@@ -1,0 +1,77 @@
+Problems with using a Genetic Algorithm for redistricting
+
+I initially formulated the genetic string to be an array, one entry per block, noting which district the block belonged to. Crossover mating on this type was simple. Mutation was easy and I allowed either swapping the district value of two positions or randomly assigning a district to some position.
+
+I used several different variations on measuring the fitness. They all had as components the "moment" of the districts and the inter district population variance.
+
+	The moment is the sum of ((block to district center distance)^2 * block population) across all blocks for the district each is in. A district center is the population weighted average of the positions of the blocks in a district.
+
+	The inter population variance is the sum of the squared differences between the population of each district and the average population of all the districts.
+
+At first I tried to get an overall fitness score by multiplying moment and population variance. Lower scores are better in both components and in the resulting product. It turned out that variance was easier to solve for and the system would get stuck in a local minima where any improvement in moment would result in a relatively nasty degradation in variance. I then tried increasing the importance of moment by exponentiating that term by 2, 3 or 4. With fitness equal to variance * moment^4, I got one trial run to settle down to a nice solution. On another run, I found that I wanted to be able to tune the balance dynamically as it ran. That would not be practical even if I implemented it.
+
+I settled on the solution of mapping each component onto the range (0,1] as appropriate for each population generation. So, find the most fit for moment, the least fit for moment, and scale all moments. Similarly for population variance. The final fitness for an individual is the addition of these scaled values. This method has been successfully running for days, neglecting neither component and moving both towards a better global solution.
+
+But, it's been running for days an the results are mediocre.
+
+Using just the zip code blocks, 1757 for California, or just 366 for New Mexico, the system rapidly settles on a "pretty good" solution. But this solution still has outlier blocks allocated to far away districts. Districts can even be more nastily intermingled, in the case of the Texas data which has been running for a day now.
+
+Ultimately, I think the problem with this method is its lack of concept of a "region". I'm really looking for a region based answer, but I have no concept of a region in the solver. I assumed that the "moment" component would implicitly result in regions, but it seems to not quite be a strong enough influence. I am still running the California full census block data set. At that level of detail this implicit region building may yet happen, but that data set has been running for over 240 hours on a 1.25 GHz G4 processor. I'll leave it running until I write a better, region based, solver.
+
+A couple little optimizations:
+Neglecting the curvature of the earth and using longitudes and latitudes as cartesian coordinates provided a great speed boost. Not taking the square root of distances also provided a great speed boost, and simply biased the system to get those distances down.
+
+2005-01-20 14:44:20 -0800
+
+A region based solver will be able to use the same population variance and moment measures of district-plan fitness, but the solutions will be automatically constrained to be 
+
+
+Census Data URLs:
+http://ftp2.census.gov/census_2000/datasets/Summary_File_1/
+For some state (2 letter abbrev, lower case) "${st}", you just need the ${st}geo_uf1.zip files from Summary File 1. That has the per-block population and lat-lon in it. Download these into subdir 'data/' and preprocess.
+data/
+	${st}geo.uf1	-- what comes inside ${st}geo_uf1.zip . I recommend discarding the .zip and using bzip2 on this after preprocessing.
+	${st}101.uf1	-- `grep 'uSF1  ..101' < ${st}geo.uf1 > ${st}101.uf1` Only the "summary level 101" lines contain block info we want.
+
+http://www2.census.gov/geo/tiger/tiger2005se/
+use the tiger/get.pl script to slurp a state worth of TIGER map data.
+tiger/
+	??/	-- a state's 2 letter abbrev, in upper case
+		zips/	-- where get.pl slurps to
+		zips/url	-- a file that just contains 'http://www2.census.gov/geo/tiger/tiger2004fe/??/' for some state '??', used by get.pl
+		raw/	-- unzip the zips into this dir. from inside zips, `unzip -d ../raw tgr\*.zip`
+
+Can't seem to find 109th congressional districts down to block level.
+http://www.census.gov/geo/www/cd109th/tables109.html
+http://ftp2.census.gov/census_2000/datasets/109_Congressional_Districts/109_CD_HundredPercent/California/cageo_h09.zip
+
+
+TO DO
+enforce district contiguity.
+
+All 50 states (or at all the states with more than one district: AL AZ AR CA CO
+CT FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO NE NV NH NJ NM NY NC OH
+OK OR PA RI SC TN TX UT VA WA WV WI
+NOT: AK DE MT ND SD VT WY)
+
+Calculate ethnic stat per generated district. What would the VRA require?
+
+make automatic download/run client (might just be perl with a web/cgi thing on
+the server side) to do redistricting@home
+
+http://www.redistrictinggame.com/
+
+Micah Altman's Dissertation
+"Districting Principles and Democratic Representation"
+http://www.hmdc.harvard.edu/micah_altman/disab.shtml
+http://www.hmdc.harvard.edu/micah_altman/dispdf/dis_full.pdf
+
+
+http://scholar.google.com/scholar?q=redistricting+compactness&hl=en&lr=lang_en
+
+
+
+"Nonpartisan Political Redistricting by Computer", 1965. Hess, Weaver,
+Siegfeldt, Whelan
+http://links.jstor.org/sici?sici=0030-364X(196511%2F12)13%3A6%3C998%3ANPRBC%3E2.0.CO%3B2-2
+

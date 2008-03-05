@@ -1,0 +1,59 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = SolverGLView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {sovm = SolverM; }; 
+            SUPERCLASS = NSOpenGLView; 
+        }, 
+        {
+            ACTIONS = {
+                goZXY = id; 
+                nudgeViewDown = id; 
+                nudgeViewLeft = id; 
+                nudgeViewRight = id; 
+                nudgeViewUp = id; 
+                run = id; 
+                setDcx = id; 
+                setDcy = id; 
+                setDebugDistrict = id; 
+                setEdgeRelativeDistanceFactor = id; 
+                setNodeColoring = id; 
+                setOdEdgeRelativeDistanceFactor = id; 
+                setPopRatioFactor = id; 
+                setRunning = id; 
+                setShowLinks = id; 
+                setZoom = id; 
+                startOpenData = id; 
+                startSaveDists = id; 
+                startSavePNG = id; 
+                startSaveSolution = id; 
+                step = id; 
+                stop = id; 
+                writePNG = id; 
+                zoomAll = id; 
+                zoomIn = id; 
+                zoomOut = id; 
+            }; 
+            CLASS = SolverM; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                "_edgeRelativeDistanceFactor" = NSControl; 
+                "_odEdgeRelativeDistanceFactor" = NSControl; 
+                "_popRatioFactor" = NSControl; 
+                dcxBox = NSControl; 
+                dcyBox = NSControl; 
+                debugDistrictMenu = NSPopUpButton; 
+                extraText = NSTextView; 
+                extraTextWindow = NSWindow; 
+                nodeColoringMenu = NSPopUpButton; 
+                stats = NSTextField; 
+                view = SolverGLView; 
+                zoomBox = NSControl; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}

@@ -1,0 +1,78 @@
+\raggedright
+
+\begin{abstract}
+Reasonable representation districts can be generated automatically by a heuristic hill-climbing search algorithm.
+This is a viable solution to the recognized problem of partisan gerrymandering.
+\end{abstract}
+
+\section{Desired Solution Qualities}
+
+What is a good district?
+Represent a community with common concerns.
+Represent a community of interest/identity.
+There exist other representation schemes (Proportional Representation) which address arbitrary interest or identity representation, so I will focus on regional representation.
+The operative definition of a good district for the rest of this paper is:
+
+\begin{center}
+Minimize the average distance of each person to the center of their district.
+\end{center}
+
+\section{Heuristics}
+
+Each district is examined for what the best block to grab would be.
+It is determied by a weighted combination of these factors:
+
+\begin{itemize}
+\item Distance from center of grabbing district (relative to the average distance from center of that district's edge blocks)
+\item Distance from center of block's current district (relative to the average distance from center of that district's edge blocks)
+\item Ratio of the number of neighboring blocks which belong to the grabbing district and the current district
+%((Number of neighboring blocks which are part of grabbing district) - (Number of neighboring blocks which are part of current district)) / (block's number of neighbors)
+\item ratio of populations between grabbing district and block's current district (modulated at a couple points to force/encourage equipopular districts)
+\item thrashing prevention "lock". starts high when a block changes districts and decays over some cycles.
+\item "field" force which globally pushes blocks into districts in regions of the map which are underpopulated
+\item random factor. Deliberately add jitter to the selection of blocks.
+\end{itemize}
+
+The distance from the center of a district to a block in question has to be made relative to the average border-to-center distance of each district because sometimes an expansive low density district will border a small high density district.
+
+Distance is being measured straight line, point to point.
+This is slightly inaccurate due to the curvature of the earth (coordinates are longitude,latitude).
+But, the speed increase of cartesian distance is substantial.
+Calculating great-circle distance between points will likely remain prohibitive until computers get 5-10 times faster than the ones I used to calculate the current set of results.
+It has been suggested that distance would be better measured as travel time.
+This probably would be better but even more computationally intensive.
+District center points would also have to be chosen differently as a point actually accessible (a geographic center could potentially be in the middle of nowhere).
+Until I can run the redistricting software on Google's server farm with their map back end to calculate travel times, I'm sticking with straight line cartesian distances.
+
+The "number of neighbors" measure is intended to cause concavities in an edge of one district to be likely spots to fill in when expanding that district.
+This is somewhat imprecise.
+A better measure would be based on map data and compare the length of perimeter of the block in question which borders each district.
+This wouldn't even be prohibitively hard to program and the data is readily available in the Census TIGER line file data.
+It would have a somewhat substantial run size impact to associate an additional piece of data with each block-block link association.
+(There are 1312372 links between 533163 blocks in the California data.)
+For now though, the existing "number of neighbors" is working well enough.
+
+Changing factor weight over time
+
+I have the random factor weight oscillating on a sine with a period of many cycles. At no time is it the dominant factor. Its weight is at most equal to one of the other factors.
+
+I run the population ration factor weight starting low and ending high.
+The solution finding should start out more flexible and move more quickly to optimally shaped regions and then refine them to be more strictly equal population.
+I find that too strongly forcing equal population early results in not escaping local optima in the district shape search space.
+
+\section{Results}
+
+Depending on the state, my solver gets districts equal population to within 200 to 1000 persons.
+For a congressional district of about 650,000 people this is less than 0.15\% difference.
+I think this is good enough, but courts my disagree.
+Current hand drawn solutions get down to a spread of 1-15 persons, depending on the state.
+
+
+\section{Future Work}
+
+Perfectly equal population districts.
+How much does that hurt the shape?
+Run solver with various limits on district population variability, graph shape quality results over that range.
+
+%\flushright
+%{\sffamily\huge http://bolson.org/dist/}

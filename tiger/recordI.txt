@@ -1,0 +1,15 @@
+RT No L A 1 1 1 Record Type 
+VERSION No L N 2 5 4 Version Number 
+FILE No L N 6 10 5 File Code 
+TLID No R N 11 20 10 TIGER/Line® ID, Permanent 1-Cell Number 
+TZIDS No R N 21 30 10 TIGER® ID, Start, Permanent Zero-Cell Number 
+TZIDE No R N 31 40 10 TIGER® ID, End, Permanent Zero-Cell Number 
+CENIDL Yes L A 41 45 5 Census File Identification Code, Left 
+POLYIDL Yes R N 46 55 10 Polygon Identification Code, Left 
+CENIDR Yes L A 56 60 5 Census File Identification Code, Right 
+POLYIDR Yes R N 61 70 10 Polygon Identification Code, Right  
+SOURCEID Yes L A 71 80 10 TIGER® 1-Cell Source Code 
+FTSEG Yes L A 81 97 17 FTSeg ID (AAAAA.O.XXXXXXXXX) (Authority-S-ID) FGDC Transportation ID Standard (not filled) 
+RS-I1 Yes L A 98 107 10 Reserved Space I1 
+RS-I2 Yes L A 108 117 10 Reserved Space I2 
+RS-I3 Yes L A 118 127 10 Reserved Space I3 
