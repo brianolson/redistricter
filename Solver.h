@@ -83,6 +83,11 @@ public:
 	void load();
 	void readLinksFile();
 	void readLinksBin();
+	/** Binary Format:
+	[GeoData.h binary format for GeoData::writeBin(int,char*)
+	uint32_t numEdges;
+	int32_t edges[numEdges*2]; // pairs of indecies into GeoData
+	*/
 	int writeBin( const char* fname );
 	void initNodes();
 	void allocSolution();

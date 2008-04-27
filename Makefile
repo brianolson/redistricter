@@ -13,11 +13,13 @@ OG:=-g
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
-CCOMMONFLAGS:=-Wall -Itiger -MMD
+CCOMMONFLAGS:=-Wall -Itiger -MMD -m64 -L/usr/local/lib64
 CXXFLAGS+=${OG} ${CCOMMONFLAGS}
 CFLAGS+=${OG} ${CCOMMONFLAGS}
 
 #CXXFLAGS+=-DNEAREST_NEIGHBOR_MULTITHREAD=1
+
+LDFLAGS+=-Wl,-map -Wl,${@}.map -Wl,-dot -Wl,${@}.dot
 
 LDPNG=-lpng12
 

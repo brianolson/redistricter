@@ -86,6 +86,8 @@ static inline void writeOrDieF(int fd, const void* buf, size_t len, const char* 
 
 static char nullchars[7] = "\0\0\0\0\0\0";
 
+static void countColumnMaxes(const char* filename, mmaped& mf, int32_t numbersPerLine, int32_t* maxes);
+
 static int processTextMmapped(const char* filename, const char* outname, mmaped& mf) {
   int toret = 0;
   int out;
@@ -105,6 +107,7 @@ static int processTextMmapped(const char* filename, const char* outname, mmaped&
   int lineCount = 0;
   int32_t numbersPerLine;
   int32_t* values;
+  int32_t* maxes;
   if ( nextnl == NULL ) {
     fprintf(stderr, "%s: no \\n found in entire file!\n", filename );
     toret = -1;
@@ -120,6 +123,7 @@ static int processTextMmapped(const char* filename, const char* outname, mmaped&
   assert(numbersPerLine > 0);
   assert(numbersPerLine < 10000);
   values = new int32_t[numbersPerLine];
+  maxes = new int32_t[numbersPerLine];
   // first, count numbers in the first line (will later assert that all lines are equal)
   // Write out header data: filetype, state, number of elements
   {
@@ -140,6 +144,7 @@ static int processTextMmapped(const char* filename, const char* outname, mmaped&
     thisLineElementIndex = 0;
     writeOrDie(out, &numbersPerLine, 4);
   }
+  countColumnMaxes(filename, mf, numbersPerLine, maxes);
   while ( pos <= last ) {
     switch ( state ) {
       case 0: { // start of line
@@ -183,6 +188,65 @@ static int processTextMmapped(const char* filename, const char* outname, mmaped&
   mf.close();
   close(out);
   return toret;
+}
+
+void countColumnMaxes(const char* filename, mmaped& mf, int32_t numbersPerLine, int32_t* maxes) {
+  char* base = (char*)mf.data;
+  char* last = base + (mf.sb.st_size - 1);
+  char* pos = base;
+  char* nextcomma = mynextchar(base, last, ',');
+//  char* nextnl = mynextchar(base, last, '\n');
+  int state = 0;
+  int thisLineElementIndex = 0;
+  int lineCount = 0;
+  for ( int i = 0; i < numbersPerLine; i++ ) {
+    maxes[i] = 0;
+  }
+  while ( pos <= last ) {
+    switch ( state ) {
+      case 0: { // start of line
+        // skip first two fields: filetype,state
+        nextcomma = mynextchar(pos, last, ',');
+        assert(nextcomma != NULL);
+        pos = nextcomma + 1;
+        nextcomma = mynextchar(pos, last, ',');
+        assert(nextcomma != NULL);
+        pos = nextcomma + 1;
+        state = 1;
+        thisLineElementIndex = 0;
+      }
+        break;
+      case 1: { // data members
+        char* endptr;
+        int x = strtol(pos, &endptr, 10);
+        if ( x > maxes[thisLineElementIndex] ) {
+          maxes[thisLineElementIndex] = x;
+        }
+        assert(endptr != pos);
+        thisLineElementIndex++;
+        if ( (*endptr == '\n') || (*endptr == '\r') ) {
+          assert(thisLineElementIndex == numbersPerLine);
+          lineCount++;
+          state = 0;
+          pos = endptr + 1;
+          while ( (pos <= last) && ((*pos == '\n') || (*pos == '\r')) ) {
+            pos++;
+          }
+        } else {
+          pos = endptr + 1;
+        }
+      }
+        break;
+      default:
+        assert(false);
+        break;
+    }
+  }
+  for ( int i = 0; i < numbersPerLine; i++ ) {
+    fprintf(stderr,"%d,", maxes[i]);
+  }
+  fprintf(stderr,"\n");
+  exit(1);
 }
 
 int Uf1Data::processText(const char* filename, const char* outname) {

@@ -344,6 +344,7 @@ int ZCTA::load() {
 	return -1;
 }
 
+// Sort by ubid to aid lookup mapping ubid->internal-index
 static int ubidSortF( const void* a, const void* b ) {
 	if ( ((Uf1::UST*)a)->ubid > ((Uf1::UST*)b)->ubid ) {
 		return 1;
@@ -481,6 +482,12 @@ uint64_t Uf1::ubid( int index ) {
 		//buf[13] = '\0';
 		return strtoull( buf, NULL, 10 );
 	}
+// get "Logical Record Number" which links to deeper census data.
+uint32_t Uf1::logrecno( int index ) {
+	char buf[8];
+	copyGeoUf1Field( buf, data, index, 18, 25 );
+	return strtoul( buf, NULL, 10 );
+}
 POPTYPE Uf1::oldDist( int index ) {
 		char buf[3];
 		char* bp;

@@ -3,6 +3,12 @@
 
 /** Class for holding full census data files. */
 // There's already a class here 'Uf1' which is for the geo data of a set.
+/* Binary format:
+6 bytes file tag (ascii, probably "uSF1\0\0")
+2 bytes state abbreviation
+4 byte int, numbersPerLine
+data: 4 byte ints, numbersPerLine wide, lines long. 4*m*n bytes.
+*/
 
 class mmaped;
 

@@ -198,6 +198,7 @@ void Solver::readLinksBin() {
 	p += sizeof(endianness);
 	/* if bin file was written in other endianness, 1 will be at wrong end. */
 	endianness = ! ( endianness & 0xff );
+	// TODO: make this some sort of sane encapsulation, or merge the two classes file concepts since I never actually use them separately.
 	p += sizeof(gd->numPoints);
 	p += sizeof(*(gd->pos)) * gd->numPoints * 2;
 #if READ_INT_POP
