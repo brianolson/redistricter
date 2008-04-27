@@ -1,0 +1,2 @@
+# Everyone has a nice new fast 64 bit capable mac, right?
+CCOMMONFLAGS:=-m64 -L/usr/local/lib64
