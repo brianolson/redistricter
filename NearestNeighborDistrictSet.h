@@ -31,6 +31,9 @@ public:
 #if NEAREST_NEIGHBOR_MULTITHREAD
 	void* setWinnersThread(SetWinnersThreadArgs* args);
 #endif
+	
+	void fixupDistrictContiguity();
+	void resumDistrictCenters();
 
 	static double kNu;
 	static double kInc;

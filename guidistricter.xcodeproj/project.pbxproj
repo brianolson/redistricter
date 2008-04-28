@@ -89,6 +89,8 @@
 		1FE29E4F0A7F1C63008AFDB1 /* record1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807AF0A61A53B00959DA5 /* record1.cpp */; };
 		1FE29E500A7F1C65008AFDB1 /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		1FE29E580A7F1C8D008AFDB1 /* makeLinks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE29E570A7F1C8C008AFDB1 /* makeLinks.cpp */; };
+		1FEAA3D70DC5500E00A08E78 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
+		1FEAA3E60DC5651D00A08E78 /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
 		320BFD660CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
 		320BFD670CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
 		321648700D4697350096D68F /* rasterizeTiger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3216486F0D4697350096D68F /* rasterizeTiger.cpp */; };
@@ -194,6 +196,7 @@
 				1F4D0CDF090C3B0B003CE55B /* OpenGL.framework in Frameworks */,
 				1F4D0CE0090C3B0B003CE55B /* libpng12.dylib in Frameworks */,
 				1F4D0CE1090C3B0F003CE55B /* GLUT.framework in Frameworks */,
+				1FEAA3D70DC5500E00A08E78 /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,9 +515,11 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1FEF15BD0A577CFD000B2C93 /* Build configuration list for PBXProject "guidistricter" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 29B97314FDCFA39411CA2CEA /* guidistricter */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* guidistricter */,
 				1F4D0CC7090C3AB3003CE55B /* ngd2 */,
@@ -594,6 +599,7 @@
 				1F8427CD0CCB221A00ACC6A4 /* AbstractDistrict.cpp in Sources */,
 				1F8427D30CCB222500ACC6A4 /* DistrictSet.cpp in Sources */,
 				320BFD670CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */,
+				1FEAA3E60DC5651D00A08E78 /* Bitmap.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

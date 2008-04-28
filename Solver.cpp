@@ -657,74 +657,10 @@ void Solver::printDistrcts() {
 #endif
 
 SolverStats* Solver::getDistrictStats() {
-#if 1
-SolverStats* stats = new SolverStats();
-dists->getStats(stats);
-#else
-	double minp = HUGE_VAL;
-	int dmin = -1;
-	double maxp = -HUGE_VAL;
-	int dmax = -1;
-	double ptot = 0.0;
-	double popavg;
-	double popvar = 0.0;
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		ptot += dists[d].pop;
-		if ( dists[d].pop < minp ) {
-			minp = dists[d].pop;
-			dmin = d;
-		}
-		if ( dists[d].pop > maxp ) {
-			maxp = dists[d].pop;
-			dmax = d;
-		}
-	}
-	popavg = ptot / districts;
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		double dp;
-		dp = popavg - dists[d].pop;
-		popvar += dp * dp;
-	}
-	POPTYPE median = sorti[districts/2];
-	double popstd = sqrt(popvar / (districts - 1.0));
-#endif
-	double nodpop = 0.0;
-	int nod = 0;
-	double moment = 0.0;
-	for ( int i = 0; i < gd->numPoints; i++ ) {
-		if ( winner[i] == NODISTRICT ) {
-			nod++;
-#if READ_INT_POP
-			nodpop += gd->pop[i];		
-#endif
-		} else {
-#if READ_INT_POP && (READ_INT_POS || READ_DOUBLE_POS)
-			double dx, dy;
-			AbstractDistrict* cd;
-			cd = &((*dists)[winner[i]]);
-#if READ_INT_POS || READ_DOUBLE_POS
-			dx = cd->centerX() - gd->pos[i*2  ];
-			dy = cd->centerY() - gd->pos[i*2+1];
-#endif
-			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
-#endif
-		}
-	}
-	// earthradius_equatorial  6378136.49 m * 2 * Pi = 40075013.481 m earth circumfrence at equator
-	// sum microdegrees / pop = avg microdegrees
-	// avg microdegrees / ( 360000000 microdegrees per diameter ) = avg diameters of earth
-	// avg diameters of earth * 40075.013481 = avg Km per person to center of dist
-	double avgPopDistToCenterOfDistKm = ((moment/stats->poptotal)/360000000.0)*40075.013481;
-#if 1
-stats->nod = nod;
-stats->nodpop = nodpop;
-stats->generation = gencount;
-stats->avgPopDistToCenterOfDistKm = avgPopDistToCenterOfDistKm;
-return stats;
-#else
-	return new SolverStats( gencount, avgPopDistToCenterOfDistKm, popavg, popstd,
-					  minp, maxp, dists[median].pop, dmin, dmax, median, nod, nodpop, NULL );
-#endif
+	SolverStats* stats = new SolverStats();
+	dists->getStats(stats);
+	stats->generation = gencount;
+	return stats;
 }
 int SolverStats::toString( char* str, int len ) {
 	char* cstr = str;

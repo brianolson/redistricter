@@ -20,15 +20,15 @@ void Bitmap::flood() {
 	memset( bits, 0xff, bytes );
 }
 int Bitmap::writeBin(int fd) {
-	int err;
+	ssize_t err;
 	err = write( fd, &bytes, sizeof(size_t) );
-	if ( err < sizeof(size_t) ) {
+	if ( (err < 0) || (((size_t)err) < sizeof(size_t)) ) {
 		perror("Bitmap::writeBin size");
 		::close(fd);
 		return -1;
 	}
 	err = write( fd, bits, bytes );
-	if ( err < bytes ) {
+	if ( (err < 0) || (((size_t)err) < bytes) ) {
 		perror("Bitmap::writeBin data");
 		::close(fd);
 		return -1;
@@ -36,7 +36,7 @@ int Bitmap::writeBin(int fd) {
 	return 0;
 }
 int Bitmap::readBin(int fd) {
-	int err;
+	ssize_t err;
 	size_t nsize;
 	u_int32_t* nbits;
 	err = read( fd, &nsize, sizeof(size_t) );
@@ -47,7 +47,7 @@ int Bitmap::readBin(int fd) {
 	}
 	nbits = new u_int32_t[nsize/sizeof(u_int32_t)];
 	err = read( fd, nbits, nsize );
-	if ( err != nsize ) {
+	if ( (err < 0) || (((size_t)err) != nsize) ) {
 		perror("Bitmap::readBin data");
 		::close(fd);
 		return -1;

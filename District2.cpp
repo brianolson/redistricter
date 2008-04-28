@@ -62,6 +62,42 @@ void District2Set::getStats(SolverStats* stats) {
 	stats->mindist = dmin;
 	stats->maxdist = dmax;
 	stats->meddist = median;
+	
+	double nodpop = 0.0;
+	int nod = 0;
+	double moment = 0.0;
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	for ( int i = 0; i < gd->numPoints; i++ ) {
+		if ( winner[i] == NODISTRICT ) {
+			nod++;
+#if READ_INT_POP
+			nodpop += gd->pop[i];		
+#endif
+		} else {
+#if READ_INT_POP && (READ_INT_POS || READ_DOUBLE_POS)
+			double dx, dy;
+			District2* cd;
+			cd = &(dists[winner[i]]);
+#if READ_INT_POS || READ_DOUBLE_POS
+			dx = cd->distx - gd->pos[i*2  ];
+			dy = cd->disty - gd->pos[i*2+1];
+#else
+#error "what?"
+#endif
+			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
+#endif
+		}
+	}
+	// earthradius_equatorial  6378136.49 m * 2 * Pi = 40075013.481 m earth circumfrence at equator
+	// sum microdegrees / pop = avg microdegrees
+	// avg microdegrees / ( 360000000 microdegrees per diameter ) = avg diameters of earth
+	// avg diameters of earth * 40075.013481 = avg Km per person to center of dist
+	// TODO: adjust for average latitude of region instead of assuming equatorial.
+	double avgPopDistToCenterOfDistKm = ((moment/stats->poptotal)/360000000.0)*40075.013481;
+	stats->nod = nod;
+	stats->nodpop = nodpop;
+	stats->avgPopDistToCenterOfDistKm = avgPopDistToCenterOfDistKm;
 }
 
 void District2Set::alloc(int size) {

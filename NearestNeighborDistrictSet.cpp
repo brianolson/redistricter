@@ -1,7 +1,10 @@
 #include "NearestNeighborDistrictSet.h"
+
 #include "districter.h"
-#include "Solver.h"
 #include "AbstractDistrict.h"
+#include "Bitmap.h"
+#include "Node.h"
+#include "Solver.h"
 #include <assert.h>
 #include <math.h>
 
@@ -75,6 +78,7 @@ void NearestNeighborDistrictSet::initNewRandomStart() {
 		dists[d].set(bx, by);
 	}
 	setWinners();
+	resumDistrictCenters();
 }
 void NearestNeighborDistrictSet::initFromLoadedSolution() {
 	fprintf(stderr,"WARNING NearestNeighborDistrictSet::initFromLoadedSolution not implemented, initting random\n");
@@ -141,16 +145,195 @@ void* NearestNeighborDistrictSet::setWinnersThread(SetWinnersThreadArgs* args) {
 }
 #endif
 
+namespace {
+class ContiguousGroup {
+public:
+	// POPTYPE d; // implicit in container or index in ContiguousGroup[]
+	int start;
+	int count;
+	ContiguousGroup* next;
+	
+	ContiguousGroup()
+	: start(-1), count(-1), next(NULL)
+	{
+	}
+	ContiguousGroup(int start_, ContiguousGroup* next_)
+	: start(start_), count(1), next(next_)
+	{
+	}
+	// Deletes next chain off this so that delete[] deletes deeply.
+	~ContiguousGroup() {
+		while ( next != NULL ) {
+			ContiguousGroup* t = next->next;
+			next->next = NULL;
+			delete next;
+			next = t;
+		}
+	}
+};
+}
+
+void NearestNeighborDistrictSet::fixupDistrictContiguity() {
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	int numPoints = gd->numPoints;
+	Bitmap hit(numPoints);
+	hit.zero();
+	int* bfsearchq = new int[numPoints];
+	int bfin = 0;
+	int bfout = 0;
+	ContiguousGroup* groups = new ContiguousGroup[districts];
+	Node* nodes = sov->nodes;
+	
+	for ( int i = 0; i < numPoints; ++i ) {
+		if ( ! hit.test(i) ) {
+			POPTYPE d = winner[i];
+			//bfin = 0;
+			bfout = 0;
+			bfsearchq[0] = i;
+			hit.set(i);
+			bfin = 1;
+			ContiguousGroup* cur;
+			if (groups[d].start == -1) {
+				// original array set
+				groups[d].start = i;
+				groups[d].count = 1;
+				cur = &(groups[d]);
+			} else {
+				cur = groups[d].next = new ContiguousGroup( i, groups[d].next );
+			}
+			// breadth-first search
+			while ( bfin != bfout ) {
+				Node* n = nodes + bfsearchq[bfout];
+				bfout = (bfout + 1) % numPoints;
+				for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+					int nin;
+					nin = n->neighbors[ni];
+					if ( (winner[nin] == d) && (! hit.test(nin)) ) {
+						bfsearchq[bfin] = nin;
+						bfin = (bfin + 1) % numPoints;
+						hit.set(nin);
+						cur->count++;
+					}
+				}
+			}
+		}
+	}
+	int pointsRepod = 0;
+	for ( POPTYPE d = 0; d < districts; ++d ) {
+		if ( groups[d].next != NULL ) {
+			// district d is not contiguous. dissolve all but largest fragment.
+			ContiguousGroup* largest = &(groups[d]);
+			ContiguousGroup* cur = largest->next;
+			int groupstat = 1;
+			int nodestat = largest->count;
+			while ( cur != NULL ) {
+				groupstat++;
+				nodestat += cur->count;
+				if ( cur->count > largest->count ) {
+					largest = cur;
+				}
+				cur = cur->next;
+			}
+			//fprintf(stderr, "dist %d, %d nodes in %d groups, largest->count=%d\n", d, nodestat, groupstat, largest->count);
+			cur = &(groups[d]);
+			while ( cur != NULL ) {
+				if ( cur != largest ) {
+					// disown fragment
+					int countCheck = 1;
+					bfsearchq[0] = cur->start;
+					bfout = 0;
+					bfin = 1;
+					pointsRepod++;
+					hit.clear(cur->start);
+					winner[cur->start] = NODISTRICT;
+					while ( bfin != bfout ) {
+						int nn = bfsearchq[bfout];
+						Node* n = nodes + nn;
+						bfout = (bfout + 1) % numPoints;
+						for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+							int nin;
+							nin = n->neighbors[ni];
+							if ( (winner[nin] == d) && hit.test(nin) ) {
+								bfsearchq[bfin] = nin;
+								bfin = (bfin + 1) % numPoints;
+								pointsRepod++;
+								countCheck++;
+								hit.clear(nin);
+								winner[nin] = NODISTRICT;
+							}
+						}
+					}
+					assert(countCheck == cur->count);
+				}
+				cur = cur->next;
+			}
+		}
+	}
+	if ( pointsRepod ) {
+		// In this block, bfsearchq is repurposed to hold orphaned node indecies.
+		int repox = 0;
+		for ( int i = 0; i < numPoints; ++i ) {
+			if ( winner[i] == NODISTRICT ) {
+				bfsearchq[repox] = i;
+				repox++;
+			}
+		}
+		assert(repox == pointsRepod);
+		while ( repox > 0 ) {
+			bool any = false;
+			for ( int ri = 0; ri < repox; ++ri ) {
+				int i = bfsearchq[ri];
+				Node* n = nodes + i;
+				double bx, by;
+				bx = gd->pos[i*2  ];
+				by = gd->pos[i*2+1];
+				POPTYPE closest = NODISTRICT;
+				double crcr = 9e9;
+				double dx, dy;
+				for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+					int nin;
+					nin = n->neighbors[ni];
+					POPTYPE d = winner[nin];
+					if ( d != NODISTRICT ) {
+						if ( closest == NODISTRICT ) {
+							closest = d;
+							dx = dists[d].x - bx;
+							dy = dists[d].y - by;
+							crcr = ((dx * dx) + (dy * dy)) * dists[d].weight;
+						} else if ( d != closest ) {
+							dx = dists[d].x - bx;
+							dy = dists[d].y - by;
+							double tr = ((dx * dx) + (dy * dy)) * dists[d].weight;
+							if ( tr < crcr ) {
+								crcr = tr;
+								closest = d;
+							}
+						}
+					}
+				}
+				if ( closest != NODISTRICT ) {
+					any = true;
+					winner[i] = closest;
+					repox--;
+					if ( repox == 0 ) {
+						break;
+					}
+					bfsearchq[ri] = bfsearchq[repox];
+				}
+			}
+			assert(any);
+		}
+	}
+	
+	delete [] groups;
+	delete [] bfsearchq;
+}
+
 void NearestNeighborDistrictSet::setWinners() {
 	POPTYPE* winner = sov->winner;
 	const GeoData* gd = sov->gd;
 	int numPoints = gd->numPoints;
-	for ( POPTYPE d = 0; d < districts; ++d ) {
-		dists[d].pop = 0;
-		dists[d].areax = 0;
-		dists[d].areay = 0;
-		dists[d].areasum = 0;
-	}
 #if NEAREST_NEIGHBOR_MULTITHREAD
 /* This doesn't help much, probably better to run two independent instances. */
 	setupPtPool();
@@ -162,14 +345,14 @@ void NearestNeighborDistrictSet::setWinners() {
 	for ( int i = 0; i < numSetWinnersThreads; i++ ) {
 		ptPool[i].join();
 	}
-	for ( int i = 0; i < numPoints; ++i ) {
+	/*for ( int i = 0; i < numPoints; ++i ) {
 		int closest = winner[i];
 		dists[closest].pop += gd->pop[i];
 		double ta = gd->area[i];
 		dists[closest].areax += ta * gd->pos[i*2  ];
 		dists[closest].areay += ta * gd->pos[i*2+1];
 		dists[closest].areasum += ta;
-	}
+	}*/
 #elif defined(_OPENMP)
 /* this is totally untested and probably wrong, but a start */
 #pragma omp parallel for default(private)
@@ -194,14 +377,14 @@ void NearestNeighborDistrictSet::setWinners() {
 		}
 		winner[i] = closest;
 	}
-	for ( int i = 0; i < numPoints; ++i ) {
+	/*for ( int i = 0; i < numPoints; ++i ) {
 		closest = winner[i];
 		dists[closest].pop += gd->pop[i];
 		double ta = gd->area[i];
 		dists[closest].areax += ta * bx;
 		dists[closest].areay += ta * by;
 		dists[closest].areasum += ta;
-        }
+        }*/
 #else
 	/* ye olde straight line code */
 	for ( int i = 0; i < numPoints; ++i ) {
@@ -224,18 +407,34 @@ void NearestNeighborDistrictSet::setWinners() {
 			}
 		}
 		winner[i] = closest;
-		dists[closest].pop += gd->pop[i];
+	}
+#endif
+}
+
+void NearestNeighborDistrictSet::resumDistrictCenters() {
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	int numPoints = gd->numPoints;
+	for ( POPTYPE d = 0; d < districts; ++d ) {
+		dists[d].pop = 0;
+		dists[d].areax = 0;
+		dists[d].areay = 0;
+		dists[d].areasum = 0;
+	}
+	for ( int i = 0; i < numPoints; ++i ) {
+		POPTYPE closest = winner[i];
 		double ta = gd->area[i];
+		double bx = gd->pos[i*2  ];
+		double by = gd->pos[i*2+1];
+		dists[closest].pop += gd->pop[i];
 		dists[closest].areax += ta * bx;
 		dists[closest].areay += ta * by;
 		dists[closest].areasum += ta;
 	}
-#endif
 	for ( POPTYPE d = 0; d < districts; ++d ) {
 		dists[d].areax /= dists[d].areasum;
 		dists[d].areay /= dists[d].areasum;
 	}
-        // FIXME TODO ensure contiguiity
 }
 
 double NearestNeighborDistrictSet::kNu = 0.01;
@@ -313,6 +512,8 @@ int NearestNeighborDistrictSet::step() {
                 //dists[d].weight += jitter(weightMaxJitter, jitterPeriod, sov->gencount);
 	}
 	setWinners();
+	fixupDistrictContiguity();
+	resumDistrictCenters();
 	return 0;
 }
 
@@ -355,6 +556,40 @@ void NearestNeighborDistrictSet::getStats(SolverStats* stats) {
 	stats->mindist = dmin;
 	stats->maxdist = dmax;
 	stats->meddist = 0;//median;
+	
+	double nodpop = 0.0;
+	int nod = 0;
+	double moment = 0.0;
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	for ( int i = 0; i < gd->numPoints; i++ ) {
+		if ( winner[i] == NODISTRICT ) {
+			nod++;
+#if READ_INT_POP
+			nodpop += gd->pop[i];		
+#endif
+		} else {
+#if READ_INT_POP && (READ_INT_POS || READ_DOUBLE_POS)
+			double dx, dy;
+			NearestNeighborDistrict* cd;
+			cd = &(dists[winner[i]]);
+#if READ_INT_POS || READ_DOUBLE_POS
+			dx = cd->x - gd->pos[i*2  ];
+			dy = cd->y - gd->pos[i*2+1];
+#endif
+			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
+#endif
+		}
+	}
+	// earthradius_equatorial  6378136.49 m * 2 * Pi = 40075013.481 m earth circumfrence at equator
+	// sum microdegrees / pop = avg microdegrees
+	// avg microdegrees / ( 360000000 microdegrees per diameter ) = avg diameters of earth
+	// avg diameters of earth * 40075.013481 = avg Km per person to center of dist
+	// TODO: adjust for average latitude of region instead of assuming equatorial.
+	double avgPopDistToCenterOfDistKm = ((moment/stats->poptotal)/360000000.0)*40075.013481;
+	stats->nod = nod;
+	stats->nodpop = nodpop;
+	stats->avgPopDistToCenterOfDistKm = avgPopDistToCenterOfDistKm;
 }
 void NearestNeighborDistrictSet::print(const char* filename) {
 
