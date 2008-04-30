@@ -823,6 +823,8 @@ void Solver::doPNG() {
 
 int Solver::handleArgs( int argc, char** argv ) {
 	int argcout = 1;
+	popRatioFactor.clear();
+	popRatioFactor.setPoint( -1, District2::popRatioFactor );
 	for ( int i = 1; i < argc; i++ ) {
 		if ( ! strcmp( argv[i], "-i" ) ) {
 			i++;

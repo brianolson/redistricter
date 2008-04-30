@@ -26,7 +26,7 @@ public:
 	// weighted x and y, center is (x/pop,y/pop)
 	double wx, wy;
 	// x/pop, y/pop
-	double distx, disty;
+	//double distx, disty;
 	double moment;
 	
 	District2();
@@ -118,8 +118,14 @@ public:
 	}
 
 	/* AbstractDistrict implementation */
-	virtual double centerX();
-	virtual double centerY();
+	//virtual double centerX();
+	//virtual double centerY();
+#if 1
+	inline void validate(const char* file = NULL, int line = -1) {}
+#define NO_D2_VALIDATE 1
+#else
+	void validate(const char* file = NULL, int line = -1);
+#endif
 };
 
 class GrabIntermediateStorage;
@@ -136,6 +142,10 @@ public:
 	virtual char* debugText();
 
 	virtual void getStats(SolverStats* stats);
+
+	virtual void fixupDistrictContiguity();
+
+	void recalc();
 
 	POPTYPE* sorti;
 	unsigned char* lock;

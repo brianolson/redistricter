@@ -23,7 +23,7 @@ inline double jitter(double max, double period, double t) {
 
 class NearestNeighborDistrict : public AbstractDistrict {
 public:
-	double x, y;
+	//double x, y;
 	double weight;
 	double dx, dy;
 	double poperr;
@@ -31,16 +31,16 @@ public:
 	int pop;
 	NearestNeighborDistrict() : weight(1.0) {}
 	NearestNeighborDistrict(double xin, double yin)
-		: x(xin), y(yin), weight(1.0) {}
+		: AbstractDistrict(xin, yin), weight(1.0) {}
 	void set(double xin, double yin) {
-		x = xin;
-		y = yin;
+		distx = xin;
+		disty = yin;
 	}
 	virtual int add( Solver* sov, int n, POPTYPE dist ) { assert(0); return 0; };
 	virtual int remove( Solver* sov, int n, POPTYPE dist,
 		double x, double y, double npop ) { assert(0); return 0; };
-	virtual double centerX() { return x; };
-	virtual double centerY() { return y; };
+/*	virtual double centerX() { return x; };
+	virtual double centerY() { return y; };*/
 };
 
 NearestNeighborDistrictSet::NearestNeighborDistrictSet(Solver* sovIn)
@@ -298,12 +298,12 @@ void NearestNeighborDistrictSet::fixupDistrictContiguity() {
 					if ( d != NODISTRICT ) {
 						if ( closest == NODISTRICT ) {
 							closest = d;
-							dx = dists[d].x - bx;
-							dy = dists[d].y - by;
+							dx = dists[d].distx - bx;
+							dy = dists[d].disty - by;
 							crcr = ((dx * dx) + (dy * dy)) * dists[d].weight;
 						} else if ( d != closest ) {
-							dx = dists[d].x - bx;
-							dy = dists[d].y - by;
+							dx = dists[d].distx - bx;
+							dy = dists[d].disty - by;
 							double tr = ((dx * dx) + (dy * dy)) * dists[d].weight;
 							if ( tr < crcr ) {
 								crcr = tr;
@@ -394,12 +394,12 @@ void NearestNeighborDistrictSet::setWinners() {
 		POPTYPE closest = 0;
 		double crcr;
 		double dx, dy;
-		dx = dists[0].x - bx;
-		dy = dists[0].y - by;
+		dx = dists[0].distx - bx;
+		dy = dists[0].disty - by;
 		crcr = ((dx * dx) + (dy * dy)) * dists[0].weight;
 		for ( POPTYPE d = 1; d < districts; ++d ) {
-			dx = dists[d].x - bx;
-			dy = dists[d].y - by;
+			dx = dists[d].distx - bx;
+			dy = dists[d].disty - by;
 			double tr = ((dx * dx) + (dy * dy)) * dists[d].weight;
 			if (tr < crcr) {
 				crcr = tr;
@@ -459,8 +459,8 @@ int NearestNeighborDistrictSet::step() {
 #if 01
 	// step towards area center
 	for ( POPTYPE d = 0; d < districts; ++d ) {
-		dists[d].dx += (dists[d].areax - dists[d].x) * kNu;
-		dists[d].dy += (dists[d].areay - dists[d].y) * kNu;
+		dists[d].dx += (dists[d].areax - dists[d].distx) * kNu;
+		dists[d].dy += (dists[d].areay - dists[d].disty) * kNu;
 	}
 #endif
 	// adjust weight based on over/under population
@@ -477,8 +477,8 @@ int NearestNeighborDistrictSet::step() {
 		for ( POPTYPE d = 0; d < districts; ++d ) {
 			for ( POPTYPE e = d+1; e < districts; ++e ) {
 				double dx, dy, r;
-				dx = dists[e].x - dists[d].x;
-				dy = dists[e].y - dists[d].y;
+				dx = dists[e].distx - dists[d].distx;
+				dy = dists[e].disty - dists[d].disty;
 				// (dx,dy) vector d->e
 				r = sqrt((dx*dx) + (dy*dy));
 				dx /= r;
@@ -507,8 +507,8 @@ int NearestNeighborDistrictSet::step() {
 	}
 	// integrate step
 	for ( POPTYPE d = 0; d < districts; ++d ) {
-		dists[d].x += dists[d].dx;
-		dists[d].y += dists[d].dy;
+		dists[d].distx += dists[d].dx;
+		dists[d].disty += dists[d].dy;
                 //dists[d].weight += jitter(weightMaxJitter, jitterPeriod, sov->gencount);
 	}
 	setWinners();
@@ -574,8 +574,8 @@ void NearestNeighborDistrictSet::getStats(SolverStats* stats) {
 			NearestNeighborDistrict* cd;
 			cd = &(dists[winner[i]]);
 #if READ_INT_POS || READ_DOUBLE_POS
-			dx = cd->x - gd->pos[i*2  ];
-			dy = cd->y - gd->pos[i*2+1];
+			dx = cd->distx - gd->pos[i*2  ];
+			dy = cd->disty - gd->pos[i*2+1];
 #endif
 			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
 #endif

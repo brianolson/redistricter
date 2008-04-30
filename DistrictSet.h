@@ -21,6 +21,8 @@ public:
 	virtual void getStats(SolverStats* stats) = 0;
 	virtual void print(const char* filename);
 
+	virtual void fixupDistrictContiguity() = 0;
+
 	AbstractDistrict& operator[](int index) {
 		return *(they[index]);
 	}

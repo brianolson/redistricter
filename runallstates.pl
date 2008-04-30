@@ -8,7 +8,7 @@ if ( ! defined $datadir ) {
 }
 $bindir = undef;
 $exe = undef;
-$stdargs = " --blankDists --sLog g/ --statLog statlog ";
+$stdargs = " --blankDists --sLog g/ --statLog statlog --d2 ";
 $start = time();
 $end = undef;
 @statearglist = ();
