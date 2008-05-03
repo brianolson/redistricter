@@ -112,7 +112,7 @@ Solver::~Solver() {
 		delete coordfname;
 	}
 	if ( dumpname != NULL ) {
-		delete dumpname;
+		free( dumpname );
 	}
 #if 0
 	if ( loadname != NULL ) {
