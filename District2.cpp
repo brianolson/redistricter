@@ -1204,17 +1204,18 @@ void District2Set::fixupDistrictContiguity() {
 	Bitmap hit(numPoints);
 	hit.zero();
 	int* bfsearchq = new int[numPoints];
+	assert(bfsearchq != NULL);
 	int bfin = 0;
 	int bfout = 0;
 	ContiguousGroup* groups = new ContiguousGroup[districts];
+	assert(groups != NULL);
 	Node* nodes = sov->nodes;
 	
 	int pointsUnowned = 0;
 	for ( int i = 0; i < numPoints; ++i ) {
 		if ( winner[i] == NODISTRICT ) {
 			pointsUnowned++;
-		}
-		if ( ! hit.test(i) ) {
+		} else if ( ! hit.test(i) ) {
 			POPTYPE d = winner[i];
 			//bfin = 0;
 			bfout = 0;
@@ -1228,7 +1229,9 @@ void District2Set::fixupDistrictContiguity() {
 				groups[d].count = 1;
 				cur = &(groups[d]);
 			} else {
-				cur = groups[d].next = new ContiguousGroup( i, groups[d].next );
+				cur = new ContiguousGroup( i, groups[d].next );
+				assert(cur != NULL);
+				groups[d].next = cur;
 			}
 			// breadth-first search
 			while ( bfin != bfout ) {
