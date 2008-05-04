@@ -95,7 +95,7 @@ SLOOP: foreach $fn ( @slogs ) {
   my $kmpp = undef;
   my $line;
   while ( $line = <FIN> ) {
-    if ( ($tk) = $line =~ /Best Km\/p: ([0-9.]+)/ ) {
+    if ( ($tk) = $line =~ /Best Km\/p:.*Km\/p=([0-9.]+)/ ) {
       $kmpp = $tk;
       ($lr) = $line =~ /^#(.*)/;
       push @lines, $lr;

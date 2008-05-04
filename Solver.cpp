@@ -77,10 +77,11 @@ Solver::Solver() :
 #endif
 	viewportRatio( 1.0 ), gencount( 0 ), blaf( NULL ),
 	showLinks( 0 ),
-	adjacency( NULL ), adjlen( 0 ), adjcap( 0 ), renumber( NULL ),
+	renumber( NULL ),
 	_point_draw_array( NULL ), 
 	lastGenDrawn( -1 ), vertexBufferObject(0), colorBufferObject(0), linesBufferObject(0),
-	drawHistoryPos( 0 )
+	drawHistoryPos( 0 ),
+	maxSpreadFraction( 1000.0 ), maxSpreadAbsolute( 9.0e9 )
 {
 		//_link_draw_array( NULL ),
 }
@@ -752,6 +753,9 @@ extern int numColors;
 
 #if WITH_PNG
 void Solver::doPNG() {
+	doPNG(winner, pngname);
+}
+void Solver::doPNG(POPTYPE* soln, const char* outname) {
 	unsigned char* data = (unsigned char*)malloc(pngWidth*pngHeight*3*sizeof(unsigned char) );
 	unsigned char** rows = (unsigned char**)malloc(pngHeight*sizeof(unsigned char*) );
 	assert( data != NULL );
@@ -762,8 +766,9 @@ void Solver::doPNG() {
 	}
 	memset( data, 0x0, pngWidth*pngHeight*3*sizeof(unsigned char) );
 
-	calculateAdjacency();
-	recolorDists( adjacency, adjlen, districts );
+	Adjacency ta;
+	calculateAdjacency_r(&ta, gd->numPoints, districts, soln, nodes);
+	recolorDists( ta.adjacency, ta.adjlen, districts );
 
 	/* setup transformation */
 	double ym = 0.999 * pngHeight / (maxy - miny);
@@ -772,11 +777,11 @@ void Solver::doPNG() {
 	for ( int i = 0; i < gd->numPoints; i++ ) {
 		double ox, oy;
 		const unsigned char* color;
-		if ( winner[i] == NODISTRICT ) {
+		if ( soln[i] == NODISTRICT ) {
 			static const unsigned char colorNODISTRICT[3] = { 0,0,0 };
 			color = colorNODISTRICT;
 		} else {
-			color = colors + ((winner[i] % numColors) * 3);
+			color = colors + ((soln[i] % numColors) * 3);
 		}
 		oy = (maxy - gd->pos[i*2+1]) * ym;
 		ox = (gd->pos[i*2  ] - minx) * xm;
@@ -815,7 +820,7 @@ void Solver::doPNG() {
 	}
 #endif
 	
-	myDoPNG( pngname, rows, pngHeight, pngWidth );
+	myDoPNG( outname, rows, pngHeight, pngWidth );
 	free( rows );
 	free( data );
 }
@@ -921,6 +926,26 @@ int Solver::handleArgs( int argc, char** argv ) {
 			districtSetFactory = NearestNeighborDistrictSetFactory;
 		} else if ( ! strcmp( argv[i], "--d2" ) ) {
 			districtSetFactory = District2SetFactory;
+		} else if ( ! strcmp( argv[i], "--maxSpreadFraction" ) ) {
+			char* endp;
+			double td;
+			i++;
+			td = strtod( argv[i], &endp );
+			if ( endp == argv[i] ) {
+				fprintf( stderr, "bogus maxSpreadFraction \"%s\"\n", argv[i] );
+				exit(1);
+			}
+			maxSpreadFraction = td;
+		} else if ( ! strcmp( argv[i], "--maxSpreadAbsolute" ) ) {
+			char* endp;
+			double td;
+			i++;
+			td = strtod( argv[i], &endp );
+			if ( endp == argv[i] ) {
+				fprintf( stderr, "bogus maxSpreadAbsolute \"%s\"\n", argv[i] );
+				exit(1);
+			}
+			maxSpreadAbsolute = td;
 		} else {
 #if 0
 			argv[argcout] = argv[i];
@@ -992,12 +1017,9 @@ int Solver::main( int argc, char** argv ) {
 	if ( generations == -1 ) {
 		generations = gd->numPoints * 10 / districts;
 	}
-	double bestStd = 100000.0;
-	double bestSpread = 100000000.0;
-	double bestKmpp = 100000.0;
-	int bestStdGen = -1;
-	int bestSpreadGen = -1;
-	int bestKmppGen = -1;
+	SolverStats* bestStd = NULL;
+	SolverStats* bestSpread = NULL;
+	SolverStats* bestKmpp = NULL;
 	POPTYPE* bestStdMap = (POPTYPE*)malloc( sizeof(POPTYPE) * gd->numPoints );
 	POPTYPE* bestSpreadMap = (POPTYPE*)malloc( sizeof(POPTYPE) * gd->numPoints );
 	POPTYPE* bestKmppMap = (POPTYPE*)malloc( sizeof(POPTYPE) * gd->numPoints );
@@ -1039,26 +1061,33 @@ int Solver::main( int argc, char** argv ) {
 #endif
 		SolverStats* curst;
 		curst = getDistrictStats();
-		if ( gencount > bestKmppStart &&
-				curst->nod == 0 &&
-				curst->popstd < bestStd ) {
-		    bestStd = curst->popstd;
-			bestStdGen = gencount;
-		    memcpy( bestStdMap, winner, sizeof(POPTYPE) * gd->numPoints );
-		}
-		if ( gencount > bestKmppStart &&
-				curst->nod == 0 &&
-				curst->popmax - curst->popmin < bestSpread ) {
-		    bestSpread = curst->popmax - curst->popmin;
-			bestSpreadGen = gencount;
-		    memcpy( bestSpreadMap, winner, sizeof(POPTYPE) * gd->numPoints );
-		}
-		if ( gencount > bestKmppStart &&
-				curst->nod == 0 &&
-				curst->avgPopDistToCenterOfDistKm < bestKmpp ) {
-		    bestKmpp = curst->avgPopDistToCenterOfDistKm;
-			bestKmppGen = gencount;
-		    memcpy( bestKmppMap, winner, sizeof(POPTYPE) * gd->numPoints );
+		double spread = curst->popmax - curst->popmin;
+		if ( (gencount > bestKmppStart) && (curst->nod == 0) &&
+			 (spread < maxSpreadAbsolute) && ((spread / districtPopTarget) < maxSpreadFraction) ) {
+			if ( bestStd == NULL ) {
+				bestStd = new SolverStats();
+				*bestStd = *curst;
+				memcpy( bestStdMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			} else if ( curst->popstd < bestStd->popstd ) {
+				*bestStd = *curst;
+				memcpy( bestStdMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			}
+			if ( bestSpread == NULL ) {
+				bestSpread = new SolverStats();
+				*bestSpread = *curst;
+				memcpy( bestSpreadMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			} else if ( spread < (bestSpread->popmax - bestSpread->popmin) ) {
+				*bestSpread = *curst;
+				memcpy( bestSpreadMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			}
+			if ( bestKmpp == NULL ) {
+				bestKmpp = new SolverStats();
+				*bestKmpp = *curst;
+				memcpy( bestKmppMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			} else if ( curst->avgPopDistToCenterOfDistKm < bestKmpp->avgPopDistToCenterOfDistKm ) {
+				*bestKmpp = *curst;
+				memcpy( bestKmppMap, winner, sizeof(POPTYPE) * gd->numPoints );
+			}
 		}
 		if ( statLog != NULL ) {
 			if ( statLogCountdown == 0 ) {
@@ -1098,39 +1127,47 @@ int Solver::main( int argc, char** argv ) {
 	}
 #endif
 
-	snprintf( estatbuf, estatbuf_length, "Best Std: %f (gen %d)\n", bestStd, bestStdGen );
-	putStdoutAndLog( estatbuf );
-	snprintf( estatbuf, estatbuf_length, "Best Spread: %f (gen %d)\n", bestSpread, bestSpreadGen );
-	putStdoutAndLog( estatbuf );
-	snprintf( estatbuf, estatbuf_length, "Best Km/p: %f (gen %d)\n", bestKmpp, bestKmppGen );
-	putStdoutAndLog( estatbuf );
-	{
+	if ( bestStd == NULL ) {
+		putStdoutAndLog( "No generation counted for Best Std\n");
+	} else {
+		snprintf( estatbuf, estatbuf_length, "Best Std: Km/p=%f spread=%f std=%f gen=%d\n",
+				 bestStd->avgPopDistToCenterOfDistKm, bestStd->popmax - bestStd->popmin,
+				 bestStd->popstd, bestStd->generation );
+		putStdoutAndLog( estatbuf );
+	}
+	if ( bestSpread == NULL ) {
+		putStdoutAndLog( "No generation counted for Best Spread\n");
+	} else {
+		snprintf( estatbuf, estatbuf_length, "Best Spread: Km/p=%f spread=%f std=%f gen=%d\n",
+				 bestSpread->avgPopDistToCenterOfDistKm, bestSpread->popmax - bestSpread->popmin,
+				 bestSpread->popstd, bestSpread->generation );
+		putStdoutAndLog( estatbuf );
+	}
+	if ( bestSpread == NULL ) {
+		putStdoutAndLog( "No generation counted for Best Km/p\n");
+	} else {
+		snprintf( estatbuf, estatbuf_length, "Best Km/p: Km/p=%f spread=%f std=%f gen=%d\n",
+				 bestKmpp->avgPopDistToCenterOfDistKm, bestKmpp->popmax - bestKmpp->popmin,
+				 bestKmpp->popstd, bestKmpp->generation );
+		putStdoutAndLog( estatbuf );
+	}
+	if ( bestStd != NULL ) {
 #if WITH_PNG
-	    char* opngname = pngname;
+		doPNG( bestStdMap, bestStdPng );
 #endif
-	    POPTYPE* owinner = winner;
-	    winner = bestStdMap;
+		::saveZSolution("bestStd.dsz", bestStdMap, gd->numPoints );
+	}
+	if ( bestSpread != NULL ) {
 #if WITH_PNG
-	    pngname = bestStdPng;
-	    doPNG();
+		doPNG( bestSpreadMap, bestSpreadPng );
 #endif
-	    saveZSolution("bestStd.dsz");
-	    winner = bestSpreadMap;
+		::saveZSolution("bestSpread.dsz", bestSpreadMap, gd->numPoints );
+	}
+	if ( bestKmpp != NULL ) {
 #if WITH_PNG
-	    pngname = bestSpreadPng;
-	    doPNG();
+		doPNG( bestKmppMap, bestKmppPng );
 #endif
-	    saveZSolution("bestSpread.dsz");
-	    winner = bestKmppMap;
-#if WITH_PNG
-	    pngname = bestKmppPng;
-	    doPNG();
-#endif
-	    saveZSolution("bestKmpp.dsz");
-	    winner = owinner;
-#if WITH_PNG
-	    pngname = opngname;
-#endif
+		::saveZSolution("bestKmpp.dsz", bestKmppMap, gd->numPoints );
 	}
 
 #if 0
@@ -1169,6 +1206,15 @@ int Solver::main( int argc, char** argv ) {
 	snprintf( estatbuf, estatbuf_length, "total: %lf sec user time, %lf system sec\n", tvDiffUsec( end.ru_utime, start.ru_utime ) / 1000000.0, tvDiffUsec( end.ru_stime, start.ru_stime ) / 1000000.0 );
 	putStdoutAndLog( estatbuf );
 
+	if ( bestStd != NULL ) {
+		delete bestStd;
+	}
+	if ( bestSpread != NULL ) {
+		delete bestSpread;
+	}
+	if ( bestKmpp != NULL ) {
+		delete bestKmpp;
+	}
 
 	delete [] estatbuf;
 	return 0;
@@ -1285,38 +1331,51 @@ void Solver::zoomAll() {
 }
 
 
-void Solver::calculateAdjacency() {
-	if ( adjcap == 0 ) {
-		adjcap = districts * districts;
-		adjacency = (POPTYPE*)malloc( sizeof(POPTYPE) * adjcap * 2 );
-		assert(adjacency != NULL);
+Adjacency::Adjacency()
+: adjacency( NULL ), adjlen( 0 ), adjcap( 0 ) {
+}
+Adjacency::~Adjacency() {
+	if ( adjacency != NULL ) {
+		free( adjacency );
 	}
-	adjlen = 0;
-	for ( int i = 0; i < gd->numPoints; i++ ) {
-	    Node* cur;
-	    POPTYPE cd;
-	    cd = winner[i];
-	    cur = nodes + i;
-	    for ( int n = 0; n < cur->numneighbors; n++ ) {
-		POPTYPE od;
-		od = winner[cur->neighbors[n]];
-		if ( od != cd ) {
-		    int newadj = 1;
-		    for ( int l = 0; l < adjlen*2; l++ ) {
-			if ( adjacency[l] == cd && adjacency[l^1] == od ) {
-			    newadj = 0;
-			    break;
+}
+
+void Solver::calculateAdjacency_r(Adjacency* it, int numPoints, int districts, const POPTYPE* winner,
+						 const Node* nodes) {
+	if ( it->adjcap == 0 ) {
+		it->adjcap = districts * districts;
+		it->adjacency = (POPTYPE*)malloc( sizeof(POPTYPE) * it->adjcap * 2 );
+		assert(it->adjacency != NULL);
+	}
+	it->adjlen = 0;
+	for ( int i = 0; i < numPoints; i++ ) {
+		const Node* cur;
+		POPTYPE cd;
+		cd = winner[i];
+		cur = nodes + i;
+		for ( int n = 0; n < cur->numneighbors; n++ ) {
+			POPTYPE od;
+			od = winner[cur->neighbors[n]];
+			if ( od != cd ) {
+				int newadj = 1;
+				for ( int l = 0; l < it->adjlen*2; l++ ) {
+					if ( it->adjacency[l] == cd && it->adjacency[l^1] == od ) {
+						newadj = 0;
+						break;
+					}
+				}
+				if ( newadj ) {
+					assert( it->adjlen + 1 < it->adjcap );
+					it->adjacency[it->adjlen*2  ] = cd;
+					it->adjacency[it->adjlen*2+1] = od;
+					it->adjlen++;
+				}
 			}
-		    }
-		    if ( newadj ) {
-			assert( adjlen + 1 < adjcap );
-			adjacency[adjlen*2  ] = cd;
-			adjacency[adjlen*2+1] = od;
-			adjlen++;
-		    }
 		}
-	    }
 	}
+}
+void Solver::calculateAdjacency(Adjacency* it) {
+	calculateAdjacency_r(it, gd->numPoints, districts, winner, nodes);
 }
 
 /* scan from top to bottom, left to right to renumber districts. */

@@ -26,26 +26,30 @@ sub statlogline() {
 @nodist = ();
 $gen = -1;
 while ( $line = statlogline() ) {
+	if ( $line =~ /^#/ ) {
+		# ignore comment lines
+	} else {
 #generation: 0
 #generation 0: 63.4341035 Km/person
 #population avg=651619 std=0.491869377
 #max=651620 (district 3)  min=651619 (district 1)  median=651619 (district 17)
-  if ( ($tkp) = $line =~ /gen(?:eration|) (\d+)/ ) {
-    $gen = $tkp;
-  }
-  if ( ($tkp) = $line =~ /([0-9.]+) Km\/person/ ) {
-    push @kmpp, $tkp;
-  }
-  if ( ($tkp) = $line =~ /std=([0-9.]+)/ ) {
-    push @std, $tkp;
-  }
-  if ( ($tmax,$tmin) = $line =~ /max=([0-9.]+).*min=([0-9.]+)/ ) {
-    $tsp = $tmax - $tmin;
-    push @spread, $tsp;
-  }
-  if ( ($tkp) = $line =~ /in no district \(pop=([0-9.]+)\)/ ) {
-    push @nodist, $tkp;
-  }
+		if ( ($tkp) = $line =~ /gen(?:eration|) (\d+)/ ) {
+			$gen = $tkp;
+		}
+		if ( ($tkp) = $line =~ /([0-9.]+) Km\/person/ ) {
+			push @kmpp, $tkp;
+		}
+		if ( ($tkp) = $line =~ /std=([0-9.]+)/ ) {
+			push @std, $tkp;
+		}
+		if ( ($tmax,$tmin) = $line =~ /max=([0-9.]+).*min=([0-9.]+)/ ) {
+			$tsp = $tmax - $tmin;
+			push @spread, $tsp;
+		}
+		if ( ($tkp) = $line =~ /in no district \(pop=([0-9.]+)\)/ ) {
+			push @nodist, $tkp;
+		}
+	}
 }
 close FIN;
 

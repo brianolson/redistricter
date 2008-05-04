@@ -270,8 +270,9 @@ void runBasic( Solver& sov ) {
 		readColoring( cfi );
 		fclose( cfi );
 	} else {
-		sov.calculateAdjacency();
-		recolorDists( sov.adjacency, sov.adjlen, sov.districts );
+		Adjacency ta;
+		sov.calculateAdjacency(&ta);
+		recolorDists( ta.adjacency, ta.adjlen, sov.districts );
 	}
 	sov.doPNG_r( data, rows, sov.pngWidth, sov.pngHeight, sov.pngname );
 	
@@ -307,6 +308,7 @@ if ( (pos < cfm.sb.st_size) && (p2 <= cfm.sb.st_size) ) {\
 } else { fprintf(stderr,"error getting arg, pos=%d p2=%d\n", pos,p2);exit(1); }
 
 void runDrendCommandFile( Solver& sov ) {
+	Adjacency ta;
 	mmaped cfm;
 	cfm.open( commandFileName );
 	char* cf = (char*)cfm.data;
@@ -338,12 +340,12 @@ void runDrendCommandFile( Solver& sov ) {
 		} else if ( mystrmatch( cf + pos, "renumber" ) ) {
 			SKIPCMD();
 			sov.californiaRenumber();
-			sov.calculateAdjacency();
-			recolorDists( sov.adjacency, sov.adjlen, sov.districts, sov.renumber );
+			sov.calculateAdjacency(&ta);
+			recolorDists( ta.adjacency, ta.adjlen, sov.districts, sov.renumber );
 		} else if ( mystrmatch( cf + pos, "recolor" ) ) {
 			SKIPCMD();
-			sov.calculateAdjacency();
-			recolorDists( sov.adjacency, sov.adjlen, sov.districts );
+			sov.calculateAdjacency(&ta);
+			recolorDists( ta.adjacency, ta.adjlen, sov.districts );
 		} else if ( mystrmatch( cf + pos, "--pngout" ) ) {
 			GETARG();
 			printf("writing \"%s\"\n", tmp );

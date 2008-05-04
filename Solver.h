@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "LinearInterpolate.h"
 
+class Adjacency;
 class DistrictSet;
 class Node;
 class GrabIntermediateStorage;
@@ -102,6 +103,7 @@ public:
 	int step();
 #if WITH_PNG
 	void doPNG();
+	void doPNG(POPTYPE* soln, const char* outname);
 	void doPNG_r( unsigned char* data, unsigned char** rows, int pngWidth, int pngHeight, const char* pngname );
 #endif
 	void printDistricts(const char* filename);
@@ -116,13 +118,11 @@ public:
 	double zoom;
 	int showLinks;
 
-	POPTYPE* adjacency;
-	int adjlen;
-	int adjcap;
-
 	POPTYPE* renumber;
 
-	void calculateAdjacency();
+	void calculateAdjacency(Adjacency*);
+	static void calculateAdjacency_r(Adjacency* it, int numPoints, int districts,
+									 const POPTYPE* winner, const Node* nodes);
 	void californiaRenumber();
 	void nullRenumber();
 
@@ -158,35 +158,50 @@ public:
 	
 	int debugDistrictNumber;
 
+	double maxSpreadFraction;
+	double maxSpreadAbsolute;
 
 	SolverStats* getDistrictStats();
 	int getDistrictStats( char* str, int len );
 };
 
-	class SolverStats {
+class SolverStats {
 public:
-		int generation;
-		double avgPopDistToCenterOfDistKm;
+	int generation;
+	double avgPopDistToCenterOfDistKm;
 	double poptotal;
-		double popavg;
-		double popstd;
-		double popmin;
-		double popmax;
-		double popmed;
-		int mindist;
-		int maxdist;
-		int meddist;
-		int nod;
-		double nodpop;
-		SolverStats* next;
-		
-		SolverStats();
-		SolverStats( int geni, double pd, double pa, double ps, double pmi, double pma, double pme,
-			   int mid, int mad, int med, int noDist, double noDistPop, SolverStats* n = NULL );
+	double popavg;
+	double popstd;
+	double popmin;
+	double popmax;
+	double popmed;
+	int mindist;
+	int maxdist;
+	int meddist;
+	int nod;
+	double nodpop;
+	SolverStats* next;
 
-		int toString( char* str, int len );
-	};
+	SolverStats();
+	SolverStats( int geni, double pd, double pa, double ps, double pmi, double pma, double pme,
+		int mid, int mad, int med, int noDist, double noDistPop, SolverStats* n = NULL );
 
+	int toString( char* str, int len );
+};
+
+// describe which districts border which other districts for coloring purposes
+class Adjacency {
+public:
+	// pairs of district indecies which border each other.
+	POPTYPE* adjacency;
+	// number of pairs in list
+	int adjlen;
+	// size of allocation in nuber of pairs
+	int adjcap;
+	
+	Adjacency();
+	~Adjacency();
+};
 
 DistrictSet* NearestNeighborDistrictSetFactory(Solver* sov);
 DistrictSet* District2SetFactory(Solver* sov);
