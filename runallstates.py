@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python2.4
 # Expects to run in the build dir with data/?? containing state data.
 # Using setupstatedata.pl in the standard way should do this.
 
@@ -17,34 +17,43 @@ import time
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
 
+if (not has_poll) and (not has_select):
+	sys.stderr.write(
+"""Lacking both select.poll() and select.select().
+No good way to get data back from subprocess.
+Upgrade your Python?
+""")
+	sys.exit(1)
+
 datadir = os.environ.get("DISTRICT_DATA")
 if datadir is None:
 	datadir = os.path.join(os.getcwd(), "data")
 
 bindir = None
 exe = None
-stdargs = " --blankDists --sLog g/ --statLog statlog --d2 "
+stdargs = " --blankDists --sLog g/ --statLog statlog "
 start = datetime.datetime.now();
 end = None
 statearglist = []
 numthreads = 1
+extrargs = ""
+dry_run = False
 
 
 def IsExecutableDir(path):
-	st = os.stat(path)
+	return os.access(path, os.X_OK)
+#	st = os.stat(path)
 	# FIXME?, test that using the dir is allowed? 
-	return stat.S_ISDIR(st[stat.ST_MODE])
+#	return stat.S_ISDIR(st[stat.ST_MODE])
 
 def IsExecutableFile(path):
 	return os.access(path, os.X_OK)
-#	st = os.stat(path)
-	# FIXME?, test that current user may execute
-#	return stat.S_ISREG(st[stat.ST_MODE])
 
 def IsReadableFile(path):
-	st = os.stat(path)
+	return os.access(path, os.R_OK)
+#	st = os.stat(path)
 	# FIXME, check permissions
-	return stat.S_ISREG(st[stat.ST_MODE])
+#	return stat.S_ISREG(st[stat.ST_MODE])
 
 i = 1
 while i < len(sys.argv):
@@ -68,6 +77,14 @@ while i < len(sys.argv):
 	elif arg == "--runsecs":
 		i += 1
 		end = start + datetime.timedelta(seconds=float(sys.argv[i]))
+	elif arg == "--":
+		i += 1
+		extrargs = " " + sys.argv[i]
+	elif arg == "--threads":
+		i += 1
+		numthreads = int(sys.argv[i])
+	elif arg == "--dry-run":
+		dry_run = True
 	else:
 		astu = arg.upper()
 		if IsReadableFile(os.path.join(datadir, astu, "basicargs")):
@@ -76,6 +93,9 @@ while i < len(sys.argv):
 			sys.stderr.write("%s: bogus arg \"%s\"\n" % (sys.argv[0], arg))
 			sys.exit(1)
 	i += 1
+
+if dry_run:
+	numthreads = 1
 
 if exe is None:
 	if bindir is None:
@@ -98,8 +118,6 @@ states = []
 basicargs = {}
 drendcmds = {}
 
-#b_data = re.compile("-B data")
-
 for s in statedirs:
 	stu = s[-2:]
 	if (not statearglist) and os.path.exists(os.path.join(s, "norun")):
@@ -110,7 +128,7 @@ for s in statedirs:
 		ba = fin.readline()
 		fin.close()
 		if ba:
-			ba = ba.strip()
+			ba = ba.strip(" \t\n\r")
 			ba = ba.replace("-B data", "-B " + datadir)
 	else:
 		continue
@@ -120,7 +138,7 @@ for s in statedirs:
 		dc = fin.readline()
 		fin.close()
 		if dc:
-			dc = dc.strip()
+			dc = dc.strip(" \t\n\r")
 			dc = dc.lstrip("# \t")
 			dc = dc.replace("../data", datadir)
 			dc = dc.replace("../drend", os.path.join(bindir, "drend"))
@@ -160,6 +178,8 @@ softfail = False
 def shouldstop():
 	if softfail:
 		return True
+	if dry_run:
+		return False
 	if os.path.exists(stoppath):
 		return True
 	if (end is not None) and (datetime.datetime.now() < end):
@@ -167,18 +187,19 @@ def shouldstop():
 	return False
 
 def poll_run(p, stu):
-	poller = select.Poll()
+	poller = select.poll()
 	poller.register(p.stdout, select.POLLIN | select.POLLPRI )
 	poller.register(p.stderr, select.POLLIN | select.POLLPRI )
 	while p.poll() is None:
 		for (fd, event) in poller.poll(500):
-			line = fd.readline()
-			if p.stdout == fd:
+			if p.stdout.fileno() == fd:
+				line = p.stdout.readline()
 				sys.stdout.write("O " + stu + ": " + line)
-			elif p.stderr == fd:
+			elif p.stderr.fileno() == fd:
+				line = p.stderr.readline()
 				sys.stdout.write("E " + stu + ": " + line)
 			else:
-				sys.stdout.write("? " + stu + ": " + line)
+				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
 
 def select_run(p, stu):
 	while p.poll() is None:
@@ -194,62 +215,107 @@ def select_run(p, stu):
 			else:
 				sys.stdout.write("? " + stu + ": " + line)
 
+def maybe_mkdir(path):
+	if dry_run:
+		print "mkdir %s" % path
+	else:
+		os.mkdir(path)
+
 def runstate(stu):
 	if not os.path.exists(stu):
-		os.mkdir(stu)
+		maybe_mkdir(stu)
 	ha = ""
 	fin = open(os.path.join(datadir, stu, "handargs"), "r")
 	if fin:
 		ha = fin.readline()
 		fin.close()
-		ha.strip()
+		ha = ha.strip(" \t\n\r")
 		ha = " " + ha
 	ctd = os.path.join(stu, timestamp())
-	os.mkdir(ctd)
-	os.mkdir(os.path.join(ctd,"g"))
-	#os.chdir(ctd)
-	cmd = nice + exe + stdargs + basicargs[stu] + ha
-	print "chdir " + ctd
-	print cmd
-	p = subprocess.Popen(cmd, shell=True, bufsize=4000, cwd=ctd,
-		stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	if has_poll:
-		poll_run(p, stu)
-	elif has_select:
-		select_run(p, stu)
-	if p.returncode != 0:
-		sys.stderr.write("solver exited with status %d\n" % p.returncode)
-		softfail = True
-		return False
+	maybe_mkdir(ctd)
+	maybe_mkdir(os.path.join(ctd,"g"))
 	statlog = os.path.join(ctd, "statlog")
-	fin = open(statlog, "r")
-	fout = open(os.path.join(ctd, "statsum"), "w")
-	for line in fin:
-		if line[0] == "#":
-			fout.write(line)
-	fout.close()
-	fin.close()
-	subprocess.check_call(["gzip", statlog])
-	subprocess.Popen(["tar", "jcf", "g.tar.bz2", "g"], cwd=ctd).wait()
-	subprocess.Popen(["rm", "-rf", "g"], cwd=ctd).wait()
+	statsum = os.path.join(ctd, "statsum")
+	if not dry_run:
+		fout = open(statlog, "w")
+		if not fout:
+			sys.stderr.write("could not open \"%s\"\n" % statlog)
+			softfail = True
+			return False
+		fout.close()
+	cmd = nice + exe + stdargs + basicargs[stu] + ha + extrargs
+	print "(cd %s && \\\n%s )" % (ctd, cmd)
+	if not dry_run:
+		p = subprocess.Popen(cmd, shell=True, bufsize=4000, cwd=ctd,
+			stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		if has_poll:
+			poll_run(p, stu)
+		elif has_select:
+			select_run(p, stu)
+		if p.returncode != 0:
+			sys.stderr.write("solver exited with status %d\n" % p.returncode)
+			softfail = True
+			return False
+		fin = open(statlog, "r")
+		fout = open(statsum, "w")
+		for line in fin:
+			if line[0] == "#":
+				fout.write(line)
+		fout.close()
+		fin.close()
+	if dry_run:
+		print "grep ^# %s > %s" % (statlog, statsum)
+		print "gzip %s" % statlog
+	else:
+		ret = subprocess.call(["gzip", statlog])
+		if ret != 0:
+			sys.stderr.write("gzip statlog failed %d\n" % ret)
+			softfail = True
+		return False
+	cmd = ["tar", "jcf", "g.tar.bz2", "g"]
+	if dry_run:
+		print "(cd %s && %s)" % (ctd, " ".join(cmd))
+	else:
+		ret = subprocess.Popen(cmd, cwd=ctd).wait()
+		if ret != 0:
+			sys.stderr.write("tar g failed %d\n" % ret)
+			softfail = True
+			return False
+	cmd = ["rm", "-rf", "g"]
+	if dry_run:
+		print "(cd %s && %s)" % (ctd, " ".join(cmd))
+	else:
+		subprocess.Popen(cmd, cwd=ctd).wait()
+		# don't care if rm-rf failed? it wouldn't report anyway?
 	if manybest:
 		cmd = [manybest, "-ngood", "15", "-mvbad", "-rmbad", "-rmempty", "-n", "10"]
-		print " ".join(cmd)
-		subprocess.Popen(cmd, cwd=stu ).wait()
+		print "(cd %s && %s)" % (stu, " ".join(cmd))
+		if not dry_run:
+			ret = subprocess.Popen(cmd, cwd=stu ).wait()
+			if ret != 0:
+				sys.stderr.write("manybest failed %d\n" % ret)
+				softfail = True
+				return False
 		drendcmd = drendcmds.get(stu)
 		final2_png = os.path.join("link1", stu + "_final2.png")
-		if (drendcmd and not 
-			os.path.exists(final2_png)):
-			print drendcmd
-			subprocess.Popen(drendcmd, cwd=stu).wait()
+		if (drendcmd and not os.path.exists(final2_png)):
+			print "(cd %s && %s)" % (stu, drendcmd)
+			if not dry_run:
+				ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()
+				if ret != 0:
+					sys.stderr.write("drend failed %d\n" % ret)
+					softfail = True
+					return False
 			start_png = os.path.join(datadir, stu, stu + "_start.png")
 			ba_png = os.path.join("link1", stu + "_ba.png")
 			cmd = ["convert", start_png, final2_png, "+append", ba_png]
-			print " ".join(cmd)
-			subprocess.Popen(cmd, cwd=stu).wait()
+			print "(cd %s && %s)" % (stu, " ".join(cmd))
+			if not dry_run:
+				subprocess.Popen(cmd, cwd=stu).wait()
 			cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
-			print " ".join(cmd)
-			subprocess.Popen(cmd, cwd=stu).wait()
+			print "(cd %s && %s)" % (stu, " ".join(cmd))
+			if not dry_run:
+				subprocess.Popen(cmd, cwd=stu).wait()
 	return True
 
 if numthreads <= 1:
@@ -258,9 +324,11 @@ if numthreads <= 1:
 		time.sleep(1)
 		for stu in states:
 			good = runstate(stu)
-			print "good=%s shouldstop=%s softfail=%s" % (good, shouldstop(), softfail)
+			#print "good=%s shouldstop=%s softfail=%s" % (good, shouldstop(), softfail)
 			if (not good) or shouldstop():
 				break
+		if dry_run:
+			break
 else:
 	print "running %d threads" % numthreads
 	qlock = threading.Lock()
@@ -277,6 +345,9 @@ else:
 	for x in xrange(0, numthreads):
 		threads.append(threading.Thread(target=runthread, args=(qlock, qpos)))
 	for x in threads:
+		x.start()
+	for x in threads:
 		x.join()
 
-os.remove(stoppath)
+if not dry_run:
+	os.remove(stoppath)

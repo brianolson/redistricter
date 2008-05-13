@@ -99,6 +99,11 @@ SLOOP: foreach $fn ( @slogs ) {
       $kmpp = $tk;
       ($lr) = $line =~ /^#(.*)/;
       push @lines, $lr;
+    } elsif ( ($tk) = $line =~ /Best Km\/p: ([0-9.]+)/ ) {
+      # old format
+      $kmpp = $tk;
+      ($lr) = $line =~ /^#(.*)/;
+      push @lines, $lr;
     } elsif ( ($lr) = $line =~ /^#(.*)/ ) {
       push @lines, $lr;
     }

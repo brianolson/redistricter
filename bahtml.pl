@@ -12,6 +12,7 @@
 
 $fullhtml = 0;
 $table = 1;
+$statsum = 1;
 
 while ( $arg = shift @ARGV ) {
   if ( $arg eq "--full" ) {
@@ -37,11 +38,25 @@ if ( $table ) {
 
 $count = 0;
 foreach $stu ( <??> ) {
+	$statsum_part = "";
   if ( (-f "${stu}/link1/${stu}_ba_500.png") && 
        (-f "${stu}/link1/${stu}_ba.png") ) {
     if ( $table ) {
+		if ( $statsum ) {
+			@statsum_lines = ();
+			if (open( FIN, '<', "${stu}/link1/statsum")) {
+				while ( $line = <FIN> ) {
+					$line =~ s/^#//;
+					push @statsum_lines, $line;
+				}
+				close FIN;
+				$statsum_part = "<td>" . join("<br />", @statsum_lines) . "</td>";
+			} else {
+				print STDERR "${stu}/link1/statsum: could not be opened, $!\n"; 
+			}
+		}
       print <<EOF;
-<tr><td class=st>${stu}</td><td class=i><a href="${stu}/link1/${stu}_ba.png"><img src="${stu}/link1/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td></tr>
+<tr><td class=st>${stu}</td><td class=i><a href="${stu}/link1/${stu}_ba.png"><img src="${stu}/link1/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
 EOF
     } else {
       print <<EOF;

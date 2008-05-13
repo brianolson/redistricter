@@ -197,8 +197,8 @@ close FOUT;
 
 open FOUT, '>', "drendcmd";
 print FOUT<<EOF;
-# ../drend -B ../data/${stu}/.gbin $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
-# ../drend -B ../data/${stu}/.gbin $distnumopt -f ../data/${stu}/drendcmd
+# ../drend -B ../data/${stu}/${stl}.gbin $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
+# ../drend -B ../data/${stu}/${stl}.gbin $distnumopt -f ../data/${stu}/drendcmd
 -px ../data/${stu}/${stl}.mpout
 --loadSolution bestKmpp.dsz
 recolor
