@@ -31,13 +31,15 @@ if datadir is None:
 
 bindir = None
 exe = None
-stdargs = " --blankDists --sLog g/ --statLog statlog "
+d2args = " --d2 --popRatioFactorPoints 0,1.4,30000,1.4,100000,500 -g 150000 "
+stdargs = " --blankDists --sLog g/ --statLog statlog --maxSpreadFraction 0.01 "
 start = datetime.datetime.now();
 end = None
 statearglist = []
 numthreads = 1
 extrargs = ""
 dry_run = False
+verbose = 1
 
 
 def IsExecutableDir(path):
@@ -85,6 +87,8 @@ while i < len(sys.argv):
 		numthreads = int(sys.argv[i])
 	elif arg == "--dry-run":
 		dry_run = True
+	elif arg == "--d2":
+		extrargs = d2args
 	else:
 		astu = arg.upper()
 		if IsReadableFile(os.path.join(datadir, astu, "basicargs")):
@@ -205,20 +209,19 @@ def select_run(p, stu):
 	while p.poll() is None:
 		(il, ol, el) = select.select([p.stdout, p.stderr], [], [], 0.5)
 		for fd in il:
-			line = fd.readline()
-			if not line:
-				pass
-			elif p.stdout == fd:
+			if p.stdout.fileno() == fd:
+				line = p.stdout.readline()
 				sys.stdout.write("O " + stu + ": " + line)
-			elif p.stderr == fd:
+			elif p.stderr.fileno() == fd:
+				line = p.stderr.readline()
 				sys.stdout.write("E " + stu + ": " + line)
 			else:
-				sys.stdout.write("? " + stu + ": " + line)
+				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
 
 def maybe_mkdir(path):
-	if dry_run:
+	if dry_run or verbose:
 		print "mkdir %s" % path
-	else:
+	if not dry_run:
 		os.mkdir(path)
 
 def runstate(stu):
@@ -252,6 +255,16 @@ def runstate(stu):
 			poll_run(p, stu)
 		elif has_select:
 			select_run(p, stu)
+		try:
+			for line in p.stdin:
+				sys.stdout.write("O " + stu + ": " + line)
+		except:
+			pass
+		try:
+			for line in p.stderr:
+				sys.stdout.write("E " + stu + ": " + line)
+		except:
+			pass
 		if p.returncode != 0:
 			sys.stderr.write("solver exited with status %d\n" % p.returncode)
 			softfail = True
@@ -263,28 +276,28 @@ def runstate(stu):
 				fout.write(line)
 		fout.close()
 		fin.close()
-	if dry_run:
+	if dry_run or verbose:
 		print "grep ^# %s > %s" % (statlog, statsum)
 		print "gzip %s" % statlog
-	else:
+	if not dry_run:
 		ret = subprocess.call(["gzip", statlog])
 		if ret != 0:
 			sys.stderr.write("gzip statlog failed %d\n" % ret)
 			softfail = True
-		return False
+			return False
 	cmd = ["tar", "jcf", "g.tar.bz2", "g"]
-	if dry_run:
+	if dry_run or verbose:
 		print "(cd %s && %s)" % (ctd, " ".join(cmd))
-	else:
+	if not dry_run:
 		ret = subprocess.Popen(cmd, cwd=ctd).wait()
 		if ret != 0:
 			sys.stderr.write("tar g failed %d\n" % ret)
 			softfail = True
 			return False
 	cmd = ["rm", "-rf", "g"]
-	if dry_run:
+	if dry_run or verbose:
 		print "(cd %s && %s)" % (ctd, " ".join(cmd))
-	else:
+	if not dry_run:
 		subprocess.Popen(cmd, cwd=ctd).wait()
 		# don't care if rm-rf failed? it wouldn't report anyway?
 	if manybest:
