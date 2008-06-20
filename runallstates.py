@@ -31,7 +31,7 @@ if datadir is None:
 
 bindir = None
 exe = None
-d2args = " --d2 --popRatioFactorPoints 0,1.4,30000,1.4,100000,500 -g 150000 "
+d2args = " --d2 --popRatioFactorPoints 0,1.4,30000,1.4,80000,500,100000,50,120000,500 -g 150000 "
 stdargs = " --blankDists --sLog g/ --statLog statlog --maxSpreadFraction 0.01 "
 start = datetime.datetime.now();
 end = None
@@ -311,7 +311,8 @@ def runstate(stu):
 				return False
 		drendcmd = drendcmds.get(stu)
 		final2_png = os.path.join("link1", stu + "_final2.png")
-		if (drendcmd and not os.path.exists(final2_png)):
+		if (drendcmd and
+		    not os.path.exists(os.path.join(stu, final2_png))):
 			print "(cd %s && %s)" % (stu, drendcmd)
 			if not dry_run:
 				ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()

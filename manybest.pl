@@ -136,34 +136,41 @@ if ( ! -e $odir ) {
   mkdir( $odir ) or die "could not mkdir ${odir}: $!\n";
 }
 
-open( FOUT, '>', "${odir}/index.html" ) or die "could not open ${odir}/index.html: $!\n";
+#open( FOUT, '>', "${odir}/index.html" ) or die "could not open ${odir}/index.html: $!\n";
+open( FPART, '>', "${odir}/.part.html" ) or die "could not open ${odir}/.part.html: $!\n";
 
-print FOUT<<EOF;
-<html><head><title>$odir</title></head>
-<body bgcolor="#ffffff">
-<table border="1">
-EOF
+#print FOUT<<EOF;
+#<html><head><title>$odir</title></head>
+#<body bgcolor="#ffffff">
+#EOF
+
+#print FOUT "<table border=\"1\">";
+print FPART "<table border=\"1\">";
 
 $i = 1;
 
 OLP: foreach $t ( @they ) {
   print $t->[1] . "\t" . $t->[0] . "\n";
   system "cp $t->[2] $odir/$i.png";
-  print FOUT<<EOF;
+  $ol =<<EOF;
 <tr><td><img src="$i.png"></td><td>run "$t->[0]"<br/>$t->[3]</td></tr>
 EOF
+#print FOUT $ol;
+  print FPART $ol;
   $i++;
   if ( (defined $nlim) && ($i > $nlim) ) {
     last OLP;
   }
 }
 
-print FOUT<<EOF;
-</table>
-</body></html>
-EOF
+#print FOUT "</table>\n";
+print FPART "</table>\n";
+#print FOUT<<EOF;
+#</body></html>
+#EOF
 
-close FOUT;
+#close FOUT;
+system("cd ${odir} && cat .head.html .part.html .tail.html > index.html");
 
 $t = $they[0];
 if ( -e "link1" ) {
