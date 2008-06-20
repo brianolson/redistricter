@@ -17,6 +17,8 @@ $statsum = 1;
 while ( $arg = shift @ARGV ) {
   if ( $arg eq "--full" ) {
     $fullhtml = 1;
+  } elsif ( $arg eq "--nostat" ) {
+    $statsum = 0;
   } else {
     print STDERR "bogus arg \"$arg\"\n";
     exit 1;
@@ -41,21 +43,30 @@ foreach $stu ( <??> ) {
 	$statsum_part = "";
   if ( (-f "${stu}/link1/${stu}_ba_500.png") && 
        (-f "${stu}/link1/${stu}_ba.png") ) {
-    if ( $table ) {
+	if ( $table ) {
 		if ( $statsum ) {
-			@statsum_lines = ();
+			#@statsum_lines = ();
 			if (open( FIN, '<', "${stu}/link1/statsum")) {
+				local $dt = undef;
+				local $bestkm = undef;
 				while ( $line = <FIN> ) {
 					$line =~ s/^#//;
-					push @statsum_lines, $line;
+					if ( ($t) = $line =~ /Best Km\/p: (.*)/ ) {
+						$bestkm = $t;
+						$bestkm =~ s/ gen=\d+//;
+					} elsif ( ($t) = $line =~ /(District calculation: [0-9.]+ sec)/ ) {
+						$dt = $t;
+					}
+					#push @statsum_lines, $line;
 				}
 				close FIN;
-				$statsum_part = "<td>" . join("<br />", @statsum_lines) . "</td>";
+				#$statsum_part = "<td>" . join("<br />", @statsum_lines) . "</td>";
+				$statsum_part = "<td>$bestkm<br />$dt</td>";
 			} else {
 				print STDERR "${stu}/link1/statsum: could not be opened, $!\n"; 
 			}
 		}
-      print <<EOF;
+	print <<EOF;
 <tr><td class=st>${stu}</td><td class=i><a href="${stu}/link1/${stu}_ba.png"><img src="${stu}/link1/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
 EOF
     } else {
