@@ -982,6 +982,14 @@ int Solver::main( int argc, char** argv ) {
 	blaf = stdout;
 	
 	handleArgs( argc, argv );
+	
+	if ( statLog != NULL ) {
+		fprintf(statLog, "# %s", argv[0] );
+		for ( int i = 1; i < argc; ++i ) {
+			fprintf(statLog, " %s", argv[i] );
+		}
+		fprintf(statLog, "\n" );
+	}
 
 	load();
 	

@@ -189,24 +189,20 @@ void District2Set::initFromLoadedSolution() {
 			dists[d].numNodes++;
 		}
 	}
-#if 1
 	recalc();
-#else
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		dists[d].recalc( sov, d );
-	}
-#endif
 }
 
 int District2Set::step() {
 	bool sorting;
 	int err = 0;
-#if 1
+#if 0
 	if ( grabdebug == NULL ) {
+		// grabdebug is horribly slow. use only if you really need it.
 		grabdebug = new GrabIntermediateStorage(sov);
 	}
 #endif
 	if ( grabdebug != NULL ) {
+		// This is horribly slow. use grabdebug only if you really need it.
 		grabdebug->clear();
 	}
 #if TRIANGLE_STEP
@@ -266,23 +262,10 @@ int District2Set::step() {
 #if TRIANGLE_STEP
 	}
 #endif
-#if 1
 	if ( sov->gencount > 500 ) {
 		fixupDistrictContiguity();
 		recalc();
 	}
-#else
-	if ( (sov->gencount > 0) && ((sov->gencount % 1000) == 0) ) {
-		fixupDistrictContiguity();
-#if 1
-		recalc();
-#else
-		for ( POPTYPE d = 0; d < districts; d++ ) {
-			dists[d].recalc( sov, d );
-		}
-#endif
-	}
-#endif
 	District2::step();
 	District2::randomFactor = 0.5 * (cos( sov->gencount / 1000.0 ) + 1.0);
 	return err;
@@ -1195,33 +1178,138 @@ public:
 		}
 	}
 };
+
+static void bfSearchDistrict(int* bfsearchq, POPTYPE d, Node* nodes,
+		POPTYPE* winner, Bitmap& hit, ContiguousGroup* cur, int numPoints) {
+	// breadth-first search
+	int bfin = 1;
+	int bfout = 0;
+	while ( bfin != bfout ) {
+		Node* n = nodes + bfsearchq[bfout];
+		bfout = (bfout + 1) % numPoints;
+		for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+			int nin;
+			nin = n->neighbors[ni];
+			if ( (winner[nin] == d) && (! hit.test(nin)) ) {
+				bfsearchq[bfin] = nin;
+				bfin = (bfin + 1) % numPoints;
+				hit.set(nin);
+				cur->count++;
+			}
+		}
+	}
 }
 
-void District2Set::fixupDistrictContiguity() {
+#if 0
+// parallelized breadth-first-search attempts dropped in favor of parallelizing runallstates.pl
+#include <pthread.h>
+class BFSearch {
+public:
+	Bitmap& hit;
+	POPTYPE* winner;
+	Node* nodes;
+	POPTYPE d;
+	int* bfsearchq;
+	int bfin;
+	int bfout;
+	int searchers;
+	int numPoints;
+	ContiguousGroup* cur;
+	
+	pthread_mutex_t lock;
+	
+	BFSearch(Bitmap& b) : hit(b) {
+		pthread_mutex_init(&lock, NULL);
+	}
+	~BFSearch() {
+		pthread_mutex_destroy(&lock);
+	}
+	
+	void searchThread() {
+		Node* n;
+		bool iAmSearching = true;
+		pthread_mutex_lock(&lock);
+		searchers++;
+		pthread_mutex_unlock(&lock);
+		while ( true ) {
+			pthread_mutex_lock(&lock);
+			if ( bfin == bfout ) {
+				if ( iAmSearching ) {
+					searchers--;
+					iAmSearching = false;
+				}
+				if ( searchers == 0 ) {
+					pthread_mutex_unlock(&lock);
+					return;
+				} else {
+					pthread_mutex_unlock(&lock);
+					continue;
+				}
+			}
+			if ( ! iAmSearching ) {
+				searchers++;
+			}
+			n = nodes + bfsearchq[bfout];
+			bfout = (bfout + 1) % numPoints;
+			pthread_mutex_unlock(&lock);
+			for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+				int nin;
+				nin = n->neighbors[ni];
+				if ( winner[nin] == d ) {
+					pthread_mutex_lock(&lock);
+					if ( ! hit.test(nin) ) {
+						bfsearchq[bfin] = nin;
+						bfin = (bfin + 1) % numPoints;
+						hit.set(nin);
+						cur->count++;
+					}
+					pthread_mutex_unlock(&lock);
+				}
+			}
+		}
+	}
+};
+void* BFSearch_searchThread(void* it) {
+	static_cast<BFSearch*>(it)->searchThread();
+	return NULL;
+}
+static void bfSearchDistrictThreaded(int* bfsearchq, POPTYPE d, Node* nodes,
+		POPTYPE* winner, Bitmap& hit, ContiguousGroup* cur, int numPoints) {
+	int bfin = 1;
+	int bfout = 0;
+	while ( bfin != bfout ) {
+		Node* n = nodes + bfsearchq[bfout];
+		bfout = (bfout + 1) % numPoints;
+		for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+			int nin;
+			nin = n->neighbors[ni];
+			if ( (winner[nin] == d) && (! hit.test(nin)) ) {
+				bfsearchq[bfin] = nin;
+				bfin = (bfin + 1) % numPoints;
+				hit.set(nin);
+				cur->count++;
+			}
+		}
+	}
+}
+#endif
+
+// Returns: true if need to continue
+static bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq) {
 	POPTYPE* winner = sov->winner;
 	const GeoData* gd = sov->gd;
 	int numPoints = gd->numPoints;
-	Bitmap hit(numPoints);
-	hit.zero();
-	int* bfsearchq = new int[numPoints];
-	assert(bfsearchq != NULL);
-	int bfin = 0;
-	int bfout = 0;
-	ContiguousGroup* groups = new ContiguousGroup[districts];
-	assert(groups != NULL);
 	Node* nodes = sov->nodes;
-	
-	int pointsUnowned = 0;
+	bool anyBroken = false;
+
 	for ( int i = 0; i < numPoints; ++i ) {
 		if ( winner[i] == NODISTRICT ) {
-			pointsUnowned++;
+			// If there are any unclaimed, it's too early to bother.
+			return false; //goto fixup_end;
 		} else if ( ! hit.test(i) ) {
 			POPTYPE d = winner[i];
-			//bfin = 0;
-			bfout = 0;
 			bfsearchq[0] = i;
 			hit.set(i);
-			bfin = 1;
 			ContiguousGroup* cur;
 			if (groups[d].start == -1) {
 				// original array set
@@ -1229,28 +1317,24 @@ void District2Set::fixupDistrictContiguity() {
 				groups[d].count = 1;
 				cur = &(groups[d]);
 			} else {
+				anyBroken = true;
 				cur = new ContiguousGroup( i, groups[d].next );
 				assert(cur != NULL);
 				groups[d].next = cur;
 			}
-			// breadth-first search
-			while ( bfin != bfout ) {
-				Node* n = nodes + bfsearchq[bfout];
-				bfout = (bfout + 1) % numPoints;
-				for ( int ni = 0; ni < n->numneighbors; ++ni ) {
-					int nin;
-					nin = n->neighbors[ni];
-					if ( (winner[nin] == d) && (! hit.test(nin)) ) {
-						bfsearchq[bfin] = nin;
-						bfin = (bfin + 1) % numPoints;
-						hit.set(nin);
-						cur->count++;
-					}
-				}
-			}
+			bfSearchDistrict( bfsearchq, d, nodes, winner, hit, cur, numPoints );
 		}
 	}
+	return anyBroken;
+}
+
+static int disownSmallGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq, int districts) {
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	int numPoints = gd->numPoints;
+	Node* nodes = sov->nodes;
 	int pointsRepod = 0;
+
 	for ( POPTYPE d = 0; d < districts; ++d ) {
 		if ( groups[d].next != NULL ) {
 			// district d is not contiguous. dissolve all but largest fragment.
@@ -1273,8 +1357,8 @@ void District2Set::fixupDistrictContiguity() {
 					// disown fragment
 					int countCheck = 1;
 					bfsearchq[0] = cur->start;
-					bfout = 0;
-					bfin = 1;
+					int bfout = 0;
+					int bfin = 1;
 					pointsRepod++;
 					hit.clear(cur->start);
 					winner[cur->start] = NODISTRICT;
@@ -1301,79 +1385,110 @@ void District2Set::fixupDistrictContiguity() {
 			}
 		}
 	}
-#if 0
-	if ( pointsRepod != 0 ) {
-		if ( pointsUnowned != 0 ) {
-			printf("%s:%d %d pointsRepod, %d unowned - no cleanup\n",
-				__FILE__, __LINE__, pointsRepod, pointsUnowned);
-		} else {
-			printf("%s:%d %d pointsRepod, going to cleanup\n",
-				__FILE__, __LINE__, pointsRepod);
+	return pointsRepod;
+}
+}  // local namespace
+
+void District2Set::assignReposessedNodes(int* bfsearchq, int pointsRepod) {
+	POPTYPE* winner = sov->winner;
+	const GeoData* gd = sov->gd;
+	int numPoints = gd->numPoints;
+	Node* nodes = sov->nodes;
+
+	// In this block, bfsearchq is repurposed to hold orphaned node indecies.
+	int repox = 0;
+	for ( int i = 0; i < numPoints; ++i ) {
+		if ( winner[i] == NODISTRICT ) {
+			bfsearchq[repox] = i;
+			repox++;
 		}
 	}
-#endif
-	if ( ( pointsRepod != 0 ) && ( pointsUnowned == 0 ) ) {
-		// In this block, bfsearchq is repurposed to hold orphaned node indecies.
-		int repox = 0;
-		for ( int i = 0; i < numPoints; ++i ) {
-			if ( winner[i] == NODISTRICT ) {
-				bfsearchq[repox] = i;
-				repox++;
-			}
-		}
-		assert(repox == pointsRepod);
-		while ( repox > 0 ) {
-			bool any = false;
-			for ( int ri = 0; ri < repox; ++ri ) {
-				int i = bfsearchq[ri];
-				Node* n = nodes + i;
-				double bx, by;
-				bx = gd->pos[i*2  ];
-				by = gd->pos[i*2+1];
-				POPTYPE closest = NODISTRICT;
-				double crcr = 9e9;
-				double dx, dy;
-				for ( int ni = 0; ni < n->numneighbors; ++ni ) {
-					int nin;
-					nin = n->neighbors[ni];
-					POPTYPE d = winner[nin];
-					if ( d != NODISTRICT ) {
-						if ( closest == NODISTRICT ) {
+	assert(repox == pointsRepod);
+	while ( repox > 0 ) {
+		bool any = false;
+		for ( int ri = 0; ri < repox; ++ri ) {
+			int i = bfsearchq[ri];
+			Node* n = nodes + i;
+			double bx, by;
+			bx = gd->pos[i*2  ];
+			by = gd->pos[i*2+1];
+			POPTYPE closest = NODISTRICT;
+			double crcr = 9e9;
+			double dx, dy;
+			for ( int ni = 0; ni < n->numneighbors; ++ni ) {
+				int nin;
+				nin = n->neighbors[ni];
+				POPTYPE d = winner[nin];
+				if ( d != NODISTRICT ) {
+					if ( closest == NODISTRICT ) {
+						closest = d;
+						dx = (*this)[d].centerX() - bx;
+						dy = (*this)[d].centerY() - by;
+						crcr = ((dx * dx) + (dy * dy));
+					} else if ( d != closest ) {
+						dx = (*this)[d].centerX() - bx;
+						dy = (*this)[d].centerY() - by;
+						double tr = ((dx * dx) + (dy * dy));
+						if ( tr < crcr ) {
+							crcr = tr;
 							closest = d;
-							dx = (*this)[d].centerX() - bx;
-							dy = (*this)[d].centerY() - by;
-							crcr = ((dx * dx) + (dy * dy));
-						} else if ( d != closest ) {
-							dx = (*this)[d].centerX() - bx;
-							dy = (*this)[d].centerY() - by;
-							double tr = ((dx * dx) + (dy * dy));
-							if ( tr < crcr ) {
-								crcr = tr;
-								closest = d;
-							}
 						}
 					}
 				}
-				if ( closest != NODISTRICT ) {
-					any = true;
-					winner[i] = closest;
-					repox--;
-					if ( repox == 0 ) {
-						break;
-					}
-					bfsearchq[ri] = bfsearchq[repox];
-				}
 			}
-			assert(any);
+			if ( closest != NODISTRICT ) {
+				any = true;
+				winner[i] = closest;
+				repox--;
+				if ( repox == 0 ) {
+					break;
+				}
+				bfsearchq[ri] = bfsearchq[repox];
+			}
 		}
+		assert(any);
+	}
+}
+
+// Using as high as 48% of total time, optimizing this is a big win.
+void District2Set::fixupDistrictContiguity() {
+	const GeoData* gd = sov->gd;
+	int numPoints = gd->numPoints;
+
+	Bitmap hit(numPoints);
+	hit.zero();
+	int* bfsearchq = new int[numPoints];
+	assert(bfsearchq != NULL);
+	ContiguousGroup* groups = new ContiguousGroup[districts];
+	assert(groups != NULL);
+	int pointsRepod = 0;
+	
+	// For each point, if we haven't already seen it, breadth-first-search
+	// out from it noting a ContiguousGroup for its district.
+	bool keepGoing = findContiguousGroups( sov, hit, groups, bfsearchq );
+	if ( ! keepGoing ) {
+		goto fixup_end;
+	}
+	// For each district, if there are multiple ContiguousGroups, disown all
+	// the points in all but the largest group.
+	pointsRepod = disownSmallGroups( sov, hit, groups, bfsearchq, districts );
+	// If points were reposessed from small ContiguousGroups, assign them to
+	// nearby districts.
+	if ( pointsRepod != 0 ) {
+		assignReposessedNodes( bfsearchq, pointsRepod );
 	}
 	
+	fixup_end:
 	delete [] groups;
 	delete [] bfsearchq;
 }
 
+// TODO merge recalc()/getStats() ?
+// Maybe not. It looks like looping over all the points twice is unavoidable.
+// Once to recalculate district centers. Again to measure distance to centers.
+// Better accounting could avoid recalc() entirely?
 void District2Set::recalc() {
-	//const GeoData* gd = sov->gd;
+	const GeoData* gd = sov->gd;
 	POPTYPE* winner = sov->winner;
 	//int numPoints = gd->numPoints;
 	for ( POPTYPE d = 0; d < districts; ++d ) {
@@ -1386,7 +1501,7 @@ void District2Set::recalc() {
 		dists[d].edgelistLen = 0;
 		assert(dists[d].edgelistCap >= DISTRICT_EDGEISTLEN_DEFAULT);
 	}
-	for ( int n = 0; n < sov->gd->numPoints; n++ ) {
+	for ( int n = 0; n < gd->numPoints; n++ ) {
 		POPTYPE d = winner[n];
 		double npop;
 		double x, y;
@@ -1395,13 +1510,13 @@ void District2Set::recalc() {
 		if ( d == NODISTRICT ) {
 			continue;
 		}
-		x = sov->gd->pos[(n)*2];
-		y = sov->gd->pos[(n)*2+1];
-		npop = sov->gd->pop[n];
+		x = gd->pos[(n)*2];
+		y = gd->pos[(n)*2+1];
+		npop = gd->pop[n];
 
 		dists[d].pop += npop;
 #if READ_INT_AREA
-		uint32_t narea = sov->gd->area[n];
+		uint32_t narea = gd->area[n];
 		//assert(narea >= 0);
 		dists[d].area += narea;
 		dists[d].wx += narea * x;
@@ -1424,14 +1539,15 @@ void District2Set::recalc() {
 	}
 	for ( POPTYPE d = 0; d < districts; ++d ) {
 #if READ_INT_AREA
-	dists[d].distx = dists[d].wx / dists[d].area;
-	dists[d].disty = dists[d].wy / dists[d].area;
+		dists[d].distx = dists[d].wx / dists[d].area;
+		dists[d].disty = dists[d].wy / dists[d].area;
 #elif UNWEIGHTED_CENTER
-	dists[d].distx = dists[d].wx / (dists[d].numNodes+1);
-	dists[d].disty = dists[d].wy / (dists[d].numNodes+1);
+		dists[d].distx = dists[d].wx / (dists[d].numNodes+1);
+		dists[d].disty = dists[d].wy / (dists[d].numNodes+1);
 #else
-	dists[d].distx = dists[d].wx / dists[d].pop;
-	dists[d].disty = dists[d].wy / dists[d].pop;
+		dists[d].distx = dists[d].wx / dists[d].pop;
+		dists[d].disty = dists[d].wy / dists[d].pop;
 #endif
 	}
 }
+

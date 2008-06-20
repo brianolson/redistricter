@@ -144,6 +144,7 @@ public:
 	virtual void getStats(SolverStats* stats);
 
 	virtual void fixupDistrictContiguity();
+	void assignReposessedNodes(int* bfsearchq, int pointsRepod);
 
 	void recalc();
 
