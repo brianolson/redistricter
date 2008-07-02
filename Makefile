@@ -61,7 +61,7 @@ THINGSTOCLEAN+=${LFUOBJS}
 linkfixup:	$(LFUOBJS)
 	$(CXX) ${CXXFLAGS} $(LFUOBJS) $(LDFLAGS) -o linkfixup
 
-DRENDOBJS:=${COREOBJS} drendmain.o
+DRENDOBJS:=${COREOBJS} drendmain.o MapDrawer.o
 
 drend:	${DRENDOBJS}
 	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(LDFLAGS) -o drend

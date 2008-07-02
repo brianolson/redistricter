@@ -1016,6 +1016,8 @@ int Solver::main( int argc, char** argv ) {
 	} else if ( initMode == initWithOldDistricts ) {
 		initSolutionFromOldCDs();
 	} else {
+		assert(districts >= 0);
+		assert(districts < 1000);
 		initSolution();
 	}
 	init();
@@ -1242,15 +1244,11 @@ int Solver::megaInit() {
 		initSolutionFromOldCDs();
 	} else {
 		assert(districts >= 0);
-		assert(districts < 100);
-#if 0
-		for (int i = 0; i < districts; ++i) {
-			assert(dists[i].pop == 0);
-		}
-#endif
+		assert(districts < 1000);
 		initSolution();
 	}
 	init();
+	gd->close();
 	return 0;
 }
 

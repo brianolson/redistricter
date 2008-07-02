@@ -69,9 +69,9 @@ int main( int argc, char** argv ) {
 		ubid += ra.TRACT_longValue(i);
 		ubid *= 10000;
 		ubid += ra.BLOCK_longValue(i);
-		long lx;
+		uint32_t lx;
 		lx = sov.gd->indexOfUbid( ubid );
-		if ( lx < 0 ) {
+		if ( lx == (uint32_t)-1 ) {
 			fprintf(stderr,"ubid %lld (county %ld, tract %ld, block %ld) => %ld\n", ubid, 
 					ra.COUNTYCU_longValue(i), ra.TRACT_longValue(i), ra.BLOCK_longValue(i),
 					lx );

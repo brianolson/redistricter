@@ -368,6 +368,7 @@ extern "C" void setDebugDistrictNumber(int index);
 		delete sov;
 	}
 	cppSolver = new Solver();
+	// 'filename' is leaked, but is small. (FIXME?)
 	filename = strdup( [nsf fileSystemRepresentation] );
 	if ( strstr( filename, "zcta" ) != NULL ) {
 		sov->geoFact = openZCTA;

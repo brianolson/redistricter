@@ -104,7 +104,7 @@ public:
 #if WITH_PNG
 	void doPNG();
 	void doPNG(POPTYPE* soln, const char* outname);
-	void doPNG_r( unsigned char* data, unsigned char** rows, int pngWidth, int pngHeight, const char* pngname );
+	//void doPNG_r( unsigned char* data, unsigned char** rows, int pngWidth, int pngHeight, const char* pngname );
 #endif
 	void printDistricts(const char* filename);
 	void printDistricts() {

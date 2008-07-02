@@ -104,6 +104,13 @@
 		3256801D0D1362CF0061AE7C /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		325680220D1362F50061AE7C /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
 		325680250D1363140061AE7C /* uf1data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680240D1363140061AE7C /* uf1data.cpp */; };
+		3259F3020E0D91D100487C8C /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
+		32CCA1950E1AF6310047558F /* MapDrawer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32CCA1940E1AF6310047558F /* MapDrawer.cpp */; };
+		32CCA1AA0E1AFDC00047558F /* MapDrawer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32CCA1940E1AF6310047558F /* MapDrawer.cpp */; };
+		32CCA1CE0E1B01A30047558F /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
+		32CCA1CF0E1B01A90047558F /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
+		32CCA1D00E1B01AE0047558F /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
+		32CCA1D20E1B01B70047558F /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -122,7 +129,7 @@
 		1F2807B50A61A54400959DA5 /* record2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = record2.cpp; path = tiger/record2.cpp; sourceTree = "<group>"; };
 		1F2807B70A61A55400959DA5 /* recordI.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = recordI.cpp; path = tiger/recordI.cpp; sourceTree = "<group>"; };
 		1F2807BB0A61A58800959DA5 /* makepolys.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makepolys.cpp; path = tiger/makepolys.cpp; sourceTree = "<group>"; };
-		1F36F34407AEC0CA00EFC065 /* libpng12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng12.dylib; path = /usr/local/lib/libpng12.dylib; sourceTree = "<absolute>"; };
+		1F36F34407AEC0CA00EFC065 /* libpng12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng12.dylib; path = /usr/local/lib64/libpng12.dylib; sourceTree = "<absolute>"; };
 		1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = GrabIntermediateStorage.cpp; sourceTree = "<group>"; };
 		1F4B100508C14E2000000D3F /* CalIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = CalIcon.icns; sourceTree = "<group>"; };
 		1F4D0C6F090C2B58003CE55B /* Solver.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Solver.cpp; sourceTree = "<group>"; };
@@ -168,6 +175,8 @@
 		325680230D1362FB0061AE7C /* uf1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uf1.h; sourceTree = "<group>"; };
 		325680240D1363140061AE7C /* uf1data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uf1data.cpp; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* guidistricter_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = guidistricter_Prefix.pch; sourceTree = "<group>"; };
+		32CCA1930E1AF62D0047558F /* MapDrawer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapDrawer.h; sourceTree = "<group>"; };
+		32CCA1940E1AF6310047558F /* MapDrawer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapDrawer.cpp; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* guidistricter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = guidistricter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -335,6 +344,8 @@
 				1F502D2E08BAB2FD00F16550 /* glutStrokeString.c */,
 				1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */,
 				1FE201A50C94ECBC008A10FE /* LinearInterpolate.cpp */,
+				32CCA1930E1AF62D0047558F /* MapDrawer.h */,
+				32CCA1940E1AF6310047558F /* MapDrawer.cpp */,
 				1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */,
 				1FDA5CB608AC580F00C8F5A3 /* mmaped.h */,
 				320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */,
@@ -615,6 +626,11 @@
 				1F5655640A57866800212FB8 /* drendmain.cpp in Sources */,
 				1FE201A90C94ECBC008A10FE /* LinearInterpolate.cpp in Sources */,
 				1F3BF6450C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */,
+				32CCA1AA0E1AFDC00047558F /* MapDrawer.cpp in Sources */,
+				32CCA1CE0E1B01A30047558F /* Bitmap.cpp in Sources */,
+				32CCA1CF0E1B01A90047558F /* DistrictSet.cpp in Sources */,
+				32CCA1D00E1B01AE0047558F /* AbstractDistrict.cpp in Sources */,
+				32CCA1D20E1B01B70047558F /* NearestNeighborDistrictSet.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -684,6 +700,8 @@
 				321648A10D469D4A0096D68F /* record2.cpp in Sources */,
 				321648A20D469D4A0096D68F /* recordA.cpp in Sources */,
 				321648A30D469D4B0096D68F /* recordI.cpp in Sources */,
+				3259F3020E0D91D100487C8C /* Bitmap.cpp in Sources */,
+				32CCA1950E1AF6310047558F /* MapDrawer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,6 +772,7 @@
 		1F5655500A5785A000212FB8 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -761,6 +780,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = YES;
@@ -770,11 +790,13 @@
 		1F5655510A5785A000212FB8 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = NO;
@@ -784,9 +806,11 @@
 		1F5655520A5785A000212FB8 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = YES;
@@ -880,16 +904,19 @@
 		1FEF15B20A577CFD000B2C93 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_CPU = G4;
+				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = guidistricter_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -909,6 +936,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = NO;
@@ -925,6 +953,7 @@
 				GCC_PREFIX_HEADER = guidistricter_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
 			};
