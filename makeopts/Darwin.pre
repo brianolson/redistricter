@@ -1,2 +1,7 @@
-# Everyone has a nice new fast 64 bit capable mac, right?
-CCOMMONFLAGS:=-m64 -L/usr/local/lib64
+# Compile for the old standby ppc and for the latest hotness x86_64
+# Need /usr/X11 in path for libpng
+CCOMMONFLAGS:=-arch ppc -arch x86_64 -I/usr/X11/include -L/usr/X11/lib
+# -MMD is incompatible with multiple -arch flags.
+# Use an alternate option like this if just using one architecture
+# for better development compilation.
+#CCOMMONFLAGS:=-m64 -I/usr/X11/include -L/usr/X11/lib -MMD

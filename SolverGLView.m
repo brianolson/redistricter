@@ -1,4 +1,9 @@
 #import "SolverGLView.h"
+#ifndef WITH_OPENGL
+#define WITH_OPENGL 0
+#endif
+
+#if WITH_OPENGL
 #include <OpenGL/gl.h>
 
 void glDrawSolver( void* s );
@@ -32,3 +37,12 @@ static int notfirst = 0;
     glViewport( 0, 0, bounds.size.width, bounds.size.height );
 }	
 @end
+
+#else
+@implementation SolverGLView
+- (void)drawRect:(NSRect) bound {
+}
+- (void)reshape {
+}
+@end
+#endif

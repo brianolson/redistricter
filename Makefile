@@ -1,6 +1,7 @@
 UNAME:=$(shell uname)
 
 -include makeopts/${UNAME}.pre
+-include localvars.make
 
 all:	districter2 linkfixup drend rta2dsz uf1data
 
@@ -13,7 +14,9 @@ OG:=-g
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
-CCOMMONFLAGS+=-Wall -Itiger -MMD
+CCOMMONFLAGS+=-Wall -Itiger
+# -MMD is incompatible with some Apple compile modes
+#CCOMMONFLAGS+=-Wall -Itiger -MMD
 CXXFLAGS+=${OG} ${CCOMMONFLAGS}
 CFLAGS+=${OG} ${CCOMMONFLAGS}
 
@@ -76,6 +79,7 @@ rta2dsz:	${RTADSZOBJS}
 rtaToDsz.o:	tiger/recordA.h
 
 UFONEDATAOBJS:=uf1.o uf1data.o tiger/mmaped.o
+THINGSTOCLEAN+=${UFONEDATAOBJS}
 uf1data:	${UFONEDATAOBJS}
 	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
 

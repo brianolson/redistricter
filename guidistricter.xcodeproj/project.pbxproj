@@ -19,7 +19,6 @@
 		1F2807B60A61A54400959DA5 /* record2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B50A61A54400959DA5 /* record2.cpp */; };
 		1F2807B80A61A55400959DA5 /* recordI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B70A61A55400959DA5 /* recordI.cpp */; };
 		1F2807BC0A61A58800959DA5 /* makepolys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807BB0A61A58800959DA5 /* makepolys.cpp */; };
-		1F36F34507AEC0CA00EFC065 /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F36F34407AEC0CA00EFC065 /* libpng12.dylib */; };
 		1F3BF6420C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
 		1F3BF6430C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
 		1F3BF6440C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
@@ -35,10 +34,7 @@
 		1F4D0CD5090C3AFB003CE55B /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
 		1F4D0CD6090C3AFC003CE55B /* Solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F4D0C6F090C2B58003CE55B /* Solver.cpp */; };
 		1F4D0CDF090C3B0B003CE55B /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6CF59307AE099600171C83 /* OpenGL.framework */; };
-		1F4D0CE0090C3B0B003CE55B /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F36F34407AEC0CA00EFC065 /* libpng12.dylib */; };
 		1F4D0CE1090C3B0F003CE55B /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F502D4D08BAB3E300F16550 /* GLUT.framework */; };
-		1F502D2F08BAB2FD00F16550 /* glutStrokeString.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F502D2E08BAB2FD00F16550 /* glutStrokeString.c */; };
-		1F502D4E08BAB3E300F16550 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F502D4D08BAB3E300F16550 /* GLUT.framework */; };
 		1F5655530A57862C00212FB8 /* District2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F260CC508ACA31200C2C4FE /* District2.cpp */; };
 		1F5655540A57862D00212FB8 /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
 		1F5655550A57863700212FB8 /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
@@ -46,17 +42,14 @@
 		1F5655580A57864300212FB8 /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		1F5655640A57866800212FB8 /* drendmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5655630A57866800212FB8 /* drendmain.cpp */; };
 		1F56559E0A579A9C00212FB8 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
-		1F5655A60A579C8500212FB8 /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F36F34407AEC0CA00EFC065 /* libpng12.dylib */; };
 		1F6CF44E07ADFE4800171C83 /* districter.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF44D07ADFE4800171C83 /* districter.h */; };
 		1F6CF45507ADFE7200171C83 /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
 		1F6CF45807ADFE7200171C83 /* place2k.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45207ADFE7200171C83 /* place2k.h */; };
 		1F6CF45907ADFE7200171C83 /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
-		1F6CF45A07ADFE7200171C83 /* solverGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45407ADFE7200171C83 /* solverGL.cpp */; };
 		1F6CF45F07ADFE7A00171C83 /* SolverGLView.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45B07ADFE7A00171C83 /* SolverGLView.h */; };
 		1F6CF46007ADFE7A00171C83 /* SolverGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45C07ADFE7A00171C83 /* SolverGLView.m */; };
 		1F6CF46107ADFE7A00171C83 /* SolverM.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45D07ADFE7A00171C83 /* SolverM.h */; };
 		1F6CF46207ADFE7A00171C83 /* SolverM.M in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45E07ADFE7A00171C83 /* SolverM.M */; };
-		1F6CF59407AE099600171C83 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6CF59307AE099600171C83 /* OpenGL.framework */; };
 		1F8427CA0CCB220000ACC6A4 /* District2GLDebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427C90CCB220000ACC6A4 /* District2GLDebug.cpp */; };
 		1F8427CC0CCB221A00ACC6A4 /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
 		1F8427CD0CCB221A00ACC6A4 /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
@@ -91,6 +84,8 @@
 		1FE29E580A7F1C8D008AFDB1 /* makeLinks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE29E570A7F1C8C008AFDB1 /* makeLinks.cpp */; };
 		1FEAA3D70DC5500E00A08E78 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
 		1FEAA3E60DC5651D00A08E78 /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
+		1FFCA1440E2CF400002D81C6 /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FFCA1430E2CF400002D81C6 /* libpng12.dylib */; };
+		1FFCA15B0E2CF58C002D81C6 /* NodeColoring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA15A0E2CF58C002D81C6 /* NodeColoring.cpp */; };
 		320BFD660CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
 		320BFD670CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
 		321648700D4697350096D68F /* rasterizeTiger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3216486F0D4697350096D68F /* rasterizeTiger.cpp */; };
@@ -99,7 +94,6 @@
 		321648A20D469D4A0096D68F /* recordA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6346F0A60C94E0041F3BE /* recordA.cpp */; };
 		321648A30D469D4B0096D68F /* recordI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B70A61A55400959DA5 /* recordI.cpp */; };
 		321648C30D46A86A0096D68F /* rasterizeTiger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3216486F0D4697350096D68F /* rasterizeTiger.cpp */; };
-		321648E40D46AB2B0096D68F /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F36F34407AEC0CA00EFC065 /* libpng12.dylib */; };
 		321648E50D46AB2C0096D68F /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
 		3256801D0D1362CF0061AE7C /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		325680220D1362F50061AE7C /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
@@ -130,7 +124,6 @@
 		1F2807B50A61A54400959DA5 /* record2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = record2.cpp; path = tiger/record2.cpp; sourceTree = "<group>"; };
 		1F2807B70A61A55400959DA5 /* recordI.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = recordI.cpp; path = tiger/recordI.cpp; sourceTree = "<group>"; };
 		1F2807BB0A61A58800959DA5 /* makepolys.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makepolys.cpp; path = tiger/makepolys.cpp; sourceTree = "<group>"; };
-		1F36F34407AEC0CA00EFC065 /* libpng12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng12.dylib; path = /usr/local/lib64/libpng12.dylib; sourceTree = "<absolute>"; };
 		1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = GrabIntermediateStorage.cpp; sourceTree = "<group>"; };
 		1F4B100508C14E2000000D3F /* CalIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = CalIcon.icns; sourceTree = "<group>"; };
 		1F4D0C6F090C2B58003CE55B /* Solver.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Solver.cpp; sourceTree = "<group>"; };
@@ -164,6 +157,8 @@
 		1FE201A50C94ECBC008A10FE /* LinearInterpolate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = LinearInterpolate.cpp; sourceTree = "<group>"; };
 		1FE29E470A7F1C43008AFDB1 /* makeLinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = makeLinks; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE29E570A7F1C8C008AFDB1 /* makeLinks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makeLinks.cpp; path = tiger/makeLinks.cpp; sourceTree = "<group>"; };
+		1FFCA1430E2CF400002D81C6 /* libpng12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng12.dylib; path = /usr/X11/lib/libpng12.dylib; sourceTree = "<absolute>"; };
+		1FFCA15A0E2CF58C002D81C6 /* NodeColoring.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NodeColoring.cpp; path = /Users/bolson/src/redistricter/NodeColoring.cpp; sourceTree = "<absolute>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -196,7 +191,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				321648E40D46AB2B0096D68F /* libpng12.dylib in Frameworks */,
 				321648E50D46AB2C0096D68F /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -206,7 +200,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F4D0CDF090C3B0B003CE55B /* OpenGL.framework in Frameworks */,
-				1F4D0CE0090C3B0B003CE55B /* libpng12.dylib in Frameworks */,
 				1F4D0CE1090C3B0F003CE55B /* GLUT.framework in Frameworks */,
 				1FEAA3D70DC5500E00A08E78 /* libz.dylib in Frameworks */,
 			);
@@ -217,7 +210,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F56559E0A579A9C00212FB8 /* libz.dylib in Frameworks */,
-				1F5655A60A579C8500212FB8 /* libpng12.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -248,10 +240,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				1F6CF59407AE099600171C83 /* OpenGL.framework in Frameworks */,
-				1F36F34507AEC0CA00EFC065 /* libpng12.dylib in Frameworks */,
-				1F502D4E08BAB3E300F16550 /* GLUT.framework in Frameworks */,
 				1F3E8ADB0CCB26BD0015C525 /* libz.dylib in Frameworks */,
+				1FFCA1440E2CF400002D81C6 /* libpng12.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,6 +345,7 @@
 				1FDA5CB608AC580F00C8F5A3 /* mmaped.h */,
 				320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */,
 				1F8427C80CCB21EA00ACC6A4 /* NodeColoring.h */,
+				1FFCA15A0E2CF58C002D81C6 /* NodeColoring.cpp */,
 				1F4D0CC3090C3A66003CE55B /* nonguimain.cpp */,
 				1F6CF45207ADFE7200171C83 /* place2k.h */,
 				1FCB993B0C3AB63E00FE809C /* PreThread.cpp */,
@@ -385,7 +376,7 @@
 			isa = PBXGroup;
 			children = (
 				1F56559D0A579A9C00212FB8 /* libz.dylib */,
-				1F36F34407AEC0CA00EFC065 /* libpng12.dylib */,
+				1FFCA1430E2CF400002D81C6 /* libpng12.dylib */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
@@ -686,12 +677,10 @@
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				1F6CF45507ADFE7200171C83 /* fileio.cpp in Sources */,
 				1F6CF45907ADFE7200171C83 /* renderDistricts.cpp in Sources */,
-				1F6CF45A07ADFE7200171C83 /* solverGL.cpp in Sources */,
 				1F6CF46007ADFE7A00171C83 /* SolverGLView.m in Sources */,
 				1F6CF46207ADFE7A00171C83 /* SolverM.M in Sources */,
 				1FDA5CB808AC581900C8F5A3 /* mmaped.cpp in Sources */,
 				1F260CC608ACA31200C2C4FE /* District2.cpp in Sources */,
-				1F502D2F08BAB2FD00F16550 /* glutStrokeString.c in Sources */,
 				1F4D0C70090C2B58003CE55B /* Solver.cpp in Sources */,
 				1FE201A70C94ECBC008A10FE /* LinearInterpolate.cpp in Sources */,
 				1FE201AD0C94ECCB008A10FE /* PreThread.cpp in Sources */,
@@ -708,6 +697,7 @@
 				3259F3020E0D91D100487C8C /* Bitmap.cpp in Sources */,
 				32CCA1950E1AF6310047558F /* MapDrawer.cpp in Sources */,
 				32E30BF00E2C425F000CC370 /* SolverPixView.M in Sources */,
+				1FFCA15B0E2CF58C002D81C6 /* NodeColoring.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -785,8 +775,9 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = "";
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = YES;
@@ -801,8 +792,9 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = "";
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = NO;
@@ -815,8 +807,9 @@
 				ARCHS = x86_64;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = "";
 				PREBINDING = NO;
 				PRODUCT_NAME = drend;
 				ZERO_LINK = YES;
@@ -921,7 +914,10 @@
 				GCC_PREFIX_HEADER = guidistricter_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
@@ -935,14 +931,16 @@
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_CPU = G4;
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = guidistricter_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = NO;
@@ -953,13 +951,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_CPU = G4;
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = guidistricter_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib64;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				PRODUCT_NAME = guidistricter;
 				WRAPPER_EXTENSION = app;
 			};
