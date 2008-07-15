@@ -1,59 +1,122 @@
-{
-    IBClasses = (
-        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            CLASS = SolverGLView; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {sovm = SolverM; }; 
-            SUPERCLASS = NSOpenGLView; 
-        }, 
-        {
-            ACTIONS = {
-                goZXY = id; 
-                nudgeViewDown = id; 
-                nudgeViewLeft = id; 
-                nudgeViewRight = id; 
-                nudgeViewUp = id; 
-                run = id; 
-                setDcx = id; 
-                setDcy = id; 
-                setDebugDistrict = id; 
-                setEdgeRelativeDistanceFactor = id; 
-                setNodeColoring = id; 
-                setOdEdgeRelativeDistanceFactor = id; 
-                setPopRatioFactor = id; 
-                setRunning = id; 
-                setShowLinks = id; 
-                setZoom = id; 
-                startOpenData = id; 
-                startSaveDists = id; 
-                startSavePNG = id; 
-                startSaveSolution = id; 
-                step = id; 
-                stop = id; 
-                writePNG = id; 
-                zoomAll = id; 
-                zoomIn = id; 
-                zoomOut = id; 
-            }; 
-            CLASS = SolverM; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                "_edgeRelativeDistanceFactor" = NSControl; 
-                "_odEdgeRelativeDistanceFactor" = NSControl; 
-                "_popRatioFactor" = NSControl; 
-                dcxBox = NSControl; 
-                dcyBox = NSControl; 
-                debugDistrictMenu = NSPopUpButton; 
-                extraText = NSTextView; 
-                extraTextWindow = NSWindow; 
-                nodeColoringMenu = NSPopUpButton; 
-                stats = NSTextField; 
-                view = SolverGLView; 
-                zoomBox = NSControl; 
-            }; 
-            SUPERCLASS = NSObject; 
-        }
-    ); 
-    IBVersion = 1; 
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IBClasses</key>
+	<array>
+		<dict>
+			<key>CLASS</key>
+			<string>FirstResponder</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>SolverPixView</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>sovm</key>
+				<string>SolverM</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSView</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>goZXY</key>
+				<string>id</string>
+				<key>nudgeViewDown</key>
+				<string>id</string>
+				<key>nudgeViewLeft</key>
+				<string>id</string>
+				<key>nudgeViewRight</key>
+				<string>id</string>
+				<key>nudgeViewUp</key>
+				<string>id</string>
+				<key>run</key>
+				<string>id</string>
+				<key>setDcx</key>
+				<string>id</string>
+				<key>setDcy</key>
+				<string>id</string>
+				<key>setDebugDistrict</key>
+				<string>id</string>
+				<key>setEdgeRelativeDistanceFactor</key>
+				<string>id</string>
+				<key>setNodeColoring</key>
+				<string>id</string>
+				<key>setOdEdgeRelativeDistanceFactor</key>
+				<string>id</string>
+				<key>setPopRatioFactor</key>
+				<string>id</string>
+				<key>setRunning</key>
+				<string>id</string>
+				<key>setShowLinks</key>
+				<string>id</string>
+				<key>setZoom</key>
+				<string>id</string>
+				<key>startOpenData</key>
+				<string>id</string>
+				<key>startSaveDists</key>
+				<string>id</string>
+				<key>startSavePNG</key>
+				<string>id</string>
+				<key>startSaveSolution</key>
+				<string>id</string>
+				<key>step</key>
+				<string>id</string>
+				<key>stop</key>
+				<string>id</string>
+				<key>writePNG</key>
+				<string>id</string>
+				<key>zoomAll</key>
+				<string>id</string>
+				<key>zoomIn</key>
+				<string>id</string>
+				<key>zoomOut</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>SolverM</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>_edgeRelativeDistanceFactor</key>
+				<string>NSControl</string>
+				<key>_odEdgeRelativeDistanceFactor</key>
+				<string>NSControl</string>
+				<key>_popRatioFactor</key>
+				<string>NSControl</string>
+				<key>dcxBox</key>
+				<string>NSControl</string>
+				<key>dcyBox</key>
+				<string>NSControl</string>
+				<key>debugDistrictMenu</key>
+				<string>NSPopUpButton</string>
+				<key>extraText</key>
+				<string>NSTextView</string>
+				<key>extraTextWindow</key>
+				<string>NSWindow</string>
+				<key>nodeColoringMenu</key>
+				<string>NSPopUpButton</string>
+				<key>stats</key>
+				<string>NSTextField</string>
+				<key>view</key>
+				<string>NSView</string>
+				<key>zoomBox</key>
+				<string>NSControl</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+	</array>
+	<key>IBVersion</key>
+	<string>1</string>
+</dict>
+</plist>

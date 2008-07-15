@@ -1,5 +1,7 @@
-#ifndef MAP_RASTERIZER_H
-#define MAP_RASTERIZER_H
+#ifndef MAP_DRAWER_H
+#define MAP_DRAWER_H
+
+#include <stdint.h>
 
 class Solver;
 namespace {
@@ -17,6 +19,7 @@ double minlat;
 double minlon;
 double maxlat;
 double maxlon;
+int bytesPerPixel;  // defaults to 3 for png output. set to 4 for screen.
 
 MapDrawer();
 
@@ -28,8 +31,17 @@ inline void setSize(int width, int height) {
 	this->height = height;
 }
 
+void clearToBlack();
+void clearToBackgroundColor();
+// Use rendered pixel list from makepolys loaded by readUPix()
+void paintPixels( Solver* sov );
+// Dot per block
+void paintPoints( Solver* sov );
 void doPNG_r( Solver* sov, const char* pngname );
 void runDrendCommandFile( Solver& sov, const char* commandFileName );
 };
 
-#endif /* MAP_RASTERIZER_H */
+
+extern uint8_t backgroundColor[];
+
+#endif /* MAP_DRAWER_H */

@@ -148,7 +148,7 @@ void runBasic( Solver& sov ) {
 		sov.calculateAdjacency(&ta);
 		recolorDists( ta.adjacency, ta.adjlen, sov.districts );
 	}
-	mr.doPNG_r( &sov, /*data, rows, sov.pngWidth, sov.pngHeight, */sov.pngname );
+	mr.doPNG_r( &sov, sov.pngname );
 	
 	if ( colorFileOut != NULL ) {
 		FILE* cfo = fopen( colorFileOut, "w" );

@@ -4,10 +4,11 @@
 #include <pthread.h>
 
 @class SolverGLView;
+@class SolverPixView;
 
 @interface SolverM : NSObject
 {
-	IBOutlet SolverGLView *view;
+	IBOutlet NSView *view;
 	IBOutlet NSTextField *stats;
 
 	IBOutlet NSControl *_edgeRelativeDistanceFactor;
@@ -25,7 +26,9 @@
 	IBOutlet NSWindow *extraTextWindow;
 
 	void* cppSolver;
+	void* cppMapDrawer;
 
+	BOOL isPixView;
 #if 0
 #define USE_NS_THREAD 1
 	//NSThread runThread;
@@ -80,6 +83,7 @@
 - (IBAction)setDebugDistrict:(id)sender;
 
 - (void)drawGL;
+- (void)drawPix:(NSRect) rect;
 - (void)setViewportRatio:(double) vr;
 
 - (void*)runThreadProc;

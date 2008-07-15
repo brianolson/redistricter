@@ -544,66 +544,7 @@ loadZFail:
 
 
 void Solver::initSolution() {
-//#define setDist( d, i ) dists[(d)].add( nodes, winner, (i), (d), tin.pointlist[(i)*2], tin.pointlist[(i)*2+1], tin.pointattributelist[(i)*2] )
-//#define setDist( d, i ) dists[(d)].add( this, (i), (d) )
-	// seed districts with initial block and other district setup
-	//int dstep = (gd->numPoints / districts);
-	//double minMoment = HUGE_VAL, maxMoment = -HUGE_VAL;
-	//double minPoperr = HUGE_VAL, maxPoperr = -HUGE_VAL;
-#if 1
-dists->initNewRandomStart();
-//#warning "reimplement initSolution inside DistrictSet
-#else
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		int i;
-		//i = dstep * d;
-		do {
-			i = random() % gd->numPoints;
-		} while ( winner[i] != NODISTRICT );
-		//setDist( d , i );
-		dists[d].addFirst( this, i, d );
-#if 0
-		dists[d].calcMoment( nodes, winner, tin.pointlist, tin.pointattributelist, d );
-		if ( dists[d].moment < minMoment ) {
-			minMoment = dists[d].moment;
-		}
-		if ( dists[d].moment > maxMoment ) {
-			maxMoment = dists[d].moment;
-		}
-		double pe;
-		pe = fabs( dists[d].pop - districtPopTarget );
-		if ( pe < minPoperr ) {
-			minPoperr = pe;
-		}
-		if ( pe > maxPoperr ) {
-			maxPoperr = pe;
-		}
-#endif
-	}
-#if 01
-	// Kickstart the growth process.
-	// Add every neighbor of an initial node not claimed by some other district.
-	bool notdone = true;
-	while ( notdone ) {
-		notdone = false;
-		for ( POPTYPE d = 0; d < districts; d++ ) {
-			int i;
-			//i = dstep * d;
-			i = dists[d].edgelist[0];
-			Node* n = nodes + i;
-			for ( int ni = 0; ni < n->numneighbors; ni++ ) {
-				int nii;
-				nii = n->neighbors[ni];
-				if ( winner[nii] == NODISTRICT ) {
-					//notdone = true;
-					setDist( d, nii );
-					break;
-				}
-			}
-		}
-	}
-#endif
-#endif
+	dists->initNewRandomStart();
 }
 
 void Solver::initSolutionFromOldCDs() {
@@ -795,30 +736,6 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
 		row[x+1] = color[1];//((unsigned char)( (((unsigned int)color[1]) * 3)/7 ));
 		row[x+2] = color[2];//((unsigned char)( (((unsigned int)color[2]) * 3)/7 ));
 	}
-#if USE_EDGE_LOOP
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		District2* cd;
-		const unsigned char* color;
-		cd = dists + d;
-		color = colors + ((d % numColors) * 3);
-		for ( District::EdgeNode* en = cd->edgelistRoot; en != cd->edgelistRoot; en = en->next ) {
-			int pi;
-			pi = en->nodeIndex;//cd->edgelist[i].nodeIndex;
-			double ox, oy;
-			oy = (maxy - gd->pos[pi*2+1]) * ym;
-			ox = (gd->pos[pi*2  ] - minx) * xm;
-			int y, x;
-			y = (int)oy;
-			unsigned char* row;
-			row = data + (y*pngWidth*3);
-			x = (int)ox;
-			x *= 3;
-			row[x] = color[0];
-			row[x+1] = color[1];
-			row[x+2] = color[2];
-		}
-	}
-#endif
 	
 	myDoPNG( outname, rows, pngHeight, pngWidth );
 	free( rows );

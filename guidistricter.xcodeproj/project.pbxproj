@@ -111,6 +111,7 @@
 		32CCA1CF0E1B01A90047558F /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
 		32CCA1D00E1B01AE0047558F /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
 		32CCA1D20E1B01B70047558F /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
+		32E30BF00E2C425F000CC370 /* SolverPixView.M in Sources */ = {isa = PBXBuildFile; fileRef = 32E30BEF0E2C425F000CC370 /* SolverPixView.M */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -177,6 +178,8 @@
 		32CA4F630368D1EE00C91783 /* guidistricter_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = guidistricter_Prefix.pch; sourceTree = "<group>"; };
 		32CCA1930E1AF62D0047558F /* MapDrawer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapDrawer.h; sourceTree = "<group>"; };
 		32CCA1940E1AF6310047558F /* MapDrawer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapDrawer.cpp; sourceTree = "<group>"; };
+		32E30BEE0E2C425F000CC370 /* SolverPixView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolverPixView.h; sourceTree = "<group>"; };
+		32E30BEF0E2C425F000CC370 /* SolverPixView.M */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SolverPixView.M; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* guidistricter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = guidistricter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -258,6 +261,8 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				32E30BEE0E2C425F000CC370 /* SolverPixView.h */,
+				32E30BEF0E2C425F000CC370 /* SolverPixView.M */,
 				1F6CF45B07ADFE7A00171C83 /* SolverGLView.h */,
 				1F6CF45C07ADFE7A00171C83 /* SolverGLView.m */,
 				1F6CF45D07ADFE7A00171C83 /* SolverM.h */,
@@ -702,6 +707,7 @@
 				321648A30D469D4B0096D68F /* recordI.cpp in Sources */,
 				3259F3020E0D91D100487C8C /* Bitmap.cpp in Sources */,
 				32CCA1950E1AF6310047558F /* MapDrawer.cpp in Sources */,
+				32E30BF00E2C425F000CC370 /* SolverPixView.M in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

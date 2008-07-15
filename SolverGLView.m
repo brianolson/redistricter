@@ -27,7 +27,6 @@ static int notfirst = 0;
 }
 - (void)reshape {
     NSRect bounds = [self bounds];
-    double rat, fovy;
 	[sovm setViewportRatio:(bounds.size.width / bounds.size.height)];
 	//printf("viewportRatio %f (%f/%f)\n", ((bounds.size.width * 1.0) / bounds.size.height), bounds.size.width, bounds.size.height );
     glViewport( 0, 0, bounds.size.width, bounds.size.height );

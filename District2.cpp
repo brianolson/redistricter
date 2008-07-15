@@ -577,49 +577,6 @@ int District2::remove( /*Node* nodes, POPTYPE* pit, */Solver* sov, int n, POPTYP
 		}
 	}
 
-#if USE_EDGE_LOOP
-	int startnode = en->prev->nodeIndex;
-	int endnode = en->next->nodeIndex;
-#warning FIXME remove()
-	printf("search from %6d to %6d\n", startnode, endnode );
-	path = bfhead = bftail = new BreadthFirstNode( startnode );
-	do {
-		nit = nodes + bfhead->nodeIndex;
-		printf("search node %6d from dist %d\n", bfhead->nodeIndex, pit[bfhead->nodeIndex] );
-		for ( i = 0; i < nit->numneighbors; i++ ) {
-			int ni;
-			ni = nit->neighbors[i];
-			printf("\t%6d dist=%d\n", ni, pit[ni] );
-			if ( pit[ni] == dist ) {
-				BreadthFirstNode* tbf = new BreadthFirstNode( ni, bfhead );
-				bftail->next = tbf;
-				bftail = tbf;
-			}
-			if ( ni == endnode ) {
-				bfhead = bftail;
-				goto traceNewEdge;
-			}
-		}
-		bfhead = bfhead->next;
-	} while ( 1 );
-traceNewEdge:
-	// follow the backpointers from bfhead to path
-	EdgeNode* cen = en->next;
-	while ( bfhead->prev != path ) {
-		EdgeNode* nen;
-		nen = newEdgeNode();
-		nen->next = cen;
-		cen->prev = nen;
-		nen->nodeIndex = bfhead->nodeIndex;
-		bfhead = bfhead->prev;
-	}
-	cen->prev = en->prev;
-	en->prev->next = cen;
-	deleteEdgeNode( en );
-#else
-	//int startnode = 0;
-	//int endnode = 0;
-#endif
 	return 0;
 }
 
@@ -1018,24 +975,8 @@ int District2::grab( District2Set* d2set, POPTYPE d ) {
 
 /* disown the furthest */
 int District2::disown( Solver* sov, POPTYPE d ) {
-	//double maxm = -HUGE_VAL;
 	int mi = -1;
 	const GeoData* gd = sov->gd;
-#if USE_EDGE_LOOP
-	EdgeNode* en = edgelistRoot;
-	do {
-		double dx, dy, tm;
-		int eln = en->nodeIndex;
-		dx = gd->pos[eln*2  ] - distx;
-		dy = gd->pos[eln*2+1] - disty;
-		tm = sqrt( (dx * dx) + (dy * dy) );// * tin.pointattributelist[nein*2];
-		if ( tm  > maxm ) {
-			maxm = tm;
-			mi = eln;
-		}
-		en = en->next;
-	} while ( en != edgelistRoot );
-#endif
 	if ( mi != -1 ) {
 		POPTYPE* winner = sov->winner;
 		District2* dists = ((District2Set*)(sov->dists))->dists;
@@ -1051,31 +992,10 @@ int District2::disown( Solver* sov, POPTYPE d ) {
 
 int District2::write( int fd ) {
 	int toret = 0;
-#if 0
-	int err;
-	err = ::write( fd, &edgelistLen, sizeof(edgelistLen) );
-	if ( err < 0 ) { return err; } else { toret += err; }
-	err = ::write( fd, edgelist, sizeof(*edgelist)*edgelistLen );
-	if ( err < 0 ) { return err; } else { toret += err; }
-#endif
 	return toret;
 }
 int District2::read( int fd, Node* nodes, POPTYPE* pit, double* xy, double* popRadii, POPTYPE dist ) {
 	int toret = 0;
-#if 0
-	int err;
-	err = ::read( fd, &edgelistLen, sizeof(edgelistLen) );
-	if ( err < 0 ) { return err; } else { toret += err; }
-	if ( edgelistLen > edgelistCap ) {
-		edgelist = (EdgeNode*)realloc( edgelist, sizeof(EdgeNode) * edgelistLen * 2 + 1 );
-	}
-	err = ::read( fd, edgelist, sizeof(*edgelist)*edgelistLen );
-	if ( err < 0 ) { return err; } else { toret += err; }
-
-	pop = 0.0;
-	wx = 0.0;
-	wy = 0.0;
-#endif
 	return toret;
 }
 

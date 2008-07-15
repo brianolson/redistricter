@@ -11,7 +11,8 @@ MapDrawer::MapDrawer()
 : data(NULL), rows(NULL),
 width(-1), height(-1),
 px(NULL),
-minlat(NAN), minlon(NAN), maxlat(NAN), maxlon(NAN) {}
+minlat(NAN), minlon(NAN), maxlat(NAN), maxlon(NAN),
+bytesPerPixel(3) {}
 
 void MapDrawer::maybeClearDataAndRows() {
 	if ( data != NULL ) {
@@ -27,13 +28,13 @@ void MapDrawer::initDataAndRows() {
 	maybeClearDataAndRows();
 	assert(width > 0);
 	assert(height > 0);
-	data = (unsigned char*)malloc(width*height*3*sizeof(unsigned char) );
+	data = (unsigned char*)malloc(width*height*bytesPerPixel*sizeof(unsigned char) );
 	rows = (unsigned char**)malloc(height*sizeof(unsigned char*) );
 	assert(data != NULL);
 	assert(rows != NULL);
 	
 	for ( int y = 0; y < height; y++ ) {
-		rows[y] = data + (y*width*3);
+		rows[y] = data + (y*width*bytesPerPixel);
 	}
 }
 
@@ -48,7 +49,7 @@ public:
 
 void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
 	mmaped mf;
-	uintptr_t data;
+	uintptr_t filemem;
 	mf.open( upfname );
 	int endianness = 0;
 	if (px != NULL) {
@@ -59,11 +60,11 @@ void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
 		px = new pxlist[sov->gd->numPoints];
 	}
 	
-	data = (uintptr_t)mf.data;
+	filemem = (uintptr_t)mf.data;
 	// int32_t vers, x, y;
 	{
 		uint32_t vers;
-		vers = *((uint32_t*)data);
+		vers = *((uint32_t*)filemem);
 		if ( swap32( vers ) == 1 ) {
 			endianness = 1;
 		} else if ( vers != 1 ) {
@@ -73,8 +74,8 @@ void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
 	}
 	{
 		int32_t xpx, ypx;
-		xpx = *((int32_t*)(data + 4));
-		ypx = *((int32_t*)(data + 8));
+		xpx = *((int32_t*)(filemem + 4));
+		ypx = *((int32_t*)(filemem + 8));
 		if ( endianness ) {
 			width = swap32( xpx );
 			height = swap32( ypx );
@@ -90,13 +91,13 @@ void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
 		uint32_t index;
 		int newpoints;
 		
-		memcpy( &tubid, (void*)(data + pos), 8 );
+		memcpy( &tubid, (void*)(filemem + pos), 8 );
 		if ( endianness ) {
 			tubid = swap64( tubid );
 		}
 		pos += 8;
 		ep = pos;
-		while ( ep < mf.sb.st_size && *((uint32_t*)(data + ep)) != 0xffffffff ) {
+		while ( ep < mf.sb.st_size && *((uint32_t*)(filemem + ep)) != 0xffffffff ) {
 			ep += 4;
 		}
 		newpoints = (ep - pos) / 4;
@@ -111,12 +112,12 @@ void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
 				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + newpoints)*2) );
 				assert( cpx->px != NULL );
 				dest = cpx->px + (cpx->numpx * 2);
-				src = (uint16_t*)(data + pos);
+				src = (uint16_t*)(filemem + pos);
 				cpx->numpx += newpoints;
 			} else {
 				cpx->px = (uint16_t*)malloc( sizeof(uint16_t)*newpoints*2 );
 				dest = cpx->px;
-				src = (uint16_t*)(data + pos);
+				src = (uint16_t*)(filemem + pos);
 				cpx->numpx = newpoints;
 			}
 			if ( endianness ) {
@@ -166,14 +167,6 @@ void MapDrawer::runDrendCommandFile(
 	int pos = 0;
 	int p2;
 	char* tmp = NULL;
-#if 0
-	int pngWidth = pngWidth;
-	int pngHeight = pngHeight;
-	char* pngname = NULL;
-	if ( sov.pngname != NULL ) {
-		pngname = strdup( sov.pngname );
-	}
-#endif
 	while( (pos < cfm.sb.st_size) && (isspace(cf[pos])) ){pos++;}
 	while ( pos < cfm.sb.st_size ) {
 		if ( cf[pos] == '#' || (cf[pos] == '/' && cf[pos+1] == '/') ) {
@@ -276,6 +269,7 @@ void MapDrawer::runDrendCommandFile(
 			delete [] px;
 			px = NULL;
 #if 0
+		// template entry
 		} else if ( mystrmatch( cf + pos, "" ) ) {
 			GETARG();
 			free( tmp ); tmp = NULL;
@@ -295,35 +289,40 @@ extern int numColors;
 uint8_t backgroundColor[3] = { 0xd0,0xd0,0xd0 };
 
 void MapDrawer::doPNG_r( Solver* sov, const char* pngname ) {
-	if ( px != NULL ) {
-		// use blackground color
-		for ( int y = 0; y < height; y++ ) {
-			unsigned char* row;
-			row = rows[y];
-			for ( int x = 0; x < width; x++ ) {
-				unsigned char* px;
-				px = row + (x*3);
-				px[0] = backgroundColor[0];
-				px[1] = backgroundColor[1];
-				px[2] = backgroundColor[2];
-			}
-		}
+	if ( px ) {
+		clearToBackgroundColor();
+		paintPixels( sov );
 	} else {
-		// points on black background
-		memset( data, 0x0, width*height*3*sizeof(unsigned char) );
+		clearToBlack();
+		paintPoints( sov );
 	}
-	
+	myDoPNG( pngname, rows, height, width );
+}
+
+void MapDrawer::clearToBlack() {
+	memset( data, 0x0, width*height*bytesPerPixel );
+}
+void MapDrawer::clearToBackgroundColor() {
+	for ( int y = 0; y < height; y++ ) {
+		unsigned char* row;
+		row = rows[y];
+		for ( int x = 0; x < width; x++ ) {
+			unsigned char* px;
+			px = row + (x*bytesPerPixel);
+			px[0] = backgroundColor[0];
+			px[1] = backgroundColor[1];
+			px[2] = backgroundColor[2];
+		}
+	}
+}
+
 #if READ_INT_POS
-	int lminx, lminy, lmaxx, lmaxy;
-	//#define SRC_TO_LM( x ) ((x) * 1000000.0)
 #define DPRSET( dim, src ) if ( ! isnan( src ) ) {\
 		l##dim = (int)(1000000.0 * (src) );	  \
 	} else { \
 		l##dim = sov->dim;\
 	}
 #elif READ_DOUBLE_POS
-	double lminx, lminy, lmaxx, lmaxy;
-	//#define SRC_TO_LM( x ) (x)
 #define DPRSET( dim, src ) if ( ! isnan( src ) ) {\
 		l##dim = ( src ); \
 	} else { \
@@ -333,12 +332,20 @@ void MapDrawer::doPNG_r( Solver* sov, const char* pngname ) {
 #error "what type is pos?"
 #endif
 
+void MapDrawer::paintPoints( Solver* sov ) {
+#if READ_INT_POS
+	int lminx, lminy, lmaxx, lmaxy;
+#elif READ_DOUBLE_POS
+	double lminx, lminy, lmaxx, lmaxy;
+#else
+#error "what type is pos?"
+#endif
+
 	DPRSET( minx, minlon );
 	DPRSET( maxx, maxlon );
 	DPRSET( miny, minlat );
 	DPRSET( maxy, maxlat );
 
-//fprintf(stderr,"minx=%10d miny=%10d maxx=%10d maxy=%10d w=%d h=%d\n", minx, miny, maxx, maxy, pngWidth, height );
 	/* setup transformation */
 	double ym = 0.999 * height / (lmaxy - lminy);
 	double xm = 0.999 * width / (lmaxx - lminx);
@@ -355,80 +362,83 @@ void MapDrawer::doPNG_r( Solver* sov, const char* pngname ) {
 		} else {
 			color = colors + ((winner[i] % numColors) * 3);
 		}
-		if ( px != NULL ) {
-			pxlist* cpx = px + i;
-			if ( cpx->numpx <= 0 ) {
-				continue;
-			}
-			for ( int j = 0; j < cpx->numpx; j++ ) {
-				int x, y;
-				x = cpx->px[j*2];
-				if ( x < 0 || x > width ) {
-					fprintf(stderr,"index %d ubid %013llu x (%d) out of bounds\n", i, gd->ubidOfIndex(i), x );
-					continue;
-				}
-				y = cpx->px[j*2 + 1];
-				if ( y < 0 || y > height ) {
-					fprintf(stderr,"index %d ubid %013llu y (%d) out of bounds\n", i, gd->ubidOfIndex(i), y );
-					continue;
-				}
-				unsigned char* row;
-				row = data + (y*width*3);
-				x *= 3;
-				row[x  ] = color[0];
-				row[x+1] = color[1];
-				row[x+2] = color[2];
-			}
+		if ( gd->pos[i*2] < lminx ) {
+			continue;
+		}
+		if ( gd->pos[i*2] > lmaxx ) {
+			continue;
+		}
+		if ( gd->pos[i*2+1] < lminy ) {
+			continue;
+		}
+		if ( gd->pos[i*2+1] > lmaxy ) {
+			continue;
+		}
+		oy = (lmaxy - gd->pos[i*2+1]) * ym;
+		ox = (gd->pos[i*2  ] - lminx) * xm;
+		int y, x;
+		y = (int)oy;
+		unsigned char* row;
+		row = data + (y*width*bytesPerPixel);
+		x = (int)ox;
+		x *= bytesPerPixel;
+		row[x  ] = color[0];
+		row[x+1] = color[1];
+		row[x+2] = color[2];
+	}
+}
+
+void MapDrawer::paintPixels( Solver* sov ) {
+	if ( px == NULL ) {
+		paintPoints( sov );
+		return;
+	}
+#if READ_INT_POS
+	int lminx, lminy, lmaxx, lmaxy;
+#elif READ_DOUBLE_POS
+	double lminx, lminy, lmaxx, lmaxy;
+#else
+#error "what type is pos?"
+#endif
+
+	DPRSET( minx, minlon );
+	DPRSET( maxx, maxlon );
+	DPRSET( miny, minlat );
+	DPRSET( maxy, maxlat );
+	
+	POPTYPE* winner = sov->winner;
+	int numPoints = sov->gd->numPoints;
+	
+	for ( int i = 0; i < numPoints; i++ ) {
+		const unsigned char* color;
+		if ( winner[i] == NODISTRICT ) {
+			static const unsigned char colorNODISTRICT[3] = { 0,0,0 };
+			color = colorNODISTRICT;
 		} else {
-			if ( gd->pos[i*2] < lminx ) {
+			color = colors + ((winner[i] % numColors) * 3);
+		}
+		pxlist* cpx = px + i;
+		if ( cpx->numpx <= 0 ) {
+			continue;
+		}
+		for ( int j = 0; j < cpx->numpx; j++ ) {
+			int x, y;
+			x = cpx->px[j*2];
+			if ( x < 0 || x > width ) {
+				fprintf(stderr,"index %d x (%d) out of bounds\n", i, x );
 				continue;
 			}
-			if ( gd->pos[i*2] > lmaxx ) {
+			y = cpx->px[j*2 + 1];
+			if ( y < 0 || y > height ) {
+				fprintf(stderr,"index %d y (%d) out of bounds\n", i, y );
 				continue;
 			}
-			if ( gd->pos[i*2+1] < lminy ) {
-				continue;
-			}
-			if ( gd->pos[i*2+1] > lmaxy ) {
-				continue;
-			}
-			oy = (lmaxy - gd->pos[i*2+1]) * ym;
-			ox = (gd->pos[i*2  ] - lminx) * xm;
-			int y, x;
-			y = (int)oy;
 			unsigned char* row;
-			row = data + (y*width*3);
-			x = (int)ox;
-			x *= 3;
+			row = data + (y*width*bytesPerPixel);
+			x *= bytesPerPixel;
 			row[x  ] = color[0];
 			row[x+1] = color[1];
 			row[x+2] = color[2];
 		}
 	}
-#if USE_EDGE_LOOP && 0
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		District2* cd;
-		const unsigned char* color;
-		cd = dists + d;
-		color = colors + ((d % numColors) * 3);
-		for ( District::EdgeNode* en = cd->edgelistRoot; en != cd->edgelistRoot; en = en->next ) {
-			int pi;
-			pi = en->nodeIndex;//cd->edgelist[i].nodeIndex;
-				double ox, oy;
-				oy = (maxy - gd->pos[pi*2+1]) * ym;
-				ox = (gd->pos[pi*2  ] - minx) * xm;
-				int y, x;
-				y = (int)oy;
-				unsigned char* row;
-				row = data + (y*width*3);
-				x = (int)ox;
-				x *= 3;
-				row[x] = color[0];
-				row[x+1] = color[1];
-				row[x+2] = color[2];
-		}
-	}
-#endif
-	
-	myDoPNG( pngname, rows, height, width );
 }

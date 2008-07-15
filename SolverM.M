@@ -1,9 +1,11 @@
 #import "SolverM.h"
-#import "SolverGLView.h"
+#import "SolverPixView.h"
+#include "MapDrawer.h"
 #include "Solver.h"
 #include "GrabIntermediateStorage.h"
 
 #define sov ((Solver*)cppSolver)
+#define mapr ((MapDrawer*)cppMapDrawer)
 
 void* runThreadProc( void* );
 
@@ -15,6 +17,8 @@ extern "C" void setDebugDistrictNumber(int index);
 - (void)awakeFromNib {
 #if 1
 	cppSolver = NULL;
+	cppMapDrawer = NULL;
+	isPixView = YES;
 #else
 	//sov = new Solver();
 	cppSolver = new Solver();
@@ -76,17 +80,10 @@ extern "C" void setDebugDistrictNumber(int index);
 }
 
 - (IBAction)step:(id)sender {
-#if 01
 	pthread_mutex_lock( &runControlM );
 	runMode = kSolverStepping;
 	pthread_cond_signal( &runControl );
 	pthread_mutex_unlock( &runControlM );
-#else	
-	pthread_mutex_lock( &sovLock );
-	sov->step();
-	pthread_mutex_unlock( &sovLock );
-	[view setNeedsDisplay:YES];
-#endif
 }
 
 - (int)stepDisplay:(BOOL)needsDisplay {
@@ -118,6 +115,16 @@ extern "C" void setDebugDistrictNumber(int index);
 	//fprintf(stderr,"SolverM.drawGL\n");
 	pthread_mutex_lock( &sovLock );
 	sov->drawGL();
+	pthread_mutex_unlock( &sovLock );
+}
+
+- (void)drawPix:(NSRect) rect {
+	if ( sov == NULL ) return;
+	//fprintf(stderr,"SolverM.drawGL\n");
+	pthread_mutex_lock( &sovLock );
+	mapr->paintPixels( sov );
+	NSDrawBitmap(rect, mapr->width, mapr->height, 8, 3, 24, mapr->width * 3,
+		NO, NO, NSDeviceRGBColorSpace, &(mapr->data) );
 	pthread_mutex_unlock( &sovLock );
 }
 
@@ -164,6 +171,12 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( zoomBox ) {
 		[zoomBox setDoubleValue: sov->zoom];
 	}
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width * sov->zoom;
+		newSize.height = mapr->height * sov->zoom;
+		[view setFrameSize:newSize];
+	}
 	[view setNeedsDisplay:YES];
 }
 - (IBAction)zoomOut:(id)sender {
@@ -172,11 +185,37 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( zoomBox ) {
 		[zoomBox setDoubleValue: sov->zoom];
 	}
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width * sov->zoom;
+		newSize.height = mapr->height * sov->zoom;
+		[view setFrameSize:newSize];
+	}
 	[view setNeedsDisplay:YES];
 }
 - (IBAction)zoomAll:(id)sender {
 	if ( sov == NULL ) return;
-	sov->zoomAll();
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width;
+		newSize.height = mapr->height;
+		NSScrollView* sv = [view enclosingScrollView];
+		if ( sv != nil ) {
+			NSSize svsize = [sv contentSize];
+			double widthratio = svsize.width / mapr->width;
+			double heightratio = svsize.height / mapr->height;
+			if ( widthratio > heightratio ) {
+				sov->zoom = heightratio;
+			} else {
+				sov->zoom = widthratio;
+			}
+			newSize.width *= sov->zoom;
+			newSize.height *= sov->zoom;
+		}
+		[view setFrameSize:newSize];
+	} else {
+		sov->zoomAll();
+	}
 	if ( zoomBox ) {
 		[zoomBox setDoubleValue: sov->zoom];
 	}
@@ -358,21 +397,31 @@ extern "C" void setDebugDistrictNumber(int index);
 - (IBAction)startOpenData:(id)sender {
 	NSOpenPanel* sheet = [NSOpenPanel openPanel];
 	[sheet setAllowsMultipleSelection:NO];
-	[sheet beginSheetForDirectory:nil file:nil types:nil modalForWindow:[view window] modalDelegate:self didEndSelector:@selector(openDataDidEnd:returnCode:contextInfo:) contextInfo:NULL];
+	NSArray* fileTypes = [NSArray arrayWithObjects:@"gbin", @"zcta", @"uf1", nil];
+	[sheet beginSheetForDirectory:nil file:nil types:fileTypes modalForWindow:[view window] modalDelegate:self didEndSelector:@selector(openDataDidEnd:returnCode:contextInfo:) contextInfo:NULL];
 }
 - (void)openDataDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
+	if (returnCode != NSOKButton) {
+		return;
+	}
 	NSString* nsf = [sheet filename];
 	char* filename;
 	pthread_mutex_lock( &sovLock );
 	if ( sov != NULL ) {
 		delete sov;
 	}
+	if ( mapr != NULL ) {
+		delete mapr;
+	}
 	cppSolver = new Solver();
+	cppMapDrawer/* mapr */ = new MapDrawer();
 	// 'filename' is leaked, but is small. (FIXME?)
 	filename = strdup( [nsf fileSystemRepresentation] );
+	//fprintf(stderr,"loading %s\n", filename);
+	char* suffixpos = NULL;
 	if ( strstr( filename, "zcta" ) != NULL ) {
 		sov->geoFact = openZCTA;
-	} else if ( strstr( filename, "gbin" ) != NULL ) {
+	} else if ( (suffixpos = strstr( filename, "gbin" )) != NULL ) {
 		sov->geoFact = openBin;
 	} else {
 		sov->geoFact = openUf1;
@@ -380,6 +429,42 @@ extern "C" void setDebugDistrictNumber(int index);
 	sov->inputname = filename;
 	sov->districts = -10; // negative sign is a flag that means the value may be overriden by the file loaded
 	sov->megaInit();
+	if ( suffixpos != NULL ) {
+		char* mpoutName = (char*)malloc( strlen(filename) + 5 );
+		suffixpos--;
+		char* strsrc = filename;
+		char* strdst = mpoutName;
+		while (strsrc != suffixpos) {
+			*strdst = *strsrc;
+			strdst++; strsrc++;
+		}
+		strcpy( strdst, ".mpout" );
+		//fprintf(stderr,"loading %s\n", mpoutName);
+		mapr->readUPix( sov, mpoutName );
+		free( mpoutName );
+		if ( isPixView ) {
+			NSSize newSize;
+			newSize.width = mapr->width;
+			newSize.height = mapr->height;
+			NSScrollView* sv = [view enclosingScrollView];
+			if ( sv != nil ) {
+				NSSize svsize = [sv contentSize];
+				double widthratio = svsize.width / mapr->width;
+				double heightratio = svsize.height / mapr->height;
+				if ( widthratio > heightratio ) {
+					sov->zoom = heightratio;
+				} else {
+					sov->zoom = widthratio;
+				}
+				newSize.width *= sov->zoom;
+				newSize.height *= sov->zoom;
+			}
+			[view setFrameSize:newSize];
+		}
+	} else {
+		mapr->setSize( sov->pngWidth, sov->pngHeight );
+	}
+	mapr->initDataAndRows();
 	[self setupDebugDistrictMenu];
 	[self setupNodeColoringMenu];
 	pthread_mutex_unlock( &sovLock );

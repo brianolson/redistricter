@@ -444,7 +444,6 @@ void Solver::drawGL() {
 		drawLinksArrayB( numEdges, edgeData, gd, zoom, glminx, glmaxx, glminy, glmaxy, winner, (GLfloat**)(&_link_draw_array) );
 #endif
 	} else {
-#if 01
 		/* array based point drawing */
 		glBindBufferARB( GL_ARRAY_BUFFER_ARB, colorBufferObject );
 		if ( lastGenDrawn != gencount ) {
@@ -490,54 +489,6 @@ void Solver::drawGL() {
 		glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
 		glebail(glDisableClientState( GL_VERTEX_ARRAY ));
 		glebail(glDisableClientState( GL_COLOR_ARRAY ));
-#else
-		/* ! array based point drawing */
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		District2* cd;
-		const unsigned char* color;
-		cd = dists + d;
-		color = colors + ((d % numColors) * 3);
-		glBegin(GL_POINTS);
-		glColor3d( color[0] * NON_EDGE_RATE, color[1] * NON_EDGE_RATE, color[2] * NON_EDGE_RATE );
-		for ( int i = 0; i < gd->numPoints; i++ ) {
-			if ( winner[i] == d ) {
-				double vx, vy;
-				vx = gd->pos[i*2];
-				vy = gd->pos[i*2+1];
-				// do some of my own clipping
-				if ( (zoom <1.9) || ((vx >= glminx) && (vx <= glmaxx) && (vy >= glminy) && (vy <= glmaxy)) ) {
-					glVertex2d( vx, vy );
-				}
-			}
-		}
-		glEnd();
-#if USE_EDGE_LOOP
-		glBegin(GL_LINE_STRIP);
-		glColor3d( color[0] / 255.0, color[1] / 255.0, color[2] / 255.0 );
-		District::EdgeNode* en = cd->edgelistRoot;
-		do {
-			int pi;
-			pi = en->nodeIndex;
-			glVertex2d( gd->pos[pi*2], gd->pos[pi*2+1] );
-			en = en->next;
-		} while ( en != cd->edgelistRoot );
-		glEnd();
-#else
-		glBegin(GL_POINTS);
-		glColor3d( color[0] / 255.0, color[1] / 255.0, color[2] / 255.0 );
-		for ( int i = 0; i < cd->edgelistLen; i++ ) {
-			int pi;
-			pi = cd->edgelist[i];
-			double vx, vy;
-			vx = gd->pos[pi*2];
-			vy = gd->pos[pi*2+1];
-			glVertex2d( vx, vy );
-		}
-		glEnd();
-#endif
-	}
-	/* ! array based point drawing */
-#endif
 	}
 	//glBegin(GL_LINES);
 	glColor3d( 1.0, 1.0, 1.0 );
