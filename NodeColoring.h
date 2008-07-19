@@ -11,4 +11,6 @@ public:
 	virtual ~NodeColoring() {}
 };
 
+extern NodeColoring* coloring;
+
 #endif /* NODE_COLORING_H */

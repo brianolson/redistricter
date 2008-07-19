@@ -1,6 +1,6 @@
 #import "SolverGLView.h"
 #ifndef WITH_OPENGL
-#define WITH_OPENGL 0
+#define WITH_OPENGL 1
 #endif
 
 #if WITH_OPENGL

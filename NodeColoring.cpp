@@ -84,7 +84,3 @@ void setNodeColoringByIndex(int index) {
 }
 
 
-void Solver::drawGL() {
-	// empty stub
-	assert(0);
-}
