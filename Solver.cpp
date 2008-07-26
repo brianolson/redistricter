@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -46,6 +47,27 @@ DistrictSet* NearestNeighborDistrictSetFactory(Solver* sov) {
 }
 DistrictSet* District2SetFactory(Solver* sov) {
 	return new District2Set(sov);
+}
+
+struct DistrictSetFactory {
+	DistrictSet* (*factory)(Solver*);
+	const char* name;
+};
+
+DistrictSetFactory districtSetFactories[] = {
+	{ NearestNeighborDistrictSetFactory, "Nearest Neighbor" },
+	{ District2SetFactory, "Grab Solver" },
+	{ NULL, NULL },
+};
+
+const char* Solver::getSetFactoryName(int index) {
+	return districtSetFactories[index].name;
+}
+
+void Solver::setFactoryByIndex(int index) {
+	assert(index >= 0);
+	districtSetFactory = districtSetFactories[index].factory;
+	assert(districtSetFactory);
 }
 
 
@@ -1388,3 +1410,93 @@ SolverStats::SolverStats( int geni, double pd, double pa, double ps, double pmi,
 	nod( noDist ), nodpop( noDistPop ),
 	next( n )
 {}
+
+// Call free(argv) when done with args.
+// argv[0] is always NULL, there is no app name.
+// argv[argc] will also be NULL.
+// Returns argc
+int parseArgvFromFile(const char* filename, char*** argvP) {
+	assert(argvP != NULL);
+	mmaped mif;
+	int argc = 0;
+	char** argv;
+	unsigned int pos = 0;
+	int err = mif.open( filename );
+	if ( err < 0 ) {
+		perror(filename);
+		return -1;
+	}
+	
+	char* f = (char*)(mif.data);
+	// count parts
+	enum { text, space, escaped } state = space;
+	for ( pos = 0; pos < mif.mmapsize; ++pos ) {
+		if ( isspace(f[pos]) ) {
+			if ( state == text ) {
+				state = space;
+			} else if ( state == escaped ) {
+				state = text;
+			} // else eat extra space
+		} else if ( f[pos] == '\\' ) {
+			if ( state != escaped ) {
+				state = escaped;
+			} else {
+				state = text;
+			}
+		} else {
+			// text char
+			if ( state == space ) {
+				argc++;
+			}
+			state = text;
+		}
+	}
+	argv = (char**)malloc( (sizeof(char*) * (argc + 2)) + mif.mmapsize );
+	if ( argv == NULL ) {
+		fprintf(stderr, "malloc(%zu) fails\n", (sizeof(char*) * (argc + 2)) + mif.mmapsize );
+		mif.close();
+		return -1;
+	}
+	argv[0] = NULL;
+	char* opos = (char*)(argv + (argc + 2));
+	int ci = 0;
+	state = space;
+	for ( pos = 0; pos < mif.mmapsize; ++pos ) {
+		if ( isspace(f[pos]) ) {
+			if ( state == text ) {
+				*opos = '\0';
+				opos++;
+				state = space;
+			} else if ( state == escaped ) {
+				*opos = f[pos];
+				opos++;
+				state = text;
+			} // else eat extra space
+		} else if ( f[pos] == '\\' ) {
+			if ( state == space ) {
+				ci++;
+				argv[ci] = opos;
+				state = escaped;
+			} else if ( state != escaped ) {
+				state = escaped;
+			} else {
+				*opos = f[pos];
+				opos++;
+				state = text;
+			}
+		} else {
+			// text char
+			if ( state == space ) {
+				ci++;
+				argv[ci] = opos;
+			}
+			*opos = f[pos];
+			opos++;
+			state = text;
+		}
+	}
+	assert(ci == argc);
+	argv[ci] = NULL;
+	*argvP = argv;
+	return argc;
+}

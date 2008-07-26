@@ -25,7 +25,7 @@ MapDrawer();
 
 void maybeClearDataAndRows();
 void initDataAndRows();
-void readUPix( const Solver* sov, char* upfname );
+void readUPix( const Solver* sov, const char* upfname );
 inline void setSize(int width, int height) {
 	this->width = width;
 	this->height = height;

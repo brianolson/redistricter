@@ -47,7 +47,7 @@ public:
 };
 } // local namespace
 
-void MapDrawer::readUPix( const Solver* sov, char* upfname ) {
+void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	mmaped mf;
 	uintptr_t filemem;
 	mf.open( upfname );

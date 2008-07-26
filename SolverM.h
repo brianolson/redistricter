@@ -21,19 +21,16 @@
 
 	IBOutlet NSPopUpButton *nodeColoringMenu;
 	IBOutlet NSPopUpButton *debugDistrictMenu;
+	IBOutlet NSPopUpButton *solverTypeMenu;
 	
 	IBOutlet NSTextView *extraText;
 	IBOutlet NSWindow *extraTextWindow;
 
+	char* dataPath;
 	void* cppSolver;
 	void* cppMapDrawer;
 
 	BOOL isPixView;
-#if 0
-#define USE_NS_THREAD 1
-	//NSThread runThread;
-#else
-#define USE_NS_THREAD 0
 	pthread_t runThread;
 	pthread_mutex_t runControlM;
 	pthread_cond_t runControl;
@@ -43,7 +40,6 @@
 		kSolverStepping = 2
 	} runMode;
 	pthread_mutex_t sovLock;
-#endif
 }
 - (void)awakeFromNib;
 - (IBAction)setRunning:(id)sender;
@@ -88,6 +84,8 @@
 
 - (void*)runThreadProc;
 
+- (void)loadMpout:(const char*)mpoutName;
+- (void)setupSolver;
 - (void)setupDebugDistrictMenu;
 - (void)setupNodeColoringMenu;
 

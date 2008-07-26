@@ -105,6 +105,8 @@
 				<string>NSWindow</string>
 				<key>nodeColoringMenu</key>
 				<string>NSPopUpButton</string>
+				<key>solverTypeMenu</key>
+				<string>NSPopUpButton</string>
 				<key>stats</key>
 				<string>NSTextField</string>
 				<key>view</key>

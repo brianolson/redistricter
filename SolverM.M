@@ -15,23 +15,10 @@ extern "C" void setDebugDistrictNumber(int index);
 
 @implementation SolverM
 - (void)awakeFromNib {
-#if 1
+	dataPath = NULL;
 	cppSolver = NULL;
 	cppMapDrawer = NULL;
 	isPixView = YES;
-#else
-	//sov = new Solver();
-	cppSolver = new Solver();
-#if 0
-	sov->inputname = "input_zcta5";
-	sov->geoFact = openZCTA;
-#else
-	sov->inputname = "input.uf1";//"nmpb.uf1";
-	sov->geoFact = openUf1;
-#endif
-	sov->districts = -10; // negative sign is a flag that means the value may be overriden by the file loaded
-	sov->megaInit();
-#endif
 
 	runMode = kSolverStopped;
 	pthread_mutex_init( &runControlM, NULL );
@@ -47,6 +34,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( _popRatioFactor ) {
 		[_popRatioFactor setDoubleValue: District2::popRatioFactor];
 	}
+#if 0
 	if ( zoomBox && sov ) {
 		[zoomBox setDoubleValue: sov->zoom];
 	}
@@ -56,10 +44,20 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( dcyBox && sov ) {
 		[dcyBox setDoubleValue: sov->dcy];
 	}
+#endif
 
 	if ( extraText ) {
 		[extraText setFont:[NSFont fontWithName:@"Monaco" size:10]];
 	}
+	[self setupNodeColoringMenu];
+	[solverTypeMenu removeAllItems];
+	int i = 0;
+	const char* setFactoryName;
+	while ((setFactoryName = Solver::getSetFactoryName(i)) != NULL) {
+		[solverTypeMenu addItemWithTitle:[NSString stringWithCString:setFactoryName]];
+		++i;
+	}
+	[solverTypeMenu selectItemAtIndex:0];
 }
 
 - (IBAction)setRunning:(id)sender {
@@ -87,7 +85,10 @@ extern "C" void setDebugDistrictNumber(int index);
 }
 
 - (int)stepDisplay:(BOOL)needsDisplay {
-	if ( sov == NULL ) return 0;
+	if ( sov == NULL ) {
+		[self setupSolver];
+		assert(sov != NULL);
+	}
 	int err;
 	pthread_mutex_lock( &sovLock );
 	err = sov->step();
@@ -301,6 +302,7 @@ extern "C" void setDebugDistrictNumber(int index);
 }
 
 - (IBAction)setNodeColoring:(id)sender {
+	if ( sov == NULL ) return;
 	int index = [sender indexOfSelectedItem];
 	setNodeColoringByIndex( index );
 	//fprintf(stderr,"SolverM.setNodeColoring %d\n", index);
@@ -397,7 +399,7 @@ extern "C" void setDebugDistrictNumber(int index);
 - (IBAction)startOpenData:(id)sender {
 	NSOpenPanel* sheet = [NSOpenPanel openPanel];
 	[sheet setAllowsMultipleSelection:NO];
-	NSArray* fileTypes = [NSArray arrayWithObjects:@"gbin", @"zcta", @"uf1", nil];
+	NSArray* fileTypes = [NSArray arrayWithObjects:@"gbin", @"zcta", @"uf1", @"args", nil];
 	[sheet beginSheetForDirectory:nil file:nil types:fileTypes modalForWindow:[view window] modalDelegate:self didEndSelector:@selector(openDataDidEnd:returnCode:contextInfo:) contextInfo:NULL];
 }
 - (void)openDataDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
@@ -405,34 +407,131 @@ extern "C" void setDebugDistrictNumber(int index);
 		return;
 	}
 	NSString* nsf = [sheet filename];
-	char* filename;
 	pthread_mutex_lock( &sovLock );
 	if ( sov != NULL ) {
 		delete sov;
+		cppSolver = NULL;
 	}
 	if ( mapr != NULL ) {
 		delete mapr;
+		cppMapDrawer = NULL;
+	}
+	if ( dataPath != NULL ) {
+		free( dataPath );
+		dataPath = NULL;
+	}
+	dataPath = strdup( [nsf fileSystemRepresentation] );
+	pthread_mutex_unlock( &sovLock );
+}
+
+- (void)setupSolverFromArgFile:(const char*)filename {
+	pthread_mutex_lock( &sovLock );
+	if ( sov != NULL ) {
+		delete sov;
+		cppSolver = NULL;
+	}
+	if ( mapr != NULL ) {
+		delete mapr;
+		cppMapDrawer = NULL;
 	}
 	cppSolver = new Solver();
+	assert(sov != NULL);
 	cppMapDrawer/* mapr */ = new MapDrawer();
-	// 'filename' is leaked, but is small. (FIXME?)
-	filename = strdup( [nsf fileSystemRepresentation] );
-	//fprintf(stderr,"loading %s\n", filename);
+	assert(mapr != NULL);
+
+	int argc;
+	char** argv;
+	argc = parseArgvFromFile(filename, &argv);
+	if ( argc > 0 ) {
+		char* mpoutName = NULL;
+		for ( int i = 1; i < argc; ++i ) {
+			// find any mpout arg, load, and strip the args.
+			if ( ! strcmp(argv[i], "mpout:") ) {
+				mpoutName = argv[i+1];
+				int j = i + 2;
+				while ( j < argc ) {
+					argv[i] = argv[j];
+					i++;
+					j++;
+				}
+				argv[i] = NULL;
+				argc -= 2;
+				break;
+			}
+		}
+		sov->handleArgs(argc, argv);
+		sov->megaInit();
+		[self loadMpout:mpoutName];
+		free(argv);
+	}
+
+	mapr->initDataAndRows();
+	[self setupDebugDistrictMenu];
+	pthread_mutex_unlock( &sovLock );
+}
+
+- (void)loadMpout:(const char*)mpoutName {
+	mapr->readUPix( sov, mpoutName );
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width;
+		newSize.height = mapr->height;
+		NSScrollView* sv = [view enclosingScrollView];
+		if ( sv != nil ) {
+			NSSize svsize = [sv contentSize];
+			double widthratio = svsize.width / mapr->width;
+			double heightratio = svsize.height / mapr->height;
+			if ( widthratio > heightratio ) {
+				sov->zoom = heightratio;
+			} else {
+				sov->zoom = widthratio;
+			}
+			newSize.width *= sov->zoom;
+			newSize.height *= sov->zoom;
+		}
+		[view setFrameSize:newSize];
+	}
+}
+
+- (void)setupSolver {
+	if ( dataPath == NULL ) {
+		fprintf(stderr, "cannot setup solver, no source data path specified\n");
+		return;
+	}
+	if ( strstr( dataPath, "args" ) != NULL ) {
+		[self setupSolverFromArgFile: dataPath];
+		return;
+	}
+	pthread_mutex_lock( &sovLock );
+	if ( sov != NULL ) {
+		delete sov;
+		cppSolver = NULL;
+	}
+	if ( mapr != NULL ) {
+		delete mapr;
+		cppMapDrawer = NULL;
+	}
+	cppSolver = new Solver();
+	assert(sov != NULL);
+	cppMapDrawer/* mapr */ = new MapDrawer();
+	assert(mapr != NULL);
+	//fprintf(stderr,"loading %s\n", dataPath);
 	char* suffixpos = NULL;
-	if ( strstr( filename, "zcta" ) != NULL ) {
+	if ( strstr( dataPath, "zcta" ) != NULL ) {
 		sov->geoFact = openZCTA;
-	} else if ( (suffixpos = strstr( filename, "gbin" )) != NULL ) {
+	} else if ( (suffixpos = strstr( dataPath, "gbin" )) != NULL ) {
 		sov->geoFact = openBin;
 	} else {
 		sov->geoFact = openUf1;
 	}
-	sov->inputname = filename;
+	sov->setFactoryByIndex([solverTypeMenu indexOfSelectedItem]);
+	sov->inputname = dataPath;
 	sov->districts = -10; // negative sign is a flag that means the value may be overriden by the file loaded
 	sov->megaInit();
 	if ( suffixpos != NULL ) {
-		char* mpoutName = (char*)malloc( strlen(filename) + 5 );
+		char* mpoutName = (char*)malloc( strlen(dataPath) + 5 );
 		suffixpos--;
-		char* strsrc = filename;
+		char* strsrc = dataPath;
 		char* strdst = mpoutName;
 		while (strsrc != suffixpos) {
 			*strdst = *strsrc;
@@ -440,33 +539,13 @@ extern "C" void setDebugDistrictNumber(int index);
 		}
 		strcpy( strdst, ".mpout" );
 		//fprintf(stderr,"loading %s\n", mpoutName);
-		mapr->readUPix( sov, mpoutName );
+		[self loadMpout:mpoutName];
 		free( mpoutName );
-		if ( isPixView ) {
-			NSSize newSize;
-			newSize.width = mapr->width;
-			newSize.height = mapr->height;
-			NSScrollView* sv = [view enclosingScrollView];
-			if ( sv != nil ) {
-				NSSize svsize = [sv contentSize];
-				double widthratio = svsize.width / mapr->width;
-				double heightratio = svsize.height / mapr->height;
-				if ( widthratio > heightratio ) {
-					sov->zoom = heightratio;
-				} else {
-					sov->zoom = widthratio;
-				}
-				newSize.width *= sov->zoom;
-				newSize.height *= sov->zoom;
-			}
-			[view setFrameSize:newSize];
-		}
 	} else {
 		mapr->setSize( sov->pngWidth, sov->pngHeight );
 	}
 	mapr->initDataAndRows();
 	[self setupDebugDistrictMenu];
-	[self setupNodeColoringMenu];
 	pthread_mutex_unlock( &sovLock );
 }
 
@@ -485,6 +564,7 @@ extern "C" void setDebugDistrictNumber(int index);
 }
 
 - (void)setupDebugDistrictMenu {
+	assert(sov != NULL);
 	if ( sov->districts <= 0 ) {
 		return;
 	}

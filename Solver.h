@@ -99,6 +99,8 @@ public:
 	void initSolution();
 	void initSolutionFromOldCDs();
 	void init();
+	static const char* getSetFactoryName(int index);
+	void setFactoryByIndex(int index);
 	int megaInit();
 	int step();
 #if WITH_PNG
@@ -205,5 +207,7 @@ public:
 
 DistrictSet* NearestNeighborDistrictSetFactory(Solver* sov);
 DistrictSet* District2SetFactory(Solver* sov);
+
+int parseArgvFromFile(const char* filename, char*** argvP);
 
 #endif /* SOLVER_H */
