@@ -9,7 +9,7 @@ THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
 
 #OG:=-O2 -DNDEBUG=1
-OG:=-g
+OG?=-g
 #OG:=-g -pg
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
@@ -28,7 +28,7 @@ LDPNG=-lpng12
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
-COREOBJS+=NearestNeighborDistrictSet.o
+COREOBJS+=NearestNeighborDistrictSet.o protoio.o
 
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp

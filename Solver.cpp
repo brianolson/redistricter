@@ -144,13 +144,38 @@ Solver::~Solver() {
 #endif
 }
 
+#if HAVE_PROTOBUF
+int writeToProtoFile(Solver* sov, const char* filename);
+int readFromProtoFile(Solver* sov, const char* filename);
+
+// doesn't do anything, just a tag to switch on in Solver::load()
+GeoData* protobufGeoDataTag( char* inputname ) {
+	assert(0);
+	return NULL;
+}
+
+int Solver::writeProtobuf( const char* fname ) {
+	writeToProtoFile(this, fname);
+}
+#endif
+
 void Solver::load() {
-	gd = geoFact( inputname );
-	gd->load();
-	if ( geoFact == openBin ) {
-		readLinksBin();
-	} else {
-		readLinksFile();
+#if HAVE_PROTOBUF
+	if ( geoFact == protobufGeoDataTag ) {
+		int err = readFromProtoFile(this, inputname);
+		if (err < 0) {
+			return;
+		}
+	} else
+#endif
+	{
+		gd = geoFact( inputname );
+		gd->load();
+		if ( geoFact == openBin ) {
+			readLinksBin();
+		} else {
+			readLinksFile();
+		}
 	}
 	
 	if ( districts <= 0 ) {
@@ -781,6 +806,12 @@ int Solver::handleArgs( int argc, char** argv ) {
 			i++;
 			inputname = argv[i];
 			geoFact = openBin;
+#if HAVE_PROTOBUF
+		} else if ( ! strcmp( argv[i], "-P" ) ) {
+			i++;
+			inputname = argv[i];
+			geoFact = protobufGeoDataTag;
+#endif
 		} else if ( ! strcmp( argv[i], "-g" ) ) {
 			i++;
 			generations = atoi( argv[i] );

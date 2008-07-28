@@ -90,6 +90,9 @@ public:
 	int32_t edges[numEdges*2]; // pairs of indecies into GeoData
 	*/
 	int writeBin( const char* fname );
+#if HAVE_PROTOBUF
+	int writeProtobuf( const char* fname );
+#endif
 	void initNodes();
 	void allocSolution();
 	int saveZSolution( const char* filename );

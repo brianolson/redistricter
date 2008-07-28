@@ -31,6 +31,9 @@ int main( int argc, char** argv ) {
 	Solver sov;
 	int i, nargc;
 	const char* foname = NULL;
+#if HAVE_PROTOBUF
+	const char* poname = NULL;
+#endif
 	
 	nargc=1;
 	
@@ -38,6 +41,11 @@ int main( int argc, char** argv ) {
 		if ( ! strcmp( argv[i], "-o" ) ) {
 			i++;
 			foname = argv[i];
+#if HAVE_PROTOBUF
+		} else if ( ! strcmp( argv[i], "-p" ) ) {
+			i++;
+			poname = argv[i];
+#endif
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;
@@ -46,7 +54,12 @@ int main( int argc, char** argv ) {
 	argv[nargc]=NULL;
 	sov.handleArgs( nargc, argv );
 
-	if ( foname == NULL ) {
+#if HAVE_PROTOBUF
+	if (( foname == NULL ) && ( poname == NULL ))
+#else
+	if ( foname == NULL )
+#endif
+	{
 		fprintf(stderr,"useless linkfixup, null foname\n");
 		exit(1);
 	}
@@ -154,7 +167,14 @@ int main( int argc, char** argv ) {
 			sov.numEdges++;
 		}
 	}
-	sov.writeBin(foname);
+	if ( foname != NULL ) {
+		sov.writeBin(foname);
+	}
+#if HAVE_PROTOBUF
+	if ( poname != NULL ) {
+		sov.writeProtobuf(poname);
+	}
+#endif	
 
 	delete [] bfsearchq;
 

@@ -40,6 +40,7 @@
 		1F5655580A57864300212FB8 /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		1F5655640A57866800212FB8 /* drendmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5655630A57866800212FB8 /* drendmain.cpp */; };
 		1F56559E0A579A9C00212FB8 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
+		1F5ECA250E3B6D8D00870895 /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
 		1F6CF44E07ADFE4800171C83 /* districter.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF44D07ADFE4800171C83 /* districter.h */; };
 		1F6CF45507ADFE7200171C83 /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
 		1F6CF45807ADFE7200171C83 /* place2k.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45207ADFE7200171C83 /* place2k.h */; };
@@ -61,6 +62,7 @@
 		1F8427D60CCB222500ACC6A4 /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
 		1F89FB1E0A79A8890064DDAF /* Solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F4D0C6F090C2B58003CE55B /* Solver.cpp */; };
 		1F89FB1F0A79A88C0064DDAF /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
+		1F9FB36E0E3D6E8D0036A885 /* protobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9FB36D0E3D6E8D0036A885 /* protobuf.framework */; };
 		1FB634530A60C9120041F3BE /* District2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F260CC508ACA31200C2C4FE /* District2.cpp */; };
 		1FB634540A60C9180041F3BE /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		1FB634550A60C91C0041F3BE /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
@@ -143,6 +145,9 @@
 		1F5655470A57857600212FB8 /* drend */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = drend; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F5655630A57866800212FB8 /* drendmain.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = drendmain.cpp; sourceTree = "<group>"; };
 		1F56559D0A579A9C00212FB8 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
+		1F5ECA240E3B6D8D00870895 /* protoio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = protoio.cpp; sourceTree = "<group>"; };
+		1F5ECA260E3B6DAD00870895 /* redata.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = redata.pb.h; sourceTree = "<group>"; };
+		1F5ECA270E3B6DB600870895 /* redata.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = redata.pb.cc; sourceTree = "<group>"; };
 		1F6CF44D07ADFE4800171C83 /* districter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = districter.h; sourceTree = "<group>"; };
 		1F6CF44F07ADFE7200171C83 /* fileio.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = fileio.cpp; sourceTree = "<group>"; };
 		1F6CF45207ADFE7200171C83 /* place2k.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = place2k.h; sourceTree = "<group>"; };
@@ -157,6 +162,7 @@
 		1F8427C90CCB220000ACC6A4 /* District2GLDebug.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = District2GLDebug.cpp; sourceTree = "<group>"; };
 		1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AbstractDistrict.cpp; sourceTree = "<group>"; };
 		1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DistrictSet.cpp; sourceTree = "<group>"; };
+		1F9FB36D0E3D6E8D0036A885 /* protobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = protobuf.framework; path = ../../Library/Frameworks/protobuf.framework; sourceTree = SOURCE_ROOT; };
 		1FB6344B0A60C8FE0041F3BE /* rta2dsz */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = rta2dsz; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FB6346F0A60C94E0041F3BE /* recordA.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = recordA.cpp; path = tiger/recordA.cpp; sourceTree = "<group>"; };
 		1FB634730A60C95E0041F3BE /* rtaToDsz.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rtaToDsz.cpp; sourceTree = "<group>"; };
@@ -255,6 +261,7 @@
 				1F3E8ADB0CCB26BD0015C525 /* libz.dylib in Frameworks */,
 				32A17EB00E2D01D0004DACE8 /* OpenGL.framework in Frameworks */,
 				32A17EB10E2D01D0004DACE8 /* GLUT.framework in Frameworks */,
+				1F9FB36E0E3D6E8D0036A885 /* protobuf.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +292,7 @@
 		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F9FB36D0E3D6E8D0036A885 /* protobuf.framework */,
 				1F502D4D08BAB3E300F16550 /* GLUT.framework */,
 				1F6CF59307AE099600171C83 /* OpenGL.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
@@ -362,6 +370,9 @@
 				1F4D0CC3090C3A66003CE55B /* nonguimain.cpp */,
 				1F6CF45207ADFE7200171C83 /* place2k.h */,
 				1FCB993B0C3AB63E00FE809C /* PreThread.cpp */,
+				1F5ECA240E3B6D8D00870895 /* protoio.cpp */,
+				1F5ECA270E3B6DB600870895 /* redata.pb.cc */,
+				1F5ECA260E3B6DAD00870895 /* redata.pb.h */,
 				1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */,
 				1FB634730A60C95E0041F3BE /* rtaToDsz.cpp */,
 				1F4D0C6F090C2B58003CE55B /* Solver.cpp */,
@@ -716,6 +727,7 @@
 				1FFCA15B0E2CF58C002D81C6 /* NodeColoring.cpp in Sources */,
 				32A17EB30E2D01DB004DACE8 /* glutStrokeString.c in Sources */,
 				32A17EB40E2D01E3004DACE8 /* solverGL.cpp in Sources */,
+				1F5ECA250E3B6D8D00870895 /* protoio.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -944,6 +956,11 @@
 			buildSettings = {
 				ARCHS = x86_64;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Library/Frameworks\"";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -965,6 +982,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Library/Frameworks\"";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = 2;
@@ -983,6 +1005,11 @@
 		1FEF15B40A577CFD000B2C93 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Library/Frameworks\"";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;

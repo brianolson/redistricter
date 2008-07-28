@@ -345,7 +345,7 @@ int ZCTA::load() {
 }
 
 // Sort by ubid to aid lookup mapping ubid->internal-index
-static int ubidSortF( const void* a, const void* b ) {
+int ubidSortF( const void* a, const void* b ) {
 	if ( ((Uf1::UST*)a)->ubid > ((Uf1::UST*)b)->ubid ) {
 		return 1;
 	} else if ( ((Uf1::UST*)a)->ubid < ((Uf1::UST*)b)->ubid ) {

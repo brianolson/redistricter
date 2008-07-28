@@ -23,6 +23,36 @@ public:
 #if READ_INT_POS
 	int32_t* pos;
 	int minx, maxx, miny, maxy;
+
+	inline void allocPoints() {
+		pos = new int32_t[numPoints];
+	}
+	inline int32_t lon(int x) {
+		return pos[(x*2)];
+	}
+	inline int32_t lat(int x) {
+		return pos[(x*2) + 1];
+	}
+	inline void set_lon(int x, int32_t microdegrees) {
+		pos[(x*2)] = microdegrees;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lon(int x, double degrees) {
+		pos[(x*2)] = degrees * 1000000.0;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lat(int x, int32_t microdegrees) {
+		pos[(x*2) + 1] = microdegrees;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
+	inline void set_lat(int x, double degrees) {
+		pos[(x*2) + 1] = degrees * 1000000.0;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
 #endif
 #ifndef READ_DOUBLE_POS
 #define READ_DOUBLE_POS 0
@@ -30,6 +60,36 @@ public:
 #if READ_DOUBLE_POS
 	double* pos;
 	double minx, maxx, miny, maxy;
+
+	inline void allocPoints() {
+		pos = new double[numPoints];
+	}
+	inline double lon(int x) {
+		return pos[(x*2)];
+	}
+	inline double lat(int x) {
+		return pos[(x*2) + 1];
+	}
+	inline void set_lon(int x, int32_t microdegrees) {
+		pos[(x*2)] = microdegrees / 1000000.0;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lon(int x, double degrees) {
+		pos[(x*2)] = degrees;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lat(int x, int32_t microdegrees) {
+		pos[(x*2) + 1] = microdegrees / 1000000.0;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
+	inline void set_lat(int x, double degrees) {
+		pos[(x*2) + 1] = degrees;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
 #endif
 
 #ifndef READ_INT_AREA

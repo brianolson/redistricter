@@ -1,0 +1,14 @@
+message RedistricterData {
+	// only one of intpoints or fpoints should have any data in it.
+	repeated int32 intpoints = 1;  // lon,lat pairs, microdegrees
+	repeated double fpoints = 2;  // lon,lat pairs
+	repeated int32 population = 3;
+	repeated int32 area = 4;  // square meters
+	repeated int64 ubids = 5;
+	repeated int32 recnos = 6;
+	repeated int32 edges = 7;  // index,index pairs
+	
+	// Default number of districts for this data set.
+	// Probably the number of US House districts.
+	optional int32 numDistricts = 8;
+}

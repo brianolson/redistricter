@@ -72,7 +72,7 @@ int main( int argc, char** argv ) {
 		uint32_t lx;
 		lx = sov.gd->indexOfUbid( ubid );
 		if ( lx == (uint32_t)-1 ) {
-			fprintf(stderr,"ubid %lld (county %ld, tract %ld, block %ld) => %ld\n", ubid, 
+			fprintf(stderr,"ubid %lld (county %ld, tract %ld, block %ld) => %u\n", ubid, 
 					ra.COUNTYCU_longValue(i), ra.TRACT_longValue(i), ra.BLOCK_longValue(i),
 					lx );
 		} else {

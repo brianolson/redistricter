@@ -466,8 +466,13 @@ if ( $doit && $with_png ) {
 	print FOUT<<EOF;
 -include data/${stu}/makedefaults
 -include data/${stu}/makeoptions
-EOF
-	print FOUT<<EOF;
+
+data/${stu}/${stl}.gbin:	data/${stu}/.uf1 linkfixup
+	linkfixup -U data/${stu}/.uf1 -o data/${stu}/${stl}.gbin
+
+data/${stu}/${stl}.pbin:	data/${stu}/.uf1 linkfixup
+	linkfixup -U data/${stu}/.uf1 -p data/${stu}/${stl}.pbin
+	
 ${stl}_all:	data/${stu}/${stu}_start_sm.jpg data/${stu}/${stl}_sm.mpout data/${stu}/${stu}_start_sm.png
 
 data/${stu}/${stu}_start_sm.jpg:	data/${stu}/${stu}_start.png
