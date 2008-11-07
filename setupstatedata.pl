@@ -23,6 +23,7 @@ $doit = 1;
 $domake = 0;
 $unpackall = 0;
 $with_png = 1;
+$protobuf = 1;
 
 while ( $arg = shift ) {
 	if ( $arg eq "--dry-run" || $arg eq "-n" ) {
@@ -413,17 +414,24 @@ if ( $doit && ! -e ".uf1.links" ) {
 	symlink "${stu}.links", ".uf1.links";
 }
 
-if ( newerthan( "${stl}101.uf1", "${stl}.gbin" ) ||
-	 newerthan( "${stu}.links", "${stl}.gbin" ) ||
-	 newerthan( "${rootdir}/linkfixup", "${stl}.gbin" ) ) {
-	print "precompile { ${stl}101.uf1, ${stu}.links } to ${stl}.gbin\n";
+
+if ($protobuf) {
+	$stl_bin = $stl . ".pb";
+} else {
+	$stl_bin = $stl . ".gbin";
+}
+
+if ( newerthan( "${stl}101.uf1", $stl_bin ) ||
+	 newerthan( "${stu}.links", $stl_bin ) ||
+	 newerthan( "${rootdir}/linkfixup", $stl_bin ) ) {
+	print "precompile { ${stl}101.uf1, ${stu}.links } to ${stl_bin}\n";
 	if ( $doit ) {
-		nsystem "${rootdir}/linkfixup", "-U", ".uf1", "-o", "${stl}.gbin";
+		nsystem "${rootdir}/linkfixup", "-U", ".uf1", "-o", $stl_bin;
 	}
 }
 
 if ( $doit && ! -e ".gbin" ) {
-	symlink "${stl}.gbin", ".gbin";
+	symlink $stl_bin, ".gbin";
 }
 
 if ( newerthan( "raw", "measure" ) ||
@@ -458,7 +466,7 @@ if ( $doit ) {
 if ( newerthan( "${stu}.RTA", "${stl}109.dsz" ) ) {
 	print "generate 109th Congress initial solution: ${stu}.RTA -> ${stl}109.dsz\n";
 	if ( $doit ) {
-		nsystem "${rootdir}/rta2dsz -B ${stl}.gbin $distnumopt ${stu}.RTA -o ${stl}109.dsz";
+		nsystem "${rootdir}/rta2dsz -B ${stl_bin} $distnumopt ${stu}.RTA -o ${stl}109.dsz";
 	}
 }
 if ( $doit && $with_png ) {
@@ -467,8 +475,8 @@ if ( $doit && $with_png ) {
 -include data/${stu}/makedefaults
 -include data/${stu}/makeoptions
 
-data/${stu}/${stl}.gbin:	data/${stu}/.uf1 linkfixup
-	linkfixup -U data/${stu}/.uf1 -o data/${stu}/${stl}.gbin
+data/${stu}/${stl_bin}:	data/${stu}/.uf1 linkfixup
+	linkfixup -U data/${stu}/.uf1 -o data/${stu}/${stl_bin}
 
 data/${stu}/${stl}.pbin:	data/${stu}/.uf1 linkfixup
 	linkfixup -U data/${stu}/.uf1 -p data/${stu}/${stl}.pbin

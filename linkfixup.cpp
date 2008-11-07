@@ -45,6 +45,11 @@ int main( int argc, char** argv ) {
 		} else if ( ! strcmp( argv[i], "-p" ) ) {
 			i++;
 			poname = argv[i];
+		} else if ( ! strcmp( argv[i], "--have-protobuf" ) ) {
+			exit(0);
+#else
+		} else if ( ! strcmp( argv[i], "--have-protobuf" ) ) {
+			exit(1);
 #endif
 		} else {
 			argv[nargc] = argv[i];
