@@ -76,6 +76,7 @@ void NearestNeighborDistrictSet::initNewRandomStart() {
 		bx = gd->pos[i*2  ];
 		by = gd->pos[i*2+1];
 		dists[d].set(bx, by);
+		winner[i] = d;
 	}
 	setWinners();
 	resumDistrictCenters();
