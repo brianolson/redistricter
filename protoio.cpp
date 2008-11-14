@@ -2,6 +2,8 @@
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 //namespace google::protobuf::io
+using google::protobuf::int32;
+using google::protobuf::int64;
 
 #include "districter.h"
 //#include "GeoData.h"
@@ -16,7 +18,6 @@
 // autoconf yet.
 #include "redata.pb.cc"
 
-using google::protobuf::int32;
 
 class ProtobufGeoData : public GeoData {
 	virtual int load() {
@@ -65,7 +66,7 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	}
 #endif
 #if READ_UBIDS
-	google::protobuf::RepeatedField<google::protobuf::int64>* ubids = rd.mutable_ubids();
+	google::protobuf::RepeatedField<int64>* ubids = rd.mutable_ubids();
 	ubids->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
 		ubids->Add(0);
@@ -74,6 +75,11 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 		ubids->Set(gd->ubids[i].index, gd->ubids[i].ubid);
 	}
 #endif
+	google::protobuf::RepeatedField<int32>* edges = rd.mutable_edges();
+	for (int i = 0; i < sov->numEdges; ++i) {
+		edges->Add(sov->edgeData[i*2]);
+		edges->Add(sov->edgeData[i*2 + 1]);
+	}
 	
 	bool ok = rd.SerializeToFileDescriptor(fd);
 	int err = close(fd);
@@ -123,6 +129,7 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	}
 #if READ_INT_POP
 	if (rd.population_size() > 0) {
+		assert(rd.population_size() == gd->numPoints);
 		gd->pop = new int32_t[gd->numPoints];
 		gd->totalpop = 0;
 		gd->maxpop = 0;
@@ -145,6 +152,7 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	}
 #endif
 #if READ_UBIDS
+	fprintf(stderr, "reading ubids\n");
 	if (rd.ubids_size() > 0) {
 		assert(rd.ubids_size() == gd->numPoints);
 		gd->ubids = new GeoData::UST[gd->numPoints];
@@ -153,10 +161,21 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			gd->ubids[i].ubid = rd.ubids(i);
 			gd->ubids[i].index = i;
 		}
+		extern int ubidSortF( const void* a, const void* b );
+		qsort( gd->ubids, gd->numPoints, sizeof( GeoData::UST ), ubidSortF );
+		for (int i = 0; i < gd->numPoints; ++i) {
+			assert(gd->ubids[i].index == gd->indexOfUbid(gd->ubids[i].ubid));
+			int ti = gd->ubids[i].index;
+			int ii = gd->indexOfUbid(gd->ubids[i].ubid);
+			if (ii != ti) fprintf(stderr, "%d -> %d\n", ti, ii);
+		}
 	}
-	extern int ubidSortF( const void* a, const void* b );
-	qsort( gd->ubids, gd->numPoints, sizeof( GeoData::UST ), ubidSortF );
 #endif
+	sov->numEdges = rd.edges_size() / 2;
+	sov->edgeData = new int32_t[rd.edges_size()];
+	for (int i = 0; i < rd.edges_size(); ++i) {
+		sov->edgeData[i] = rd.edges(i);
+	}
 	return 0;
 }
 

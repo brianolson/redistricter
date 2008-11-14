@@ -4,9 +4,7 @@
 #include <stdint.h>
 
 class Solver;
-namespace {
 class pxlist;
-}
 
 class MapDrawer {
 public:

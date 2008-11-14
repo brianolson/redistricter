@@ -90,7 +90,7 @@ Solver::Solver() :
 #if WITH_PNG
 	pngname( NULL ), pngWidth( 1000 ), pngHeight( 1000 ),
 #endif
-	geoFact( openZCTA ),
+	gd( NULL ), geoFact( openZCTA ),
 	/*sorti( NULL ),*/
 #if READ_DOUBLE_POS
 	minx( HUGE_VAL ), miny( HUGE_VAL ), maxx( -HUGE_VAL ), maxy( -HUGE_VAL ),
@@ -155,14 +155,21 @@ GeoData* protobufGeoDataTag( char* inputname ) {
 }
 
 int Solver::writeProtobuf( const char* fname ) {
-	writeToProtoFile(this, fname);
+	return writeToProtoFile(this, fname);
 }
 #endif
 
 void Solver::load() {
+	int err = -1;
 #if HAVE_PROTOBUF
-	if ( geoFact == protobufGeoDataTag ) {
-		int err = readFromProtoFile(this, inputname);
+	if ( geoFact == openBin ) {
+		// try proto anyway
+		err = readFromProtoFile(this, inputname);
+	}
+	if ( err >= 0 ) {
+		// success. done.
+	} else if ( geoFact == protobufGeoDataTag ) {
+		err = readFromProtoFile(this, inputname);
 		if (err < 0) {
 			return;
 		}
@@ -170,7 +177,10 @@ void Solver::load() {
 #endif
 	{
 		gd = geoFact( inputname );
-		gd->load();
+		err = gd->load();
+		if ( err < 0 ) {
+			return;
+		}
 		if ( geoFact == openBin ) {
 			readLinksBin();
 		} else {
@@ -204,9 +214,9 @@ void Solver::readLinksFile() {
 	char* linkFileName = strdup( inputname );
 	assert(linkFileName != NULL);
 	{
-	    size_t nlen = strlen( linkFileName ) + 8;
-	    linkFileName = (char*)realloc( linkFileName, nlen );
-	    assert(linkFileName != NULL);
+		size_t nlen = strlen( linkFileName ) + 8;
+		linkFileName = (char*)realloc( linkFileName, nlen );
+		assert(linkFileName != NULL);
 	}
 	strcat( linkFileName, ".links" );
 	mmaped linksFile;
@@ -260,9 +270,9 @@ void Solver::readLinksBin() {
 	p += sizeof(uint64_t)*gd->numPoints;
 #endif
 	if ( endianness ) {
-	    numEdges = swap32( *((uint32_t*)p) );
+		numEdges = swap32( *((uint32_t*)p) );
 	} else {
-	    numEdges = *((uint32_t*)p);
+		numEdges = *((uint32_t*)p);
 	}
 	p += sizeof(uint32_t);
 	edgeData = new int32_t[numEdges*2];

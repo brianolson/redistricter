@@ -8,6 +8,20 @@
 #include "Bitmap.h"
 #include "Node.h"
 
+static const char usage[] =
+"usage: linkfixup [-o file][-p file][--have-protobuf][Solver args]\n"
+#if HAVE_PROTOBUF
+"  -p file   write out new protobuf file\n"
+#endif
+"  -o file   write out old '.gbin' format file\n"
+"  --have-protobuf exit success if -p available, failure otherwise.\n"
+#if HAVE_PROTOBUF
+"\nthis linkfixup was compiled with protobuf support\n"
+#else
+"\nno protobuf support.\n"
+#endif
+;
+
 int _aei( const char** argv, int argc, int i, const char* n ) {
 	if ( i >= argc ) {
 		fprintf(stderr,"expected argument but ran out after \"%s\"\n", argv[argc] );
@@ -51,6 +65,11 @@ int main( int argc, char** argv ) {
 		} else if ( ! strcmp( argv[i], "--have-protobuf" ) ) {
 			exit(1);
 #endif
+		} else if ( (!strcmp( argv[i], "--help" )) ||
+			    (!strcmp( argv[i], "-help" )) ||
+			    (!strcmp( argv[i], "-h" )) ) {
+			fputs(usage, stdout);
+			exit(0);
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;

@@ -38,14 +38,12 @@ void MapDrawer::initDataAndRows() {
 	}
 }
 
-namespace {
 class pxlist {
 public:
 	int numpx;
 	uint16_t* px;
 	pxlist() : numpx( 0 ), px( NULL ) {};
 };
-} // local namespace
 
 void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	mmaped mf;

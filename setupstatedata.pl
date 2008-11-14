@@ -35,6 +35,8 @@ while ( $arg = shift ) {
 	} elsif ( $arg eq "--unpackall" ) {
 # an option useful if there were download problems
 		$unpackall = 1;
+	} elsif ( $arg eq "--gbin" ) {
+		$protobuf = 0;
 	} elsif ( ! defined $stl ) {
 		$stl = $arg;
 	} else {
@@ -326,38 +328,12 @@ sub newerthan ($$) {
 
 chdir( "${rootdir}/data/${stu}" ) or die "could not chdir to ${rootdir}/data/${stu}: $!\n";
 
-if ( 0 ) {
-if ( newerthan( "${tigerdir}/mergeRT1", "${stu}.RT1" ) ||
-     newerthan( "raw", "${stu}.RT1" ) ) {
-	print "merge data/${stu}/raw/*RT1\n";
-	if ( $doit ) {
-		nsystem "${tigerdir}/mergeRT1 -o ${stu}.RT1 raw/*RT1";
-	}
-}
-
-if ( newerthan( "${tigerdir}/blockNeighbors.pl", "$stu.links" ) ||
-     newerthan( "${tigerdir}/blockNeighbors.pl", "$stu.edge" ) ||
-     newerthan( "$stu.RT1", "$stu.links" ) ||
-     newerthan( "$stu.RT1", "$stu.edge" ) ) {
-	print "$stu.RT1 -> $stu.links $stu.edge\n";
-	if ( $doit ) {
-		open FIN, "${tigerdir}/blockNeighbors.pl -i $stu.RT1 |";
-		open FOUT, '>', "$stu.info";
-		while ( $line = <FIN> ) {
-			print FOUT $line;
-		}
-		close FOUT;
-		close FIN;
-	}
-}
-} else {
 if ( newerthan( "${tigerdir}/makeLinks", "${stu}.links" ) ||
 	 newerthan( "raw", "${stu}.links" ) ) {
 	print "data/${stu}/raw/*RT1 -> ${stu}.links\n";
 	if ( $doit ) {
 		nsystem "${tigerdir}/makeLinks -o ${stu}.links raw/*RT1";
 	}
-}
 }
 
 if ( newerthan( "raw", "$stu.RTA" ) ) {
@@ -425,8 +401,13 @@ if ( newerthan( "${stl}101.uf1", $stl_bin ) ||
 	 newerthan( "${stu}.links", $stl_bin ) ||
 	 newerthan( "${rootdir}/linkfixup", $stl_bin ) ) {
 	print "precompile { ${stl}101.uf1, ${stu}.links } to ${stl_bin}\n";
+	if ($protobuf) {
+		$linkfixupOutMode = "-p";
+	} else {
+		$linkfixupOutMode = "-o";
+	}
 	if ( $doit ) {
-		nsystem "${rootdir}/linkfixup", "-U", ".uf1", "-o", $stl_bin;
+		nsystem "${rootdir}/linkfixup", "-U", ".uf1", $linkfixupOutMode, $stl_bin;
 	}
 }
 
@@ -487,10 +468,10 @@ data/${stu}/${stu}_start_sm.jpg:	data/${stu}/${stu}_start.png
 	convert data/${stu}/${stu}_start.png -resize 150x150 data/${stu}/${stu}_start_sm.jpg
 
 data/${stu}/${stu}_start.png:	drend data/${stu}/${stl}.mpout data/${stu}/${stl}109.dsz
-	./drend -B data/${stu}/.gbin \$\{${stu}DISTOPT\} -px data/${stu}/${stl}.mpout --pngout data/${stu}/${stu}_start.png --loadSolution data/${stu}/${stl}109.dsz
+	./drend -B data/${stu}/${stl_bin} \$\{${stu}DISTOPT\} -px data/${stu}/${stl}.mpout --pngout data/${stu}/${stu}_start.png --loadSolution data/${stu}/${stl}109.dsz
 
 data/${stu}/${stu}_start_sm.png:	drend data/${stu}/${stl}_sm.mpout data/${stu}/${stl}109.dsz
-	./drend -B data/${stu}/.gbin \$\{${stu}DISTOPT\} -px data/${stu}/${stl}_sm.mpout --pngout data/${stu}/${stu}_start_sm.png --loadSolution data/${stu}/${stl}109.dsz
+	./drend -B data/${stu}/${stl_bin} \$\{${stu}DISTOPT\} -px data/${stu}/${stl}_sm.mpout --pngout data/${stu}/${stu}_start_sm.png --loadSolution data/${stu}/${stl}109.dsz
 
 data/${stu}/${stl}.mpout:	tiger/makepolys
 	time tiger/makepolys -o data/${stu}/${stl}.mpout \$\{${stu}LONLAT\} \$\{${stu}PNGSIZE\} --maskout data/${stu}/${stl}mask.png data/${stu}/raw/*.RT1

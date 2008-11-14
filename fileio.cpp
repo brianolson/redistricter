@@ -31,12 +31,12 @@ int GeoData::open( char* inputname ) {
 	fd = ::open( inputname, O_RDONLY );
 	if ( fd <= 0 ) {
 		perror(inputname);
-		exit(1);
+		return -1;
 	}
 	err = fstat( fd, &sb );
 	if ( err == -1 ) {
 		perror("fstat");
-		exit(1);
+		return -1;
 	}
 	{
 		int pagesize = getpagesize();
@@ -46,7 +46,7 @@ int GeoData::open( char* inputname ) {
 	}
 	if ( (signed long)data == -1 ) {
 		perror("mmap");
-		exit(1);
+		return -1;
 	}
 	return 0;
 }
@@ -67,7 +67,7 @@ int GeoData::close() {
 }
 
 GeoData::GeoData()
-	: fd( -1 ), data( (void*)0 ), mmapsize( 0 )
+	: fd( -1 ), data( (void*)0 ), mmapsize( 0 ), recnos( NULL )
 {
 }
 
@@ -103,8 +103,8 @@ int GeoData::writeBin( const char* fname ) {
 	}
 	err = writeBin( fd, fname );
 	if ( err != 0 ) {
-	    ::close(fd);
-	    return err;
+		::close(fd);
+		return err;
 	}
 	return ::close( fd );
 }
@@ -190,8 +190,8 @@ int GeoData::readBin( const char* fname ) {
 	}
 	err = readBin( fd, fname );
 	if ( err != 0 ) {
-	    ::close(fd);
-	    return err;
+		::close(fd);
+		return err;
 	}
 	return ::close( fd );
 }
@@ -235,7 +235,7 @@ int GeoData::readBin( int fd, const char* fname ) {
 		return -1;
 	}
 	if ( endianness ) {
-	    for ( int i = 0; i < numPoints; i++ ) {
+		for ( int i = 0; i < numPoints; i++ ) {
 #if READ_INT_POS
 		pos[i*2] = swap32( pos[i*2] );
 		pos[i*2 + 1] = swap32( pos[i*2 + 1] );
@@ -244,7 +244,7 @@ int GeoData::readBin( int fd, const char* fname ) {
 		((uint64_t*)pos)[i*2] = swap64( ((uint64_t*)pos)[i*2] );
 		((uint64_t*)pos)[i*2 + 1] = swap64( ((uint64_t*)pos)[i*2 + 1] );
 #endif
-	    }
+		}
 	}
 	for ( int i = 0; i < numPoints; i++ ) {
 		if ( pos[i*2  ] < minx ) {
@@ -272,7 +272,7 @@ int GeoData::readBin( int fd, const char* fname ) {
 	}
 	for ( int i = 0; i < numPoints; i++ ) {
 		if ( endianness ) {
-		    pop[i] = swap32( pop[i] );
+			pop[i] = swap32( pop[i] );
 		}
 		totalpop += pop[i];
 	}
@@ -287,9 +287,9 @@ int GeoData::readBin( int fd, const char* fname ) {
 		return -1;
 	}
 	if ( endianness ) {
-	    for ( int i = 0; i < numPoints; i++ ) {
-		area[i] = swap32( area[i] );
-	    }
+		for ( int i = 0; i < numPoints; i++ ) {
+			area[i] = swap32( area[i] );
+		}
 	}
 #endif
 #if READ_UBIDS
@@ -355,6 +355,17 @@ int ubidSortF( const void* a, const void* b ) {
 	}
 }
 
+// Sort by recno to aid lookup mapping recno->internal-index
+int recnoSortF( const void* a, const void* b ) {
+	if ( ((Uf1::RecnoNode*)a)->recno > ((Uf1::RecnoNode*)b)->recno ) {
+		return 1;
+	} else if ( ((Uf1::RecnoNode*)a)->recno < ((Uf1::RecnoNode*)b)->recno ) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 int Uf1::load() {
 	int i;
 	char buf[128];
@@ -389,6 +400,9 @@ int Uf1::load() {
 	char* dsts[MAX_DISTRICTS];
 	congressionalDistricts = 0;
 #endif
+	if (false) {
+		recnos = new RecnoNode[numPoints];
+	}
 
 	for ( i = 0; i < numPoints; i++ ) {
 #if READ_DOUBLE_POS || READ_INT_POS
@@ -425,11 +439,11 @@ int Uf1::load() {
 #if READ_INT_AREA
 		copyGeoUf1Field( buf, data, i, 172, 186 );
 		{
-		    char* endp;
-		    errno = 0;
-		    area[i] = strtoul( buf, &endp, 10 );
-		    assert( errno == 0 );
-		    assert( endp != buf );
+			char* endp;
+			errno = 0;
+			area[i] = strtoul( buf, &endp, 10 );
+			assert( errno == 0 );
+			assert( endp != buf );
 		}
 #endif /* READ_INT_AREA*/
 
@@ -446,6 +460,10 @@ int Uf1::load() {
 		ubids[i].ubid = ubid( i );
 		ubids[i].index = i;
 #endif
+		if (recnos != NULL) {
+			recnos[i].recno = logrecno( i );
+			recnos[i].index = i;
+		}
 #if COUNT_DISTRICTS
 		char* cd;
 		//cd = (char*)((unsigned long)data + i*sizeof_GeoUf1 + 136 ); // 106th cong
@@ -472,6 +490,9 @@ int Uf1::load() {
 #if READ_INT_POS
 	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
 #endif
+	if (recnos != NULL) {
+		qsort( recnos, numPoints, sizeof(RecnoNode), recnoSortF );
+	}
 	return 0;
 }
 uint64_t Uf1::ubid( int index ) {
@@ -504,11 +525,18 @@ POPTYPE Uf1::oldDist( int index ) {
 int GeoBin::load() {
 	size_t s;
 	uintptr_t p = (uintptr_t)data;
-	int32_t endianness = 1;
+	int32_t endianness;
 	endianness = *((int32_t*)p);
 	p += sizeof(endianness);
-	/* if bin file was written in other endianness, 1 will be at wrong end. */
-	endianness = ! ( endianness & 0xff );
+	if (endianness == 1) {
+		// good, set endianness to 0 to indicate natural order.
+		endianness = 0;
+	} else if (endianness == 0x01000000) {
+		endianness = 1;
+	} else {
+		fprintf(stderr,"not a known gbin version\n");
+		return -1;
+	}
 	if ( endianness ) {
 		fprintf(stderr,"reading reverse endia gbin\n");
 		numPoints = swap32( *((uint32_t*)p) );
@@ -673,6 +701,8 @@ uint32_t GeoData::indexOfUbid( uint64_t u ) {
 		} else if ( t < u ) {
 			lo = mid + 1;
 		} else {
+			assert(ubids[mid].index >= 0);
+			assert(ubids[mid].index < numPoints);
 			return ubids[mid].index;
 		}
 	}
@@ -687,6 +717,42 @@ uint64_t GeoData::ubidOfIndex( uint32_t index ) {
 	return (uint64_t)-1;
 }
 
+/* binary search, fastish */
+uint32_t GeoData::indexOfRecno( uint32_t rn ) {
+	if (recnos == NULL) {
+		return (uint32_t)-1;
+	}
+	int lo = 0;
+	int hi = numPoints - 1;
+	int mid;
+	uint32_t t;
+	while ( hi >= lo ) {
+		mid = (hi + lo) / 2;
+		t = recnos[mid].recno;
+		if ( t > rn ) {
+			hi = mid - 1;
+		} else if ( t < rn ) {
+			lo = mid + 1;
+		} else {
+			assert(recnos[mid].index >= 0);
+			assert(recnos[mid].index < numPoints);
+			return recnos[mid].index;
+		}
+	}
+	return (uint32_t)-1;
+}
+/* linear search, sloooow */
+uint32_t GeoData::recnoOfIndex( uint32_t index ) {
+	if (recnos == NULL) {
+		return (uint32_t)-1;
+	}
+	for ( int i = 0; i < numPoints; i++ ) {
+		if ( recnos[i].index == index ) {
+			return recnos[i].recno;
+		}
+	}
+	return (uint32_t)-1;
+}
 
 int Uf1::numDistricts() {
 #if COUNT_DISTRICTS
@@ -736,9 +802,9 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 	char* linkFileName = strdup( inputname );
 	assert(linkFileName != NULL);
 	{
-	    size_t nlen = strlen( linkFileName ) + 8;
-	    linkFileName = (char*)realloc( linkFileName, nlen );
-	    assert(linkFileName != NULL);
+		size_t nlen = strlen( linkFileName ) + 8;
+		linkFileName = (char*)realloc( linkFileName, nlen );
+		assert(linkFileName != NULL);
 	}
 	strcat( linkFileName, ".links" );
 	mmaped linksFile;

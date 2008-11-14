@@ -25,7 +25,7 @@ public:
 	int minx, maxx, miny, maxy;
 
 	inline void allocPoints() {
-		pos = new int32_t[numPoints];
+		pos = new int32_t[numPoints*2];
 	}
 	inline int32_t lon(int x) {
 		return pos[(x*2)];
@@ -62,7 +62,7 @@ public:
 	double minx, maxx, miny, maxy;
 
 	inline void allocPoints() {
-		pos = new double[numPoints];
+		pos = new double[numPoints*2];
 	}
 	inline double lon(int x) {
 		return pos[(x*2)];
@@ -123,11 +123,7 @@ public:
 	/* linear search, sloooow */
 	uint64_t ubidOfIndex( uint32_t index );
 #endif
-#ifndef READ_RECNOS
-// TODO: not done yet, implement recno merging of other data
-#define READ_RECNOS 0
-#endif
-#if READ_RECNOS
+
 	// Map "Logical Record Number" to internal index so that we can map in 
 	// other Census data files.
 	class RecnoNode {
@@ -135,12 +131,12 @@ public:
 		uint32_t recno;
 		uint32_t index;
 	};
+	// May be NULL
 	RecnoNode* recnos;
 	/* binary search, fastish */
 	uint32_t indexOfRecno( uint32_t u );
 	/* linear search, sloooow */
 	uint32_t recnoOfIndex( uint32_t index );
-#endif
 	
 	GeoData();
 	int open( char* inputname );
@@ -182,8 +178,8 @@ class Uf1 : public GeoData {
 	// get Unique Block ID, the ull interpretation of county tract and block concatenated
 	uint64_t ubid( int index );
 	
-    // get "Logical Record Number" which links to deeper census data.
-    uint32_t logrecno( int index );
+	// get "Logical Record Number" which links to deeper census data.
+	uint32_t logrecno( int index );
 public:
 	POPTYPE oldDist( int index );
 };
