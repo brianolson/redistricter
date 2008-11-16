@@ -76,7 +76,7 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	}
 #endif
 	google::protobuf::RepeatedField<int32>* edges = rd.mutable_edges();
-	for (int i = 0; i < sov->numEdges; ++i) {
+	for (unsigned int i = 0; i < sov->numEdges; ++i) {
 		edges->Add(sov->edgeData[i*2]);
 		edges->Add(sov->edgeData[i*2 + 1]);
 	}

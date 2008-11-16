@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 # Expects to run in the build dir with data/?? containing state data.
 # Using setupstatedata.pl in the standard way should do this.
 
@@ -209,14 +209,14 @@ def select_run(p, stu):
 	while p.poll() is None:
 		(il, ol, el) = select.select([p.stdout, p.stderr], [], [], 0.5)
 		for fd in il:
-			if p.stdout.fileno() == fd:
+			if (p.stdout.fileno() == fd) or (fd == p.stdout):
 				line = p.stdout.readline()
 				sys.stdout.write("O " + stu + ": " + line)
-			elif p.stderr.fileno() == fd:
+			elif (p.stderr.fileno() == fd) or (fd == p.stderr):
 				line = p.stderr.readline()
 				sys.stdout.write("E " + stu + ": " + line)
 			else:
-				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
+				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
 
 def maybe_mkdir(path):
 	if dry_run or verbose:

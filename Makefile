@@ -8,8 +8,8 @@ all:	districter2 linkfixup drend rta2dsz uf1data
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
 
-#OG:=-O2 -DNDEBUG=1
-OG?=-g
+OG:=-O2 -DNDEBUG=1
+#OG?=-g
 #OG:=-g -pg
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
@@ -24,6 +24,7 @@ CFLAGS+=${OG} ${CCOMMONFLAGS}
 
 
 LDPNG=-lpng12
+LDFLAGS+=${LDPNG} -lz
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
@@ -84,9 +85,7 @@ uf1data:	${UFONEDATAOBJS}
 	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
 
 clean:
-	rm -f ${THINGSTOCLEAN}
-
-LDFLAGS+=${LDPNG} -lz
+	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h
 
 run:	districter2
 	./districter2 -U build/input.uf1 -g 100 --pngout fl_test.png --pngW 400 --pngH 400 --oldCDs -d -10 -o fl_test_oz
@@ -102,3 +101,4 @@ include tiger/tiger.make
 
 -include data/*/.make
 
+-include localtail.make
