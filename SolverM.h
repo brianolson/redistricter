@@ -25,10 +25,12 @@
 	
 	IBOutlet NSTextView *extraText;
 	IBOutlet NSWindow *extraTextWindow;
+	IBOutlet NSTableView *debugParams;
 
 	char* dataPath;
 	void* cppSolver;
 	void* cppMapDrawer;
+	id debugParamsDataSource;
 
 	BOOL isPixView;
 	pthread_t runThread;
@@ -102,4 +104,10 @@
 - (id)valueForKeyPath:(NSString *)keyPath;
 - (id)valueForUndefinedKey:(NSString *)key;
 
+
+/* pass through to Solver's DisrictSet object */
+- (int)numParameters;
+- (const char*)getParameterLabelByIndex:(int)index;
+- (double)getParameterValueByIndex:(int)index;
+- (void)setParameterByIndex:(int)index value:(double)v;
 @end

@@ -19,14 +19,79 @@
 #include "Solver.h"
 #include "Node.h"
 #include "GrabIntermediateStorage.h"
+#include "StatThing.h"
 
+
+// TODO: optimization
+// Recent run shows time going:
+//	32.1% recalc()
+//	31.1% grab() (28.5% grabScore())
+//	24.1% fixupDistrictContiguity() (most of that in findContiguousGroups())
+//	10.6% getStats()
 
 District2Set::District2Set(Solver* sovIn)
-	: DistrictSet(sovIn), grabdebug(NULL) {}
+	: DistrictSet(sovIn), grabdebug(NULL),
+	debugStats(NULL),
+	fixupFrequency(0.1), fixupBucket(0.0) {
+}
 
 char* District2Set::debugText() {
-	if ( grabdebug == NULL ) return NULL;
-	return grabdebug->debugText();
+	char* dstext = NULL;
+	char* gdtext = NULL;
+	if ( debugStats != NULL ) {
+		dstext = debugStatsText();
+	}
+	if ( grabdebug != NULL ) {
+		gdtext = grabdebug->debugText();
+	}
+	if (dstext != NULL) {
+		if (gdtext != NULL) {
+			char* out = (char*)malloc(strlen(dstext) + strlen(gdtext) + 2);
+			strcpy(out, dstext);
+			strcat(out, "\n");
+			strcat(out, gdtext);
+			free(dstext);
+			free(gdtext);
+			return out;
+		} else {
+			return dstext;
+		}
+	} else {
+		return gdtext;
+	}
+}
+enum {
+	edgeRelativeDistanceIndex = 0,
+	edgeRelativeDistanceFactorIndex,
+	odEdgeRelativeDistanceIndex,
+	odEdgeRelativeDistanceFactorIndex,
+	neighborRatioIndex,
+	neighborRatioFactorIndex,
+	popRatioIndex,
+	popRatioFactorIndex,
+	lockStrengthIndex,
+	lockStrengthFactorIndex,
+	popFieldIndex,
+	popFieldFactorIndex,
+	currentRandomIndex,
+	currentRandomFactorIndex,
+	debugStatsLength
+};
+char* District2Set::debugStatsText() {
+	static const size_t outLen = 4096;
+	char* out = (char*)malloc(outLen);
+	char* cur = out;
+	size_t remaining = outLen;
+	int err;
+#define PRINT_LOG(x) err = snprintf(cur, remaining, "%23s: % 8g/% 8g/% 8g, *weight % 8g/% 8g/% 8g\n", #x, debugStats[x##Index].min(), debugStats[x##Index].average(), debugStats[x##Index].max(), debugStats[x##FactorIndex].min(), debugStats[x##FactorIndex].average(), debugStats[x##FactorIndex].max()); if (err >= 0) {cur += err; remaining -= err;} else {fprintf(stderr, "error printing %s\n", #x);}
+	PRINT_LOG(edgeRelativeDistance);
+	PRINT_LOG(odEdgeRelativeDistance);
+	PRINT_LOG(neighborRatio);
+	PRINT_LOG(popRatio);
+	PRINT_LOG(lockStrength);
+	PRINT_LOG(popField);
+	PRINT_LOG(currentRandom);
+	return out;
 }
 void District2Set::getStats(SolverStats* stats) {
 	double minp = HUGE_VAL;
@@ -201,9 +266,20 @@ int District2Set::step() {
 		grabdebug = new GrabIntermediateStorage(sov);
 	}
 #endif
+#if 0
+	// compile in for debugging
+	if ( debugStats == NULL ) {
+		debugStats = new StatThing[debugStatsLength];
+	}
+#endif
 	if ( grabdebug != NULL ) {
 		// This is horribly slow. use grabdebug only if you really need it.
 		grabdebug->clear();
+	}
+	if (debugStats != NULL) {
+		for (int i = 0; i < debugStatsLength; ++i) {
+			debugStats[i].clear();
+		}
 	}
 #if TRIANGLE_STEP
 	for ( int runl = districts; runl > 0; runl-- ) {
@@ -262,12 +338,18 @@ int District2Set::step() {
 #if TRIANGLE_STEP
 	}
 #endif
-	if ( sov->gencount > 500 ) {
-		fixupDistrictContiguity();
-		recalc();
+	if (sov->gencount > 500) {
+		if (fixupFrequency > 0.0) {
+			if (fixupBucket >= 1.0) {
+				fixupDistrictContiguity();
+				recalc();
+				fixupBucket -= 1.0;
+			}
+			fixupBucket += fixupFrequency;
+		}
 	}
 	District2::step();
-	District2::randomFactor = 0.5 * (cos( sov->gencount / 1000.0 ) + 1.0);
+	currentRandomFactor = District2::randomFactor * (cos( sov->gencount / 1000.0 ) + 1.0);
 	return err;
 }
 
@@ -584,11 +666,23 @@ int District2::remove( /*Node* nodes, POPTYPE* pit, */Solver* sov, int n, POPTYP
 
 double District2::edgeRelativeDistanceFactor = 1.2;
 double District2::odEdgeRelativeDistanceFactor = 1.0;
-double District2::neighborRatioFactor = 1.0;
-double District2::popRatioFactor = 1.4;
+double District2::neighborRatioFactor = 0.3;
+double District2::popRatioFactor = 0.5;
 double District2::lockStrengthFactor = 0.1;//1.0;
 double District2::randomFactor = 0.1;
 double District2::popFieldFactor = 0.001;
+const char* District2::parameterNames[] = {
+"distance relative to edge",
+"distance relative to edge (OD)",
+"neighbor ratio",
+"pop ratio",
+"lock strength",
+"random",
+"pop field",
+"fixup frequency",
+NULL,
+};
+static const int kNumParameterNames = 8;
 
 double District2::lastAvgPopField = HUGE_VAL;
 double District2::nextPopFieldSum = 0.0;
@@ -663,22 +757,22 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 		edgeRelativeDistance = tm / edgeMeanR - 1.0;
 	}
 	// defaults paint a somewhat favorable condition for a no-district node
-	double odEdgeRelativeDistance = 0.4;	// higher better
+	double odEdgeRelativeDistance = -0.4;	// lower better
 	double popRatio = -0.9;					// lower better
-	double neighborRatio = 1.0;				// higher better
+	double neighborRatio = -1.0;			// lower better
 	double lockStrength = (d2set->lock[nein]/5.0 + 1.0); // lower better
 	if ( odi != NODISTRICT ) {
 		District2* od;
 		od = (District2*)&(dists[odi]);
-		//dx = bx - od->distx;
-		//dy = by - od->disty;
-		//tm = sqrt( (dx * dx) + (dy * dy) );
 		if ( od->edgelistLen <= 1 ) {
-			odEdgeRelativeDistance = 0.0;
+			return HUGE_VAL; // don't take other district's last node.
+//			odEdgeRelativeDistance = 0.0;
 		} else {
-			odEdgeRelativeDistance = tm / od->edgeMeanR - 1.0;
+			dx = bx - od->distx;
+			dy = by - od->disty;
+			tm = sqrt( (dx * dx) + (dy * dy) );
+			odEdgeRelativeDistance = (tm / od->edgeMeanR - 1.0) * -1.0;
 		}
-		//tm = 0.0;
 		// tm should be higher if taking it from a district is costly to that district. this is to prevent thrashing and promote district mobility.
 		// equivalently, taking a block from a bigger district should be easier by making tm smaller.
 		if ( od->pop <= 1 ) {
@@ -714,7 +808,7 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 				othern++;
 			}
 		}
-		neighborRatio = thisn - othern;
+		neighborRatio = othern - thisn;
 		neighborRatio /= on->numneighbors;
 	}
 #ifndef FIELD_VS_AVG_POP
@@ -746,6 +840,17 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 	popField /= lastAvgPopField;
 
 	double d2dr = d2drand();
+	if ( d2set->debugStats != NULL ) {
+#define LOG_STAT(x) d2set->debugStats[x##Index].log(x); d2set->debugStats[x##FactorIndex].log(x * x##Factor)
+		LOG_STAT(edgeRelativeDistance);
+		LOG_STAT(odEdgeRelativeDistance);
+		LOG_STAT(neighborRatio);
+		LOG_STAT(popRatio);
+		LOG_STAT(lockStrength);
+		LOG_STAT(popField);
+		d2set->debugStats[currentRandomIndex].log(d2dr);
+		d2set->debugStats[currentRandomFactorIndex].log(d2dr * d2set->currentRandomFactor);
+	}
 	if ( gsdebug ) {
 		printf("grabScore:  erd: %f*%f=%f\n", edgeRelativeDistance, edgeRelativeDistanceFactor, edgeRelativeDistance * edgeRelativeDistanceFactor );
 		printf("grabScore: oerd: %f*%f=%f\n", odEdgeRelativeDistance, odEdgeRelativeDistanceFactor, odEdgeRelativeDistance * odEdgeRelativeDistanceFactor );
@@ -753,7 +858,7 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 		printf("grabScore: popr: %f*%f=%f\n", popRatio, popRatioFactor, popRatio * popRatioFactor );
 		printf("grabScore: lock: %f*%f=%f\n", lockStrength, lockStrengthFactor, lockStrength * lockStrengthFactor );
 		printf("grabScore: popf: %f*%f=%f\n", popField, popFieldFactor, popField * popFieldFactor );
-		printf("grabScore: rand: %f*%f=%f\n", d2dr, randomFactor, d2dr * randomFactor );
+		printf("grabScore: rand: %f*%f=%f\n", d2dr, d2set->currentRandomFactor, d2dr * d2set->currentRandomFactor );
 	}
 	if ( (d2set->grabdebug != NULL) &&
 			((sov->debugDistrictNumber < 0) || (sov->debugDistrictNumber == d)) ) {
@@ -762,12 +867,12 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 	}
 
 	return edgeRelativeDistance * edgeRelativeDistanceFactor
-		- odEdgeRelativeDistance * odEdgeRelativeDistanceFactor
-		- neighborRatio * neighborRatioFactor
+		+ odEdgeRelativeDistance * odEdgeRelativeDistanceFactor
+		+ neighborRatio * neighborRatioFactor
 		+ popRatio * popRatioFactor
 		+ lockStrength * lockStrengthFactor
 		+ popField * popFieldFactor
-		+ d2dr * randomFactor;
+		+ d2dr * d2set->currentRandomFactor;
 }
 
 #ifndef INTRA_GRAB_MULTITHREAD
@@ -1395,6 +1500,7 @@ void District2Set::fixupDistrictContiguity() {
 	// If points were reposessed from small ContiguousGroups, assign them to
 	// nearby districts.
 	if ( pointsRepod != 0 ) {
+		//fprintf(stderr, "changed %d points fixing contiguity at t=%d\n", pointsRepod, sov->gencount);
 		assignReposessedNodes( bfsearchq, pointsRepod );
 	}
 	
@@ -1471,3 +1577,76 @@ void District2Set::recalc() {
 	}
 }
 
+int District2Set::numParameters() {
+	return kNumParameterNames;
+}
+// Return NULL if index too high or too low.
+const char* District2Set::getParameterLabelByIndex(int index) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return NULL;
+	}
+	return District2::parameterNames[index];
+}
+double District2Set::getParameterByIndex(int index) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return NAN;
+	}
+	switch (index) {
+	case 0:
+		return District2::edgeRelativeDistanceFactor;
+	case 1:
+		return District2::odEdgeRelativeDistanceFactor;
+	case 2:
+		return District2::neighborRatioFactor;
+	case 3:
+		return District2::popRatioFactor;
+	case 4:
+		return District2::lockStrengthFactor;
+	case 5:
+		return District2::randomFactor;
+	case 6:
+		return District2::popFieldFactor;
+	case 7:
+		return fixupFrequency;
+	default:
+		assert(0);
+	}
+	assert(0);
+	return NAN;
+}
+void District2Set::setParameterByIndex(int index, double value) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return;
+	}
+	switch (index) {
+		case 0:
+			District2::edgeRelativeDistanceFactor = value;
+			break;
+		case 1:
+			District2::odEdgeRelativeDistanceFactor = value;
+			break;
+		case 2:
+			District2::neighborRatioFactor = value;
+			break;
+		case 3:
+			District2::popRatioFactor = value;
+			break;
+		case 4:
+			District2::lockStrengthFactor = value;
+			break;
+		case 5:
+			District2::randomFactor = value;
+			break;
+		case 6:
+			District2::popFieldFactor = value;
+			break;
+		case 7:
+			fixupFrequency = value;
+			if (fixupFrequency > 1.0) {
+				fixupFrequency = 1.0;
+			}
+			break;
+		default:
+			assert(0);
+	}
+}

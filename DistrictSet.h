@@ -27,6 +27,12 @@ public:
 		return *(they[index]);
 	}
 	
+	virtual int numParameters() = 0;
+	// Return NULL if index too high or too low.
+	virtual const char* getParameterLabelByIndex(int index) = 0;
+	virtual double getParameterByIndex(int index) = 0;
+	virtual void setParameterByIndex(int index, double value) = 0;
+	
 	// How many are they?
 	int districts;
 	

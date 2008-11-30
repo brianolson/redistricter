@@ -55,8 +55,8 @@ struct DistrictSetFactory {
 };
 
 DistrictSetFactory districtSetFactories[] = {
+{ District2SetFactory, "Grab Solver" },
 	{ NearestNeighborDistrictSetFactory, "Nearest Neighbor" },
-	{ District2SetFactory, "Grab Solver" },
 	{ NULL, NULL },
 };
 
@@ -1452,6 +1452,8 @@ SolverStats::SolverStats( int geni, double pd, double pa, double ps, double pmi,
 	next( n )
 {}
 
+// Reads file with arguments split by any whitespace according to isspace().
+// \isspace() is excepted and preserved.
 // Call free(argv) when done with args.
 // argv[0] is always NULL, there is no app name.
 // argv[argc] will also be NULL.

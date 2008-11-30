@@ -35,6 +35,12 @@ public:
 	void fixupDistrictContiguity();
 	void resumDistrictCenters();
 
+	virtual int numParameters();
+	// Return NULL if index too high or too low.
+	virtual const char* getParameterLabelByIndex(int index);
+	virtual double getParameterByIndex(int index);
+	virtual void setParameterByIndex(int index, double value);
+
 	static double kNu;
 	static double kInc;
 	static double kDec;

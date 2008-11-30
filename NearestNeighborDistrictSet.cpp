@@ -438,14 +438,20 @@ void NearestNeighborDistrictSet::resumDistrictCenters() {
 	}
 }
 
+// center motion step multiplier
 double NearestNeighborDistrictSet::kNu = 0.01;
+// weight increase multiplier
 double NearestNeighborDistrictSet::kInc = 1.0 + kNu;
+// weight decrease multiplier
 double NearestNeighborDistrictSet::kDec = 1.0 - kNu;
+// field effect weight
 double NearestNeighborDistrictSet::kField = 0.0001;
+// do n^2 weight field
+bool NearestNeighborDistrictSet::donndsfield = false;
+// FIXME implement jitter and add it to parameter interface.
 double NearestNeighborDistrictSet::kDefaultPosMaxJitter = 0.01;
 double NearestNeighborDistrictSet::kDefaultWeightMaxJitter = kNu;
 double NearestNeighborDistrictSet::kDefaultJitterPeriod = 2000;
-bool NearestNeighborDistrictSet::donndsfield = false;
 
 int NearestNeighborDistrictSet::step() {
 	for ( POPTYPE d = 0; d < districts; ++d ) {
@@ -594,4 +600,82 @@ void NearestNeighborDistrictSet::getStats(SolverStats* stats) {
 }
 void NearestNeighborDistrictSet::print(const char* filename) {
 
+}
+
+static const char* parameterNames[] = {
+"center motion step multiplier",
+"weight increase multiplier",
+"weight decrease multiplier",
+"field effect weight",
+"do n^2 weight field",
+};
+static const int kNumParameterNames = 5;
+
+int NearestNeighborDistrictSet::numParameters() {
+	return kNumParameterNames;
+}
+// Return NULL if index too high or too low.
+const char* NearestNeighborDistrictSet::getParameterLabelByIndex(int index) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return NULL;
+	}
+	return parameterNames[index];
+}
+double NearestNeighborDistrictSet::getParameterByIndex(int index) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return NAN;
+	}
+	switch (index) {
+		case 0:
+			// center motion step multiplier
+			return NearestNeighborDistrictSet::kNu;
+		case 1:
+			// weight increase multiplier
+			return NearestNeighborDistrictSet::kInc;
+		case 2:
+			// weight decrease multiplier
+			return NearestNeighborDistrictSet::kDec;
+		case 3:
+			// field effect weight
+			return NearestNeighborDistrictSet::kField;
+		case 4:
+			// do n^2 weight field
+			if (NearestNeighborDistrictSet::donndsfield) {
+				return 1.0;
+			} else {
+				return 0.0;
+			}
+		default:
+			assert(0);
+	}
+	assert(0);
+	return NAN;
+}
+void NearestNeighborDistrictSet::setParameterByIndex(int index, double value) {
+	if ((index < 0) || (index >= kNumParameterNames)) {
+		return;
+	}
+	switch (index) {
+		case 0:
+			// center motion step multiplier
+			NearestNeighborDistrictSet::kNu = value;
+		case 1:
+			// weight increase multiplier
+			NearestNeighborDistrictSet::kInc = value;
+		case 2:
+			// weight decrease multiplier
+			NearestNeighborDistrictSet::kDec = value;
+		case 3:
+			// field effect weight
+			NearestNeighborDistrictSet::kField = value;
+		case 4:
+			// do n^2 weight field
+			if (value >= 0.5) {
+				NearestNeighborDistrictSet::donndsfield = true;
+			} else {
+				NearestNeighborDistrictSet::donndsfield = false;
+			}
+		default:
+			assert(0);
+	}
 }

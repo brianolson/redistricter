@@ -196,5 +196,6 @@ int readGeoUf1( char* inputname, PosPop** zipdP );*/
 GeoData* openZCTA( char* inputname );
 GeoData* openUf1( char* inputname );
 GeoData* openBin( char* inputname );
+GeoData* protobufGeoDataTag( char* inputname );
 
 #endif /* GEODATA_H */

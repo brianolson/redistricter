@@ -13,18 +13,150 @@ extern "C" const char* getNodeColoringName(int index);
 extern "C" void setNodeColoringByIndex(int index);
 extern "C" void setDebugDistrictNumber(int index);
 
+@interface SolverM_ParamTableAdaptor : NSObject
+{
+	SolverM* s;
+	
+	NSMutableArray* paramNames;
+	NSMutableArray* paramValues;
+}
+// May be called again to reset internal state from new solver dists
+- (id)initFromSolver: (SolverM*)s_;
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView;
+- (BOOL)tableView:(NSTableView *)aTableView acceptDrop:(id < NSDraggingInfo >)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)operation;
+- (NSArray *)tableView:(NSTableView *)aTableView namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination forDraggedRowsWithIndexes:(NSIndexSet *)indexSet;
+- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex;
+- (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex;
+- (void)tableView:(NSTableView *)aTableView sortDescriptorsDidChange:(NSArray *)oldDescriptors;
+- (NSDragOperation)tableView:(NSTableView *)aTableView validateDrop:(id < NSDraggingInfo >)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)operation;
+- (BOOL)tableView:(NSTableView *)aTableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard;
+@end
+
+@implementation SolverM_ParamTableAdaptor
+- (id)initFromSolver: (SolverM*)s_ {
+	s = s_;
+	int len = [s numParameters];
+	paramNames = [NSMutableArray arrayWithCapacity:len];
+	paramValues = [NSMutableArray arrayWithCapacity:len];
+	for (int i = 0; i < len; ++i) {
+		const char* str = [s getParameterLabelByIndex:i];
+		[paramNames addObject:[NSString stringWithCString:str]];
+		double vald = [s getParameterValueByIndex:i];
+#if 1
+		NSNumber* val = [NSNumber numberWithDouble:vald];
+#else
+		NSCell* val = [[NSCell alloc] initTextCell:@""];
+		[val setEditable:YES];
+		[val setDoubleValue:vald];
+#endif
+		[paramValues addObject:val];
+		fprintf(stderr, "%d: %s=%f\n", i, str, vald);
+	}
+	return self;
+}
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
+	int rows = [s numParameters];
+	fprintf(stderr, "numberOfRowsInTableView:%p => %d\n", aTableView, rows);
+	return rows;
+}
+- (BOOL)tableView:(NSTableView *)aTableView acceptDrop:(id < NSDraggingInfo >)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)operation {
+	// drag-in unimplemented
+	fprintf(stderr, "acceptDrop\n");
+	return NO;
+}
+- (NSArray *)tableView:(NSTableView *)aTableView namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination forDraggedRowsWithIndexes:(NSIndexSet *)indexSet {
+	fprintf(stderr, "namesOfPromisedFilesDroppedAtDestination\n");
+	return NULL;
+}
+- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
+	// Return Cell object for column:row
+	// TODO: setIdentifier to be paramNames and paramValues
+	NSMutableArray* ar = nil;
+	id tcid = [aTableColumn identifier];
+	if ([tcid isKindOfClass:[NSString class]]) {
+		if ([tcid isEqualToString:@"2"]) {
+			//fprintf(stderr, "goint to return paramValues[%d]\n", (int)rowIndex);
+			ar = paramValues;
+		} else if ([tcid isEqualToString:@"1"]) {
+			//fprintf(stderr, "goint to return paramNames[%d]\n", (int)rowIndex);
+			ar = paramNames;
+		}
+	}
+	if (ar != nil) {
+		id tid = [ar objectAtIndex:rowIndex];
+		//fprintf(stderr, "tid=%p desc=%s\n", tid, [[tid description] cStringUsingEncoding:NSASCIIStringEncoding]);
+		return tid;
+	}
+	fprintf(stderr, "tableView:%s objectValueForTableColumn:%s rowIndex:%d\n\tidentifier %p, desc=%s\n",
+			[[aTableView description] cStringUsingEncoding:NSASCIIStringEncoding],
+			[[aTableColumn description] cStringUsingEncoding:NSASCIIStringEncoding],
+			(int)rowIndex,
+			[aTableColumn identifier],
+			[[[aTableColumn identifier] description] cStringUsingEncoding:NSASCIIStringEncoding]);
+	return nil;
+}
+- (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
+	// Accept changed data
+	// TODO
+	NSMutableArray* ar = nil;
+	id tcid = [aTableColumn identifier];
+	if ([tcid isKindOfClass:[NSString class]]) {
+		if ([tcid isEqualToString:@"2"]) {
+			fprintf(stderr, "going to set paramValues[%d]\n", (int)rowIndex);
+			ar = paramValues;
+		} else if ([tcid isEqualToString:@"1"]) {
+			fprintf(stderr, "error: trying to set paramNames[%d]!\n", (int)rowIndex);
+			//ar = paramNames;
+		}
+	}
+	if (ar != nil) {
+		if ([anObject respondsToSelector:@selector(doubleValue)]) {
+			double x = [anObject doubleValue];
+			[s setParameterByIndex:rowIndex value:x];
+			NSNumber* nn = [NSNumber numberWithDouble:x];
+			fprintf(stderr, "setting [%d]=%f\n", (int)rowIndex, x);
+			[ar replaceObjectAtIndex:rowIndex withObject:nn];
+		}
+	}
+	fprintf(stderr, "table=%p setObjectValue:id=%p desc=%s col=%p desc=%s row=%d\n",
+			aTableView,
+			anObject,
+			[[anObject description] cStringUsingEncoding:NSASCIIStringEncoding],
+			aTableColumn,
+			[[[aTableColumn identifier] description] cStringUsingEncoding:NSASCIIStringEncoding],
+			(int)rowIndex);
+}
+- (void)tableView:(NSTableView *)aTableView sortDescriptorsDidChange:(NSArray *)oldDescriptors {
+	// Don't care
+	fprintf(stderr, "sortDescriptorsDidChange\n");
+}
+- (NSDragOperation)tableView:(NSTableView *)aTableView validateDrop:(id < NSDraggingInfo >)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)operation {
+	// drag-in unimplemented
+	fprintf(stderr, "validateDrop\n");
+	return nil;
+}
+- (BOOL)tableView:(NSTableView *)aTableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard {
+	// drag-out unimplemented
+	fprintf(stderr, "writeRowsWithIndexes\n");
+	return NO;
+}
+@end
+
 @implementation SolverM
 - (void)awakeFromNib {
 	dataPath = NULL;
 	cppSolver = NULL;
 	cppMapDrawer = NULL;
 	isPixView = YES;
+	debugParamsDataSource = nil;
 
 	runMode = kSolverStopped;
 	pthread_mutex_init( &runControlM, NULL );
 	pthread_cond_init( &runControl, NULL );
 	pthread_mutex_init( &sovLock, NULL );
 	pthread_create( &runThread, NULL, runThreadProc, self );
+#if 0
 	if ( _edgeRelativeDistanceFactor ) {
 		[_edgeRelativeDistanceFactor setDoubleValue: District2::edgeRelativeDistanceFactor];
 	}
@@ -34,6 +166,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( _popRatioFactor ) {
 		[_popRatioFactor setDoubleValue: District2::popRatioFactor];
 	}
+#endif
 #if 0
 	if ( zoomBox && sov ) {
 		[zoomBox setDoubleValue: sov->zoom];
@@ -87,7 +220,10 @@ extern "C" void setDebugDistrictNumber(int index);
 - (int)stepDisplay:(BOOL)needsDisplay {
 	if ( sov == NULL ) {
 		[self setupSolver];
-		assert(sov != NULL);
+		if ( sov == NULL ) {
+			needsDisplay = NO;
+			return -1;
+		}
 	}
 	int err;
 	pthread_mutex_lock( &sovLock );
@@ -246,6 +382,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	printf( "%s from unkown sender %p\n", __FUNCTION__, sender ); }
 
 - (IBAction)setEdgeRelativeDistanceFactor:(id)sender {
+#if 0
 	if ( [sender respondsToSelector:@selector(doubleValue)] ) {
 		District2::edgeRelativeDistanceFactor = [sender doubleValue];
 		if ( _edgeRelativeDistanceFactor ) {
@@ -254,8 +391,10 @@ extern "C" void setDebugDistrictNumber(int index);
 	} else {
 		printf("setEdgeRelativeDistanceFactor from unkown sender %p\n", sender );
 	}
+#endif
 }
 - (IBAction)setOdEdgeRelativeDistanceFactor:(id)sender {
+#if 0
 	if ( [sender respondsToSelector:@selector(doubleValue)] ) {
 		District2::odEdgeRelativeDistanceFactor = [sender doubleValue];
 		if ( _odEdgeRelativeDistanceFactor ) {
@@ -264,8 +403,10 @@ extern "C" void setDebugDistrictNumber(int index);
 	} else {
 		printf("setOdEdgeRelativeDistanceFactor from unkown sender %p\n", sender );
 	}
+#endif
 }
 - (IBAction)setPopRatioFactor:(id)sender {
+#if 0
 	if ( [sender respondsToSelector:@selector(doubleValue)] ) {
 		District2::popRatioFactor = [sender doubleValue];
 		if ( _popRatioFactor ) {
@@ -274,6 +415,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	} else {
 		printf("setPopRatioFactor from unkown sender %p\n", sender );
 	}
+#endif
 }
 - (IBAction)setZoom:(id)sender {
 	if ( sov == NULL ) return;
@@ -399,7 +541,7 @@ extern "C" void setDebugDistrictNumber(int index);
 - (IBAction)startOpenData:(id)sender {
 	NSOpenPanel* sheet = [NSOpenPanel openPanel];
 	[sheet setAllowsMultipleSelection:NO];
-	NSArray* fileTypes = [NSArray arrayWithObjects:@"gbin", @"zcta", @"uf1", @"args", nil];
+	NSArray* fileTypes = [NSArray arrayWithObjects:@"pb", @"gbin", @"zcta", @"uf1", @"args", nil];
 	[sheet beginSheetForDirectory:nil file:nil types:fileTypes modalForWindow:[view window] modalDelegate:self didEndSelector:@selector(openDataDidEnd:returnCode:contextInfo:) contextInfo:NULL];
 }
 - (void)openDataDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
@@ -424,6 +566,42 @@ extern "C" void setDebugDistrictNumber(int index);
 	pthread_mutex_unlock( &sovLock );
 }
 
+- (void)loadMpout:(const char*)mpoutName {
+	mapr->readUPix( sov, mpoutName );
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width;
+		newSize.height = mapr->height;
+		NSScrollView* sv = [view enclosingScrollView];
+		if ( sv != nil ) {
+			NSSize svsize = [sv contentSize];
+			double widthratio = svsize.width / mapr->width;
+			double heightratio = svsize.height / mapr->height;
+			if ( widthratio > heightratio ) {
+				sov->zoom = heightratio;
+			} else {
+				sov->zoom = widthratio;
+			}
+			newSize.width *= sov->zoom;
+			newSize.height *= sov->zoom;
+		}
+		[view setFrameSize:newSize];
+	}
+}
+
+- (void)setupSolverFinalize {
+	if (debugParamsDataSource == nil) {
+		debugParamsDataSource = [[SolverM_ParamTableAdaptor alloc] initFromSolver:self];
+		[debugParams setDataSource:debugParamsDataSource];
+	}
+	[debugParams reloadData];
+	mapr->initDataAndRows();
+	[self setupDebugDistrictMenu];
+}
+
+// Reads file with arguments split by any whitespace according to isspace().
+// \isspace() is excepted and preserved.
+// "mpout:", "path/to/ST.mpout" is special and loded here.
 - (void)setupSolverFromArgFile:(const char*)filename {
 	pthread_mutex_lock( &sovLock );
 	if ( sov != NULL ) {
@@ -438,6 +616,8 @@ extern "C" void setDebugDistrictNumber(int index);
 	assert(sov != NULL);
 	cppMapDrawer/* mapr */ = new MapDrawer();
 	assert(mapr != NULL);
+	// This might be overridden by the args file.
+	sov->setFactoryByIndex([solverTypeMenu indexOfSelectedItem]);
 
 	int argc;
 	char** argv;
@@ -465,32 +645,8 @@ extern "C" void setDebugDistrictNumber(int index);
 		free(argv);
 	}
 
-	mapr->initDataAndRows();
-	[self setupDebugDistrictMenu];
+	[self setupSolverFinalize];
 	pthread_mutex_unlock( &sovLock );
-}
-
-- (void)loadMpout:(const char*)mpoutName {
-	mapr->readUPix( sov, mpoutName );
-	if ( isPixView ) {
-		NSSize newSize;
-		newSize.width = mapr->width;
-		newSize.height = mapr->height;
-		NSScrollView* sv = [view enclosingScrollView];
-		if ( sv != nil ) {
-			NSSize svsize = [sv contentSize];
-			double widthratio = svsize.width / mapr->width;
-			double heightratio = svsize.height / mapr->height;
-			if ( widthratio > heightratio ) {
-				sov->zoom = heightratio;
-			} else {
-				sov->zoom = widthratio;
-			}
-			newSize.width *= sov->zoom;
-			newSize.height *= sov->zoom;
-		}
-		[view setFrameSize:newSize];
-	}
 }
 
 - (void)setupSolver {
@@ -521,6 +677,8 @@ extern "C" void setDebugDistrictNumber(int index);
 		sov->geoFact = openZCTA;
 	} else if ( (suffixpos = strstr( dataPath, "gbin" )) != NULL ) {
 		sov->geoFact = openBin;
+	} else if ( (suffixpos = strstr( dataPath, "pb" )) != NULL ) {
+		sov->geoFact = protobufGeoDataTag;
 	} else {
 		sov->geoFact = openUf1;
 	}
@@ -544,22 +702,24 @@ extern "C" void setDebugDistrictNumber(int index);
 	} else {
 		mapr->setSize( sov->pngWidth, sov->pngHeight );
 	}
-	mapr->initDataAndRows();
-	[self setupDebugDistrictMenu];
+	[self setupSolverFinalize];
 	pthread_mutex_unlock( &sovLock );
 }
 
 /* NSKeyValueCoding */
 - (id)valueForKey:(NSString *)key {
-	printf("valueForKey: %s\n", [key dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES]);
+	printf("valueForKey: %s\n",
+		(const char*)[[key dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES] bytes]);
 	return nil;
 }
 - (id)valueForKeyPath:(NSString *)keyPath {
-	printf("valueForKeyPath: %s\n", [keyPath dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES]);
+	printf("valueForKeyPath: %s\n",
+		(const char*)[[keyPath dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES] bytes]);
 	return nil;
 }
 - (id)valueForUndefinedKey:(NSString *)key {
-	printf("valueForUndefinedKey: %s\n", [key dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES]);
+	printf("valueForUndefinedKey: %s\n",
+		(const char*)[[key dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES] bytes]);
 	return nil;
 }
 
@@ -604,7 +764,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	//fprintf(stderr,"SolverM.updateStatsPane\n");
 	pthread_mutex_lock( &sovLock );
 	int statStrLen = sov->getDistrictStats( buf, sizeof(buf) );
-	if (statStrLen + 10 < sizeof(buf)) {
+	if ((statStrLen >= 0) && (((size_t)statStrLen + 10) < sizeof(buf))) {
 		snprintf(buf + statStrLen, sizeof(buf) - statStrLen, "fps=%lf", sov->fps );
 	}
 	pthread_mutex_unlock( &sovLock );
@@ -625,18 +785,50 @@ extern "C" void setDebugDistrictNumber(int index);
 	[et setString:nsdebugtext];
 }
 
+/* Pass through do Solver's DistrictSet object */
+- (int)numParameters {
+	if (sov == NULL) {
+		return -1;
+	}
+	int p;
+	//pthread_mutex_lock( &sovLock );
+	p = sov->dists->numParameters();
+	//pthread_mutex_unlock( &sovLock );
+	return p;
+}
+- (const char*)getParameterLabelByIndex:(int)index {
+	if (sov == NULL) {
+		return NULL;
+	}
+	const char* p;
+	//pthread_mutex_lock( &sovLock );
+	p = sov->dists->getParameterLabelByIndex(index);
+	//pthread_mutex_unlock( &sovLock );
+	return p;
+}
+- (double)getParameterValueByIndex:(int)index {
+	if (sov == NULL) {
+		return NAN;
+	}
+	double v;
+	v = sov->dists->getParameterByIndex(index);
+	return v;
+}
+- (void)setParameterByIndex:(int)index value:(double)v {
+	if (sov == NULL) {
+		return;
+	}
+	pthread_mutex_lock( &sovLock );
+	sov->dists->setParameterByIndex(index, v);
+	pthread_mutex_unlock( &sovLock );
+}
+
 /* run thread */
 
 - (void*)runThreadProc {
 	int displayEvery = 50;
 	int displayCountdown = displayEvery;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-#if 0
-	// FIXME, use actual messaging
-	while ( gc == nil ) {
-		usleep(10);
-	}
-#endif
 	while ( 1 ) {
 		int err;
 		BOOL needsDisplay;

@@ -99,6 +99,10 @@
 				<string>NSControl</string>
 				<key>debugDistrictMenu</key>
 				<string>NSPopUpButton</string>
+				<key>debugParams</key>
+				<string>NSTableView</string>
+				<key>debugParamsDataSource</key>
+				<string>id</string>
 				<key>extraText</key>
 				<string>NSTextView</string>
 				<key>extraTextWindow</key>

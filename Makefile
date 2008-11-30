@@ -8,9 +8,9 @@ all:	districter2 linkfixup drend rta2dsz uf1data
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
 
-OG:=-O2 -DNDEBUG=1
+#OG:=-O2 -DNDEBUG=1
 #OG?=-g
-#OG:=-g -pg
+OG:=-g -pg
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
@@ -31,6 +31,11 @@ COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
 COREOBJS+=NearestNeighborDistrictSet.o protoio.o
 
+CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
+CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
+CORESRCS+=GrabIntermediateStorage.cpp AbstractDistrict.cpp DistrictSet.cpp
+CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp
+
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp
 
@@ -40,6 +45,9 @@ districter2:	$(D2OBJS)
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
 #districter2:	 District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp
 #	${CXX} -o districter2 ${CXXFLAGS} District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp  -lpng12 -lz
+
+d2prof:	${CORESRCS} nonguimain.cpp
+	${CXX} -m64 -o districter2 -g -pg ${CCOMMONFLAGS} ${CORESRCS} nonguimain.cpp ${LDFLAGS}
 
 d2debug:	 ${D2SOURCES}
 	${CXX} -o districter2 -g -Wall -Itiger -MMD ${D2SOURCES} ${LDPNG} -lz
@@ -102,3 +110,6 @@ include tiger/tiger.make
 -include data/*/.make
 
 -include localtail.make
+
+%.pb.cc : %.proto
+	protoc $< --cpp_out=$(@D)

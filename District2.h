@@ -82,6 +82,8 @@ public:
 	static double lockStrengthFactor;
 	static double randomFactor;
 	static double popFieldFactor;
+	
+	static const char* parameterNames[];
 
 	static double lastAvgPopField;
 	static double nextPopFieldSum;
@@ -129,6 +131,7 @@ public:
 };
 
 class GrabIntermediateStorage;
+class StatThing;
 
 class District2Set : public DistrictSet {
 public:
@@ -146,11 +149,25 @@ public:
 	virtual void fixupDistrictContiguity();
 	void assignReposessedNodes(int* bfsearchq, int pointsRepod);
 
+	virtual int numParameters();
+	// Return NULL if index too high or too low.
+	virtual const char* getParameterLabelByIndex(int index);
+	virtual double getParameterByIndex(int index);
+	virtual void setParameterByIndex(int index, double value);
+
 	void recalc();
 
 	POPTYPE* sorti;
 	unsigned char* lock;
 	GrabIntermediateStorage* grabdebug;
+	StatThing* debugStats;
+	// Returns malloc() allocated memory that caller must free(), or NULL.
+	char* debugStatsText();
+	
+	double fixupFrequency;
+	double fixupBucket;
+	
+	double currentRandomFactor;
 };
 
 #endif
