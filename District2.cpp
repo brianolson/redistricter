@@ -27,6 +27,7 @@
 //	32.1% recalc()
 //	31.1% grab() (28.5% grabScore())
 //	24.1% fixupDistrictContiguity() (most of that in findContiguousGroups())
+//        Running CA this gets up to 50% findContiguousGroups
 //	10.6% getStats()
 
 District2Set::District2Set(Solver* sovIn)
@@ -680,9 +681,10 @@ const char* District2::parameterNames[] = {
 "random",
 "pop field",
 "fixup frequency",
+"do debug stats",
 NULL,
 };
-static const int kNumParameterNames = 8;
+static const int kNumParameterNames = 9;
 
 double District2::lastAvgPopField = HUGE_VAL;
 double District2::nextPopFieldSum = 0.0;
@@ -1608,6 +1610,8 @@ double District2Set::getParameterByIndex(int index) {
 		return District2::popFieldFactor;
 	case 7:
 		return fixupFrequency;
+	case 8:
+		return (debugStats == NULL) ? 0.0 : 1.0;
 	default:
 		assert(0);
 	}
@@ -1644,6 +1648,18 @@ void District2Set::setParameterByIndex(int index, double value) {
 			fixupFrequency = value;
 			if (fixupFrequency > 1.0) {
 				fixupFrequency = 1.0;
+			}
+			break;
+		case 8:
+			if (value > 0.5) {
+				if (debugStats == NULL) {
+					debugStats = new StatThing[debugStatsLength];
+				}
+			} else {
+				if (debugStats != NULL) {
+					delete debugStats;
+					debugStats = NULL;
+				}
 			}
 			break;
 		default:

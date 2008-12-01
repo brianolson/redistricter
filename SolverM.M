@@ -431,6 +431,12 @@ extern "C" void setDebugDistrictNumber(int index);
 }
 - (IBAction)goZXY:(id)sender {
 	if ( sov == NULL ) return;
+	if ( isPixView ) {
+		NSSize newSize;
+		newSize.width = mapr->width * sov->zoom;
+		newSize.height = mapr->height * sov->zoom;
+		[view setFrameSize:newSize];
+	}
 	if ( zoomBox ) {
 		sov->zoom = [zoomBox doubleValue];
 	}
