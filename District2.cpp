@@ -33,7 +33,7 @@
 District2Set::District2Set(Solver* sovIn)
 	: DistrictSet(sovIn), grabdebug(NULL),
 	debugStats(NULL),
-	fixupFrequency(0.1), fixupBucket(0.0) {
+	fixupFrequency(1.0), fixupBucket(0.0) {
 }
 
 char* District2Set::debugText() {

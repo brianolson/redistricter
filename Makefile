@@ -8,9 +8,9 @@ all:	districter2 linkfixup drend rta2dsz uf1data
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
 
-#OG:=-O2 -DNDEBUG=1
+OG:=-O2 -DNDEBUG=1
 #OG?=-g
-OG:=-g -pg
+#OG:=-g -pg
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
@@ -29,12 +29,12 @@ LDFLAGS+=${LDPNG} -lz
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
-COREOBJS+=NearestNeighborDistrictSet.o protoio.o
+COREOBJS+=NearestNeighborDistrictSet.o protoio.o StatThing.o
 
 CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
 CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
 CORESRCS+=GrabIntermediateStorage.cpp AbstractDistrict.cpp DistrictSet.cpp
-CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp
+CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp StatThing.cpp
 
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp
