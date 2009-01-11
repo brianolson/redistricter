@@ -1,5 +1,6 @@
 syntax = "proto2";
 
+// intpoints/fpoints, population, area, ubids and recnos should all have the same length.
 message RedistricterData {
 	// only one of intpoints or fpoints should have any data in it.
 	repeated int32 intpoints = 1;  // lon,lat pairs, microdegrees
@@ -7,14 +8,28 @@ message RedistricterData {
 	repeated int32 population = 3;
 	repeated int32 area = 4;  // square meters
 	repeated int64 ubids = 5;
-	repeated int32 recnos = 6;
+	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs
 	
 	// Default number of districts for this data set.
 	// Probably the number of US House districts.
 	optional int32 numDistricts = 8;
+	
+	repeated group Other = 9 {
+		// name of this data
+		required string name = 10;
+		// odata should be the same length as point/area/ubids/recnos
+		// It was probably imported from Sf1 .uf1 files based on logrecno.
+		repeated int32 odata = 11;
+	}
 }
 
+// There's probably a more portable format than this. What do GIS packages actually use?
+// A plain text format in the style of census data might be reasonable.
+// Two fixed width decimal integer fields:
+//  7 space padded digits of LOGRECNO
+//  2 space padded digits of district number
+//  \r\n (0x0d 0x0a)
 message DistrictMap {
 	// Record Number from census data.
 	repeated int32 recno = 1;

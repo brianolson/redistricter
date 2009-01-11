@@ -75,6 +75,12 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 		ubids->Set(gd->ubids[i].index, gd->ubids[i].ubid);
 	}
 #endif
+	if (gd->recnos != NULL) {
+		google::protobuf::RepeatedField<int32>* recnos = rd.mutable_recnos();
+		for (int i = 0; i < gd->numPoints; ++i) {
+			recnos->Add(gd->recnos[i]);
+		}
+	}
 	google::protobuf::RepeatedField<int32>* edges = rd.mutable_edges();
 	for (unsigned int i = 0; i < sov->numEdges; ++i) {
 		edges->Add(sov->edgeData[i*2]);
@@ -171,6 +177,18 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 		}
 	}
 #endif
+	if (rd.recnos_size() > 0) {
+		extern int recnoSortF( const void* a, const void* b );
+		assert(rd.recnos_size() == gd->numPoints);
+		gd->recno_map = new Uf1::RecnoNode[gd->numPoints];
+		gd->recnos = new uint32_t[gd->numPoints];
+		for (int i = 0; i < gd->numPoints; ++i) {
+			gd->recnos[i] = rd.recnos(i);
+			gd->recno_map[i].recno = gd->recnos[i];
+			gd->recno_map[i].index = i;
+		}
+		qsort( gd->recno_map, gd->numPoints, sizeof(Uf1::RecnoNode), recnoSortF );
+	}
 	sov->numEdges = rd.edges_size() / 2;
 	sov->edgeData = new int32_t[rd.edges_size()];
 	for (int i = 0; i < rd.edges_size(); ++i) {

@@ -30,11 +30,13 @@ COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
 COREOBJS+=NearestNeighborDistrictSet.o protoio.o StatThing.o
+COREOBJS+=uf1.o
 
 CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
 CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
 CORESRCS+=GrabIntermediateStorage.cpp AbstractDistrict.cpp DistrictSet.cpp
 CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp StatThing.cpp
+CORESRCS+=uf1.cpp
 
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp

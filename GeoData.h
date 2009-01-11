@@ -1,6 +1,12 @@
 #ifndef GEODATA_H
 #define GEODATA_H
 
+#include <assert.h>
+#include <stdint.h>
+#include <sys/stat.h>
+
+#include "districter.h"
+
 // TODO: cleanup all the unused options and remove #if around the used ones.
 class GeoData {
 public:
@@ -132,11 +138,16 @@ public:
 		uint32_t index;
 	};
 	// May be NULL
-	RecnoNode* recnos;
+	RecnoNode* recno_map;
+	uint32_t* recnos;
 	/* binary search, fastish */
 	uint32_t indexOfRecno( uint32_t u );
-	/* linear search, sloooow */
-	uint32_t recnoOfIndex( uint32_t index );
+	/* lookup table, fast! */
+	uint32_t recnoOfIndex( uint32_t index ) {
+		assert(index >= 0);
+		assert(index < ((uint32_t)numPoints));
+		return recnos[index];
+	}
 	
 	GeoData();
 	int open( char* inputname );

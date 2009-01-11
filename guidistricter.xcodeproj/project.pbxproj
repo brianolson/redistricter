@@ -19,6 +19,9 @@
 		1F2807B60A61A54400959DA5 /* record2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B50A61A54400959DA5 /* record2.cpp */; };
 		1F2807B80A61A55400959DA5 /* recordI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B70A61A55400959DA5 /* recordI.cpp */; };
 		1F2807BC0A61A58800959DA5 /* makepolys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807BB0A61A58800959DA5 /* makepolys.cpp */; };
+		1F2E3DCB0F1994C800A1A037 /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
+		1F2E3DCD0F1994D200A1A037 /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
+		1F2E3DCF0F1994E000A1A037 /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
 		1F3BF6420C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
 		1F3BF6430C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
 		1F3BF6440C9DF085002D27AE /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
@@ -655,6 +658,8 @@
 				1F8427CE0CCB221A00ACC6A4 /* AbstractDistrict.cpp in Sources */,
 				1F8427D40CCB222500ACC6A4 /* DistrictSet.cpp in Sources */,
 				32A17EC80E2D028F004DACE8 /* NearestNeighborDistrictSet.cpp in Sources */,
+				1F2E3DCD0F1994D200A1A037 /* uf1.cpp in Sources */,
+				1F2E3DCF0F1994E000A1A037 /* StatThing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -786,6 +791,7 @@
 				32A17EB40E2D01E3004DACE8 /* solverGL.cpp in Sources */,
 				1F5ECA250E3B6D8D00870895 /* protoio.cpp in Sources */,
 				1FCBB14F0EE3177B00D90B1F /* StatThing.cpp in Sources */,
+				1F2E3DCB0F1994C800A1A037 /* uf1.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

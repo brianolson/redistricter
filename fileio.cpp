@@ -400,8 +400,9 @@ int Uf1::load() {
 	char* dsts[MAX_DISTRICTS];
 	congressionalDistricts = 0;
 #endif
-	if (false) {
-		recnos = new RecnoNode[numPoints];
+	if (true) {
+		recno_map = new RecnoNode[numPoints];
+		recnos = new uint32_t[numPoints];
 	}
 
 	for ( i = 0; i < numPoints; i++ ) {
@@ -461,8 +462,9 @@ int Uf1::load() {
 		ubids[i].index = i;
 #endif
 		if (recnos != NULL) {
-			recnos[i].recno = logrecno( i );
-			recnos[i].index = i;
+			recno_map[i].recno = logrecno( i );
+			recno_map[i].index = i;
+			recnos[i] = recno_map[i].recno;
 		}
 #if COUNT_DISTRICTS
 		char* cd;
@@ -491,7 +493,7 @@ int Uf1::load() {
 	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
 #endif
 	if (recnos != NULL) {
-		qsort( recnos, numPoints, sizeof(RecnoNode), recnoSortF );
+		qsort( recno_map, numPoints, sizeof(RecnoNode), recnoSortF );
 	}
 	return 0;
 }
@@ -702,7 +704,7 @@ uint32_t GeoData::indexOfUbid( uint64_t u ) {
 			lo = mid + 1;
 		} else {
 			assert(ubids[mid].index >= 0);
-			assert(ubids[mid].index < numPoints);
+			assert(ubids[mid].index < ((uint32_t)numPoints));
 			return ubids[mid].index;
 		}
 	}
@@ -719,7 +721,7 @@ uint64_t GeoData::ubidOfIndex( uint32_t index ) {
 
 /* binary search, fastish */
 uint32_t GeoData::indexOfRecno( uint32_t rn ) {
-	if (recnos == NULL) {
+	if (recno_map == NULL) {
 		return (uint32_t)-1;
 	}
 	int lo = 0;
@@ -728,31 +730,33 @@ uint32_t GeoData::indexOfRecno( uint32_t rn ) {
 	uint32_t t;
 	while ( hi >= lo ) {
 		mid = (hi + lo) / 2;
-		t = recnos[mid].recno;
+		t = recno_map[mid].recno;
 		if ( t > rn ) {
 			hi = mid - 1;
 		} else if ( t < rn ) {
 			lo = mid + 1;
 		} else {
-			assert(recnos[mid].index >= 0);
-			assert(recnos[mid].index < numPoints);
-			return recnos[mid].index;
+			assert(recno_map[mid].index >= 0);
+			assert(recno_map[mid].index < ((uint32_t)numPoints));
+			return recno_map[mid].index;
 		}
 	}
 	return (uint32_t)-1;
 }
+#if 0
 /* linear search, sloooow */
 uint32_t GeoData::recnoOfIndex( uint32_t index ) {
-	if (recnos == NULL) {
+	if (recno_map == NULL) {
 		return (uint32_t)-1;
 	}
 	for ( int i = 0; i < numPoints; i++ ) {
-		if ( recnos[i].index == index ) {
-			return recnos[i].recno;
+		if ( recno_map[i].index == index ) {
+			return recno_map[i].recno;
 		}
 	}
 	return (uint32_t)-1;
 }
+#endif
 
 int Uf1::numDistricts() {
 #if COUNT_DISTRICTS

@@ -63,6 +63,7 @@ void readColoring( FILE* fin );
 #endif
 
 class Node;
+class GeoData;
 Node* initNodesFromLinksFile( GeoData* gd, const char* inputname );
 
 static inline uint16_t swap16( uint16_t v ) {
