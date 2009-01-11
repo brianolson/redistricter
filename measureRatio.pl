@@ -100,9 +100,12 @@ sub processUF1($) {
 }
 
 $stu = undef;
+$binsuffix = "pb";
 
 while ( $arg = shift ) {
-	if ( $arg =~ /RT1$/ ) {
+	if ( $arg eq "--gbin" ) {
+		$binsuffix = "gbin";
+	} elsif ( $arg =~ /RT1$/ ) {
 		print STDERR "$arg\n";
 		checkR1( $arg );
 	} elsif ( $arg =~ /RT2$/ ) {
@@ -197,8 +200,8 @@ close FOUT;
 
 open FOUT, '>', "drendcmd";
 print FOUT<<EOF;
-# ../drend -B ../data/${stu}/${stl}.gbin $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
-# ../drend -B ../data/${stu}/${stl}.gbin $distnumopt -f ../data/${stu}/drendcmd
+# ../drend -B ../data/${stu}/${stl}.${binsuffix} $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
+# ../drend -B ../data/${stu}/${stl}.${binsuffix} $distnumopt -f ../data/${stu}/drendcmd
 -px ../data/${stu}/${stl}.mpout
 --loadSolution bestKmpp.dsz
 recolor
@@ -218,7 +221,7 @@ close FOUT;
 
 open FOUT, '>', "basicargs";
 print FOUT <<EOF;
--B data/${stu}/${stl}.gbin --pngout ${stu}_final.png -d $numdists -o ${stu}_final.dsz $pngsize_sm
+-B data/${stu}/${stl}.${binsuffix} --pngout ${stu}_final.png -d $numdists -o ${stu}_final.dsz $pngsize_sm
 EOF
 close FOUT;
 # mrun2.pl also adds: --blankDists --sLog g/ --statLog statlog
