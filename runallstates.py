@@ -85,7 +85,7 @@ while i < len(sys.argv):
 	elif arg == "--threads":
 		i += 1
 		numthreads = int(sys.argv[i])
-	elif arg == "--dry-run":
+	elif (arg == "--dry-run") or (arg == "-n"):
 		dry_run = True
 	elif arg == "--d2":
 		extrargs = d2args
@@ -126,7 +126,13 @@ for s in statedirs:
 	stu = s[-2:]
 	if (not statearglist) and os.path.exists(os.path.join(s, "norun")):
 		continue
-	fin = open(os.path.join(s, "basicargs"), "r")
+	ba_path = stu + "_basicargs"
+	if not os.path.exists(ba_path):
+		ba_path = os.path.join(s, "basicargs")
+	if not os.path.exists(ba_path):
+		sys.stderr.write("error: %s missing basicargs\n" % stu)
+		continue
+	fin = open(ba_path, "r")
 	ba = ""
 	if fin:
 		ba = fin.readline()
@@ -137,7 +143,10 @@ for s in statedirs:
 	else:
 		continue
 	basicargs[stu] = ba
-	fin = open(os.path.join(s, "drendcmd"), "r")
+	dc_path = stu + "_drendcmd"
+	if not os.path.exists(dc_path):
+		dc_path = os.path.join(s, "drendcmd")
+	fin = open(dc_path, "r")
 	if fin:
 		dc = fin.readline()
 		fin.close()
@@ -228,7 +237,10 @@ def runstate(stu):
 	if not os.path.exists(stu):
 		maybe_mkdir(stu)
 	ha = ""
-	fin = open(os.path.join(datadir, stu, "handargs"), "r")
+	ha_path = stu + "_handargs"
+	if not os.path.exists(ha_path):
+		ha_path = os.path.join(datadir, stu, "handargs")
+	fin = open(ha_path, "r")
 	if fin:
 		ha = fin.readline()
 		fin.close()
