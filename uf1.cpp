@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 Uf1Data::Uf1Data()
 	: data(NULL), allocated(true), numIntFields(0), map(NULL) {
@@ -26,20 +27,6 @@ Uf1Data::~Uf1Data() {
 		}
 	}
 }
-
-#if 0
-static const int BADPOS = 0x7fffffff;
-
-static inline int mynextchar(char* haystack, int pos, off_t lim, char needle) {
-	while ( pos < lim ) {
-		if ( haystack[pos] == needle ) {
-			return pos;
-		}
-		pos++;
-	}
-	return BADPOS;
-}
-#endif
 
 static inline char* mynextchar(char* pos, char* last, char needle) {
 	while ( pos <= last ) {
@@ -88,6 +75,134 @@ static inline void writeOrDieF(int fd, const void* buf, size_t len, const char* 
 static char nullchars[7] = "\0\0\0\0\0\0";
 
 static void countColumnMaxes(const char* filename, mmaped& mf, int32_t numbersPerLine, int32_t* maxes);
+
+// parse a decimal integer from a line of comma separated text.
+bool uint32_field_from_csv(uint32_t* out, const char* line, int column) {
+	assert(line != NULL);
+	// pos points to start of row
+	const char* rp = line;
+	int ci = 0;
+	while (ci < column) {
+		rp = strchr(rp, ',');
+		if (rp == NULL) {
+			return false;
+		}
+		rp++;
+		ci++;
+	}
+	char* check;
+	uint32_t t = strtoul(rp, &check, 10);
+	if (check == NULL) return false;
+	if (check == rp) return false;
+	*out = t;
+	return true;
+}
+
+class LineSource {
+public:
+	LineSource() {
+	}
+	virtual ~LineSource() {
+	}
+	virtual bool init(const char* filename) = 0;
+	virtual char* gets(char* buffer, size_t len) = 0;
+};
+
+class FILELineSource : public LineSource {
+public:
+	FILELineSource() : fin(NULL) {
+	}
+	virtual bool init(const char* filename) {
+		fin = fopen(filename, "r");
+		if (fin == NULL) {
+			perror(filename);
+			return false;
+		}
+		return true;
+	}
+	virtual ~FILELineSource() {
+		if (fin != NULL) {
+			fclose(fin);
+			fin = NULL;
+		}
+	}
+	virtual char* gets(char* buffer, size_t len) {
+		return fgets(buffer, len, fin);
+	}
+private:
+	FILE* fin;
+};
+
+class ZlibLineSource : public LineSource {
+public:
+	ZlibLineSource() : zf(NULL) {
+	}
+	virtual bool init(const char* filename) {
+		zf = gzopen(filename, "rb");
+		if (zf == NULL) {
+			fprintf(stderr, "%s: %s\n", filename, gzerror(zf, NULL));
+			return false;
+		}
+		return true;
+	}
+	virtual ~ZlibLineSource() {
+		if (zf != NULL) {
+			gzclose(zf);
+			zf = NULL;
+		}
+	}
+	virtual char* gets(char* buffer, size_t len) {
+		return gzgets(zf, buffer, len);
+	}
+private:
+	gzFile zf;
+};
+
+#define MAX_LINE_LENTH (32*1024)
+
+// Returns malloc() buffer full of uint32_t[gd->numPoints] of uf1 data.
+uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column) {
+	if (gd->recno_map == NULL) {
+		return NULL;
+	}
+	LineSource* fin;
+	if (strstr(filename, ".gz")) {
+		fin = new ZlibLineSource();
+	} else {
+		fin = new FILELineSource();
+	}
+	if (!fin->init(filename)) {
+		perror(filename);
+	}
+	uint32_t* out = (uint32_t*)malloc(gd->numPoints * sizeof(uint32_t));
+	int line_number = 0;
+	char* line = (char*)malloc(MAX_LINE_LENTH);
+	while (fin->gets(line, MAX_LINE_LENTH)) {
+		uint32_t recno;
+		uint32_t index;
+		line_number++;
+		if (!uint32_field_from_csv(&recno, line, 5)) {
+			fprintf(stderr, "%s:%d csv parse fail getting field 5 LOGRECNO\n", filename, line_number);
+			free(out);
+			out = NULL;
+			goto done;
+		}
+		index = gd->indexOfRecno(recno);
+		if (index != ((uint32_t)-1)) {
+			uint32_t value;
+			if (!uint32_field_from_csv(&value, line, column)) {
+				fprintf(stderr, "%s:%d csv parse fail getting field %d\n", filename, line_number, column);
+				free(out);
+				out = NULL;
+				goto done;
+			}
+			out[index] = value;
+		}
+	}
+done:
+	free(line);
+	return out;
+}
 
 class Uf1ScanState {
 public:
@@ -334,6 +449,8 @@ int Uf1Data::processText(const char* filename, const char* outname) {
 	}
 	return processTextMmapped(filename, outname, mf);
 }
+// TODO: process text from arbitrary input text chunks
+// TODO: process text from zlib input stream
 int Uf1Data::processText(int fd, int out) {
 	assert(false);
 	return -1;

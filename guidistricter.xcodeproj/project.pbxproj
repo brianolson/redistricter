@@ -44,6 +44,8 @@
 		1F5655640A57866800212FB8 /* drendmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5655630A57866800212FB8 /* drendmain.cpp */; };
 		1F56559E0A579A9C00212FB8 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
 		1F5ECA250E3B6D8D00870895 /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
+		1F5FF80D0F2418060087B09F /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
+		1F5FF80F0F2418120087B09F /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
 		1F6CF45507ADFE7200171C83 /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
 		1F6CF45807ADFE7200171C83 /* place2k.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45207ADFE7200171C83 /* place2k.h */; };
 		1F6CF45907ADFE7200171C83 /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
@@ -714,6 +716,8 @@
 				32CCA1CF0E1B01A90047558F /* DistrictSet.cpp in Sources */,
 				32CCA1D00E1B01AE0047558F /* AbstractDistrict.cpp in Sources */,
 				32CCA1D20E1B01B70047558F /* NearestNeighborDistrictSet.cpp in Sources */,
+				1F5FF80D0F2418060087B09F /* uf1.cpp in Sources */,
+				1F5FF80F0F2418120087B09F /* StatThing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

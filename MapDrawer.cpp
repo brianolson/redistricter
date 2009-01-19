@@ -376,13 +376,17 @@ void MapDrawer::paintPoints( Solver* sov ) {
 		ox = (gd->pos[i*2  ] - lminx) * xm;
 		int y, x;
 		y = (int)oy;
+		x = (int)ox;
+#if 1
+		setPoint(x, y, color[0], color[1], color[2]);
+#else
 		unsigned char* row;
 		row = data + (y*width*bytesPerPixel);
-		x = (int)ox;
 		x *= bytesPerPixel;
 		row[x  ] = color[0];
 		row[x+1] = color[1];
 		row[x+2] = color[2];
+#endif
 	}
 }
 
@@ -431,12 +435,77 @@ void MapDrawer::paintPixels( Solver* sov ) {
 				fprintf(stderr,"index %d y (%d) out of bounds\n", i, y );
 				continue;
 			}
+#if 1
+			setPoint(x, y, color[0], color[1], color[2]);
+#else
 			unsigned char* row;
 			row = data + (y*width*bytesPerPixel);
 			x *= bytesPerPixel;
 			row[x  ] = color[0];
 			row[x+1] = color[1];
 			row[x+2] = color[2];
+#endif
 		}
+	}
+}
+
+void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green, uint8_t blue) {
+	if (px != NULL) {
+		pxlist* cpx = px + index;
+		if ( cpx->numpx <= 0 ) {
+			return;
+		}
+		for ( int j = 0; j < cpx->numpx; j++ ) {
+			int x, y;
+			x = cpx->px[j*2];
+			if ( x < 0 || x > width ) {
+				fprintf(stderr,"index %d x (%d) out of bounds\n", index, x );
+				return;
+			}
+			y = cpx->px[j*2 + 1];
+			if ( y < 0 || y > height ) {
+				fprintf(stderr,"index %d y (%d) out of bounds\n", index, y );
+				return;
+			}
+			setPoint(x, y, red, green, blue);
+		}
+	} else {
+#if READ_INT_POS
+		int lminx, lminy, lmaxx, lmaxy;
+#elif READ_DOUBLE_POS
+		double lminx, lminy, lmaxx, lmaxy;
+#else
+#error "what type is pos?"
+#endif
+		
+		DPRSET( minx, minlon );
+		DPRSET( maxx, maxlon );
+		DPRSET( miny, minlat );
+		DPRSET( maxy, maxlat );
+		
+		/* setup transformation */
+		double ym = 0.999 * height / (lmaxy - lminy);
+		double xm = 0.999 * width / (lmaxx - lminx);
+		
+		GeoData* gd = sov->gd;
+		double ox, oy;
+		if ( gd->pos[index*2] < lminx ) {
+			return;
+		}
+		if ( gd->pos[index*2] > lmaxx ) {
+			return;
+		}
+		if ( gd->pos[index*2+1] < lminy ) {
+			return;
+		}
+		if ( gd->pos[index*2+1] > lmaxy ) {
+			return;
+		}
+		oy = (lmaxy - gd->pos[index*2+1]) * ym;
+		ox = (gd->pos[index*2  ] - lminx) * xm;
+		int y, x;
+		y = (int)oy;
+		x = (int)ox;
+		setPoint(x, y, red, green, blue);
 	}
 }

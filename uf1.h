@@ -43,4 +43,7 @@ public:
 	mmaped* map;
 };
 
+bool uint32_field_from_csv(uint32_t* out, const char* line, int column);
+uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column);
+
 #endif /* UF1_H */

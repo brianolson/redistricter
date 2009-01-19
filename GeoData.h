@@ -140,9 +140,9 @@ public:
 	// May be NULL
 	RecnoNode* recno_map;
 	uint32_t* recnos;
-	/* binary search, fastish */
+	/* binary search, fastish. ((uint32_t)-1) on failure. */
 	uint32_t indexOfRecno( uint32_t u );
-	/* lookup table, fast! */
+	/* lookup table, fast! ((uint32_t)-1) on failure. */
 	uint32_t recnoOfIndex( uint32_t index ) {
 		assert(index >= 0);
 		assert(index < ((uint32_t)numPoints));

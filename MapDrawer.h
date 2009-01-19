@@ -8,8 +8,8 @@ class pxlist;
 
 class MapDrawer {
 public:
-unsigned char* data; // = NULL;
-unsigned char** rows; // = NULL;
+uint8_t* data; // = NULL;
+uint8_t** rows; // = NULL;
 int width; // pixels
 int height; // pixels
 pxlist* px;
@@ -37,6 +37,16 @@ void paintPixels( Solver* sov );
 void paintPoints( Solver* sov );
 void doPNG_r( Solver* sov, const char* pngname );
 void runDrendCommandFile( Solver& sov, const char* commandFileName );
+	
+	void setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green, uint8_t blue);
+	inline void setPoint(int x, int y, uint8_t red, uint8_t green, uint8_t blue) {
+		uint8_t* row;
+		row = data + (y*width*bytesPerPixel);
+		x *= bytesPerPixel;
+		row[x  ] = red;
+		row[x+1] = green;
+		row[x+2] = blue;
+	}
 };
 
 
