@@ -10,7 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <vector>
 #include <zlib.h>
+
+using std::vector;
 
 Uf1Data::Uf1Data()
 	: data(NULL), allocated(true), numIntFields(0), map(NULL) {
@@ -202,6 +205,65 @@ uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column) {
 done:
 	free(line);
 	return out;
+}
+
+
+// Returns malloc() buffer full of uint32_t[gd->numPoints] of uf1 data.
+bool read_uf1_columns_for_recnos(
+		GeoData* gd, const char* filename, const vector<int>& columns, vector<uint32_t*>* data_columns) {
+	bool good = true;
+	if (gd->recno_map == NULL) {
+		return false;
+	}
+	LineSource* fin;
+	if (strstr(filename, ".gz")) {
+		fin = new ZlibLineSource();
+	} else {
+		fin = new FILELineSource();
+	}
+	if (!fin->init(filename)) {
+		perror(filename);
+	}
+	data_columns->clear();
+	for (unsigned int i = 0; i < columns.size(); ++i) {
+		uint32_t* out = (uint32_t*)malloc(gd->numPoints * sizeof(uint32_t));
+		data_columns->push_back(out);
+	}
+	int line_number = 0;
+	char* line = (char*)malloc(MAX_LINE_LENTH);
+	while (fin->gets(line, MAX_LINE_LENTH)) {
+		uint32_t recno;
+		uint32_t index;
+		line_number++;
+		if (!uint32_field_from_csv(&recno, line, 5)) {
+			fprintf(stderr, "%s:%d csv parse fail getting field 5 LOGRECNO\n", filename, line_number);
+			good = false;
+			goto done;
+		}
+		index = gd->indexOfRecno(recno);
+		if (index != ((uint32_t)-1)) {
+			for (unsigned int i = 0; i < columns.size(); ++i) {
+				int column = columns[i];
+				uint32_t value;
+				if (!uint32_field_from_csv(&value, line, column)) {
+					fprintf(stderr, "%s:%d csv parse fail getting field %d\n", filename, line_number, column);
+					good = false;
+					goto done;
+				}
+				uint32_t* out = (*data_columns)[i];
+				out[index] = value;
+			}
+		}
+	}
+done:
+	if (!good) {
+		for (unsigned int i = 0; i < data_columns->size(); ++i) {
+			free((*data_columns)[i]);
+		}
+		data_columns->clear();
+	}
+	free(line);
+	return good;
 }
 
 class Uf1ScanState {

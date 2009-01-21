@@ -3,7 +3,7 @@ UNAME:=$(shell uname)
 -include makeopts/${UNAME}.pre
 -include localvars.make
 
-all:	districter2 linkfixup drend rta2dsz uf1data
+all:	districter2 linkfixup drend rta2dsz
 
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
@@ -89,10 +89,10 @@ rta2dsz:	${RTADSZOBJS}
 
 rtaToDsz.o:	tiger/recordA.h
 
-UFONEDATAOBJS:=uf1.o uf1data.o tiger/mmaped.o
-THINGSTOCLEAN+=${UFONEDATAOBJS}
-uf1data:	${UFONEDATAOBJS}
-	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
+#UFONEDATAOBJS:=uf1.o uf1data.o tiger/mmaped.o
+#THINGSTOCLEAN+=${UFONEDATAOBJS}
+#uf1data:	${UFONEDATAOBJS}
+#	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
 
 clean:
 	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h

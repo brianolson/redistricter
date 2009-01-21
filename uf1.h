@@ -10,6 +10,8 @@
 data: 4 byte ints, numbersPerLine wide, lines long. 4*m*n bytes.
 */
 
+#include <vector>
+
 class GeoData;
 class mmaped;
 
@@ -45,5 +47,8 @@ public:
 
 bool uint32_field_from_csv(uint32_t* out, const char* line, int column);
 uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column);
+bool read_uf1_columns_for_recnos(
+	GeoData* gd, const char* filename,
+	const std::vector<int>& columns, std::vector<uint32_t*>* data_columns);
 
 #endif /* UF1_H */
