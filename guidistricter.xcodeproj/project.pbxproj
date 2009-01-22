@@ -110,6 +110,7 @@
 		325AB9B40ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
 		325AB9B50ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
 		325AB9B60ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
+		325B86DB0F27A79B004734B7 /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
 		32A17EB00E2D01D0004DACE8 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6CF59307AE099600171C83 /* OpenGL.framework */; };
 		32A17EB10E2D01D0004DACE8 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F502D4D08BAB3E300F16550 /* GLUT.framework */; };
 		32A17EB30E2D01DB004DACE8 /* glutStrokeString.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F502D2E08BAB2FD00F16550 /* glutStrokeString.c */; };
@@ -128,6 +129,10 @@
 		32CCA1CF0E1B01A90047558F /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
 		32CCA1D00E1B01AE0047558F /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
 		32CCA1D20E1B01B70047558F /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
+		32DD1F950F282EF8002FD344 /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
+		32DD1FA20F282F0C002FD344 /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FFCA1430E2CF400002D81C6 /* libpng12.dylib */; };
+		32DD1FA60F282F21002FD344 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
+		32DD1FA80F282F3C002FD344 /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
 		32E30BF00E2C425F000CC370 /* SolverPixView.M in Sources */ = {isa = PBXBuildFile; fileRef = 32E30BEF0E2C425F000CC370 /* SolverPixView.M */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -235,6 +240,7 @@
 			files = (
 				321648E50D46AB2C0096D68F /* libz.dylib in Frameworks */,
 				325AB9B40ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				32DD1FA20F282F0C002FD344 /* libpng12.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +287,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				325AB9B60ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				32DD1FA60F282F21002FD344 /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -696,6 +703,7 @@
 				1F8427D30CCB222500ACC6A4 /* DistrictSet.cpp in Sources */,
 				320BFD670CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp in Sources */,
 				1FEAA3E60DC5651D00A08E78 /* Bitmap.cpp in Sources */,
+				325B86DB0F27A79B004734B7 /* StatThing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -738,6 +746,7 @@
 				1F8427D60CCB222500ACC6A4 /* DistrictSet.cpp in Sources */,
 				32A17ED00E2D02B9004DACE8 /* NearestNeighborDistrictSet.cpp in Sources */,
 				32A17ED10E2D02BF004DACE8 /* Bitmap.cpp in Sources */,
+				32DD1F950F282EF8002FD344 /* StatThing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -760,6 +769,7 @@
 				3256801D0D1362CF0061AE7C /* mmaped.cpp in Sources */,
 				325680220D1362F50061AE7C /* uf1.cpp in Sources */,
 				325680250D1363140061AE7C /* uf1data.cpp in Sources */,
+				32DD1FA80F282F3C002FD344 /* fileio.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -831,6 +841,10 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				PREBINDING = NO;
 				PRODUCT_NAME = makepolys;
 				ZERO_LINK = YES;
@@ -845,6 +859,10 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				PREBINDING = NO;
 				PRODUCT_NAME = makepolys;
 				ZERO_LINK = NO;
@@ -857,6 +875,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
 				PREBINDING = NO;
 				PRODUCT_NAME = makepolys;
 				ZERO_LINK = YES;
