@@ -6,19 +6,23 @@
 # See also baltx.pl to crate LaTeX output.
 #
 # Usage:
-# ./bahtml.pl [--full] > your.html
+# ./bahtml.pl [--full][--data dir] > your.html
 #   --full   emit complete HTML document, otherwise just a table to be
 #            included in a larger document.
+#   --data d where to find more data about states
 
 $fullhtml = 0;
 $table = 1;
 $statsum = 1;
+$datadir = undef;
 
 while ( $arg = shift @ARGV ) {
   if ( $arg eq "--full" ) {
     $fullhtml = 1;
   } elsif ( $arg eq "--nostat" ) {
     $statsum = 0;
+  } elsif ( $arg eq "--data" ) {
+    $datadir = shift @ARGV;
   } else {
     print STDERR "bogus arg \"$arg\"\n";
     exit 1;
@@ -43,6 +47,18 @@ foreach $stu ( <??> ) {
 	$statsum_part = "";
   if ( (-f "${stu}/link1/${stu}_ba_500.png") && 
        (-f "${stu}/link1/${stu}_ba.png") ) {
+	$startstats = undef;
+	if ((defined $datadir) and (-r "${datadir}/${stu}/${stu}_start_stats")) {
+		if (open( FIN, '<', "${datadir}/${stu}/${stu}_start_stats")) {
+			@lines = <FIN>;
+			$ssdata = join("", @lines);
+			($startkmpp) = $ssdata =~ /([0-9.]+) Km\/person/s;
+			($max, $min) = $ssdata =~ /max=([0-9]+).*min=([0-9]+)/s;
+			$startspread = $max - $min;
+			($std) = $ssdata =~ /std=([0-9]+)/s;
+			$startstats = "Km/p=${startkmpp} spread=${startspread} std=${std}";
+		}
+	}
 	if ( $table ) {
 		if ( $statsum ) {
 			#@statsum_lines = ();
@@ -54,14 +70,18 @@ foreach $stu ( <??> ) {
 					if ( ($t) = $line =~ /Best Km\/p: (.*)/ ) {
 						$bestkm = $t;
 						$bestkm =~ s/ gen=\d+//;
-					} elsif ( ($t) = $line =~ /(District calculation: [0-9.]+ sec)/ ) {
-						$dt = $t;
+					} elsif ( ($t) = $line =~ /District calculation: ([0-9.]+ sec)/ ) {
+						$dt = "run time: " . $t;
 					}
 					#push @statsum_lines, $line;
 				}
 				close FIN;
 				#$statsum_part = "<td>" . join("<br />", @statsum_lines) . "</td>";
-				$statsum_part = "<td>$bestkm<br />$dt</td>";
+				if (defined $startstats) {
+					$statsum_part = "<td>Current: $startstats<br />My Way: $bestkm<br />$dt</td>";
+				} else {
+					$statsum_part = "<td>$bestkm<br />$dt</td>";
+				}
 			} else {
 				print STDERR "${stu}/link1/statsum: could not be opened, $!\n"; 
 			}

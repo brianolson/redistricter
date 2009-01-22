@@ -468,7 +468,7 @@ data/${stu}/${stu}_start_sm.jpg:	data/${stu}/${stu}_start.png
 	convert data/${stu}/${stu}_start.png -resize 150x150 data/${stu}/${stu}_start_sm.jpg
 
 data/${stu}/${stu}_start.png:	drend data/${stu}/${stl}.mpout data/${stu}/${stl}109.dsz
-	./drend -B data/${stu}/${stl_bin} \$\{${stu}DISTOPT\} -px data/${stu}/${stl}.mpout --pngout data/${stu}/${stu}_start.png --loadSolution data/${stu}/${stl}109.dsz
+	./drend -B data/${stu}/${stl_bin} \$\{${stu}DISTOPT\} -px data/${stu}/${stl}.mpout --pngout data/${stu}/${stu}_start.png --loadSolution data/${stu}/${stl}109.dsz > data/${stu}/${stu}_start_stats
 
 data/${stu}/${stu}_start_sm.png:	drend data/${stu}/${stl}_sm.mpout data/${stu}/${stl}109.dsz
 	./drend -B data/${stu}/${stl_bin} \$\{${stu}DISTOPT\} -px data/${stu}/${stl}_sm.mpout --pngout data/${stu}/${stu}_start_sm.png --loadSolution data/${stu}/${stl}109.dsz

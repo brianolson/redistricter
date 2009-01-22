@@ -113,6 +113,10 @@ int main( int argc, char** argv ) {
 		if ( sov.loadZSolution( sov.loadname ) < 0 ) {
 			return 1;
 		}
+		char* statstr = new char[10000];
+		sov.getDistrictStats(statstr, 10000);
+		fputs( statstr, stdout );
+		delete statstr;
 	}
 	//sov.init();
 	
