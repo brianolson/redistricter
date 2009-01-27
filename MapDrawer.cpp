@@ -1,3 +1,4 @@
+#include "logging.h"
 #include "MapDrawer.h"
 #include "Solver.h"
 #include "tiger/mmaped.h"
@@ -347,6 +348,16 @@ void MapDrawer::paintPoints( Solver* sov ) {
 	/* setup transformation */
 	double ym = 0.999 * height / (lmaxy - lminy);
 	double xm = 0.999 * width / (lmaxx - lminx);
+#if READ_INT_POS
+        debugprintf(
+            "min lat,lon=(%d, %d), max (%d, %d)\n",
+            lminx, lminy, lmaxx, lmaxy);
+#elif READ_DOUBLE_POS
+        debugprintf(
+            "min lat,lon=(%f, %f), max (%f, %f)\n",
+            lminx, lminy, lmaxx, lmaxy);
+#endif
+        debugprintf("scale x,y=(%f, %f)\n", xm, ym);
 	
 	GeoData* gd = sov->gd;
 	POPTYPE* winner = sov->winner;
