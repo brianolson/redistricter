@@ -63,6 +63,21 @@ sub nsystem(@){
   }
 }
 
+# true if a newerthan b, or b doesn't exist
+sub newerthan ($$) {
+  my $mtimea;
+  my $mtimeb;
+  $mtimea = (stat("$_[0]"))[9];
+  $mtimeb = (stat("$_[1]"))[9];
+  if ( ! defined $mtimea ) {
+    return 0;
+  }
+  if ( ! defined $mtimeb ) {
+    return 1;
+  }
+  return $mtimea > $mtimeb;
+};
+
 if ( ! $stl ) {
   print STDERR $usage;
   exit 1;
@@ -113,59 +128,64 @@ if ( ! -d "data/$stu" ) {
   mkdir("data/$stu") or die "could not mkdir \"data/$stu\": $!";
 }
 
-if ( ! (-f "data/${stu}/${stl}geo.uf1" || -f "data/${stu}/${stl}geo.uf1.bz2") ) {
-  $zipfile = "data/${stu}/${stl}geo_uf1.zip";
-  if ( ! -f $zipfile ) {
-    open FIN, '<', $geourls;
-    my @zipurl = grep(/${stl}geo_uf1.zip/, <FIN>);
-    close FIN;
-    if ($#zipurl == 0) {
-      nsystem "curl", "--silent", "-o", $zipfile, $zipurl[0];
-    } else {
-      my $nz = $#zipurl + 1;
-      print STDERR <<EOF;
+
+# generate ${stl}101.uf1 from ${stl}geo_uf1.zip
+$uf101 = "data/${stu}/${stl}101.uf1";
+$zipfile = "data/${stu}/${stl}geo_uf1.zip";
+if ((! -f $uf101) || newerthan($zipfile, $uf101)) {
+	if ( ! -f $zipfile ) {
+		open FIN, '<', $geourls;
+		my @zipurl = grep(/${stl}geo_uf1.zip/, <FIN>);
+		close FIN;
+		if ($#zipurl == 0) {
+			nsystem "curl", "--silent", "-o", $zipfile, $zipurl[0];
+		} else {
+			my $nz = $#zipurl + 1;
+			print STDERR <<EOF;
 no file data/${stu}/${stl}geo_uf1.zip and could not find url in $geourls
 found $nz urls but wanted 1
 EOF
-      exit 1;
-    }
-  }
-  if ( -f $zipfile ) {
-    nsystem "(cd data/${stu}; unzip ${stl}geo_uf1.zip)";
-    if ( ! -f "data/${stu}/${stl}geo.uf1" ) {
-      print STDERR "have $zipfile but unzip did not produce \"data/${stu}/${stl}geo.uf1\"\n";
-      exit 1;
-    }
-  } else {
-    print STDERR<<EOF;
+			exit 1;
+		}
+	}
+	if (! -f $zipfile) {
+		print STDERR<<EOF;
 error, no file "data/${stu}/${stl}geo.uf1", have things been set up right?
 
 $usage
 EOF
-    exit 1;
-  }
+		exit 1;
+	}
+	sub filtergeo($$) {
+		my $finame = shift;
+		my $foname = shift;
+		print "\"$finame\" -> \"$foname\"\n";
+		open(FIN, $finame) or die "could not open \"$finame\": $!\n";
+		open(FOUT, '>', $foname) or die "could not open \"$foname\": $!\n";;
+		while ( $line = <FIN> ) {
+			if ( $line =~ /^uSF1  ..101/ ) {
+				print FOUT $line;
+			}
+		}
+		close FOUT;
+		close FIN;
+	}
+	if (newerthan($zipfile, $uf101)) {
+		filtergeo(
+			"unzip -p data/${stu}/${stl}geo_uf1.zip ${stl}geo.uf1 |",
+			$uf101);
+		nsystem "(cd data/${stu}; unzip ${stl}geo_uf1.zip)";
+		if ( ! -f $uf101 ) {
+			print STDERR "have $zipfile but unzip did not produce \"$uf101\"\n";
+			exit 1;
+		}
+	}
 }
 
 $rootdir = `pwd`;
 chomp $rootdir;
 
 $tigerdir = "${rootdir}/tiger";
-
-if ( 0 && ! -e "${tigerdir}/mergeRT1" ) {
-	print "make in $tigerdir\n";
-	if ( $doit ) {
-		chdir( $tigerdir ) or die "could not chdir to ${tigerdir}: $!\n";
-		nsystem "make";
-		if ( ! -e "${tigerdir}/mergeRT1" ) {
-			print STDERR<<EOF;
-make failed to create missing executable 'mergeRT1', should be at
-${tigerdir}/mergeRT1
-EOF
-			exit 1;
-		}
-		chdir( $rootdir ) or die "could not chdir to $rootdir : $!\n";
-	}
-}
 
 if ( $domake || ! -e "linkfixup" ) {
 #	print "make linkfixup\n";
@@ -311,21 +331,6 @@ if ( @zl ) {
 #chdir( $rootdir ) or die "could not chdir to $rootdir : $!\n";
 
 
-# true if a newerthan b, or b doesn't exist
-sub newerthan ($$) {
-  my $mtimea;
-  my $mtimeb;
-  $mtimea = (stat("$_[0]"))[9];
-  $mtimeb = (stat("$_[1]"))[9];
-  if ( ! defined $mtimea ) {
-    return 0;
-  }
-  if ( ! defined $mtimeb ) {
-    return 1;
-  }
-  return $mtimea > $mtimeb;
-};
-
 chdir( "${rootdir}/data/${stu}" ) or die "could not chdir to ${rootdir}/data/${stu}: $!\n";
 
 if ( newerthan( "${tigerdir}/makeLinks", "${stu}.links" ) ||
@@ -348,38 +353,6 @@ if ( newerthan( "raw", "$stu.RTA" ) ) {
 			close FIN;
 		}
 		close FOUT;
-	}
-}
-
-if ( (-f "${stl}geo.uf1.bz2") && (! -f "${stl}geo.uf1") ) {
-	if ( newerthan( "${stl}geo.uf1.bz2", "${stl}101.uf1" ) ) {
-		print "${stl}geo.uf1.bz2 -> ${stl}101.uf1\n";
-		if ( $doit ) {
-			open FIN, "bunzip2 --stdout ${stl}geo.uf1.bz2 |";
-			open FOUT, '>', "${stl}101.uf1";
-			while ( $line = <FIN> ) {
-				if ( $line =~ /^uSF1  ..101/ ) {
-					print FOUT $line;
-				}
-			}
-			close FOUT;
-			close FIN;
-		}
-	}
-} else {
-	if ( newerthan( "${stl}geo.uf1", "${stl}101.uf1" ) ) {
-		print "${stl}geo.uf1 -> ${stl}101.uf1\n";
-		if ( $doit ) {
-			open FIN, '<', "${stl}geo.uf1";
-			open FOUT, '>', "${stl}101.uf1";
-			while ( $line = <FIN> ) {
-				if ( $line =~ /^uSF1  ..101/ ) {
-					 print FOUT $line;
-				}
-			}
-			close FOUT;
-			close FIN;
-		}
 	}
 }
 
