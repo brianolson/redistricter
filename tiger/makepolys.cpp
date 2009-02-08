@@ -25,6 +25,8 @@
 
 #include "rasterizeTiger.h"
 
+#include "../PBPointOutput.h"
+
 class bstrlist {
 public:
 	char* str;
@@ -100,6 +102,7 @@ int main( int argc, char** argv ) {
 	char* maskOutName = NULL;
 	bool printPointsPreRasterize = false;
 	bool pointNOP = false;
+	bool protobufOutput = false;
 
 	for ( i = 1; i < argc; i++ ) {
 		if ( ! strcmp( argv[i], "--minlat" ) ) {
@@ -140,6 +143,8 @@ int main( int argc, char** argv ) {
 			maskOutName = argv[i];
 		} else if ( ! strcmp( argv[i], "--prerast" ) ) {
 			printPointsPreRasterize = true;
+		} else if ( ! strcmp( argv[i], "--protobuf" ) ) {
+			protobufOutput = true;
 		} else if ( ! strcmp( argv[i], "--pointnop" ) ) {
 			pointNOP = true;
 		} else if ( checkRoot( argv[i] ) ) {
@@ -165,7 +170,10 @@ int main( int argc, char** argv ) {
 	} else {
 		fout = stdout;
 	}
-	if ( ! printPointsPreRasterize ) {
+	PBPointOutput* pbout = NULL;
+	if ( protobufOutput ) {
+		pbout = new PBPointOutput(fileno(fout), pg.xpx, pg.ypx);
+	} else if ( ! printPointsPreRasterize ) {
 		uint32_t vers = 1;
 		fwrite(&vers,sizeof(uint32_t),1,fout);
 		fwrite(&pg.xpx,sizeof(int32_t),1,fout);
@@ -176,7 +184,9 @@ int main( int argc, char** argv ) {
 	}
 
 	PointOutput* pout;
-	if ( printPointsPreRasterize ) {
+	if ( protobufOutput ) {
+		pout = pbout;
+	} else if ( printPointsPreRasterize ) {
 		pout = new FILEPointOutput<uint32_t>(fout);
 	} else {
 		pout = new FILEPointOutput<uint16_t>(fout);

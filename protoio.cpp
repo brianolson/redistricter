@@ -1,23 +1,14 @@
 #if HAVE_PROTOBUF
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-//namespace google::protobuf::io
 using google::protobuf::int32;
 using google::protobuf::int64;
 
 #include "districter.h"
-//#include "GeoData.h"
-//#include "redata.pb.h"
+#include "redata.pb.h"
 #include "Solver.h"
 
 #include <fcntl.h>
-
-// Yes, I'm including the C++ source file here, that way I get conditional
-// compilation on the generated file under the "#if HAVE_PROTOBUF" that wraps
-// this whole file. It's kinda gross, but I'm still not bothering to learn
-// autoconf yet.
-#include "redata.pb.cc"
-
 
 class ProtobufGeoData : public GeoData {
 	virtual int load() {
@@ -114,9 +105,18 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	GeoData* gd = sov->gd = new ProtobufGeoData();
 	if (rd.intpoints_size() > 0) {
 		gd->numPoints = rd.intpoints_size() / 2;
+		assert(gd->numPoints > 0);
 		gd->allocPoints();
 		int pi = 0;
-		for (int i = 0; i < gd->numPoints; ++i) {
+		int i = 0;
+		gd->set_lon(i, rd.intpoints(pi));
+		++pi;
+		gd->set_lat(i, rd.intpoints(pi));
+		++pi;
+		gd->minx = gd->maxx = gd->lon(i);
+		gd->miny = gd->maxy = gd->lat(i);
+		++i;
+		for (; i < gd->numPoints; ++i) {
 			gd->set_lon(i, rd.intpoints(pi));
 			++pi;
 			gd->set_lat(i, rd.intpoints(pi));
@@ -124,9 +124,18 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 		}
 	} else if (rd.fpoints_size() > 0) {
 		gd->numPoints = rd.fpoints_size() / 2;
+		assert(gd->numPoints > 0);
 		gd->allocPoints();
 		int pi = 0;
-		for (int i = 0; i < gd->numPoints; ++i) {
+		int i = 0;
+		gd->set_lon(i, rd.fpoints(pi));
+		++pi;
+		gd->set_lat(i, rd.fpoints(pi));
+		++pi;
+		gd->minx = gd->maxx = gd->lon(i);
+		gd->miny = gd->maxy = gd->lat(i);
+		++i;
+		for (; i < gd->numPoints; ++i) {
 			gd->set_lon(i, rd.fpoints(pi));
 			++pi;
 			gd->set_lat(i, rd.fpoints(pi));

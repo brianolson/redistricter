@@ -1,3 +1,9 @@
+DEPENDENCIES:
+	google protocol buffers
+	http://code.google.com/p/protobuf/
+
+BUILDING:	
+
 There's no ./configure because autoconf is hard. :-(
 
 Instead, Makefile includes makeopts/`uname`.pre early on to set variables. See the Darwin and Linux examples.
@@ -12,3 +18,8 @@ If you want to leave makeopts/* alone, create a file localvars.make which gets i
 ## MAC OS Notes:
 makeopts/Darwin.pre
 	Defaults to compiling for ppc (32 bit) and x86_64. For development it's probably better to pick just your architecture and enable the -MMD flag which emits good dependency information that gnumake can use.
+
+RUNNING:
+
+Make a directory, which I traditionally call "data", to hold the Census data.
+./setupstatedata.pl ga

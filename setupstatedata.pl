@@ -341,7 +341,8 @@ if ( newerthan( "${tigerdir}/makeLinks", "${stu}.links" ) ||
 	}
 }
 
-if ( newerthan( "raw", "$stu.RTA" ) ) {
+# TODO FIXME delete this block
+if ( 0 && newerthan( "raw", "$stu.RTA" ) ) {
 	print "merge raw/*RTA into $stu.RTA\n";
 	if ( $doit ) {
 		open FOUT, '>', "$stu.RTA";
@@ -417,10 +418,10 @@ if ( $doit ) {
 	close FIN;
 }
 
-if ( newerthan( "${stu}.RTA", "${stl}109.dsz" ) ) {
+if ( newerthan( "raw", "${stl}109.dsz" ) ) {
 	print "generate 109th Congress initial solution: ${stu}.RTA -> ${stl}109.dsz\n";
 	if ( $doit ) {
-		nsystem "${rootdir}/rta2dsz -B ${stl_bin} $distnumopt ${stu}.RTA -o ${stl}109.dsz";
+		nsystem "${rootdir}/rta2dsz -B ${stl_bin} $distnumopt raw/*.RTA -o ${stl}109.dsz";
 	}
 }
 if ( $doit && $with_png ) {

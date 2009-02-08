@@ -1,6 +1,8 @@
 #ifndef RASTERIZE_TIGER_H
 #define RASTERIZE_TIGER_H
 
+#include <math.h>
+#include <stdio.h>
 #include <stdint.h>
 
 class rtip;

@@ -7,7 +7,7 @@ message RedistricterData {
 	repeated double fpoints = 2;  // lon,lat pairs, degrees
 	repeated int32 population = 3;
 	repeated int32 area = 4;  // square meters
-	repeated int64 ubids = 5;
+	repeated int64 ubids = 5;  // universal block identifier (my internal number)
 	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs
 	
@@ -35,4 +35,15 @@ message DistrictMap {
 	repeated int32 recno = 1;
 	// District Number, 1..N. Must be the same length as recno.
 	repeated int32 district = 2;
+}
+
+// For some ubid, a list of pixels (x,y coords) to draw.
+// Alternative to custom binary ".mpout" file
+message MapRasterization {
+	repeated group Block = 1 {
+		required int64 ubid = 2;
+		repeated int32 xy = 3;  // (x, y) pairs
+	}
+	optional int32 sizex = 4;
+	optional int32 sizey = 5;
 }

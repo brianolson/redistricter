@@ -42,9 +42,15 @@ if ( $table ) {
   print "<table border=\"0\">";
 }
 
+# $stu => [kmpp, spread, std]
+%origstats = ();
+%newstats = ();
+
 $count = 0;
 foreach $stu ( <??> ) {
 	$statsum_part = "";
+# TODO: read the link "link1" and write HTML that referrs to the underlying YYYYMMDD_hhmmss directory
+# TODO: more flexible output options. stats table output.
   if ( (-f "${stu}/link1/${stu}_ba_500.png") && 
        (-f "${stu}/link1/${stu}_ba.png") ) {
 	$startstats = undef;
@@ -57,6 +63,7 @@ foreach $stu ( <??> ) {
 			$startspread = $max - $min;
 			($std) = $ssdata =~ /std=([0-9]+)/s;
 			$startstats = "Km/p=${startkmpp} spread=${startspread} std=${std}";
+			$origstats{$stu} = [$startkmpp, $startspread, $std];
 		}
 	}
 	if ( $table ) {
@@ -77,10 +84,14 @@ foreach $stu ( <??> ) {
 				}
 				close FIN;
 				#$statsum_part = "<td>" . join("<br />", @statsum_lines) . "</td>";
-				if (defined $startstats) {
-					$statsum_part = "<td>Current: $startstats<br />My Way: $bestkm<br />$dt</td>";
-				} else {
-					$statsum_part = "<td>$bestkm<br />$dt</td>";
+				if (defined $bestkm) {
+					($kmpp, $spread, $std) = $bestkm =~ /Km\/p=([0-9.]+)\s+spread=([0-9.]+)\s+std=([0-9.])/;
+					$newstats{$stu} = [$kmpp, $spread, $std];
+					if (defined $startstats) {
+						$statsum_part = "<td>Current: $startstats<br />My Way: $bestkm<br />$dt</td>";
+					} else {
+						$statsum_part = "<td>$bestkm<br />$dt</td>";
+					}
 				}
 			} else {
 				print STDERR "${stu}/link1/statsum: could not be opened, $!\n"; 

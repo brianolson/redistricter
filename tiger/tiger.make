@@ -23,7 +23,7 @@ tiger/mergeRT1:	tiger/mergeRT1.cpp tiger/record1.o tiger/mmaped.o
 
 POLYOBJS:=tiger/makepolys.o tiger/recordA.o tiger/recordI.o
 POLYOBJS+=tiger/record1.o tiger/record2.o tiger/mmaped.o
-POLYOBJS+=tiger/rasterizeTiger.o
+POLYOBJS+=tiger/rasterizeTiger.o PBPointOutput.o redata.pb.o
 THINGSTOCLEAN+=${POLYOBJS}
 
 tiger/makepolys.o:	tiger/recordI.h tiger/record2.h

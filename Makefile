@@ -30,7 +30,7 @@ COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
 COREOBJS+=NearestNeighborDistrictSet.o protoio.o StatThing.o
-COREOBJS+=uf1.o logging.o
+COREOBJS+=uf1.o logging.o redata.pb.o
 
 CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
 CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
