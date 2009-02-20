@@ -15,6 +15,7 @@ $fullhtml = 0;
 $table = 1;
 $statsum = 1;
 $datadir = undef;
+$explicitpath = 1;
 
 while ( $arg = shift @ARGV ) {
   if ( $arg eq "--full" ) {
@@ -54,6 +55,11 @@ foreach $stu ( <??> ) {
   if ( (-f "${stu}/link1/${stu}_ba_500.png") && 
        (-f "${stu}/link1/${stu}_ba.png") ) {
 	$startstats = undef;
+	if ($explicitpath) {
+		$one = readlink "${stu}/link1";
+	} else {
+		$one = "link1";
+	}
 	if ((defined $datadir) and (-r "${datadir}/${stu}/${stu}_start_stats")) {
 		if (open( FIN, '<', "${datadir}/${stu}/${stu}_start_stats")) {
 			@lines = <FIN>;
@@ -98,11 +104,11 @@ foreach $stu ( <??> ) {
 			}
 		}
 	print <<EOF;
-<tr><td class=st>${stu}</td><td class=i><a href="${stu}/link1/${stu}_ba.png"><img src="${stu}/link1/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
+<tr><td class=st>${stu}</td><td class=i><a href="${stu}/${one}/${stu}_ba.png"><img src="${stu}/${one}/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
 EOF
     } else {
       print <<EOF;
-${stu}: <a href="${stu}/link1/${stu}_ba.png"><img src="${stu}/link1/${stu}_ba_500.png" alt="$stu current and proposed districting"></a><br />
+${stu}: <a href="${stu}/${one}/${stu}_ba.png"><img src="${stu}/${one}/${stu}_ba_500.png" alt="$stu current and proposed districting"></a><br />
 EOF
     }
     $count++;
