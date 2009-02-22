@@ -51,6 +51,8 @@ class manybest(object):
 		self.rmbad = False
 		self.rmempty = False
 		self.mvbad = False
+		self.verbose = None
+		self.dry_run = False
 
 	def addSlog(self, path):
 		if self.root:
@@ -81,6 +83,7 @@ class manybest(object):
 			fpath = os.path.join(self.root, f)
 			if os.path.isdir(fpath) and not os.path.islink(fpath):
 				self.maybeAddSlogDir(fpath)
+		self.odir = os.path.join(self.root, self.odir)
 	
 	def parseOpts(self, argv):
 		argv = argv[1:]
@@ -105,6 +108,11 @@ class manybest(object):
 				self.mvbad = True
 			elif arg == "-root":
 				self.setRoot(argv.pop(0))
+			elif arg == "-verbose":
+				self.verbose = sys.stderr
+			elif arg == "-dryrun":
+				self.dry_run = True
+				self.verbose = sys.stderr
 			elif os.access(arg, os.F_OK|os.R_OK):
 				self.addSlog(arg)
 			elif os.path.isdir(arg) and self.maybeAddSlogDir(arg):
@@ -112,7 +120,24 @@ class manybest(object):
 			else:
 				errstr = "bogus arg \"%s\"\n" % arg
 				sys.stderr.write(errstr)
-				raise errstr
+				raise Error(errstr)
+
+	def parseLog(self, fin):
+		"""
+		fin: iterable source of lines
+		return (float kmpp, str[] lines)"""
+		lines = []
+		kmpp = None
+		for line in fin:
+			m = kmpp_re_a.match(line)
+			if not m:
+				m = kmpp_re_b.match(line)
+			if m:
+				kmpp = float(m.group(1))
+				lines.append(line[1:])
+			elif line[0] == "#":
+				lines.append(line[1:])
+		return (kmpp, lines)
 	
 	def skimLogs(self, loglist=None):
 		"""return (slog[] they, string[] empties)"""
@@ -133,18 +158,10 @@ class manybest(object):
 			else:
 				if not os.path.isdir(root):
 					continue
+			if self.verbose:
+				self.verbose.write("scanning %s\n" % fn)
 			fin = open(fn, "r")
-			lines = []
-			kmpp = None
-			for line in fin:
-				m = kmpp_re_a.match(line)
-				if not m:
-					m = kmpp_re_b.match(line)
-				if m:
-					kmpp = float(m.group(1))
-					lines.append(line[1:])
-				elif line[0] == "#":
-					lines.append(line[1:])
+			kmpp, lines = self.parseLog(fin)
 			fin.close()
 			if kmpp is None:
 				empties.append(root)
@@ -164,7 +181,11 @@ class manybest(object):
 	def copyPngs(self, they):
 		i = 1
 		for t in they:
-			shutil.copyfile(t.png, os.path.join(self.odir, "%d.png" % i))
+			destpngpath = os.path.join(self.odir, "%d.png" % i)
+			if self.verbose:
+				self.verbose.write("cp %s %s\n" % (t.png, destpngpath))
+			if not self.dry_run:
+				shutil.copyfile(t.png, destpngpath)
 			i += 1
 	
 	def writeBestsTable(self, they, fpart):
@@ -180,9 +201,17 @@ class manybest(object):
 		fpart.write("""</table>""")
 
 	def mergeIndexParts(self):
+		if self.verbose:
+			self.verbose.write("(cd %s; cat .head.html .part.html .tail.html > index.html)\n" % self.odir)
+		if self.dry_run:
+			return
 		findex = open(os.path.join(self.odir, "index.html"), "w")
 		for finame in [".head.html", ".part.html", ".tail.html"]:
-			fi = open(os.path.join(self.odir, finame), "r")
+			fipath = os.path.join(self.odir, finame)
+			if not os.path.exists(fipath):
+				sys.stderr.write("warning: no file \"%s\"\n" % fipath)
+				continue
+			fi = open(fipath, "r")
 			while True:
 				buf = fi.read(30000)
 				if len(buf) <= 0:
@@ -192,20 +221,31 @@ class manybest(object):
 		findex.close()
 
 	def setLink1(self, path):
-		if os.path.exists("link1"):
-			if os.path.islink("link1"):
-				os.unlink("link1")
+		if self.verbose:
+			self.verbose.write("setLink1(%s)\n" % path)
+		if self.root:
+			link1path = os.path.join(self.root, "link1")
+		else:
+			link1path = "link1"
+		if os.path.lexists(link1path):
+			if os.path.islink(link1path):
+				if self.verbose:
+					self.verbose.write("rm %s\n" % link1path)
+				if not self.dry_run:
+					os.unlink(link1path)
 			else:
 				sys.stderr.write("link1 exists but is not a link\n")
 				raise Error("link1 exists but is not a link\n")
-		path = os.path.realpath(path)
+		def verboseSymlink(a, b):
+			if self.verbose:
+				self.verbose.write("ln -s %s %s\n" % (a, b))
+			if not self.dry_run:
+				os.symlink(a, b)
 		if self.root:
-			if path.startswith(self.root):
-				os.symlink(path[len(self.root)+1:], "link1")
-			else:
-				os.symlink(path, "link1")
+			verboseSymlink(path, link1path)
 		else:
-			os.symlink(path, "link1")
+			path = os.path.realpath(path)
+			verboseSymlink(path, link1path)
 
 	def getBadlist(self, they):
 		if (self.ngood is not None) and (self.ngood < len(they)):
@@ -224,37 +264,49 @@ class manybest(object):
 			if os.path.exists(garch):
 				bgl.append(garch)
 		if bgl:
-			print "bad best kmpp:"
-			print "rm -rf " + " ".join(bgl)
-			for x in bgl:
-				os.unlink(x)
+			if self.verbose:
+				self.verbose.write("bad best kmpp:\nrm -rf " + " ".join(bgl) + "\n")
+			if not self.dry_run:
+				for x in bgl:
+					os.unlink(x)
 
 	def moveBadToOld(self, badlist):
-		print "move bad best kmpp to old dir"
+		if self.verbose:
+			self.verbose.write("move bad best kmpp to old dir\n")
 		oldpath = "old"
 		if self.root:
 			oldpath = os.path.join(self.root, "old")
 		if not os.path.isdir(oldpath):
-			os.mkdir(oldpath)
+			if self.verbose:
+				self.verbose.write("mkdir %s\n" % oldpath)
+			if not self.dry_run:
+				os.mkdir(oldpath)
 		for b in badlist:
 			if self.root:
 				b = os.path.join(self.root, b)
-			shutil.move(b, oldpath)
+			if self.verbose:
+				self.verbose.write("mv %s %s\n" % (b, oldpath))
+			if not self.dry_run:
+				shutil.move(b, oldpath)
 	
 	def handleEmpties(self, empties):
 		if empties:
 			# don't delete the last one, in case it's still active
 			empties.pop(-1)
 		if empties:
-			print "empty solution:"
-			print "rm -rf " + " ".join(empties)
+			if self.verbose:
+				self.verbose.write("empty solution:\nrm -rf " + " ".join(empties) + "\n")
 			for eroot in empties:
 				if self.root:
 					eroot = os.path.join(self.root, eroot)
-				shutil.rmtree(eroot)
+				if not self.dry_run:
+					shutil.rmtree(eroot)
 		
 	def main(self, argv):
 		self.parseOpts(argv)
+		self.run()
+
+	def run(self):
 		if (self.ngood is not None) and (self.nlim is None):
 			self.nlim = self.ngood
 		if not self.slogs:
@@ -271,9 +323,12 @@ class manybest(object):
 			if not os.path.isdir(self.odir):
 				os.makedirs(self.odir)
 			self.copyPngs(they)
-			fpart = open(os.path.join(self.odir, ".part.html"))
-			self.writeBestsTable(they, fpart)
-			fpart.close()
+			if self.verbose:
+				self.verbose.write("write .part.html\n")
+			if not self.dry_run:
+				fpart = open(os.path.join(self.odir, ".part.html"), "w")
+				self.writeBestsTable(they, fpart)
+				fpart.close()
 			self.mergeIndexParts()
 			self.setLink1(they[0].root)
 
