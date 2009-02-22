@@ -14,7 +14,7 @@ OG:=-O2 -DNDEBUG=1
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
-CCOMMONFLAGS+=-Wall -Itiger
+CCOMMONFLAGS+=-Wall -Itiger -DHAVE_PROTOBUF
 # -MMD is incompatible with some Apple compile modes
 #CCOMMONFLAGS+=-Wall -Itiger -MMD
 CXXFLAGS+=${OG} ${CCOMMONFLAGS}
@@ -24,7 +24,7 @@ CFLAGS+=${OG} ${CCOMMONFLAGS}
 
 
 LDPNG=-lpng12
-LDFLAGS+=${LDPNG} -lz
+LDFLAGS+=${LDPNG} -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
@@ -103,6 +103,9 @@ run:	districter2
 pw:	pw.cpp
 	g++ -Wall ${LDPNG} pw.cpp -lz -o pw -g
 
+xcode:
+	xcodebuild -alltargets -project guidistricter.xcodeproj
+
 .FORCE:
 
 include tiger/tiger.make
@@ -113,5 +116,8 @@ include tiger/tiger.make
 
 -include localtail.make
 
-%.pb.cc : %.proto
+%.pb.cc %.pb.h : %.proto
 	protoc $< --cpp_out=$(@D)
+
+protoio.o:	redata.pb.h
+PBPointOutput.o:	redata.pb.h
