@@ -29,6 +29,8 @@ kmpp_re_b = re.compile(r".*Best Km\/p: ([0-9.]+)")
 
 
 class slog(object):
+	"""A log summary object"""
+	
 	def __init__(self, root, kmpp, png, text):
 		self.root = root
 		self.kmpp = kmpp
@@ -43,7 +45,7 @@ class manybest(object):
 	def __init__(self):
 		self.odir = "best"
 		self.root = None
-		self.slogs = []
+		self.log_paths = []
 		self.nlim = None
 		self.ngood = None
 		self.badkmpp = None
@@ -53,16 +55,18 @@ class manybest(object):
 		self.mvbad = False
 		self.verbose = None
 		self.dry_run = False
+		self.slogs = None
+		self.empties = None
 
 	def addSlog(self, path):
 		if self.root:
 			rp = os.path.realpath(path)
 			if rp.startswith(self.root):
-				self.slogs.append(path[len(self.root)+1:])
+				self.log_paths.append(path[len(self.root)+1:])
 			else:
-				self.slogs.append(path)
+				self.log_paths.append(path)
 		else:
-			self.slogs.append(path)
+			self.log_paths.append(path)
 
 	def maybeAddSlogDir(self, path):
 		pa = os.path.join(path, "statsum")
@@ -138,13 +142,30 @@ class manybest(object):
 			elif line[0] == "#":
 				lines.append(line[1:])
 		return (kmpp, lines)
+
+	def parseLog(self, fin):
+		"""
+		fin: iterable source of lines
+		return (float kmpp, str[] lines)"""
+		lines = []
+		kmpp = None
+		for line in fin:
+			m = kmpp_re_a.match(line)
+			if not m:
+				m = kmpp_re_b.match(line)
+			if m:
+				kmpp = float(m.group(1))
+				lines.append(line[1:])
+			elif line[0] == "#":
+				lines.append(line[1:])
+		return (kmpp, lines)
 	
 	def skimLogs(self, loglist=None):
 		"""return (slog[] they, string[] empties)"""
 		they = []
 		empties = []
 		if loglist is None:
-			loglist = self.slogs
+			loglist = self.log_paths
 		for fn in loglist:
 			root = os.path.dirname(fn)
 			if not root:
@@ -176,6 +197,8 @@ class manybest(object):
 			if (self.badkmpp is not None) and (kmpp > self.badkmpp):
 				badlist.append(root)
 			they.append(slog(root, kmpp, png, "<br/>".join(lines)))
+		self.they = they
+		self.empties = empties
 		return (they, empties)
 
 	def copyPngs(self, they):
@@ -282,12 +305,14 @@ class manybest(object):
 			if not self.dry_run:
 				os.mkdir(oldpath)
 		for b in badlist:
+			bpath = b
 			if self.root:
-				b = os.path.join(self.root, b)
+				bpath = os.path.join(self.root, b)
+			oldsub = os.path.join(oldpath, b)
 			if self.verbose:
-				self.verbose.write("mv %s %s\n" % (b, oldpath))
+				self.verbose.write("mv %s %s\n" % (bpath, oldsub))
 			if not self.dry_run:
-				shutil.move(b, oldpath)
+				shutil.move(bpath, oldsub)
 	
 	def handleEmpties(self, empties):
 		if empties:
@@ -309,16 +334,18 @@ class manybest(object):
 	def run(self):
 		if (self.ngood is not None) and (self.nlim is None):
 			self.nlim = self.ngood
-		if not self.slogs:
-			self.slogs = glob.glob("*/statsum")
-		if not self.slogs:
+		if not self.log_paths:
+			self.log_paths = glob.glob("*/statsum")
+		if not self.log_paths:
 			sys.stderr.write("no logs to process\n")
 			sys.stderr.write(usage)
 			sys.exit(1)
-		they, empties = self.skimLogs(self.slogs)
-		if not they:
+		self.skimLogs(self.log_paths)
+		if not self.they:
 			raise Exception("no good runs found\n")
-		they.sort(cmp=lambda a, b: cmp(a.kmpp, b.kmpp))
+		self.they.sort(cmp=lambda a, b: cmp(a.kmpp, b.kmpp))
+		they = self.they
+		empties = self.empties
 		if self.odir:
 			if not os.path.isdir(self.odir):
 				os.makedirs(self.odir)

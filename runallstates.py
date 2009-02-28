@@ -104,7 +104,36 @@ class runallstates(object):
 		self.drendcmds = {}
 		self.softfail = False
 		self.stoppath = None
+		self.runlog = None  # file
+		self.bestlog = None  # file
+		self.bests = None  # map<stu, manybest.slog>
 
+	def readBestLog(self, path):
+		rbestlog = open(path, "r")
+		bests = {}
+		for line in rbestlog:
+			try:
+				a = line.split("\t")
+				stu = a[0]
+				x = manybest.slog("", float(a[1]), "", "")
+				bests[stu] = x
+			except Exception, e:
+				sys.stderr.write("readBestLog error: %s\n" % e)
+		rbestlog.close()
+		return bests
+		
+	def openBestLog(self, path):
+		try:
+			self.bests = self.readBestLog(path)
+		except Exception, e:
+			sys.stderr.write("readBestLog failed: %s\n" % e)
+		if self.bests is None:
+			self.bests = {}
+		self.bestlog = open(path, "a")
+
+	def openRunLog(self, path):
+		self.runlog = open(path, "a")
+	
 	def readArgs(self, argv):
 		"""Reads argv[1:]"""
 		i = 1
@@ -139,6 +168,12 @@ class runallstates(object):
 				self.dry_run = True
 			elif arg == "--d2":
 				self.extrargs = d2args
+			elif arg == "--runlog":
+				i += 1
+				self.openRunLog(argv[i])
+			elif arg == "--bestlog":
+				i += 1
+				self.openBestLog(argv[i])
 			else:
 				astu = arg.upper()
 				if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")):
@@ -302,44 +337,57 @@ class runallstates(object):
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=ctd).wait()
 			# don't care if rm-rf failed? it wouldn't report anyway?
-		if True:  #manybest:
-			mb = manybest.manybest()
-			mb.ngood = 15
-			mb.mvbad = True
-			mb.rmbad = True
-			mb.rmempty = True
-			mb.nlim = 10
-			mb.setRoot(stu)
-#			cmd = [manybest, "-ngood", "15", "-mvbad", "-rmbad", "-rmempty", "-n", "10"]
-#			print "(cd %s && %s)" % (stu, " ".join(cmd))
+		mb = manybest.manybest()
+		mb.ngood = 15
+		mb.mvbad = True
+		mb.rmbad = True
+		mb.rmempty = True
+		mb.nlim = 10
+		mb.verbose = sys.stderr
+		mb.setRoot(stu)
+		mb.dry_run = self.dry_run
+		#./manybest.py -ngood 15 -mvbad -rmbad -rmempty -n 10
+		mb.run()
+		drendcmd = self.drendcmds.get(stu)
+		final2_png = os.path.join("link1", stu + "_final2.png")
+		if (drendcmd and
+			not os.path.exists(os.path.join(stu, final2_png))):
+			print "(cd %s && %s)" % (stu, drendcmd)
 			if not self.dry_run:
-				mb.run()
-#				ret = subprocess.Popen(cmd, cwd=stu ).wait()
-#				if ret != 0:
-#					sys.stderr.write("manybest failed %d\n" % ret)
-#					self.softfail = True
-#					return False
-			drendcmd = self.drendcmds.get(stu)
-			final2_png = os.path.join("link1", stu + "_final2.png")
-			if (drendcmd and
-				not os.path.exists(os.path.join(stu, final2_png))):
-				print "(cd %s && %s)" % (stu, drendcmd)
-				if not self.dry_run:
-					ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()
-					if ret != 0:
-						sys.stderr.write("drend failed %d\n" % ret)
-						self.softfail = True
-						return False
-				start_png = os.path.join(self.datadir, stu, stu + "_start.png")
-				ba_png = os.path.join("link1", stu + "_ba.png")
-				cmd = ["convert", start_png, final2_png, "+append", ba_png]
-				print "(cd %s && %s)" % (stu, " ".join(cmd))
-				if not self.dry_run:
-					subprocess.Popen(cmd, cwd=stu).wait()
-				cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
-				print "(cd %s && %s)" % (stu, " ".join(cmd))
-				if not self.dry_run:
-					subprocess.Popen(cmd, cwd=stu).wait()
+				ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()
+				if ret != 0:
+					sys.stderr.write("drend failed %d\n" % ret)
+					self.softfail = True
+					return False
+			start_png = os.path.join(self.datadir, stu, stu + "_start.png")
+			ba_png = os.path.join("link1", stu + "_ba.png")
+			cmd = ["convert", start_png, final2_png, "+append", ba_png]
+			print "(cd %s && %s)" % (stu, " ".join(cmd))
+			if not self.dry_run:
+				subprocess.Popen(cmd, cwd=stu).wait()
+			cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
+			print "(cd %s && %s)" % (stu, " ".join(cmd))
+			if not self.dry_run:
+				subprocess.Popen(cmd, cwd=stu).wait()
+		if (self.bestlog is not None) and mb.they:
+			best = mb.they[0]
+			oldbest = self.bests.get(stu)
+			if (oldbest is None) or (best.kmpp < oldbest.kmpp):
+				self.bests[stu] = best
+				if oldbest is None:
+					oldmsg = "was none"
+				else:
+					oldmsg = "old=%f" % oldbest.kmpp
+				outf = self.bestlog
+				if self.dry_run:
+					outf = sys.stderr
+				outf.write("%s\t%f\t%s\t%s\t%s\n" % (
+					stu,
+					best.kmpp,
+					os.path.join(stu, best.root),
+					datetime.datetime.now().isoformat(" "),
+					oldmsg))
+				outf.flush()
 		return True
 
 	def main(self, argv):
