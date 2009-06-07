@@ -47,3 +47,19 @@ message MapRasterization {
 	optional int32 sizex = 4;
 	optional int32 sizey = 5;
 }
+
+message TableFileDescription {
+	// the name of the containing table file
+	required string name = 1;
+	repeated group Table = 2 {
+		// the name of the table (group of columns)
+		required string table = 3;
+		optional string tableDescription = 4;
+		repeated group Column = 5 {
+			// number of column within table file
+			required int32 column = 6;
+			// ['total','male','30-35'] or similar
+			repeated string path = 7;
+		}
+	}
+}

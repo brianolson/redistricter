@@ -3,13 +3,13 @@ UNAME:=$(shell uname)
 -include makeopts/${UNAME}.pre
 -include localvars.make
 
-all:	districter2 linkfixup drend rta2dsz
+all:	districter2 linkfixup drend rta2dsz analyze
 
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
 
 
-OG:=-O2 -DNDEBUG=1
-#OG?=-g
+#OG:=-O2 -DNDEBUG=1
+OG?=-g
 #OG:=-g -pg
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
@@ -80,14 +80,22 @@ DRENDOBJS:=${COREOBJS} drendmain.o MapDrawer.o
 drend:	${DRENDOBJS}
 	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(LDFLAGS) -o drend
 
+ANALYZEOBJS:=${COREOBJS} analyze.o
+
+analyze:	${ANALYZEOBJS}
+	$(CXX) ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
+
 RTADSZOBJS:=${COREOBJS} rtaToDsz.o tiger/recordA.o
 
-THINGSTOCLEAN+=${DRENDOBJS} ${GBINOBJS} ${RTADSZOBJS} *.d */*.d
+THINGSTOCLEAN+=${DRENDOBJS} ${GBINOBJS} ${RTADSZOBJS} ${ANALYZEOBJS} *.d */*.d
 
 rta2dsz:	${RTADSZOBJS}
 	$(CXX) ${CXXFLAGS} $(RTADSZOBJS) $(LDFLAGS) -o rta2dsz
 
 rtaToDsz.o:	tiger/recordA.h
+
+tabledesc/redata_pb2.py:	redata.proto
+	protoc redata.proto --python_out=tabledesc
 
 #UFONEDATAOBJS:=uf1.o uf1data.o tiger/mmaped.o
 #THINGSTOCLEAN+=${UFONEDATAOBJS}

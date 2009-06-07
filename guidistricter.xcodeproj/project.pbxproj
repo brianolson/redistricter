@@ -109,15 +109,37 @@
 		3256801D0D1362CF0061AE7C /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		325680220D1362F50061AE7C /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
 		325680250D1363140061AE7C /* uf1data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680240D1363140061AE7C /* uf1data.cpp */; };
+		325934FF0FD8B3FA008A40FB /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
+		325935240FD9DE58008A40FB /* libpng12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FFCA1430E2CF400002D81C6 /* libpng12.dylib */; };
+		325935250FD9DE59008A40FB /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325935260FD9DE59008A40FB /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F56559D0A579A9C00212FB8 /* libz.dylib */; };
+		325935270FD9DE76008A40FB /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
+		325935280FD9DE76008A40FB /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
+		325935290FD9DE77008A40FB /* District2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F260CC508ACA31200C2C4FE /* District2.cpp */; };
+		3259352A0FD9DE79008A40FB /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
+		3259352D0FD9DE9F008A40FB /* analyze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3259352C0FD9DE9F008A40FB /* analyze.cpp */; };
+		3259352E0FD9DEAD008A40FB /* fileio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF44F07ADFE7200171C83 /* fileio.cpp */; };
+		3259352F0FD9DEAF008A40FB /* GrabIntermediateStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */; };
+		325935300FD9DEB2008A40FB /* LinearInterpolate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE201A50C94ECBC008A10FE /* LinearInterpolate.cpp */; };
+		325935390FD9DF5D008A40FB /* logging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DFD190F3DDA34008FF766 /* logging.cpp */; };
+		3259353A0FD9DF74008A40FB /* NearestNeighborDistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320BFD650CCD6CC900B33764 /* NearestNeighborDistrictSet.cpp */; };
+		3259353B0FD9DF82008A40FB /* PreThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB993B0C3AB63E00FE809C /* PreThread.cpp */; };
+		3259353C0FD9DF8D008A40FB /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
+		3259353D0FD9DF93008A40FB /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
+		3259353E0FD9DF9E008A40FB /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
+		3259353F0FD9DFA3008A40FB /* Solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F4D0C6F090C2B58003CE55B /* Solver.cpp */; };
+		325935400FD9DFA8008A40FB /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
+		325935410FD9DFAE008A40FB /* uf1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325680210D1362F50061AE7C /* uf1.cpp */; };
+		325935440FD9DFBF008A40FB /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		3259F3020E0D91D100487C8C /* Bitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F1862C90926B03A0025E521 /* Bitmap.cpp */; };
-		325AB9AF0ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B00ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B10ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B20ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B30ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B40ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B50ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
-		325AB9B60ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */; };
+		325AB9AF0ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B00ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B10ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B20ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B30ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B40ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B50ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
+		325AB9B60ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */; };
 		325B86DB0F27A79B004734B7 /* StatThing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FCBB14E0EE3177B00D90B1F /* StatThing.cpp */; };
 		32A17EB00E2D01D0004DACE8 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6CF59307AE099600171C83 /* OpenGL.framework */; };
 		32A17EB10E2D01D0004DACE8 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F502D4D08BAB3E300F16550 /* GLUT.framework */; };
@@ -223,7 +245,9 @@
 		325680210D1362F50061AE7C /* uf1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uf1.cpp; sourceTree = "<group>"; };
 		325680230D1362FB0061AE7C /* uf1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uf1.h; sourceTree = "<group>"; };
 		325680240D1363140061AE7C /* uf1data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uf1data.cpp; sourceTree = "<group>"; };
-		325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libprotobuf.2.dylib; path = /usr/local/lib/libprotobuf.2.dylib; sourceTree = "<absolute>"; };
+		3259351F0FD9DE3C008A40FB /* analyze */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze; sourceTree = BUILT_PRODUCTS_DIR; };
+		3259352C0FD9DE9F008A40FB /* analyze.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = analyze.cpp; sourceTree = "<group>"; };
+		325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libprotobuf.3.dylib; path = /usr/local/lib/libprotobuf.3.dylib; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* guidistricter_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = guidistricter_Prefix.pch; sourceTree = "<group>"; };
 		32CCA1930E1AF62D0047558F /* MapDrawer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapDrawer.h; sourceTree = "<group>"; };
 		32CCA1940E1AF6310047558F /* MapDrawer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapDrawer.cpp; sourceTree = "<group>"; };
@@ -240,7 +264,7 @@
 			files = (
 				32A17EC50E2D0285004DACE8 /* libz.dylib in Frameworks */,
 				32A17EC60E2D0287004DACE8 /* libpng12.dylib in Frameworks */,
-				325AB9B10ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B10ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,7 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				321648E50D46AB2C0096D68F /* libz.dylib in Frameworks */,
-				325AB9B40ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B40ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 				32DD1FA20F282F0C002FD344 /* libpng12.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -260,7 +284,7 @@
 			files = (
 				1FEAA3D70DC5500E00A08E78 /* libz.dylib in Frameworks */,
 				32A17ECB0E2D029F004DACE8 /* libpng12.dylib in Frameworks */,
-				325AB9B00ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B00ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,7 +294,7 @@
 			files = (
 				1F56559E0A579A9C00212FB8 /* libz.dylib in Frameworks */,
 				32A17EBF0E2D026F004DACE8 /* libpng12.dylib in Frameworks */,
-				325AB9B20ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B20ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,7 +304,7 @@
 			files = (
 				1FB6345C0A60C9260041F3BE /* libz.dylib in Frameworks */,
 				32A17ECE0E2D02B1004DACE8 /* libpng12.dylib in Frameworks */,
-				325AB9B30ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B30ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,7 +312,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				325AB9B50ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B50ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,8 +320,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				325AB9B60ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9B60ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 				32DD1FA60F282F21002FD344 /* libz.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3259351D0FD9DE3C008A40FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				325935240FD9DE58008A40FB /* libpng12.dylib in Frameworks */,
+				325935250FD9DE59008A40FB /* libprotobuf.3.dylib in Frameworks */,
+				325935260FD9DE59008A40FB /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,7 +343,7 @@
 				1F3E8ADB0CCB26BD0015C525 /* libz.dylib in Frameworks */,
 				32A17EB00E2D01D0004DACE8 /* OpenGL.framework in Frameworks */,
 				32A17EB10E2D01D0004DACE8 /* GLUT.framework in Frameworks */,
-				325AB9AF0ECCFE50006C7A20 /* libprotobuf.2.dylib in Frameworks */,
+				325AB9AF0ECCFE50006C7A20 /* libprotobuf.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,6 +393,7 @@
 				1F2807A30A61A50D00959DA5 /* makepolys */,
 				1FE29E470A7F1C43008AFDB1 /* makeLinks */,
 				325680150D1362960061AE7C /* uf1data */,
+				3259351F0FD9DE3C008A40FB /* analyze */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -397,6 +432,7 @@
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */,
 				1FF95AD20ED0D015009A375C /* AbstractDistrict.h */,
+				3259352C0FD9DE9F008A40FB /* analyze.cpp */,
 				1F1862C90926B03A0025E521 /* Bitmap.cpp */,
 				1FF95AD90ED0D083009A375C /* Bitmap.h */,
 				1F260CC508ACA31200C2C4FE /* District2.cpp */,
@@ -462,7 +498,7 @@
 			children = (
 				1F56559D0A579A9C00212FB8 /* libz.dylib */,
 				1FFCA1430E2CF400002D81C6 /* libpng12.dylib */,
-				325AB9AE0ECCFE50006C7A20 /* libprotobuf.2.dylib */,
+				325AB9AE0ECCFE50006C7A20 /* libprotobuf.3.dylib */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
@@ -584,6 +620,22 @@
 			productReference = 325680150D1362960061AE7C /* uf1data */;
 			productType = "com.apple.product-type.tool";
 		};
+		3259351E0FD9DE3C008A40FB /* analyze */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3259352B0FD9DE97008A40FB /* Build configuration list for PBXNativeTarget "analyze" */;
+			buildPhases = (
+				3259351C0FD9DE3C008A40FB /* Sources */,
+				3259351D0FD9DE3C008A40FB /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = analyze;
+			productName = analyze;
+			productReference = 3259351F0FD9DE3C008A40FB /* analyze */;
+			productType = "com.apple.product-type.tool";
+		};
 		8D1107260486CEB800E47090 /* guidistricter */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1FEF15B10A577CFD000B2C93 /* Build configuration list for PBXNativeTarget "guidistricter" */;
@@ -623,6 +675,7 @@
 				1F2807A20A61A50D00959DA5 /* makepolys */,
 				1FE29E460A7F1C43008AFDB1 /* makeLinks */,
 				325680140D1362960061AE7C /* uf1data */,
+				3259351E0FD9DE3C008A40FB /* analyze */,
 			);
 		};
 /* End PBXProject section */
@@ -792,6 +845,31 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3259351C0FD9DE3C008A40FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				325935270FD9DE76008A40FB /* AbstractDistrict.cpp in Sources */,
+				325935280FD9DE76008A40FB /* Bitmap.cpp in Sources */,
+				325935290FD9DE77008A40FB /* District2.cpp in Sources */,
+				3259352A0FD9DE79008A40FB /* DistrictSet.cpp in Sources */,
+				3259352D0FD9DE9F008A40FB /* analyze.cpp in Sources */,
+				3259352E0FD9DEAD008A40FB /* fileio.cpp in Sources */,
+				3259352F0FD9DEAF008A40FB /* GrabIntermediateStorage.cpp in Sources */,
+				325935300FD9DEB2008A40FB /* LinearInterpolate.cpp in Sources */,
+				325935390FD9DF5D008A40FB /* logging.cpp in Sources */,
+				3259353A0FD9DF74008A40FB /* NearestNeighborDistrictSet.cpp in Sources */,
+				3259353B0FD9DF82008A40FB /* PreThread.cpp in Sources */,
+				3259353C0FD9DF8D008A40FB /* protoio.cpp in Sources */,
+				3259353D0FD9DF93008A40FB /* redata.pb.cc in Sources */,
+				3259353E0FD9DF9E008A40FB /* renderDistricts.cpp in Sources */,
+				3259353F0FD9DFA3008A40FB /* Solver.cpp in Sources */,
+				325935400FD9DFA8008A40FB /* StatThing.cpp in Sources */,
+				325935410FD9DFAE008A40FB /* uf1.cpp in Sources */,
+				325935440FD9DFBF008A40FB /* mmaped.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -826,6 +904,7 @@
 				1FCBB14F0EE3177B00D90B1F /* StatThing.cpp in Sources */,
 				1F2E3DCB0F1994C800A1A037 /* uf1.cpp in Sources */,
 				1F2DFD1A0F3DDA34008FF766 /* logging.cpp in Sources */,
+				325934FF0FD8B3FA008A40FB /* redata.pb.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1370,6 +1449,66 @@
 			};
 			name = Default;
 		};
+		325935210FD9DE3D008A40FB /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = analyze;
+			};
+			name = Development;
+		};
+		325935220FD9DE3D008A40FB /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = analyze;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		325935230FD9DE3D008A40FB /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/X11/lib,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = analyze;
+			};
+			name = Default;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1459,6 +1598,16 @@
 				325680180D1362B40061AE7C /* Development */,
 				325680190D1362B40061AE7C /* Deployment */,
 				3256801A0D1362B40061AE7C /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		3259352B0FD9DE97008A40FB /* Build configuration list for PBXNativeTarget "analyze" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				325935210FD9DE3D008A40FB /* Development */,
+				325935220FD9DE3D008A40FB /* Deployment */,
+				325935230FD9DE3D008A40FB /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;

@@ -184,7 +184,7 @@ uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column) {
 		uint32_t recno;
 		uint32_t index;
 		line_number++;
-		if (!uint32_field_from_csv(&recno, line, 5)) {
+		if (!uint32_field_from_csv(&recno, line, 4)) {
 			fprintf(stderr, "%s:%d csv parse fail getting field 5 LOGRECNO\n", filename, line_number);
 			free(out);
 			out = NULL;
@@ -210,7 +210,10 @@ done:
 
 // Returns malloc() buffer full of uint32_t[gd->numPoints] of uf1 data.
 bool read_uf1_columns_for_recnos(
-		GeoData* gd, const char* filename, const vector<int>& columns, vector<uint32_t*>* data_columns) {
+		GeoData* gd, const char* filename,
+		const vector<int>& columns,
+		vector<uint32_t*>* data_columns,
+		int* recnos_matched) {
 	bool good = true;
 	if (gd->recno_map == NULL) {
 		return false;
@@ -229,19 +232,21 @@ bool read_uf1_columns_for_recnos(
 		uint32_t* out = (uint32_t*)malloc(gd->numPoints * sizeof(uint32_t));
 		data_columns->push_back(out);
 	}
+	int match_count = 0;
 	int line_number = 0;
 	char* line = (char*)malloc(MAX_LINE_LENTH);
 	while (fin->gets(line, MAX_LINE_LENTH)) {
 		uint32_t recno;
 		uint32_t index;
 		line_number++;
-		if (!uint32_field_from_csv(&recno, line, 5)) {
+		if (!uint32_field_from_csv(&recno, line, 4)) {
 			fprintf(stderr, "%s:%d csv parse fail getting field 5 LOGRECNO\n", filename, line_number);
 			good = false;
 			goto done;
 		}
 		index = gd->indexOfRecno(recno);
 		if (index != ((uint32_t)-1)) {
+			match_count++;
 			for (unsigned int i = 0; i < columns.size(); ++i) {
 				int column = columns[i];
 				uint32_t value;
@@ -263,6 +268,9 @@ done:
 		data_columns->clear();
 	}
 	free(line);
+	if (recnos_matched != NULL) {
+		*recnos_matched = match_count;
+	}
 	return good;
 }
 

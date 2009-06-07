@@ -1,0 +1,940 @@
+# file 01
+# P1. TOTAL POPULATION [1] 
+# Universe: Total population 
+Total
+# P2. URBAN AND RURAL [6] (FINAL NATIONAL FILE ONLY) 
+# Universe: Total population
+Total: 
+	Urban: 
+		Inside urbanized areas 
+		Inside urban clusters 
+	Rural 
+	Not defined for this file 
+# P3. RACE [71] 
+# Universe: Total population 
+Total: 
+	Population of one race: 
+		White alone 
+		Black or African American alone 
+		American Indian and Alaska Native alone 
+		Asian alone 
+		Native Hawaiian and Other Pacific Islander alone 
+		Some other race alone 
+	Population of two or more races: 
+		Population of two races: 
+			White; Black or African American 
+			White; American Indian and Alaska Native 
+			White; Asian 
+			White; Native Hawaiian and Other Pacific Islander 
+			White; Some other race 
+			Black or African American; American Indian and Alaska Native 
+			Black or African American; Asian 
+			Black or African American; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Some other race 
+			American Indian and Alaska Native; Asian 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander 
+			Asian; Some other race 
+			Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of three races: 
+			White; Black or African American; American Indian and Alaska Native 
+			White; Black or African American; Asian 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Some other race 
+			White; American Indian and Alaska Native; Asian 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Asian; Some other race 
+			White; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Asian; Some other race 
+			Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Asian; Some other race 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of four races: 
+			White; Black or African American; American Indian and Alaska Native; Asian 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Asian; Some other race 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Asian; Some other race 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of five races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of six races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race
+# P4. HISPANIC OR LATINO, AND NOT HISPANIC OR LATINO BY RACE [73] 
+# Universe: Total population 
+Total: 
+	Hispanic or Latino 
+	Not Hispanic or Latino: 
+	Population of one race: 
+		White alone 
+		Black or African American alone 
+		American Indian and Alaska Native alone 
+		Asian alone 
+		Native Hawaiian and Other Pacific Islander alone 
+		Some other race alone 
+	Population of two or more races: 
+		Population of two races: 
+			White; Black or African American 
+			White; American Indian and Alaska Native 
+			White; Asian 
+			White; Native Hawaiian and Other Pacific Islander 
+			White; Some other race 
+			Black or African American; American Indian and Alaska Native 
+			Black or African American; Asian 
+			Black or African American; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Some other race 
+			American Indian and Alaska Native; Asian 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander 
+			Asian; Some other race 
+			Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of three races: 
+			White; Black or African American; American Indian and Alaska Native 
+			White; Black or African American; Asian 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Some other race 
+			White; American Indian and Alaska Native; Asian 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Asian; Some other race 
+			White; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Asian; Some other race 
+			Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Asian; Some other race 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of four races: 
+			White; Black or African American; American Indian and Alaska Native; Asian 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Asian; Some other race 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Asian; Some other race 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of five races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Population of six races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race
+# P5. RACE FOR THE POPULATION 18 YEARS AND OVER [71] 
+# Universe: Total population 18 years and over 
+Total: 
+	Population of one race: 
+		White alone 
+		Black or African American alone 
+		American Indian and Alaska Native alone 
+		Asian alone 
+		Native Hawaiian and Other Pacific Islander alone 
+		Some other race alone 
+	Population of two or more races: 
+		Population of two races: 
+			White; Black or African American 
+			White; American Indian and Alaska Native 
+			White; Asian 
+			White; Native Hawaiian and Other Pacific Islander 
+			White; Some other race 
+			Black or African American; American Indian and Alaska Native 
+			Black or African American; Asian 
+			Black or African American; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Some other race 
+			American Indian and Alaska Native; Asian 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander 
+			Asian; Some other race 
+			Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of three races: 
+			White; Black or African American; American Indian and Alaska Native 
+			White; Black or African American; Asian 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Some other race 
+			White; American Indian and Alaska Native; Asian 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Asian; Some other race 
+			White; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; Asian; Some other race 
+			Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			American Indian and Alaska Native; Asian; Some other race 
+			American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of four races: 
+			White; Black or African American; American Indian and Alaska Native; Asian 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; Asian; Some other race 
+			White; Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; American Indian and Alaska Native; Asian; Some other race 
+			White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of five races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+			White; Black or African American; American Indian and Alaska Native; Asian; Some other race 
+			White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+		Population of six races: 
+			White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+# file 02
+# P6. HISPANIC OR LATINO, AND NOT HISPANIC OR LATINO BY RACE FOR THE POPULATION 18 YEARS AND OVER [73] 
+# Universe: Total population 18 years and over 
+Total: 
+	Hispanic or Latino 
+	Not Hispanic or Latino: 
+		Population of one race: 
+			White alone 
+			Black or African American alone 
+			American Indian and Alaska Native alone 
+			Asian alone 
+			Native Hawaiian and Other Pacific Islander alone 
+			Some other race alone 
+		Population of two or more races: 
+			Population of two races: 
+				White; Black or African American 
+				White; American Indian and Alaska Native 
+				White; Asian 
+				White; Native Hawaiian and Other Pacific Islander 
+				White; Some other race 
+				Black or African American; American Indian and Alaska Native 
+				Black or African American; Asian 
+				Black or African American; Native Hawaiian and Other Pacific Islander 
+				Black or African American; Some other race 
+				American Indian and Alaska Native; Asian 
+				American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+				American Indian and Alaska Native; Some other race 
+				Asian; Native Hawaiian and Other Pacific Islander 
+				Asian; Some other race 
+				Native Hawaiian and Other Pacific Islander; Some other race 
+			Population of three races: 
+				White; Black or African American; American Indian and Alaska Native 
+				White; Black or African American; Asian 
+				White; Black or African American; Native Hawaiian and Other Pacific Islander 
+				White; Black or African American; Some other race 
+				White; American Indian and Alaska Native; Asian 
+				White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+				White; American Indian and Alaska Native; Some other race 
+				White; Asian; Native Hawaiian and Other Pacific Islander 
+				White; Asian; Some other race 
+				White; Native Hawaiian and Other Pacific Islander; Some other race 
+				Black or African American; American Indian and Alaska Native; Asian 
+				Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+				Black or African American; American Indian and Alaska Native; Some other race 
+				Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+				Black or African American; Asian; Some other race 
+				Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+				American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+				American Indian and Alaska Native; Asian; Some other race 
+				American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+				Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Population of four races: 
+				White; Black or African American; American Indian and Alaska Native; Asian 
+				White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander 
+				White; Black or African American; American Indian and Alaska Native; Some other race 
+				White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander 
+				White; Black or African American; Asian; Some other race 
+				White; Black or African American; Native Hawaiian and Other Pacific Islander; Some other race 
+				White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+				White; American Indian and Alaska Native; Asian; Some other race 
+				White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+				White; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+				Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+				Black or African American; American Indian and Alaska Native; Asian; Some other race 
+				Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+				Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+				American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Population of five races: 
+				White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander 
+				White; Black or African American; American Indian and Alaska Native; Asian; Some other race 
+				White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some other race 
+				White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+				White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+				Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+			Population of six races: 
+				White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some other race 
+# P7. RACE [8] 
+# Universe: Total population 
+Total: 
+	White alone 
+	Black or African American alone 
+	American Indian and Alaska Native alone 
+	Asian alone 
+	Native Hawaiian and Other Pacific Islander alone 
+	Some other race alone 
+	Two or more races 
+# P8. HISPANIC OR LATINO BY RACE [17] 
+# Universe: Total population 
+Total: 
+	Not Hispanic or Latino: 
+		White alone 
+		Black or African American alone 
+		American Indian and Alaska Native alone 
+		Asian alone 
+		Native Hawaiian and Other Pacific Islander alone 
+		Some other race alone 
+		Two or more races 
+	Hispanic or Latino: 
+		White alone 
+		Black or African American alone 
+		American Indian and Alaska Native alone 
+		Asian alone 
+		Native Hawaiian and Other Pacific Islander alone 
+		Some other race alone 
+		Two or more races 
+# P9. RACE (TOTAL RACES TALLIED) [7] 
+# Universe: Total races tallied 
+Total races tallied: 
+	White alone or in combination with one or more other races 
+	Black or African American alone or in combination with one or more other races 
+	American Indian and Alaska Native alone or in combination with one or more other races 
+	Asian alone or in combination with one or more other races 
+	Native Hawaiian and Other Pacific Islander alone or in combination with one or more other races 
+	Some other race alone or in combination with one or more other races 
+# P10. HISPANIC OR LATINO BY RACE (TOTAL RACES TALLIED) [15] 
+# Universe: Total races tallied 
+Total races tallied: 
+	Not Hispanic or Latino: 
+		White alone or in combination with one or more other races 
+		Black or African American alone or in combination with one or more other races 
+		American Indian and Alaska Native alone or in combination with one or more other races 
+		Asian alone or in combination with one or more other races 
+		Native Hawaiian and Other Pacific Islander alone or in combination with one or more other races 
+		Some other race alone or in combination with one or more other races 
+	Hispanic or Latino: 
+		White alone or in combination with one or more other races 
+		Black or African American alone or in combination with one or more other races 
+		American Indian and Alaska Native alone or in combination with one or more other races 
+		Asian alone or in combination with one or more other races 
+		Native Hawaiian and Other Pacific Islander alone or in combination with one or more other races 
+		Some other race alone or in combination with one or more other races 
+# P11. HISPANIC OR LATINO [1] 
+# Universe: People who are Hispanic or Latino 
+Total 
+# P12. SEX BY AGE [49] 
+# Universe: Total population 
+Total: 
+	Male: 
+		Under 5 years 
+		5 to 9 years 
+		10 to 14 years 
+		15 to 17 years 
+		18 and 19 years 
+		20 years 
+		21 years 
+		22 to 24 years 
+		25 to 29 years 
+		30 to 34 years 
+		35 to 39 years 
+		40 to 44 years 
+		45 to 49 years 
+		50 to 54 years 
+		55 to 59 years 
+		60 and 61 years 
+		62 to 64 years 
+		65 and 66 years 
+		67 to 69 years 
+		70 to 74 years 
+		75 to 79 years 
+		80 to 84 years 
+		85 years and over 
+	Female: 
+		Under 5 years 
+		5 to 9 years 
+		10 to 14 years 
+		15 to 17 years 
+		18 and 19 years 
+		20 years 
+		21 years 
+		22 to 24 years 
+		25 to 29 years 
+		30 to 34 years 
+		35 to 39 years 
+		40 to 44 years 
+		45 to 49 years 
+		50 to 54 years 
+		55 to 59 years 
+		60 and 61 years 
+		62 to 64 years 
+		65 and 66 years 
+		67 to 69 years 
+		70 to 74 years 
+		75 to 79 years 
+		80 to 84 years 
+		85 years and over 
+# P13. MEDIAN AGE BY SEX [3] 
+# Universe: Total population 
+Median age-Both sexes 
+Median age-Male 
+Median age-Female 
+# P14. SEX BY AGE FOR THE POPULATION UNDER 20 YEARS [43] 
+# Universe: Population under 20 years 
+Total: 
+	Male: 
+		Under 1 year 
+		1 year 
+		2 years 
+		3 years 
+		4 years 
+		5 years 
+		6 years 
+		7 years 
+		8 years 
+		9 years 
+		10 years 
+		11 years 
+		12 years 
+		13 years 
+		14 years 
+		15 years 
+		16 years 
+		17 years 
+		18 years 
+		19 years 
+	Female: 
+		Under 1 year 
+		1 year 
+		2 years 
+		3 years 
+		4 years 
+		5 years 
+		6 years 
+		7 years 
+		8 years 
+		9 years 
+		10 years 
+		11 years 
+		12 years 
+		13 years 
+		14 years 
+		15 years 
+		16 years 
+		17 years 
+		18 years 
+		19 years 
+# P15. HOUSEHOLDS [1] 
+# Universe: Households 
+Total 
+# P16. POPULATION IN HOUSEHOLDS [1] 
+# Universe: Population in households 
+Total 
+# P17. AVERAGE HOUSEHOLD SIZE [1] 
+# Universe: Households 
+Average household size 
+# P18. HOUSEHOLD SIZE, HOUSEHOLD TYPE, AND PRESENCE OF OWN CHILDREN [19] 
+# Universe: Households 
+Total: 
+	1-person household: 
+		Male householder 
+		Female householder 
+	2-or-more person household: 
+		Family households: 
+			Married-couple family: 
+				With own children under 18 years 
+				No own children under 18 years 
+			Other family: 
+				Male householder, no wife present: 
+					With own children under 18 years 
+					No own children under 18 years 
+				Female householder, no husband present: 
+					With own children under 18 years 
+					No own children under 18 years 
+		Nonfamily households: 
+			Male householder 
+			Female householder 
+# file 03
+# P19. HOUSEHOLDS BY PRESENCE OF PEOPLE UNDER 18 YEARS BY HOUSEHOLD TYPE [19] 
+# Universe: Households 
+Total: 
+	Households with one or more people under 18 years: 
+		Family households: 
+			Married-couple family 
+			Other family: 
+				Male householder, no wife present 
+				Female householder, no husband present 
+		Nonfamily households: 
+			Male householder 
+			Female householder 
+	Households with no people under 18 years: 
+		Family households: 
+			Married-couple family 
+			Other family: 
+				Male householder, no wife present 
+				Female householder, no husband present 
+		Nonfamily households: 
+			Male householder 
+			Female householder 
+# P20. HOUSEHOLDS BY AGE OF HOUSEHOLDER BY HOUSEHOLD TYPE (INCLUDING LIVING ALONE) BY PRESENCE OF OWN CHILDREN [31] 
+# Universe: Households 
+Total: 
+	Householder 15 to 64 years: 
+		Family households: 
+			Married-couple family: 
+				With own children under 18 years 
+				No own children under 18 years 
+			Other family: 
+				Male householder, no wife present: 
+					With own children under 18 years 
+					No own children under 18 years 
+				Female householder, no husband present: 
+					With own children under 18 years 
+					No own children under 18 years 
+		Nonfamily households: 
+			Householder living alone 
+			Householder not living alone 
+	Householder 65 years and over: 
+		Family households: 
+			Married-couple family: 
+				With own children under 18 years 
+				No own children under 18 years 
+			Other family: 
+				Male householder, no wife present: 
+					With own children under 18 years 
+					No own children under 18 years 
+				Female householder, no husband present: 
+					With own children under 18 years 
+					No own children under 18 years 
+		Nonfamily households: 
+			Householder living alone 
+			Householder not living alone 
+# P21. HOUSEHOLD TYPE BY AGE OF HOUSEHOLDER [19] 
+# Universe: Households 
+Total: 
+	Family households: 
+		Householder 15 to 24 years 
+		Householder 25 to 34 years 
+		Householder 35 to 44 years 
+		Householder 45 to 54 years 
+		Householder 55 to 64 years 
+		Householder 65 to 74 years 
+		Householder 75 to 84 years 
+		Householder 85 years and over 
+	Nonfamily households: 
+		Householder 15 to 24 years 
+		Householder 25 to 34 years 
+		Householder 35 to 44 years 
+		Householder 45 to 54 years 
+		Householder 55 to 64 years 
+		Householder 65 to 74 years 
+		Householder 75 to 84 years 
+		Householder 85 years and over 
+# P22. HOUSEHOLDS BY PRESENCE OF PEOPLE 60 YEARS AND OVER, HOUSEHOLD SIZE, AND HOUSEHOLD TYPE [11] 
+# Universe: Households 
+Total: 
+	Households with one or more people 60 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+	Households with no people 60 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+# P23. HOUSEHOLDS BY PRESENCE OF PEOPLE 65 YEARS AND OVER, HOUSEHOLD SIZE, AND HOUSEHOLD TYPE [11] 
+# Universe: Households 
+Total: 
+	Households with one or more people 65 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+	Households with no people 65 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+# P24. HOUSEHOLDS BY PRESENCE OF PEOPLE 75 YEARS AND OVER, HOUSEHOLD SIZE, AND HOUSEHOLD TYPE [11] 
+# Universe: Households 
+Total: 
+	Households with one or more people 75 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+	Households with no people 75 years and over: 
+		1-person household 
+		2-or-more person household: 
+			Family households 
+			Nonfamily households 
+# P25. HOUSEHOLDS BY PRESENCE OF NONRELATIVES [3] 
+# Universe: Households 
+Total: 
+	Households with one or more nonrelatives 
+	Households with no nonrelatives 
+# P26. HOUSEHOLD TYPE BY HOUSEHOLD SIZE [16] 
+# Universe: Households 
+Total: 
+	Family households: 
+		2-person household 
+		3-person household 
+		4-person household 
+		5-person household 
+		6-person household 
+		7-or-more person household 
+	Nonfamily households: 
+		1-person household 
+		2-person household 
+		3-person household 
+		4-person household 
+		5-person household 
+		6-person household 
+		7-or-more person household 
+# P27. RELATIONSHIP BY HOUSEHOLD TYPE (INCLUDING LIVING ALONE) [27] 
+# Universe: Total population 
+Total: 
+	In households: 
+		In family households: 
+			Householder: 
+				Male 
+				Female 
+			Spouse 
+			Child: 
+				Natural-born or adopted 
+				Step 
+			Grandchild 
+			Brother or sister 
+			Parent 
+			Other relatives 
+			Nonrelatives 
+		In nonfamily households: 
+			Male householder: 
+				Living alone 
+				Not living alone 
+			Female householder: 
+				Living alone 
+				Not living alone 
+			Nonrelatives 
+		In group quarters: 
+			Institutionalized population 
+			Noninstitutionalized population 
+		Coverage improvement adjustment 
+# P28. RELATIONSHIP BY HOUSEHOLD TYPE FOR THE POPULATION UNDER 18 YEARS [17] 
+# Universe: Population under 18 years 
+Total: 
+	In households: 
+		Householder or spouse 
+		Related child: 
+			Own child: 
+				In married-couple family 
+				In other family: 
+					Male householder, no wife present 
+					Female householder, no husband present 
+			Other relatives: 
+				Grandchild 
+				Other relatives 
+			Nonrelatives 
+	In group quarters: 
+		Institutionalized population 
+		Noninstitutionalized population 
+	Coverage improvement adjustment 
+# P29. RELATIONSHIP BY AGE FOR THE POPULATION UNDER 18 YEARS [46] 
+# Universe: Population under 18 years 
+Total: 
+	In households: 
+		Householder or spouse 
+		Related child: 
+			Own child: 
+				Under 3 years 
+				3 and 4 years 
+				5 years 
+				6 to 11 years 
+				12 and 13 years 
+				14 years 
+				15 to 17 years 
+			Other relatives: 
+				Under 3 years 
+				3 and 4 years 
+				5 years 
+				6 to 11 years 
+				12 and 13 years 
+				14 years 
+				15 to 17 years 
+		Nonrelatives: 
+			Under 3 years 
+			3 and 4 years 
+			5 years 
+			6 to 11 years 
+			12 and 13 years 
+			14 years 
+			15 to 17 years 
+	In group quarters: 
+		Institutionalized population: 
+			Under 3 years 
+			3 and 4 years 
+			5 years 
+			6 to 11 years 
+			12 and 13 years 
+			14 years 
+			15 to 17 years 
+		Noninstitutionalized population: 
+			Under 3 years 
+			3 and 4 years 
+			5 years 
+			6 to 11 years 
+			12 and 13 years 
+			14 years 
+			15 to 17 years 
+	Coverage improvement adjustment 
+# P30. RELATIONSHIP BY HOUSEHOLD TYPE (INCLUDING LIVING ALONE) FOR THE POPULATION 65 YEARS AND OVER [22] 
+# Universe: Population 65 years and over 
+Total: 
+	In households: 
+		In family households: 
+			Householder: 
+				Male 
+				Female 
+			Spouse 
+			Parent 
+			Other relatives 
+			Nonrelatives 
+		In nonfamily households: 
+			Male householder: 
+				Living alone 
+				Not living alone 
+			Female householder: 
+				Living alone 
+				Not living alone 
+			Nonrelatives 
+	In group quarters: 
+		Institutionalized population 
+		Noninstitutionalized population 
+	Coverage improvement adjustment 
+# P31. FAMILIES [1] 
+# Universe: Families 
+Total 
+# P32. POPULATION IN FAMILIES [1] 
+# Universe: Population in families 
+Total 
+# P33. AVERAGE FAMILY SIZE [1] 
+# Universe: Families 
+Average family size 
+# file 04
+# P34. FAMILY TYPE BY PRESENCE AND AGE OF OWN CHILDREN [20] 
+# Universe: Families 
+Total: 
+	Married-couple family: 
+		With own children under 18 years: 
+			Under 6 years only 
+			Under 6 years and 6 to 17 years 
+			6 to 17 years only 
+		No own children under 18 years 
+	Other family: 
+		Male householder, no wife present: 
+			With own children under 18 years: 
+				Under 6 years only 
+				Under 6 years and 6 to 17 years 
+				6 to 17 years only 
+			No own children under 18 years 
+		Female householder, no husband present: 
+			With own children under 18 years: 
+				Under 6 years only 
+				Under 6 years and 6 to 17 years 
+				6 to 17 years only 
+			No own children under 18 years 
+# P35. FAMILY TYPE BY PRESENCE AND AGE OF RELATED CHILDREN [20] 
+# Universe: Families 
+Total: 
+	Married-couple family: 
+		With related children under 18 years: 
+			Under 6 years only 
+			Under 6 years and 6 to 17 years 
+			6 to 17 years only 
+		No related children under 18 years 
+	Other family: 
+		Male householder, no wife present: 
+			With related children under 18 years: 
+				Under 6 years only 
+				Under 6 years and 6 to 17 years 
+				6 to 17 years only 
+			No related children under 18 years 
+		Female householder, no husband present: 
+			With related children under 18 years: 
+				Under 6 years only 
+				Under 6 years and 6 to 17 years 
+				6 to 17 years only 
+			No related children under 18 years 
+# P36. OWN CHILDREN UNDER 18 YEARS BY FAMILY TYPE AND AGE [20] 
+# Universe: Own children under 18 years 
+Total: 
+	In married-couple families: 
+		Under 3 years 
+		3 and 4 years 
+		5 years 
+		6 to 11 years 
+		12 to 17 years 
+	In other families: 
+		Male householder, no wife present: 
+			Under 3 years 
+			3 and 4 years 
+			5 years 
+			6 to 11 years 
+			12 to 17 years 
+		Female householder, no husband present: 
+			Under 3 years 
+			3 and 4 years 
+			5 years 
+			6 to 11 years 
+			12 to 17 years 
+# P37. GROUP QUARTERS POPULATION BY GROUP QUARTERS TYPE [9] 
+# Universe: Population in group quarters 
+Total: 
+	Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+		Correctional institutions (101-107) 
+		Nursing homes (301-307) 
+		Other institutions (201-209, 400-410) 
+	Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+		College dormitories (includes college quarters off campus) (501) 
+		Military quarters (601-603) 
+		Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+# P38. GROUP QUARTERS POPULATION BY SEX BY AGE BY GROUP QUARTERS TYPE [57] 
+# Universe: Population in group quarters 
+Total: 
+	Male: 
+		Under 18 years: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+		18 to 64 years: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+		65 years and over: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+	Female: 
+		Under 18 years: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+		18 to 64 years: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+		65 years and over: 
+			Institutionalized population (101-107, 201-209, 301-307, 400-410): 
+				Correctional institutions (101-107) 
+				Nursing homes (301-307) 
+				Other institutions (201-209, 400-410) 
+			Noninstitutionalized population (501, 601-604, 701-706, 801-810, 900-906, 908-909, 911): 
+				College dormitories (includes college quarters off campus) (501) 
+				Military quarters (601-603) 
+				Other noninstitutional group quarters (604, 701-706, 801-810, 900-906, 908-909, 911) 
+# P39. POPULATION SUBSTITUTED [5] 
+# Universe: Total population 
+Total: 
+	Not substituted 
+	Substituted: 
+		Noninterview 
+		Coverage improvement adjustment 
+# P40. IMPUTATION OF POPULATION ITEMS [3] 
+# Universe: Population not substituted 
+Total: 
+	No items allocated 
+	One or more items allocated 
+# P41. IMPUTATION OF RACE [3] 
+# Universe: Population not substituted 
+Total: 
+	Allocated 
+	Not allocated 
+# P42. IMPUTATION OF HISPANIC OR LATINO [3] 
+# Universe: Population not substituted 
+Total: 
+	Allocated 
+	Not allocated 
+# P43. IMPUTATION OF SEX [3] 
+# Universe: Population not substituted 
+Total: 
+	Allocated 
+	Not allocated 
+# P44. IMPUTATION OF AGE [3] 
+# Universe: Population not substituted 
+Total: 
+	Allocated 
+	Not allocated 
+# P45. IMPUTATION OF RELATIONSHIP [3] 
+# Universe: Population not substituted 
+Total: 
+	Allocated 
+	Not allocated 
+# file 05
