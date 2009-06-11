@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-#include "districter.h"
+#include "config.h"
 
 // TODO: cleanup all the unused options and remove #if around the used ones.
 class GeoData {
@@ -16,16 +16,10 @@ public:
 	size_t mmapsize;
 
 	int32_t numPoints;
-#ifndef COUNT_DISTRICTS
-#define COUNT_DISTRICTS 1
-#endif
 #if COUNT_DISTRICTS
 	int congressionalDistricts;
 #endif
 
-#ifndef READ_INT_POS
-#define READ_INT_POS 1
-#endif
 #if READ_INT_POS
 	int32_t* pos;
 	int minx, maxx, miny, maxy;
@@ -59,9 +53,6 @@ public:
 		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
 		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
 	}
-#endif
-#ifndef READ_DOUBLE_POS
-#define READ_DOUBLE_POS 0
 #endif
 #if READ_DOUBLE_POS
 	double* pos;
@@ -98,23 +89,14 @@ public:
 	}
 #endif
 
-#ifndef READ_INT_AREA
-#define READ_INT_AREA 1
-#endif
 #if READ_INT_AREA
 	uint32_t* area;
 #endif
 
-#ifndef READ_INT_POP
-#define READ_INT_POP 1
-#endif
 #if READ_INT_POP
 	int32_t* pop;
 	int totalpop;
 	int maxpop;
-#endif
-#ifndef READ_UBIDS
-#define READ_UBIDS 1
 #endif
 #if READ_UBIDS
 	// Ubid Sort Thing
@@ -202,8 +184,6 @@ class GeoBin : public GeoData {
 };
 
 
-/*int readZCTA( char* inputname, PosPop** zipdP );
-int readGeoUf1( char* inputname, PosPop** zipdP );*/
 GeoData* openZCTA( char* inputname );
 GeoData* openUf1( char* inputname );
 GeoData* openBin( char* inputname );

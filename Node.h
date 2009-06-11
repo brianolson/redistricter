@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "districter.h"
+#include "config.h"
 
 class Node {
 public:

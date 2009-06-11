@@ -1,17 +1,13 @@
 #ifndef DISTRICT2_H
 #define DISTRICT2_H
 
-#include "districter.h"
-//#include "flowdistricter.h"
-
-class Solver;
-class Node;
-class GrabTaskParams;
-
 #include "AbstractDistrict.h"
 #include "DistrictSet.h"
 
 class District2Set;
+class GrabTaskParams;
+class Solver;
+class Node;
 
 class District2 : public AbstractDistrict {
 public:
@@ -123,10 +119,10 @@ public:
 	//virtual double centerX();
 	//virtual double centerY();
 #if 1
-	inline void validate(const char* file = NULL, int line = -1) {}
+	inline void validate(const char* file = ((const char*)0), int line = -1) {}
 #define NO_D2_VALIDATE 1
 #else
-	void validate(const char* file = NULL, int line = -1);
+	void validate(const char* file = ((const char*)0), int line = -1);
 #endif
 };
 

@@ -1,12 +1,12 @@
 #include "NearestNeighborDistrictSet.h"
 
-#include "districter.h"
 #include "AbstractDistrict.h"
 #include "Bitmap.h"
 #include "Node.h"
 #include "Solver.h"
 #include <assert.h>
 #include <math.h>
+#include "GeoData.h"
 
 // TODO(bolson): It's hill-climbing. It needs jitter and annealing to get out of local minima.
 

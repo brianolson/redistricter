@@ -17,6 +17,7 @@ OG?=-g
 CCOMMONFLAGS+=-Wall -Itiger -DHAVE_PROTOBUF
 # -MMD is incompatible with some Apple compile modes
 #CCOMMONFLAGS+=-Wall -Itiger -MMD
+#CCOMMONFLAGS+=-MMD
 CXXFLAGS+=${OG} ${CCOMMONFLAGS}
 CFLAGS+=${OG} ${CCOMMONFLAGS}
 

@@ -20,6 +20,7 @@
 #include "Solver.h"
 #include "tiger/mmaped.h"
 #include "MapDrawer.h"
+#include "renderDistricts.h"
 
 char* commandFileName = NULL;
 

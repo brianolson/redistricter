@@ -9,10 +9,8 @@
 
 #include <sys/types.h>
 
-#include "districter.h"
-
-//extern const unsigned char colors[];
-//extern const int numColors;
+#include "config.h"
+#include "renderDistricts.h"
 
 const unsigned char stdColors[] = {
 	0xff, 0x00, 0x00,	// 0 red
@@ -50,67 +48,6 @@ void user_error_fn( png_structp png_ptr, const char* str ) {
 }
 void user_warning_fn( png_structp png_ptr, const char* str ) {
 	fprintf( stderr, "warning: %s", str );
-}
-//void myDoPNG( char* outname, unsigned char** rows, int height, int width );
-
-void renderDistricts( int numZips, PosPop* zipd, double* rs, POPTYPE* winner, char* outname, int height, int width ) {
-	int i;
-	unsigned char* data = (unsigned char*)malloc(width*height*3*sizeof(unsigned char) );
-	unsigned char** rows = (unsigned char**)malloc(height*sizeof(unsigned char*) );
-	assert(rows != NULL);
-	assert(data != NULL);
-#if 0
-	unsigned char* colors = (unsigned char*)malloc( 3*80*sizeof(unsigned char) );
-	int numColors = 80;
-	for ( i = 0; i < 3*80; i++ ) {
-		colors[i] = (random() >> 7) & 0xff;
-	}
-#endif
-	for ( int y = 0; y < height; y++ ) {
-		rows[y] = data + (y*width*3);
-	}
-	memset( data, 0, width*height*3*sizeof(unsigned char) );
-	
-	double minx = HUGE_VAL, miny = HUGE_VAL, maxx = -HUGE_VAL, maxy = -HUGE_VAL;
-	for ( i = 0; i < numZips; i++ ) {
-		if ( zipd[i].pos.lon < minx ) {
-			minx = zipd[i].pos.lon;
-		}
-		if ( zipd[i].pos.lon > maxx ) {
-			maxx = zipd[i].pos.lon;
-		}
-		if ( zipd[i].pos.lat < miny ) {
-			miny = zipd[i].pos.lat;
-		}
-		if ( zipd[i].pos.lat > maxy ) {
-			maxy = zipd[i].pos.lat;
-		}
-		//printf("r=%9.9g\n", rs[i] );
-	}
-	
-	/* setup transformation */
-	double ym = height / (maxy - miny);
-	double xm = width / (maxx - minx);
-	//static const double degreesPerMeter = 360.0 / 40002.307039307200644;
-
-	for ( i = 0; i < numZips; i++ ) if ( winner[i] != NODISTRICT ) {
-		double ox, oy;
-		const unsigned char* color;
-		color = colors + ((winner[i] % numColors) * 3);
-		oy = (maxy - zipd[i].pos.lat) * ym;
-		ox = (zipd[i].pos.lon - minx) * xm;
-		int y, x;
-		y = (int)oy;
-		unsigned char* row;
-		row = data + (y*width*3);
-		x = (int)ox;
-		x *= 3;
-		row[x] = color[0];
-		row[x+1] = color[1];
-		row[x+2] = color[2];
-	}
-	
-	myDoPNG( outname, rows, height, width );
 }
 
 void myDoPNG( const char* outname, unsigned char** rows, int height, int width ) {

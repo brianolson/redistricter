@@ -20,6 +20,7 @@
 #include "Node.h"
 #include "GrabIntermediateStorage.h"
 #include "StatThing.h"
+#include "GeoData.h"
 
 
 // TODO: optimization

@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <math.h>
 #include "District2.h"
-#include "districter.h"
 #include "Bitmap.h"
 #include "Node.h"
 #include "uf1.h"
+#include "GeoData.h"
 
 #include <vector>
 using std::vector;
@@ -232,11 +232,15 @@ int main( int argc, char** argv ) {
 		if (htmlout) {
 			// for each column, print district values
 			// header row
-			fprintf(stdout, "<table><tr><th>column</th>");
-			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, "<th>%d</th>", d);
+			bool printDistrictNumber = false;
+			fprintf(stdout, "<table>");
+			if (printDistrictNumber) {
+				fprintf(stdout, "<tr><th>column</th>");
+				for (POPTYPE d = 0; d < sov.districts; ++d) {
+					fprintf(stdout, "<th>%d</th>", d);
+				}
+				fprintf(stdout, "</tr>\n");
 			}
-			fprintf(stdout, "</tr>\n");
 			for (unsigned int col = 0; col < columns.size(); ++col) {
 				fprintf(stdout, "<tr><td>%s</td>", labels[col]);
 				for (POPTYPE d = 0; d < sov.districts; ++d) {
@@ -248,13 +252,19 @@ int main( int argc, char** argv ) {
 
 			// for each district, print column values
 			// header row
-			fprintf(stdout, "<table><tr><th>district</th>");
+			fprintf(stdout, "<table><tr>");
+			if (printDistrictNumber) {
+				fprintf(stdout, "<th>district</th>");
+			}
 			for (unsigned int col = 0; col < columns.size(); ++col) {
 				fprintf(stdout, "<th>%s</th>", labels[col]);
 			}
 			fprintf(stdout, "</tr>\n");
 			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, "<tr><td>%d</td>", d);
+				fprintf(stdout, "<tr>");
+				if (printDistrictNumber) {
+					fprintf(stdout, "<td>%d</td>", d);
+				}
 				for (unsigned int col = 0; col < columns.size(); ++col) {
 					fprintf(stdout, "<td>%d</td>", counts[d][col]);
 				}

@@ -2,11 +2,15 @@
 #include "MapDrawer.h"
 #include "Solver.h"
 #include "tiger/mmaped.h"
+#include "swap.h"
+#include "GeoData.h"
+#include "renderDistricts.h"
 
 #include <assert.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 MapDrawer::MapDrawer()
 : data(NULL), rows(NULL),

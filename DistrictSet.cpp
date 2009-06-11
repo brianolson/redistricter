@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "districter.h"
 #include "DistrictSet.h"
 #include "AbstractDistrict.h"
 

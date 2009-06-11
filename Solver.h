@@ -8,8 +8,9 @@
 
 class Adjacency;
 class DistrictSet;
-class Node;
+class GeoData;
 class GrabIntermediateStorage;
+class Node;
 
 // TODO separate application state and solution state!
 class Solver {

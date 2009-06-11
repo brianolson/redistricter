@@ -65,9 +65,12 @@ EOF
  exit 1;
 }
 open GP, "|gnuplot";
+# gnuplot keeps changing details of 'set' command.
+# "set lines" used to be "set style data lines"
+# dunno what it'll be next. :-/
 print GP <<EOF;
 set logscale y
-set style data lines
+set lines
 set terminal png
 set output 'kmpp.png'
 plot '-' title 'Km/person'

@@ -4,9 +4,10 @@
 #include <unistd.h>
 #include <math.h>
 #include "District2.h"
-#include "districter.h"
 #include "Bitmap.h"
 #include "Node.h"
+#include "GeoData.h"
+#include "tiger/mmaped.h"
 
 static const char usage[] =
 "usage: linkfixup [-o file][-p file][--have-protobuf][Solver args]\n"
@@ -40,6 +41,8 @@ public:
 };
 newedge* neroot = NULL;
 int necount = 0;
+
+Node* initNodesFromLinksFile( GeoData* gd, const char* inputname );
 
 int main( int argc, char** argv ) {
 	Solver sov;
@@ -203,4 +206,86 @@ int main( int argc, char** argv ) {
 	delete [] bfsearchq;
 
 	return 0;
+}
+
+Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
+	int i, j;
+	int maxneighbors = 0;
+	int numPoints = gd->numPoints;
+	Node* nodes = new Node[numPoints];
+	for ( i = 0; i < numPoints; i++ ) {
+		nodes[i].numneighbors = 0;
+	}
+	// read edges from edge file
+	char* linkFileName = strdup( inputname );
+	assert(linkFileName != NULL);
+	{
+		size_t nlen = strlen( linkFileName ) + 8;
+		linkFileName = (char*)realloc( linkFileName, nlen );
+		assert(linkFileName != NULL);
+	}
+	strcat( linkFileName, ".links" );
+	mmaped linksFile;
+	linksFile.open( linkFileName );
+#define sizeof_linkLine 27
+	int numEdges = linksFile.sb.st_size / sizeof_linkLine;
+	long* edgeData = new long[numEdges*2];
+	char buf[14];
+	buf[13] = '\0';
+	j = 0;
+	for ( i = 0 ; i < numEdges; i++ ) {
+		uint64_t tubid;
+		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i, 13 );
+		tubid = strtoull( buf, NULL, 10 );
+		edgeData[j*2  ] = gd->indexOfUbid( tubid );
+		if ( edgeData[j*2  ] < 0 ) {
+			printf("ubid %lld => index %ld\n", tubid, edgeData[j*2] );
+			continue;
+		}
+		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i + 13, 13 );
+		tubid = strtoull( buf, NULL, 10 );
+		edgeData[j*2+1] = gd->indexOfUbid( tubid );
+		if ( edgeData[j*2+1] < 0 ) {
+			printf("ubid %lld => index %ld\n", tubid, edgeData[j*2+1] );
+			continue;
+		}
+		//printf("ubid %lld => index %d\n", tubid, edgeData[i*2] );
+		nodes[edgeData[j*2  ]].numneighbors++;
+		//printf("ubid %lld => index %d\n", tubid, edgeData[i*2+1] );
+		nodes[edgeData[j*2+1]].numneighbors++;
+		j++;
+	}
+	numEdges = j;
+	linksFile.close();
+	free( linkFileName );
+	// allocate all the space
+	int* allneigh = new int[numEdges * 2]; // if you care, "delete [] nodes[0].neighbors;" somewhere
+	int npos = 0;
+	// give space to each node as counted above
+	for ( i = 0; i < numPoints; i++ ) {
+		Node* cur;
+		cur = nodes + i;
+		cur->neighbors = allneigh + npos;
+		if ( cur->numneighbors > maxneighbors ) {
+			maxneighbors = cur->numneighbors;
+		}
+		npos += cur->numneighbors;
+		cur->numneighbors = 0;
+	}
+	// copy edges into nodes
+	for ( j = 0; j < numEdges; j++ ) {
+		int ea, eb;
+		Node* na;
+		Node* nb;
+		ea = edgeData[j*2];
+		eb = edgeData[j*2 + 1];
+		na = nodes + ea;
+		nb = nodes + eb;
+		na->neighbors[na->numneighbors] = eb;
+		na->numneighbors++;
+		nb->neighbors[nb->numneighbors] = ea;
+		nb->numneighbors++;
+	}
+	delete [] edgeData;
+	return nodes;
 }

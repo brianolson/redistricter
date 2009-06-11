@@ -19,6 +19,7 @@
 #include "Solver.h"
 #include "tiger/mmaped.h"
 #include "tiger/recordA.h"
+#include "GeoData.h"
 
 using std::vector;
 

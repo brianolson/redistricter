@@ -25,6 +25,9 @@
 #include "Node.h"
 #include "tiger/mmaped.h"
 #include "NearestNeighborDistrictSet.h"
+#include "swap.h"
+#include "GeoData.h"
+#include "renderDistricts.h"
 
 #if 01
 extern "C" double greatCircleDistance(double lat1,double long1,double lat2,double long2);

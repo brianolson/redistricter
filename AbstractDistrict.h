@@ -1,7 +1,7 @@
 #ifndef ABSTRACT_DISTRICT_H
 #define ABSTRACT_DISTRICT_H
 
-#include "districter.h"
+#include "config.h"
 
 class Solver;
 
