@@ -143,23 +143,6 @@ class manybest(object):
 				lines.append(line[1:])
 		return (kmpp, lines)
 
-	def parseLog(self, fin):
-		"""
-		fin: iterable source of lines
-		return (float kmpp, str[] lines)"""
-		lines = []
-		kmpp = None
-		for line in fin:
-			m = kmpp_re_a.match(line)
-			if not m:
-				m = kmpp_re_b.match(line)
-			if m:
-				kmpp = float(m.group(1))
-				lines.append(line[1:])
-			elif line[0] == "#":
-				lines.append(line[1:])
-		return (kmpp, lines)
-	
 	def skimLogs(self, loglist=None):
 		"""return (slog[] they, string[] empties)"""
 		they = []
