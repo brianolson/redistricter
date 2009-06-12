@@ -368,6 +368,23 @@ int recnoSortF( const void* a, const void* b ) {
 	}
 }
 
+static inline int countADistrict(void* data, int i, char** dsts, int num) {
+	// 108th cong at position 138. 106th at 136.
+	char* cd = (char*)((unsigned long)data + i*sizeof_GeoUf1 + 138 );
+	bool match = false;
+	for ( int j = 0; j < num; j++ ) {
+		if ( (cd[0] == dsts[j][0]) && (cd[1] == dsts[j][1]) ) {
+			match = true;
+			break;
+		}
+	}
+	if ( ! match ) {
+		dsts[num] = cd;
+		num++;
+	}
+	return num;
+}
+
 int Uf1::load() {
 	int i;
 	char buf[128];
@@ -469,20 +486,7 @@ int Uf1::load() {
 			recnos[i] = recno_map[i].recno;
 		}
 #if COUNT_DISTRICTS
-		char* cd;
-		//cd = (char*)((unsigned long)data + i*sizeof_GeoUf1 + 136 ); // 106th cong
-		cd = (char*)((unsigned long)data + i*sizeof_GeoUf1 + 138 ); // 108th cong
-		bool match = false;
-		for ( int j = 0; j < congressionalDistricts; j++ ) {
-			if ( (cd[0] == dsts[j][0]) && (cd[1] == dsts[j][1]) ) {
-				match = true;
-				break;
-			}
-		}
-		if ( ! match ) {
-			dsts[congressionalDistricts] = cd;
-			congressionalDistricts++;
-		}
+		congressionalDistricts = countADistrict(data, i, dsts, congressionalDistricts);
 #endif
 	}
 #if READ_UBIDS
@@ -746,36 +750,26 @@ uint32_t GeoData::recnoOfIndex( uint32_t index ) {
 }
 #endif
 
-int Uf1::numDistricts() {
-#if COUNT_DISTRICTS
-	return congressionalDistricts;
-#else
-	char** dsts;
-	int num = 0;
-	char* cd;
-	int numZips = 0;
-	
-	numZips = sb.st_size / sizeof_GeoUf1;
-	dsts = (char**)malloc( sizeof(*dsts) * MAX_DISTRICTS );
-	for ( int i = 0; i < numZips; i++ ) {
-		cd = (char*)((unsigned long)data + i*sizeof_GeoUf1 + 136 );
-		bool match = false;
-		for ( int j = 0; j < num; j++ ) {
-			if ( (cd[0] == dsts[j][0]) && (cd[1] == dsts[j][1]) ) {
-				match = true;
-				break;
-			}
-		}
-		if ( ! match ) {
-			dsts[num] = cd;
-			num++;
-		}
+int Uf1::countDistricts() {
+	if (data == NULL) {
+		return -1;
 	}
-
-	free( dsts );
+	int num = 0;
+	char** dsts = new char*[MAX_DISTRICTS];
+	for ( int i = 0; i < numPoints; i++ ) {
+		num = countADistrict(data, i, dsts, num);
+	}
+	delete [] dsts;
 	if ( num > 1 ) {
 		return num;
 	}
 	return -1;
+}
+
+int Uf1::numDistricts() {
+#if COUNT_DISTRICTS
+	return congressionalDistricts;
+#else
+	return countDistricts();
 #endif
 }

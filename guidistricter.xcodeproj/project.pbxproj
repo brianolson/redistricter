@@ -184,6 +184,7 @@
 		1F2807BB0A61A58800959DA5 /* makepolys.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makepolys.cpp; path = tiger/makepolys.cpp; sourceTree = "<group>"; };
 		1F28F4A60FE0B11400AECBB8 /* renderDistricts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderDistricts.h; sourceTree = "<group>"; };
 		1F28F4F50FE0BCD800AECBB8 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
+		1F28F4F90FE16EC200AECBB8 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		1F2DFD180F3DDA34008FF766 /* logging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
 		1F2DFD190F3DDA34008FF766 /* logging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = GrabIntermediateStorage.cpp; sourceTree = "<group>"; };
@@ -212,7 +213,6 @@
 		1F8427C90CCB220000ACC6A4 /* District2GLDebug.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = District2GLDebug.cpp; sourceTree = "<group>"; };
 		1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AbstractDistrict.cpp; sourceTree = "<group>"; };
 		1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DistrictSet.cpp; sourceTree = "<group>"; };
-		1FAD549E0FDC8B6C00A56E35 /* districter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = districter.h; sourceTree = "<group>"; };
 		1FB6344B0A60C8FE0041F3BE /* rta2dsz */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = rta2dsz; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FB6346F0A60C94E0041F3BE /* recordA.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = recordA.cpp; path = tiger/recordA.cpp; sourceTree = "<group>"; };
 		1FB634730A60C95E0041F3BE /* rtaToDsz.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rtaToDsz.cpp; sourceTree = "<group>"; };
@@ -438,13 +438,13 @@
 				3259352C0FD9DE9F008A40FB /* analyze.cpp */,
 				1F1862C90926B03A0025E521 /* Bitmap.cpp */,
 				1FF95AD90ED0D083009A375C /* Bitmap.h */,
+				1F28F4F90FE16EC200AECBB8 /* config.h */,
 				1F260CC508ACA31200C2C4FE /* District2.cpp */,
 				1FF95AD80ED0D083009A375C /* District2.h */,
 				1F8427C90CCB220000ACC6A4 /* District2GLDebug.cpp */,
 				1FF95AD70ED0D083009A375C /* District2GLDebug.h */,
 				1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */,
 				1FF95AD50ED0D083009A375C /* DistrictSet.h */,
-				1FAD549E0FDC8B6C00A56E35 /* districter.h */,
 				1F5655630A57866800212FB8 /* drendmain.cpp */,
 				1F6CF44F07ADFE7200171C83 /* fileio.cpp */,
 				1F1862B50926A79A0025E521 /* linkfixup.cpp */,

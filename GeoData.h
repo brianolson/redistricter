@@ -173,6 +173,9 @@ class Uf1 : public GeoData {
 	
 	// get "Logical Record Number" which links to deeper census data.
 	uint32_t logrecno( int index );
+	
+	int countDistricts();
+
 public:
 	POPTYPE oldDist( int index );
 };
