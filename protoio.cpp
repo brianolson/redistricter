@@ -1,6 +1,7 @@
 #if HAVE_PROTOBUF
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/gzip_stream.h>
 using google::protobuf::int32;
 using google::protobuf::int64;
 
@@ -78,7 +79,16 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 		edges->Add(sov->edgeData[i*2 + 1]);
 	}
 	
-	bool ok = rd.SerializeToFileDescriptor(fd);
+	bool ok = true;
+	{
+		google::protobuf::io::FileOutputStream pbfos(fd);
+		google::protobuf::io::GzipOutputStream zos(
+			&pbfos, google::protobuf::io::GzipOutputStream::ZLIB);
+		ok = rd.SerializeToZeroCopyStream(&zos);
+		zos.Flush();
+		zos.Close();
+		pbfos.Close();
+	}
 	int err = close(fd);
 	if (ok && (err == 0)) {
 		return 0;
@@ -93,9 +103,10 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 		return -1;
 	}
 	google::protobuf::io::FileInputStream pbfis(fd);
+	google::protobuf::io::GzipInputStream zis(&pbfis);
 	pbfis.SetCloseOnDelete(true);
 	RedistricterData rd;
-	bool ok = rd.ParseFromZeroCopyStream(&pbfis);
+	bool ok = rd.ParseFromZeroCopyStream(&zis);
 	if (!ok) {
 		return -1;
 	}
