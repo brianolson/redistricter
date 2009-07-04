@@ -1,5 +1,8 @@
 #include "PBPointOutput.h"
 
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/gzip_stream.h>
+
 PBPointOutput::PBPointOutput(int fileDescriptor)
 	: fd(fileDescriptor), rast(NULL), block(NULL) {
 	rast = new MapRasterization();
@@ -27,5 +30,12 @@ bool PBPointOutput::flush() {
 	return true;
 }
 bool PBPointOutput::close() {
-	return rast->SerializeToFileDescriptor(fd);
+	google::protobuf::io::FileOutputStream pbfos(fd);
+	google::protobuf::io::GzipOutputStream zos(
+		&pbfos, google::protobuf::io::GzipOutputStream::ZLIB);
+	bool ok = rast->SerializeToZeroCopyStream(&zos);
+	zos.Flush();
+	zos.Close();
+	pbfos.Close();
+	return ok;
 }

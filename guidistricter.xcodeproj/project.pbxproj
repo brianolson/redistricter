@@ -19,6 +19,8 @@
 		1F2807B60A61A54400959DA5 /* record2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B50A61A54400959DA5 /* record2.cpp */; };
 		1F2807B80A61A55400959DA5 /* recordI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B70A61A55400959DA5 /* recordI.cpp */; };
 		1F2807BC0A61A58800959DA5 /* makepolys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807BB0A61A58800959DA5 /* makepolys.cpp */; };
+		1F28F51A0FE1EBB600AECBB8 /* PBPointOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28F5190FE1EBB600AECBB8 /* PBPointOutput.cpp */; };
+		1F28F51D0FE1EC4300AECBB8 /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
 		1F2DFD1A0F3DDA34008FF766 /* logging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DFD190F3DDA34008FF766 /* logging.cpp */; };
 		1F2DFD1B0F3DDA34008FF766 /* logging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DFD190F3DDA34008FF766 /* logging.cpp */; };
 		1F2DFD1C0F3DDA34008FF766 /* logging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DFD190F3DDA34008FF766 /* logging.cpp */; };
@@ -185,6 +187,8 @@
 		1F28F4A60FE0B11400AECBB8 /* renderDistricts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderDistricts.h; sourceTree = "<group>"; };
 		1F28F4F50FE0BCD800AECBB8 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
 		1F28F4F90FE16EC200AECBB8 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		1F28F5180FE1EBB600AECBB8 /* PBPointOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBPointOutput.h; sourceTree = "<group>"; };
+		1F28F5190FE1EBB600AECBB8 /* PBPointOutput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PBPointOutput.cpp; sourceTree = "<group>"; };
 		1F2DFD180F3DDA34008FF766 /* logging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
 		1F2DFD190F3DDA34008FF766 /* logging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = GrabIntermediateStorage.cpp; sourceTree = "<group>"; };
@@ -467,6 +471,8 @@
 				1F8427C80CCB21EA00ACC6A4 /* NodeColoring.h */,
 				1F4D0CC3090C3A66003CE55B /* nonguimain.cpp */,
 				1F6CF45207ADFE7200171C83 /* place2k.h */,
+				1F28F5180FE1EBB600AECBB8 /* PBPointOutput.h */,
+				1F28F5190FE1EBB600AECBB8 /* PBPointOutput.cpp */,
 				1FCB993B0C3AB63E00FE809C /* PreThread.cpp */,
 				1FF95AED0ED0D188009A375C /* PreThread.h */,
 				1F5ECA240E3B6D8D00870895 /* protoio.cpp */,
@@ -756,6 +762,8 @@
 				1F2807BC0A61A58800959DA5 /* makepolys.cpp in Sources */,
 				321648C30D46A86A0096D68F /* rasterizeTiger.cpp in Sources */,
 				1F2DFD200F3DDA34008FF766 /* logging.cpp in Sources */,
+				1F28F51A0FE1EBB600AECBB8 /* PBPointOutput.cpp in Sources */,
+				1F28F51D0FE1EC4300AECBB8 /* redata.pb.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
