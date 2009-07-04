@@ -19,6 +19,7 @@ my $class = pop @cp;
 open FIN, "${path}.txt";
 open FH, '>', "${path}.h";
 open FC, '>', "${path}.cpp";
+open FP, '>', "${path}.py";
 
 print FH <<EOF;
 #ifndef ${class}_H
@@ -38,6 +39,15 @@ EOF
 print FC <<EOF;
 #include "${class}.h"
 
+EOF
+
+print FP <<EOF;
+#!/usr/bin/python
+
+class ${class}(object):
+	def __init__(self, raw):
+		self.raw = raw
+	
 EOF
 
 sub print_field {
@@ -82,6 +92,18 @@ EOF
 print FC <<EOF;
 const int ${class}::size = $fieldwidth;
 EOF
+print FP <<EOF;
+	fieldwidth = $fieldwidth
+	
+	def record(self, x):
+		start = ${class}.fieldwidth * x
+		end = start + ${class}.fieldwidth
+		return self.raw[start:end]
+	
+	def numRecords(self):
+		return len(self.raw)/${class}.fieldwidth
+	
+EOF
 foreach my $f ( @fields ) {
 	my ($field,$bv,$fmt,$type,$beg,$end,$len,$desc) = @{$f};
 	$beg--;
@@ -94,6 +116,16 @@ print FH <<EOF;
 	static const int ${field}_length;
 	static const char* ${field}_desc;
 EOF
+print FP <<EOF;
+	${field}_length = $len
+	${field}_desc = '${desc}'
+	
+	def $field(self, x):
+		start = (x * ${class}.fieldwidth) + $beg
+		end = start + $len
+		return self.raw[start:end]
+	
+EOF
 	if ( $type eq "N" ) {
 print FH <<EOF;
 	inline long ${field}_longValue( int index ) const {
@@ -102,6 +134,11 @@ print FH <<EOF;
 		buf[$len] = 0;
 		return strtol( buf, NULL, 10 );
 	}
+EOF
+print FP <<EOF;
+	def ${field}_int(self, x):
+		return int(self.${field}(x).strip())
+	
 EOF
 	} else {
 		print FH <<EOF;
