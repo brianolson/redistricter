@@ -26,8 +26,8 @@ RS-A20 Yes L N 101 104 4 Reserved Space A20
 RS-A21 Yes L N 105 108 4 Reserved Space A21 
 RS-A22 Yes L N 109 112 4 Reserved Space A22 
 CDCU Yes R N 113 114 2 Congressional District Code, Current (108 th) 
-ZCTA5CU Yes L A 115 119 5 5-Digit ZIP Code® Tabulation Area, current 
-ZCTA3CU Yes R A 120 122 3 3-Digit ZIP Code® Tabulation Area, current 
+ZCTA5CU Yes L A 115 119 5 5-Digit ZIP Code Tabulation Area, current 
+ZCTA3CU Yes R A 120 122 3 3-Digit ZIP Code Tabulation Area, current 
 RS-A4 Yes R A 123 128 6 Reserved Space A4 
 RS-A5 Yes R A 129 131 3 Reserved Space A5 
 RS-A6 Yes R A 132 134 3 Reserved Space A6 

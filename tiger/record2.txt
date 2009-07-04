@@ -1,6 +1,6 @@
 RT No L A 1 1 1 Record Type 
 VERSION No L N 2 5 4 Version Number 
-TLID No R N 6 15 10 TIGER/Line® ID, Permanent 1-Cell Number  
+TLID No R N 6 15 10 TIGER/Line ID, Permanent 1-Cell Number  
 RTSQ No R N 16 18 3 Record Sequence Number 
 LONG1 No R N 19 28 10 Point 1, Longitude 
 LAT1 No R N 29 37 9 Point 1, Latitude 

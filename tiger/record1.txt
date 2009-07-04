@@ -1,6 +1,6 @@
 RT No L A 1 1 1 Record Type 
 VERSION No L N 2 5 4 Version Number 
-TLID No R N 6 15 10 TIGER/Line¨ ID, Permanent 1-Cell Number  
+TLID No R N 6 15 10 TIGER/Line ID, Permanent 1-Cell Number  
 SIDE1 Yes R N 16 16 1 Single-Side Source Code  
 SOURCE Yes L A 17 17 1 Linear Segment Source Code 
 FEDIRP Yes L A 18 19 2 Feature Direction, Prefix 
@@ -16,8 +16,8 @@ FRIADDL Yes L A 103 103 1 Start Imputed Address Flag, Left
 TOIADDL Yes L A 104 104 1 End Imputed Address Flag, Left 
 FRIADDR Yes L A 105 105 1 Start Imputed Address Flag, Right 
 TOIADDR Yes L A 106 106 1 End Imputed Address Flag, Right 
-ZIPL Yes L N 107 111 5 ZIP Code¨, Left 
-ZIPR Yes L N 112 116 5 ZIP Code¨, Right 
+ZIPL Yes L N 107 111 5 ZIP Code, Left 
+ZIPR Yes L N 112 116 5 ZIP Code, Right 
 AIANHHFPL Yes L N 117 121 5 FIPS 55 Code (American Indian/ Alaska Native Area/Hawaiian Home Land),  2000 Left 
 AIANHHFPR Yes L N 122 126 5 FIPS 55 Code (American Indian/ Alaska Native Area/Hawaiian Home Land),  2000 Right 
 AIHHTLIL Yes L A 127 127 1 American Indian/Hawaiian Home Land Trust Land Indicator, 2000 Left 
