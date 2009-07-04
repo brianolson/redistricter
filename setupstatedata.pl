@@ -341,22 +341,6 @@ if ( newerthan( "${tigerdir}/makeLinks", "${stu}.links" ) ||
 	}
 }
 
-# TODO FIXME delete this block
-if ( 0 && newerthan( "raw", "$stu.RTA" ) ) {
-	print "merge raw/*RTA into $stu.RTA\n";
-	if ( $doit ) {
-		open FOUT, '>', "$stu.RTA";
-		foreach $fi ( <raw/*RTA> ) {
-			open FIN, $fi;
-			while ( $line = <FIN> ) {
-				print FOUT $line;
-			}
-			close FIN;
-		}
-		close FOUT;
-	}
-}
-
 if ( $doit && ! -e ".uf1" ) {
 	symlink "${stl}101.uf1", ".uf1";
 }
