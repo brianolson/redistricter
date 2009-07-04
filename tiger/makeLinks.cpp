@@ -69,8 +69,6 @@ hash_set<halflink> halves;
 
 class source {
 public:
-	long value;
-	int index;
 	int len;
 
 	const char* filename;
@@ -80,7 +78,7 @@ public:
 	source* next;
 	source* prev;
 	
-	source( const char* f, source* n ) : value( 0 ), index( 0 ), len( 0 ), filename( f ), next( n ), tlidSortIndecies(NULL) {
+	source( const char* f, source* n ) : len( 0 ), filename( f ), next( n ) {
 		if ( next != NULL ) {
 			prev = next->prev;
 			next->prev = this;
@@ -91,86 +89,7 @@ public:
 			prev = NULL;
 		}
 	}
-	
-	inline long getValue() {
-		//return value = r.TLID_longValue( index );
-		return value = tlidSortIndecies[index*2];
-	}
-	inline const char* record( int index ) const {
-		return r.record( tlidSortIndecies[index*2+1] );
-	}
-	
-	long* tlidSortIndecies;
-	
-	void sortOnTLID();
 };
-
-#if 0
-long source::getValue() {
-	return value = r.TLID_longValue( index );
-}
-#endif
-
-static int sotC( const void* a, const void* b ) {
-	return (int)(((long*)a)[0] - ((long*)b)[0]);
-}
-
-void source::sortOnTLID() {
-	// quicksort
-	if ( tlidSortIndecies == NULL ) {
-		tlidSortIndecies = new long[len*2];
-	}
-	int i;
-	for ( i = 0; i < len; i++ ) {
-		tlidSortIndecies[i*2] = r.TLID_longValue( i );
-		tlidSortIndecies[i*2 + 1] = i;
-	}
-	// quicksort
-	qsort( tlidSortIndecies, len, sizeof( long ) * 2, sotC );
-#if 0
-	for ( i = 0; i < len; i++ ) {
-		printf("%d: %ld\n", i, tlidSortIndecies[i*2] );
-	}
-#endif
-}
-
-source* stubbleSort( source* root ) {
-	if ( root == NULL || root->next == NULL ) {
-		return root;
-	}
-	source* cur;
-	bool notdone = true;
-	while ( notdone ) {
-		cur = root;
-		notdone = false;
-		while ( cur != NULL && cur->next != NULL ) {
-			if ( cur->next->value < cur->value ) {
-				// a cur b c
-				// a b cur c
-				source* a = cur->prev;
-				source* b = cur->next;
-				source* c = b->next;
-				if ( a ) {
-					a->next = b;
-				}
-				b->prev = a;
-				b->next = cur;
-				cur->prev = b;
-				cur->next = c;
-				if ( c ) {
-					c->prev = cur;
-				}
-				if ( cur == root ) {
-					root = b;
-				}
-				notdone = true;
-			} else {
-				cur = cur->next;
-			}
-		}
-	}
-	return root;
-}
 
 #define memcpy( dst, src, len ) my_inline_memcpy( dst, src, len )
 #define uint8_t unsigned char
@@ -245,7 +164,6 @@ int main( int argc, const char** argv ) {
 		//out = stdout;
 	}
 	
-	//source* done = NULL;
 	source* cur;
 	cur = root;
 	long recordsin = 0;
@@ -260,9 +178,6 @@ int main( int argc, const char** argv ) {
 		}
 		cur->len = cur->m.sb.st_size / record1::size;
 		cur->r.base = (uint8_t*)(cur->m.data);
-		cur->sortOnTLID();
-		cur->getValue();
-		fprintf(stderr,"opened %s, %d records, first TLID %ld\n", cur->filename, cur->len, cur->value );
 		recordsin += cur->len;
 		
 		for ( int i = 0; i < cur->len; i++ ) {
@@ -318,11 +233,4 @@ int main( int argc, const char** argv ) {
 	recordsout = they.size();
 	printf("%ld records in\n%ld links out\n%lu unpaired halves\n", recordsin, recordsout, (long unsigned int)(halves.size()) );
 	fclose( out );
-#if 0
-	cur = done;
-	while ( cur != NULL ) {
-		cur->m.close();
-		cur = cur->next;
-	}
-#endif
 }
