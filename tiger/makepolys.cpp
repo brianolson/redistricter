@@ -170,27 +170,22 @@ int main( int argc, char** argv ) {
 	} else {
 		fout = stdout;
 	}
-	PBPointOutput* pbout = NULL;
+	PointOutput* pout = NULL;
 	if ( protobufOutput ) {
-		pbout = new PBPointOutput(fileno(fout), pg.xpx, pg.ypx);
-	} else if ( ! printPointsPreRasterize ) {
+		pout = new PBPointOutput(fileno(fout), pg.xpx, pg.ypx);
+	} else if ( printPointsPreRasterize ) {
+		pout = new FILEPointOutput<uint32_t>(fout);
+	} else /*if ( ! printPointsPreRasterize )*/ {
 		uint32_t vers = 1;
 		fwrite(&vers,sizeof(uint32_t),1,fout);
 		fwrite(&pg.xpx,sizeof(int32_t),1,fout);
 		fwrite(&pg.ypx,sizeof(int32_t),1,fout);
+		pout = new FILEPointOutput<uint16_t>(fout);
 	}
 	if ( (maskOutName != NULL) && (!printPointsPreRasterize) ) {
 	    pg.maskpx = (uint8_t*)malloc( sizeof(uint8_t)*pg.xpx*pg.ypx );
 	}
 
-	PointOutput* pout;
-	if ( protobufOutput ) {
-		pout = pbout;
-	} else if ( printPointsPreRasterize ) {
-		pout = new FILEPointOutput<uint32_t>(fout);
-	} else {
-		pout = new FILEPointOutput<uint16_t>(fout);
-	}
 	pg.updatePixelSize();
 	bstrlist* cf = froots;
 	while ( cf != NULL ) {
