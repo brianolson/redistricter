@@ -17,6 +17,7 @@ class linker(object):
 	def __init__(self):
 		self.they = {}
 		self.halves = {}
+		self.verbose = False
 	
 	def put(self, a, b):
 		if a < b:
@@ -28,7 +29,8 @@ class linker(object):
 		x = self.halves.get(tlid)
 		if x is not None:
 			if x == ubid:
-				sys.stderr.write('weird split, tlid=%09d ubid=%013u\n' % (tlid, ubid))
+				if self.verbose:
+					sys.stderr.write('weird split, tlid=%09d ubid=%013u\n' % (tlid, ubid))
 				return
 			self.put(ubid,x)
 			del self.halves[tlid]
@@ -73,7 +75,8 @@ class linker(object):
 		zf = zipfile.ZipFile(fname, 'r')
 		for x in zf.namelist():
 			if x.lower().endswith('.rt1'):
-				sys.stderr.write('reading %s(%s)\n' % (fname, x))
+				if self.verbose:
+					sys.stderr.write('reading %s(%s)\n' % (fname, x))
 				raw = zf.read(x)
 				cur = record1(raw)
 				self.process(cur)
@@ -100,6 +103,7 @@ def main(argv):
 		else:
 			sourcelist.append(arg)
 	l = linker()
+	l.verbose = True
 	for s in sourcelist:
 		if s.lower().endswith('.zip'):
 			l.processZipFilename(s)

@@ -103,6 +103,7 @@ int main( int argc, char** argv ) {
 	bool printPointsPreRasterize = false;
 	bool pointNOP = false;
 	bool protobufOutput = false;
+	bool verbose = false;
 
 	for ( i = 1; i < argc; i++ ) {
 		if ( ! strcmp( argv[i], "--minlat" ) ) {
@@ -190,7 +191,9 @@ int main( int argc, char** argv ) {
 	bstrlist* cf = froots;
 	while ( cf != NULL ) {
 		pg.setRootName( cf->str );
-		fprintf(stderr,"processing %s\n", cf->str );
+		if (verbose) {
+			fprintf(stderr,"processing %s\n", cf->str );
+		}
 		
 		pg.buildRTI();
 		pg.buildShapes();

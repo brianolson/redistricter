@@ -28,6 +28,9 @@ kmpp_re_a = re.compile(r".*Best Km\/p:.*Km\/p=([0-9.]+)")
 kmpp_re_b = re.compile(r".*Best Km\/p: ([0-9.]+)")
 
 
+class NoRunsException(Exception):
+	pass
+
 class slog(object):
 	"""A log summary object"""
 	
@@ -325,7 +328,7 @@ class manybest(object):
 			sys.exit(1)
 		self.skimLogs(self.log_paths)
 		if not self.they:
-			raise Exception("no good runs found\n")
+			raise NoRunsException("no good runs found\n")
 		self.they.sort(cmp=lambda a, b: cmp(a.kmpp, b.kmpp))
 		they = self.they
 		empties = self.empties

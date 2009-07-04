@@ -21,6 +21,7 @@ import re
 import string
 import subprocess
 import sys
+import time
 import urllib
 import zipfile
 
@@ -262,10 +263,12 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 		rawpath = os.path.join(dpath, 'raw')
 		ziplist = self.downloadTigerZips(dpath)
+		needlinks = False
 		if not os.path.isfile(linkspath):
 			needlinks = True
-		else:
-			needlinks = False
+		if (not needlinks) and newerthan(makelinks.__file__, linkspath):
+			needlinks = True
+		if not needlinks:
 			for z in ziplist:
 				zp = os.path.join(zipspath, z)
 				if newerthan(zp, linkspath):
@@ -273,6 +276,7 @@ class StateData(object):
 					break
 		if needlinks:
 			print '%s/{%s} -> %s' % (zipspath, ','.join(ziplist), linkspath)
+			start = time.time()
 			linker = makelinks.linker()
 			for z in ziplist:
 				zp = os.path.join(zipspath, z)
@@ -280,8 +284,7 @@ class StateData(object):
 			f = open(linkspath, 'wb')
 			linker.writeText(f)
 			f.close()
-#		else:
-#			print 'links already current'
+			print 'makelinks took %f seconds' % (time.time() - start)
 		return linkspath
 	
 	def compileBinaryData(self, options, dpath):
@@ -314,7 +317,9 @@ class StateData(object):
 #		if not (newerthan(uf1path, outpath) or newerthan(linkspath, outpath)):
 #			return
 		print 'cd %s && "%s"' % (dpath, '" "'.join(cmd))
+		start = time.time()
 		status = subprocess.call(cmd, cwd=dpath)
+		print 'data compile took %f seconds' % (time.time() - start)
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 	
@@ -341,14 +346,19 @@ class StateData(object):
 		pgeompath = os.path.join(dpath, 'geometry.pickle')
 		needsmeasure = False
 		rawdir = os.path.join(dpath, 'raw')
+		needsmeasure = False
 		if not os.path.isfile(pgeompath):
 			needsmeasure = True
-		else:
+		if (not needsmeasure) and newerthan(measureGeometry.__file__, pgeompath):
+			needsmeasure = True
+		if not needsmeasure:
 			for z in ziplist:
 				if newerthan(os.path.join(zipspath, z), pgeompath):
 					needsmeasure = True
 					break
 		if needsmeasure:
+			print '%s/{%s} -> %s/{geometry.pickle,meausure,makedefaults}' % (zipspath, ','.join(ziplist), dpath)
+			start = time.time()
 			g = measureGeometry.geom()
 			if not os.path.isdir(rawdir):
 				os.mkdir(rawdir)
@@ -366,6 +376,7 @@ class StateData(object):
 			dout = open(os.path.join(dpath, 'makedefaults'), 'w')
 			g.makedefaults(dout, self.stu)
 			dout.close()
+			print 'measureGeometry took %f seconds' % (time.time() - start)
 		else:
 			fin = open(pgeompath, 'rb')
 			g = pickle.load(fin)
@@ -408,25 +419,33 @@ class StateData(object):
 			ha.close
 		# TODO: create ${stl}109.dsz
 		self.writeMakeFragment(options, dpath)
+		start = time.time()
 		status = subprocess.call(['make', '-k', '-f', os.path.join(dpath, '.make'), self.stl + '_all'])
+		print 'final make took %f seconds' % (time.time() - start)
 		
 
-argp = optparse.OptionParser()
-argp.add_option('-n', '--dry-run', action='store_false', dest='doit', default=True)
-argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
-argp.add_option('--nopng', '--without_png', dest='png', action='store_false', default=True)
-argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
-argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
-argp.add_option('-d', '--data', dest='datadir', default='data')
-argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
-(options, args) = argp.parse_args()
+def main(argv):
+	argp = optparse.OptionParser()
+	argp.add_option('-n', '--dry-run', action='store_false', dest='doit', default=True)
+	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
+	argp.add_option('--nopng', '--without_png', dest='png', action='store_false', default=True)
+	argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
+	argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
+	argp.add_option('-d', '--data', dest='datadir', default='data')
+	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
+	(options, args) = argp.parse_args()
 
-if not os.path.isdir(options.datadir):
-	raise Error('data dir "%s" does not exist' % options.datadir)
+	if not os.path.isdir(options.datadir):
+		raise Error('data dir "%s" does not exist' % options.datadir)
 
-pg = ProcessGlobals(options)
+	pg = ProcessGlobals(options)
 
-for a in args:
-	print a
-	sd = StateData(pg, a)
-	sd.dostate(options)
+	for a in args:
+		print a
+		start = time.time()
+		sd = StateData(pg, a)
+		sd.dostate(options)
+		print '%s took %f seconds' % (a, time.time() - start)
+
+if __name__ == '__main__':
+	main(sys.argv)
