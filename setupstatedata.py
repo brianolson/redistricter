@@ -223,7 +223,7 @@ class StateData(object):
 	def getTigerZipIndex(self, dpath):
 		if self.ziplist is not None:
 			return self.ziplist
-		zipspath = os.path.join(dpath, 'zips')
+		zipspath = self.zipspath(dpath)
 		indexpath = os.path.join(zipspath, 'index.html')
 		if not os.path.isfile(indexpath):
 			if not os.path.isdir(zipspath):
@@ -400,12 +400,23 @@ class StateData(object):
 			'stl': self.stl,
 			'stl_bin': stl_bin}))
 		out.close()
+
+	def getextras(self, dpath, extras):
+		geourl = self.pg.getGeoUrl(self.stl)
+		zipspath = self.zipspath(dpath)
+		for x in extras:
+			xurl = geourl.replace('geo_uf1', x + '_uf1')
+			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
+			if not os.path.isfile(xpath):
+				print 'fetching ' + xurl
+				urllib.urlretrieve(xurl, xpath)
 	
 	def dostate(self, options):
 		dpath = os.path.join(options.datadir, self.stu)
 		if not os.path.isdir(dpath):
 			os.mkdir(dpath)
 		geozip = os.path.join(dpath, self.stl + 'geo_uf1.zip')
+		self.getextras(dpath, options.extras)
 		uf101 = os.path.join(dpath, self.stl + '101.uf1')
 		if (not os.path.isfile(uf101)) or newerthan(geozip, uf101):
 			self.makeUf101(geozip, uf101)
@@ -433,6 +444,7 @@ def main(argv):
 	argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
 	argp.add_option('-d', '--data', dest='datadir', default='data')
 	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
+	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	(options, args) = argp.parse_args()
 
 	if not os.path.isdir(options.datadir):
