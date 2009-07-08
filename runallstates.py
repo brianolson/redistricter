@@ -55,10 +55,18 @@ def getNiceCommandFragment():
 
 nice = getNiceCommandFragment()
 
+def lastlines(arr, limit, line):
+	if len(arr) >= limit:
+		start = (len(arr) - limit) + 1
+		arr = arr[start:]
+	arr.append(line)
+	return arr
+
 def poll_run(p, stu):
 	poller = select.poll()
 	poller.register(p.stdout, select.POLLIN | select.POLLPRI )
 	poller.register(p.stderr, select.POLLIN | select.POLLPRI )
+	lastelines = []
 	while p.poll() is None:
 		for (fd, event) in poller.poll(500):
 			if p.stdout.fileno() == fd:
@@ -67,10 +75,13 @@ def poll_run(p, stu):
 			elif p.stderr.fileno() == fd:
 				line = p.stderr.readline()
 				sys.stdout.write("E " + stu + ": " + line)
+				lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
+	return lastelines
 
 def select_run(p, stu):
+	lastelines = []
 	while p.poll() is None:
 		(il, ol, el) = select.select([p.stdout, p.stderr], [], [], 0.5)
 		for fd in il:
@@ -80,8 +91,10 @@ def select_run(p, stu):
 			elif (p.stderr.fileno() == fd) or (fd == p.stderr):
 				line = p.stderr.readline()
 				sys.stdout.write("E " + stu + ": " + line)
+				lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
+	return lastelines
 
 
 class runallstates(object):
@@ -106,6 +119,7 @@ class runallstates(object):
 		self.drendcmds = {}
 		self.softfail = False
 		self.stoppath = None
+		self.stopreason = ''
 		self.runlog = None  # file
 		self.bestlog = None  # file
 		self.bests = None  # map<stu, manybest.slog>
@@ -290,8 +304,10 @@ class runallstates(object):
 		if self.dry_run:
 			return False
 		if self.stoppath and os.path.exists(self.stoppath):
+			self.stopreason = self.stoppath + ' exists'
 			return True
 		if (self.end is not None) and (datetime.datetime.now() < self.end):
+			self.stopreason = 'ran past end time'
 			return True
 		return False
 
@@ -337,7 +353,8 @@ class runallstates(object):
 		if not self.dry_run:
 			fout = open(statlog, "w")
 			if not fout:
-				sys.stderr.write("could not open \"%s\"\n" % statlog)
+				self.stopreason = "could not open \"%s\"" % statlog
+				sys.stderr.write(self.stopreason + "\n")
 				self.softfail = True
 				return False
 			fout.close()
@@ -346,10 +363,16 @@ class runallstates(object):
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=True, bufsize=4000, cwd=ctd,
 				stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			errorlines = []
 			if has_poll:
-				poll_run(p, stu)
+				errorlines = poll_run(p, stu)
 			elif has_select:
-				select_run(p, stu)
+				errorlines = select_run(p, stu)
+			else:
+				self.stopreason = 'has neither poll nor select\n'
+				sys.stderr.write(self.stopreason + "\n")
+				self.softfail = True
+				return False
 			try:
 				for line in p.stdin:
 					sys.stdout.write("O " + stu + ": " + line)
@@ -358,10 +381,14 @@ class runallstates(object):
 			try:
 				for line in p.stderr:
 					sys.stdout.write("E " + stu + ": " + line)
+					lastlines(errorlines, 10, line)
 			except:
 				pass
 			if p.returncode != 0:
-				sys.stderr.write("solver exited with status %d\n" % p.returncode)
+				self.stopreason = "solver exited with status %d" % p.returncode
+				if errorlines:
+					self.stopreason += '\n' + '\n'.join(errorlines)
+				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
 			fin = open(statlog, "r")
@@ -377,7 +404,8 @@ class runallstates(object):
 		if not self.dry_run:
 			ret = subprocess.call(["gzip", statlog])
 			if ret != 0:
-				sys.stderr.write("gzip statlog failed %d\n" % ret)
+				self.stopreason = "gzip statlog failed %d" % ret
+				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
 		cmd = ["tar", "jcf", "g.tar.bz2", "g"]
@@ -386,7 +414,8 @@ class runallstates(object):
 		if not self.dry_run:
 			ret = subprocess.Popen(cmd, cwd=ctd).wait()
 			if ret != 0:
-				sys.stderr.write("tar g failed %d\n" % ret)
+				self.stopreason = "tar g failed %d" % ret
+				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
 		cmd = ["rm", "-rf", "g"]
@@ -417,7 +446,8 @@ class runallstates(object):
 			if not self.dry_run:
 				ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()
 				if ret != 0:
-					sys.stderr.write("drend failed %d\n" % ret)
+					self.stopreason = "drend failed %d\n" % ret
+					sys.stderr.write(self.stopreason + '\n')
 					self.softfail = True
 					return False
 			start_png = os.path.join(self.datadir, stu, stu + "_start.png")
@@ -500,6 +530,7 @@ class runallstates(object):
 				x.join()
 
 		if not self.dry_run:
+			print self.stopreason
 			if os.path.exists(self.stoppath):
 				os.remove(self.stoppath)
 
