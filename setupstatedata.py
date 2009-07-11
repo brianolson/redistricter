@@ -404,6 +404,8 @@ class StateData(object):
 	def getextras(self, dpath, extras):
 		geourl = self.pg.getGeoUrl(self.stl)
 		zipspath = self.zipspath(dpath)
+		if not os.path.isdir(zipspath):
+			os.mkdir(zipspath)
 		for x in extras:
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
 			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
@@ -415,8 +417,11 @@ class StateData(object):
 		dpath = os.path.join(options.datadir, self.stu)
 		if not os.path.isdir(dpath):
 			os.mkdir(dpath)
+		if options.extras:
+			self.getextras(dpath, options.extras)
+			if options.extras_only:
+				return
 		geozip = os.path.join(dpath, self.stl + 'geo_uf1.zip')
-		self.getextras(dpath, options.extras)
 		uf101 = os.path.join(dpath, self.stl + '101.uf1')
 		if (not os.path.isfile(uf101)) or newerthan(geozip, uf101):
 			self.makeUf101(geozip, uf101)
@@ -445,6 +450,7 @@ def main(argv):
 	argp.add_option('-d', '--data', dest='datadir', default='data')
 	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
+	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
 	(options, args) = argp.parse_args()
 
 	if not os.path.isdir(options.datadir):

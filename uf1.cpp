@@ -116,6 +116,10 @@ public:
 	FILELineSource() : fin(NULL) {
 	}
 	virtual bool init(const char* filename) {
+		if ((filename == NULL) || (filename[0] == '\0')) {
+			fin = stdin;
+			return true;
+		}
 		fin = fopen(filename, "r");
 		if (fin == NULL) {
 			perror(filename);

@@ -65,9 +65,12 @@ void parseCompareArg(char* arg, vector<int>* columns) {
 int main( int argc, char** argv ) {
 	Solver sov;
 	int nargc;
-	bool textout = true;
-	bool csvout = true;
-	bool htmlout = true;
+	FILE* textout = stdout;
+	FILE* csvout = NULL;
+	FILE* htmlout = NULL;
+	int dsort = -1;
+	bool distrow = true;
+	bool distcol = false;
 	
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
@@ -77,24 +80,66 @@ int main( int argc, char** argv ) {
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--compare")) {
+			// --compare filename:colnum,colnum,colnum
 			++i;
 			compareArgs.push_back(argv[i]);
 		} else if (!strcmp(argv[i], "--labels")) {
 			// comma separated list of labels to match a corresponding compare set
 			++i;
 			labelArgs.push_back(argv[i]);
+		} else if (!strcmp(argv[i], "--dsort")) {
+			// when printing districts as rows, sort by column N
+			++i;
+			dsort = atoi(argv[i]);
 		} else if (!strcmp(argv[i], "--html")) {
-			htmlout = true;
+			++i;
+			if (argv[i][0] == '\0') {
+				htmlout = stdout;
+			} else {
+				htmlout = fopen(argv[i], "w");
+				if (htmlout == NULL) {
+					perror(argv[i]);
+					exit(1);
+				}
+			}
 		} else if (!strcmp(argv[i], "--nohtml")) {
-			htmlout = false;
+			htmlout = NULL;
 		} else if (!strcmp(argv[i], "--text")) {
-			textout = true;
+			++i;
+			if (argv[i][0] == '\0') {
+				textout = stdout;
+			} else {
+				textout = fopen(argv[i], "w");
+				if (textout == NULL) {
+					perror(argv[i]);
+					exit(1);
+				}
+			}
 		} else if (!strcmp(argv[i], "--notext")) {
-			textout = false;
+			textout = NULL;
 		} else if (!strcmp(argv[i], "--csv")) {
-			csvout = true;
+			++i;
+			if (argv[i][0] == '\0') {
+				csvout = stdout;
+			} else {
+				csvout = fopen(argv[i], "w");
+				if (csvout == NULL) {
+					perror(argv[i]);
+					exit(1);
+				}
+			}
 		} else if (!strcmp(argv[i], "--nocsv")) {
-			csvout = false;
+			csvout = NULL;
+		} else if (!strcmp(argv[i], "--distrow")) {
+			// print table with districts in rows
+			distrow = true;
+		} else if (!strcmp(argv[i], "--nodistrow")) {
+			distrow = false;
+		} else if (!strcmp(argv[i], "--distcol")) {
+			// print table with districts in columns
+			distcol = true;
+		} else if (!strcmp(argv[i], "--nodistcol")) {
+			distcol = false;
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;
@@ -136,6 +181,7 @@ int main( int argc, char** argv ) {
 			return 1;
 		}
 		// for each district, for each columns, sum things...
+		// counts[district][column]
 		vector<vector<uint32_t> > counts;
 		for (POPTYPE d = 0; d < sov.districts; ++d) {
 			counts.push_back(vector<uint32_t>());
@@ -175,102 +221,137 @@ int main( int argc, char** argv ) {
 				}
 			}
 		}
+		
+		// sort districts based on some column index
+		int* dsortIndecies = new int[sov.districts];
+		for (int d = 0; d < sov.districts; ++d) {
+			dsortIndecies[d] = d;
+		}
+		if (dsort >= 0 && ((unsigned int)dsort) < columns.size()) {
+			bool done = false;
+			while (!done) {
+				done = true;
+				for (int i = 1; i < sov.districts; ++i) {
+					if (counts[dsortIndecies[i-1]][dsort] < counts[dsortIndecies[i]][dsort]) {
+						int x = dsortIndecies[i];
+						dsortIndecies[i] = dsortIndecies[i-1];
+						dsortIndecies[i-1] = x;
+						done = false;
+					}
+				}
+			}
+		}
 
 		// plain text out
-		if (textout) {
-			// for each column, print district values
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, "%s:%s\n", fname, labels[col]);
-				for (POPTYPE d = 0; d < sov.districts; ++d) {
-					fprintf(stdout, "\t%d: %d\n", d, counts[d][col]);
+		if (textout != NULL) {
+			if (distcol) {
+				// for each column, print district values
+				for (unsigned int col = 0; col < columns.size(); ++col) {
+					fprintf(textout, "%s:%s\n", fname, labels[col]);
+					for (POPTYPE d = 0; d < sov.districts; ++d) {
+						fprintf(textout, "\t%d: %d\n", d, counts[d][col]);
+					}
 				}
 			}
 
-			// for each district, print column values
-			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, "distrct:%d\n", d);
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(stdout, "\t%s: %d\n", labels[col], counts[d][col]);
+			if (distrow) {
+				// for each district, print column values
+				for (POPTYPE di = 0; di < sov.districts; ++di) {
+					POPTYPE d = dsortIndecies[di];
+					fprintf(textout, "distrct:%d\n", d);
+					for (unsigned int col = 0; col < columns.size(); ++col) {
+						fprintf(textout, "\t%s: %d\n", labels[col], counts[d][col]);
+					}
 				}
 			}
 		}
 		
 		// csv out
-		if (csvout) {
-			// for each column, print district values
-			// header row
-			fprintf(stdout, "column");
-			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, ",%d", d);
-			}
-			fprintf(stdout, "\n");
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, "%s", labels[col]);
+		if (csvout != NULL) {
+			if (distcol) {
+				// for each column, print district values
+				// header row
+				fprintf(csvout, "column");
 				for (POPTYPE d = 0; d < sov.districts; ++d) {
-					fprintf(stdout, ",%d", counts[d][col]);
+					fprintf(csvout, ",%d", d);
 				}
-				fprintf(stdout, "\n");
+				fprintf(csvout, "\n");
+				for (unsigned int col = 0; col < columns.size(); ++col) {
+					fprintf(csvout, "%s", labels[col]);
+					for (POPTYPE d = 0; d < sov.districts; ++d) {
+						fprintf(csvout, ",%d", counts[d][col]);
+					}
+					fprintf(csvout, "\n");
+				}
 			}
 
-			// for each district, print column values
-			// header row
-			fprintf(stdout, "district");
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, ",%s", labels[col]);
-			}
-			fprintf(stdout, "\n");
-			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, "%d", d);
+			if (distrow) {
+				// for each district, print column values
+				// header row
+				fprintf(csvout, "district");
 				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(stdout, ",%d", counts[d][col]);
+					fprintf(csvout, ",%s", labels[col]);
 				}
-				fprintf(stdout, "\n");
+				fprintf(csvout, "\n");
+				for (POPTYPE di = 0; di < sov.districts; ++di) {
+					POPTYPE d = dsortIndecies[di];
+					fprintf(csvout, "%d", d);
+					for (unsigned int col = 0; col < columns.size(); ++col) {
+						fprintf(csvout, ",%d", counts[d][col]);
+					}
+					fprintf(csvout, "\n");
+				}
 			}
 		}
 		
 		// html out
-		if (htmlout) {
-			// for each column, print district values
-			// header row
+		if (htmlout != NULL) {
 			bool printDistrictNumber = false;
-			fprintf(stdout, "<table>");
-			if (printDistrictNumber) {
-				fprintf(stdout, "<tr><th>column</th>");
-				for (POPTYPE d = 0; d < sov.districts; ++d) {
-					fprintf(stdout, "<th>%d</th>", d);
-				}
-				fprintf(stdout, "</tr>\n");
-			}
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, "<tr><td>%s</td>", labels[col]);
-				for (POPTYPE d = 0; d < sov.districts; ++d) {
-					fprintf(stdout, "<td>%d</td>", counts[d][col]);
-				}
-				fprintf(stdout, "</tr>\n");
-			}
-			fprintf(stdout, "</table>\n");
-
-			// for each district, print column values
-			// header row
-			fprintf(stdout, "<table><tr>");
-			if (printDistrictNumber) {
-				fprintf(stdout, "<th>district</th>");
-			}
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, "<th>%s</th>", labels[col]);
-			}
-			fprintf(stdout, "</tr>\n");
-			for (POPTYPE d = 0; d < sov.districts; ++d) {
-				fprintf(stdout, "<tr>");
+			if (distcol) {
+				// for each column, print district values
+				// header row
+				fprintf(htmlout, "<table>");
 				if (printDistrictNumber) {
-					fprintf(stdout, "<td>%d</td>", d);
+					fprintf(htmlout, "<tr><th>column</th>");
+					for (POPTYPE d = 0; d < sov.districts; ++d) {
+						fprintf(htmlout, "<th>%d</th>", d);
+					}
+					fprintf(htmlout, "</tr>\n");
 				}
 				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(stdout, "<td>%d</td>", counts[d][col]);
+					fprintf(htmlout, "<tr><td>%s</td>", labels[col]);
+					for (POPTYPE d = 0; d < sov.districts; ++d) {
+						fprintf(htmlout, "<td>%d</td>", counts[d][col]);
+					}
+					fprintf(htmlout, "</tr>\n");
 				}
-				fprintf(stdout, "</tr>\n");
+				fprintf(htmlout, "</table>\n");
 			}
-			fprintf(stdout, "</table>\n");
+
+			if (distrow) {
+				// for each district, print column values
+				// header row
+				fprintf(htmlout, "<table><tr>");
+				if (printDistrictNumber) {
+					fprintf(htmlout, "<th>district</th>");
+				}
+				for (unsigned int col = 0; col < columns.size(); ++col) {
+					fprintf(htmlout, "<th>%s</th>", labels[col]);
+				}
+				fprintf(htmlout, "</tr>\n");
+				for (POPTYPE di = 0; di < sov.districts; ++di) {
+					POPTYPE d = dsortIndecies[di];
+					fprintf(htmlout, "<tr>");
+					if (printDistrictNumber) {
+						fprintf(htmlout, "<td>%d</td>", d);
+					}
+					for (unsigned int col = 0; col < columns.size(); ++col) {
+						fprintf(htmlout, "<td>%d</td>", counts[d][col]);
+					}
+					fprintf(htmlout, "</tr>\n");
+				}
+				fprintf(htmlout, "</table>\n");
+			}
 		}
 
 		for (unsigned int col = 0; col < data_columns.size(); ++col) {
