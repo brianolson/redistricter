@@ -265,13 +265,16 @@ class StateData(object):
 		ziplist = self.downloadTigerZips(dpath)
 		needlinks = False
 		if not os.path.isfile(linkspath):
+			print 'no ' + linkspath
 			needlinks = True
 		if (not needlinks) and newerthan(makelinks.__file__, linkspath):
+			print makelinks.__file__ + ' > ' + linkspath
 			needlinks = True
 		if not needlinks:
 			for z in ziplist:
 				zp = os.path.join(zipspath, z)
 				if newerthan(zp, linkspath):
+					print zp + ' > ' + linkspath
 					needlinks = True
 					break
 		if needlinks:

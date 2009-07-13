@@ -207,7 +207,7 @@ void Solver::load() {
 	totalpop = gd->totalpop;
 	dcx = (maxx + minx) / 2.0;
 	dcy = (miny + maxy) / 2.0;
-	printf("minx %0.6lf, miny  %0.6lf, maxx %0.6lf, maxy %0.6lf\n", (double)minx, (double)miny, (double)maxx, (double)maxy );
+	//printf("minx %0.6lf, miny  %0.6lf, maxx %0.6lf, maxy %0.6lf\n", (double)minx, (double)miny, (double)maxx, (double)maxy );
 	zoom = 1.0;
 	districtPopTarget = totalpop / districts;
 }

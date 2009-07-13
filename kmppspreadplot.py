@@ -151,7 +151,7 @@ class svgplotter(object):
 def main(argv):
   try:
     opts, args = getopt.gnu_getopt(argv[1:], 'i:', ['png=', 'svg='])
-  except getopt.GetopError:
+  except getopt.GetoptError:
     sys.exit(1)
   #out = sys.stdout
   out = None

@@ -71,6 +71,7 @@ int main( int argc, char** argv ) {
 	int dsort = -1;
 	bool distrow = true;
 	bool distcol = false;
+	bool quiet = false;
 	
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
@@ -95,6 +96,7 @@ int main( int argc, char** argv ) {
 			++i;
 			if (argv[i][0] == '\0') {
 				htmlout = stdout;
+				quiet = true;
 			} else {
 				htmlout = fopen(argv[i], "w");
 				if (htmlout == NULL) {
@@ -108,6 +110,7 @@ int main( int argc, char** argv ) {
 			++i;
 			if (argv[i][0] == '\0') {
 				textout = stdout;
+				quiet = true;
 			} else {
 				textout = fopen(argv[i], "w");
 				if (textout == NULL) {
@@ -121,6 +124,7 @@ int main( int argc, char** argv ) {
 			++i;
 			if (argv[i][0] == '\0') {
 				csvout = stdout;
+				quiet = true;
 			} else {
 				csvout = fopen(argv[i], "w");
 				if (csvout == NULL) {
@@ -151,31 +155,39 @@ int main( int argc, char** argv ) {
 	sov.initNodes();
 	sov.allocSolution();
 	if (sov.loadname != NULL) {
-		fprintf(stdout, "loading \"%s\"\n", sov.loadname);
+		if (!quiet) {
+			fprintf(stdout, "loading \"%s\"\n", sov.loadname);
+		}
 		if (sov.loadZSolution(sov.loadname) < 0) {
 			return 1;
 		}
-		char* statstr = new char[10000];
-		sov.getDistrictStats(statstr, 10000);
-		fputs(statstr, stdout);
-		delete statstr;
+		if (!quiet) {
+			char* statstr = new char[10000];
+			sov.getDistrictStats(statstr, 10000);
+			fputs(statstr, stdout);
+			delete statstr;
+		}
 	}
 	
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
 		char* fname = strdup(compareArgs[i]);
 		vector<int> columns;
 		parseCompareArg(fname, &columns);
-		fprintf(stdout, "reading \"%s\" columns:", fname);
-		for (unsigned int col = 0; col < columns.size(); ++col) {
-			fprintf(stdout, " %d", columns[col]);
+		if (!quiet) {
+			fprintf(stdout, "reading \"%s\" columns:", fname);
+			for (unsigned int col = 0; col < columns.size(); ++col) {
+				fprintf(stdout, " %d", columns[col]);
+			}
+			fprintf(stdout, "\n");
 		}
-		fprintf(stdout, "\n");
 		vector<uint32_t*> data_columns;
 		int recnos_matched;
 		bool ok = read_uf1_columns_for_recnos(
 			sov.gd, fname, columns, &data_columns, &recnos_matched);
-		fprintf(stdout, "%d recnos matched of %d points\n",
-			recnos_matched, sov.gd->numPoints);
+		if (!quiet) {
+			fprintf(stdout, "%d recnos matched of %d points\n",
+				recnos_matched, sov.gd->numPoints);
+		}
 		if (!ok) {
 			fprintf(stderr, "read file \"%s\" failed\n", fname);
 			return 1;
