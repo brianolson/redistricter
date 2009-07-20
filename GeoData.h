@@ -148,8 +148,8 @@ public:
 	uint64_t ubid[numPoints];
 	)
 	*/
-	int writeBin( int fd, const char* fname = NULL );
-	int readBin( int fd, const char* fname = NULL );
+	int writeBin( int fd, const char* fname = ((const char*)0) );
+	int readBin( int fd, const char* fname = ((const char*)0) );
 	int writeBin( const char* fname );
 	int readBin( const char* fname );
 	int close();
