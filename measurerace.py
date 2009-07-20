@@ -66,14 +66,18 @@ def foo(bindir, datadir, stu, datafile, resultdir, prefix):
 		cmd = make_cmd(
 			stl, bindir, datadir, datafile, pbfile, numd, official_map,
 			old_html_path)
-		print cmd
-		subprocess.call(cmd, shell=True)
+		#print cmd
+		retcode = subprocess.call(cmd, shell=True)
+		if retcode != 0:
+			raise Exception('analyze failed with %d: %s' % (retcode, cmd))
 	if newerthan(pbfile, new_html_path) or newerthan(new_map, new_html_path):
 		cmd = make_cmd(
 			stl, bindir, datadir, datafile, pbfile, numd, new_map,
 			new_html_path)
-		print cmd
-		subprocess.call(cmd, shell=True)
+		#print cmd
+		retcode = subprocess.call(cmd, shell=True)
+		if retcode != 0:
+			raise Exception('analyze failed with %d: %s' % (retcode, cmd))
 
 
 def main(argv):
