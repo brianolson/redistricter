@@ -69,8 +69,6 @@ public:
 	void addEdge( int n );
 	void removeEdge( int n );
 	
-	void recalc( Solver* sov, POPTYPE dist );
-	
 	static double edgeRelativeDistanceFactor;
 	static double odEdgeRelativeDistanceFactor;
 	static double neighborRatioFactor;

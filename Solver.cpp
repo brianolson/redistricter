@@ -571,30 +571,7 @@ int Solver::loadZSolution( const char* filename ) {
 	if ( endianness ) {
 		assert( sizeof(POPTYPE) == 1 );
 	}
-#if 1
 	dists->initFromLoadedSolution();
-#else
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		dists[d].numNodes = 0;
-	}
-	for ( int i = 0; i < gd->numPoints; i++ ) {
-		POPTYPE d;
-		d = winner[i];
-		if ( d == ERRDISTRICT || d == NODISTRICT ) {
-			continue;
-		}
-		//assert( d >= 0 );
-		if ( d >= districts ) {
-			fprintf(stderr,"%s element %d is invalid district %d of %d districts\n", filename, i, d, districts );
-			exit(1);
-		} else {
-			dists[d].numNodes++;
-		}
-	}
-	for ( POPTYPE d = 0; d < districts; d++ ) {
-		dists[d].recalc( this, d );
-	}
-#endif
 	return close( readfd );
 loadZFail:
 	free( zb );
