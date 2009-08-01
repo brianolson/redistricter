@@ -80,6 +80,18 @@ ${dpath}/${stl}_large.mpout:	tiger/makepolys
 
 ${dpath}/${stl}_huge.mpout:	tiger/makepolys
 	time ./tiger/makepolys -o ${dpath}/${stl}_huge.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
+
+${dpath}/${stl}.mppb:	tiger/makepolys
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}.mppb $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stl}mask.png ${dpath}/raw/*.RT1
+
+${dpath}/${stl}_sm.mppb:	tiger/makepolys
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_sm.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stl}mask_sm.png ${dpath}/raw/*.RT1
+
+${dpath}/${stl}_large.mppb:	tiger/makepolys
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_large.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stl}mask_large.png ${dpath}/raw/*.RT1
+
+${dpath}/${stl}_huge.mppb:	tiger/makepolys
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
 """)
 
 
@@ -445,10 +457,12 @@ class StateData(object):
 
 def main(argv):
 	argp = optparse.OptionParser()
-	argp.add_option('-n', '--dry-run', action='store_false', dest='doit', default=True)
-	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
-	argp.add_option('--nopng', '--without_png', dest='png', action='store_false', default=True)
-	argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
+# commented out options aren't actually used.
+# TODO: implement --dry-run
+#	argp.add_option('-n', '--dry-run', action='store_false', dest='doit', default=True)
+#	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
+#	argp.add_option('--nopng', '--without_png', dest='png', action='store_false', default=True)
+#	argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
 	argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
 	argp.add_option('-d', '--data', dest='datadir', default='data')
 	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
