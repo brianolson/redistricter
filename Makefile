@@ -5,7 +5,7 @@ UNAME:=$(shell uname)
 
 all:	districter2 linkfixup drend rta2dsz analyze
 
-THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz
+THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze
 
 
 #OG:=-O2 -DNDEBUG=1
@@ -127,6 +127,9 @@ include tiger/tiger.make
 
 %.pb.cc %.pb.h : %.proto
 	protoc $< --cpp_out=$(@D)
+
+org/bolson/redistricter/Redata.java:	redata.proto
+	protoc $< --java_out=$(@D)
 
 protoio.o:	redata.pb.h
 PBPointOutput.o:	redata.pb.h

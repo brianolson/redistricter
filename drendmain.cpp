@@ -48,7 +48,8 @@ int main( int argc, char** argv ) {
 	Solver sov;
 	int i, nargc;
 	char* upxfname = NULL;
-	
+	char* mppbfname = NULL;
+
 	nargc=1;
 	sov.districtSetFactory = District2SetFactory;
 
@@ -83,6 +84,9 @@ int main( int argc, char** argv ) {
 		} else if ( ! strcmp( argv[i], "-px" ) ) {
 			i++;
 			upxfname = argv[i];
+		} else if ( ! strcmp( argv[i], "--mppb" ) ) {
+			i++;
+			mppbfname = argv[i];
 		} else if ( ! strcmp( argv[i], "--colorsIn" ) ) {
 			i++;
 			colorFileIn = argv[i];
@@ -123,6 +127,8 @@ int main( int argc, char** argv ) {
 	
 	if ( upxfname != NULL ) {
 		mr.readUPix( &sov, upxfname );
+	} else if ( mppbfname != NULL ) {
+		mr.readMapRasterization( &sov, mppbfname );
 	} else {
 		mr.setSize( sov.pngWidth, sov.pngHeight );
 	}

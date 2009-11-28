@@ -194,7 +194,7 @@ dlon/dlat
 				stu, suffix, self.basewidth * mult, self.baseheight * mult))
 		out.write('%sLONLAT ?= --minlon %s --maxlon %s --minlat %s --maxlat %s\n' % (
 			stu, self.minlon, self.maxlon, self.minlat, self.maxlat))
-		out.write('%sDISTOPT ?= -d %d' % (stu, len(self.districts)))
+		out.write('%sDISTOPT ?= -d %d\n' % (stu, len(self.districts)))
 
 	def run(self, stu, files, do_makedefaults=None, outdir=None, outname=None):
 		for arg in files:

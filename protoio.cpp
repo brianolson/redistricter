@@ -4,6 +4,7 @@
 #include <google/protobuf/io/gzip_stream.h>
 using google::protobuf::int32;
 using google::protobuf::int64;
+using google::protobuf::uint64;
 
 #include "redata.pb.h"
 #include "Solver.h"
@@ -58,7 +59,7 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	}
 #endif
 #if READ_UBIDS
-	google::protobuf::RepeatedField<int64>* ubids = rd.mutable_ubids();
+	google::protobuf::RepeatedField<uint64>* ubids = rd.mutable_ubids();
 	ubids->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
 		ubids->Add(0);
@@ -82,8 +83,9 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	bool ok = true;
 	{
 		google::protobuf::io::FileOutputStream pbfos(fd);
-		google::protobuf::io::GzipOutputStream zos(
-			&pbfos, google::protobuf::io::GzipOutputStream::ZLIB);
+		google::protobuf::io::GzipOutputStream::Options zos_opts;
+		zos_opts.format = google::protobuf::io::GzipOutputStream::ZLIB;
+		google::protobuf::io::GzipOutputStream zos(&pbfos, zos_opts);
 		ok = rd.SerializeToZeroCopyStream(&zos);
 		zos.Flush();
 		zos.Close();

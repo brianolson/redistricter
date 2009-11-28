@@ -31,8 +31,10 @@ bool PBPointOutput::flush() {
 }
 bool PBPointOutput::close() {
 	google::protobuf::io::FileOutputStream pbfos(fd);
+	google::protobuf::io::GzipOutputStream::Options zos_options;
+	zos_options.format = google::protobuf::io::GzipOutputStream::ZLIB;
 	google::protobuf::io::GzipOutputStream zos(
-		&pbfos, google::protobuf::io::GzipOutputStream::ZLIB);
+		&pbfos, zos_options);
 	bool ok = rast->SerializeToZeroCopyStream(&zos);
 	zos.Flush();
 	zos.Close();

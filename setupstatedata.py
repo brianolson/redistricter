@@ -52,45 +52,45 @@ makefile_fragment_template = string.Template("""
 ${dpath}/${stl}109.dsz:	${dpath}/raw/*.RTA rta2dsz
 	./rta2dsz -B ${dpath}/${stl_bin} $${${stu}DISTOPT} ${dpath}/raw/*.RTA -o ${dpath}/${stl}109.dsz
 
-${dpath}/${stl_bin}:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -o ${dpath}/${stl_bin}
+${dpath}/${stl}.gbin:	${dpath}/.uf1 linkfixup
+	./linkfixup -U ${dpath}/.uf1 -o ${dpath}/${stl}.gbin
 
-${dpath}/${stl}.pbin:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -p ${dpath}/${stl}.pbin
+${dpath}/${stl}.pb:	${dpath}/.uf1 linkfixup
+	./linkfixup -U ${dpath}/.uf1 -p ${dpath}/${stl}.pb
 	
-${stl}_all:	${dpath}/${stu}_start_sm.jpg ${dpath}/${stl}_sm.mpout ${dpath}/${stu}_start_sm.png
+${stl}_all:	${dpath}/${stu}_start_sm.jpg ${dpath}/${stl}_sm.mppb ${dpath}/${stu}_start_sm.png
 
 ${dpath}/${stu}_start_sm.jpg:	${dpath}/${stu}_start.png
 	convert ${dpath}/${stu}_start.png -resize 150x150 ${dpath}/${stu}_start_sm.jpg
 
-${dpath}/${stu}_start.png:	drend ${dpath}/${stl}.mpout ${dpath}/${stl}109.dsz
-	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} -px ${dpath}/${stl}.mpout --pngout ${dpath}/${stu}_start.png --loadSolution ${dpath}/${stl}109.dsz > ${dpath}/${stu}_start_stats
+${dpath}/${stu}_start.png:	drend ${dpath}/${stl}.mppb ${dpath}/${stl}109.dsz
+	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stl}.mppb --pngout ${dpath}/${stu}_start.png --loadSolution ${dpath}/${stl}109.dsz > ${dpath}/${stu}_start_stats
 
-${dpath}/${stu}_start_sm.png:	drend ${dpath}/${stl}_sm.mpout ${dpath}/${stl}109.dsz
-	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} -px ${dpath}/${stl}_sm.mpout --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stl}109.dsz
+${dpath}/${stu}_start_sm.png:	drend ${dpath}/${stl}_sm.mppb ${dpath}/${stl}109.dsz
+	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stl}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stl}109.dsz
 
-${dpath}/${stl}.mpout:	tiger/makepolys
+${dpath}/${stl}.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys -o ${dpath}/${stl}.mpout $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stl}mask.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_sm.mpout:	tiger/makepolys
+${dpath}/${stl}_sm.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys -o ${dpath}/${stl}_sm.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stl}mask_sm.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_large.mpout:	tiger/makepolys
+${dpath}/${stl}_large.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys -o ${dpath}/${stl}_large.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stl}mask_large.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_huge.mpout:	tiger/makepolys
+${dpath}/${stl}_huge.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys -o ${dpath}/${stl}_huge.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}.mppb:	tiger/makepolys
+${dpath}/${stl}.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}.mppb $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stl}mask.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_sm.mppb:	tiger/makepolys
+${dpath}/${stl}_sm.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_sm.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stl}mask_sm.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_large.mppb:	tiger/makepolys
+${dpath}/${stl}_large.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_large.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stl}mask_large.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_huge.mppb:	tiger/makepolys
+${dpath}/${stl}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
 """)
 

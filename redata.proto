@@ -1,5 +1,7 @@
 syntax = "proto2";
 
+option java_package = "org.bolson.redistricter";
+
 // intpoints/fpoints, population, area, ubids and recnos should all have the same length.
 message RedistricterData {
 	// only one of intpoints or fpoints should have any data in it.
@@ -7,7 +9,7 @@ message RedistricterData {
 	repeated double fpoints = 2;  // lon,lat pairs, degrees
 	repeated int32 population = 3;
 	repeated int32 area = 4;  // square meters
-	repeated int64 ubids = 5;  // universal block identifier (my internal number)
+	repeated uint64 ubids = 5;  // universal block identifier (my internal number)
 	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs
 	
@@ -41,7 +43,7 @@ message DistrictMap {
 // Alternative to custom binary ".mpout" file
 message MapRasterization {
 	repeated group Block = 1 {
-		optional int64 ubid = 2;
+		optional uint64 ubid = 2;
 		optional int32 recno = 6;
 		repeated int32 xy = 3;  // (x, y) pairs
 	}

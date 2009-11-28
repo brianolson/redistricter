@@ -5,12 +5,16 @@
 #include "swap.h"
 #include "GeoData.h"
 #include "renderDistricts.h"
+#include "redata.pb.h"
 
 #include <assert.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/gzip_stream.h>
 
 MapDrawer::MapDrawer()
 : data(NULL), rows(NULL),
@@ -140,6 +144,58 @@ void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	mf.close();
 }
 
+bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path ) {
+	int fd = open(mppb_path, O_RDONLY);
+	google::protobuf::io::FileInputStream pbfin(fd);
+	google::protobuf::io::GzipInputStream zin(&pbfin);
+	MapRasterization map;
+	bool ok = map.ParseFromZeroCopyStream(&zin);
+	if (!ok) {
+		fprintf(stderr, "%s: error: failed to parse MapRasterization\n", mppb_path);
+		return false;
+	}
+	pbfin.Close();
+	
+	width = map.sizex();
+	height = map.sizey();
+	
+	if (px != NULL) {
+		delete [] px;
+		px = NULL;
+	}
+	if (px == NULL) {
+		px = new pxlist[sov->gd->numPoints];
+	}
+	for (int i = 0; i < map.block_size(); ++i) {
+		const MapRasterization::Block& b = map.block(i);
+		if (!b.has_ubid()) {
+			fprintf(stderr, "%s: error: block %d without ubid\n", mppb_path, i);
+			return false;
+		}
+		uint64_t tubid = b.ubid();
+		uint32_t index = sov->gd->indexOfUbid(tubid);
+		if ( index != (uint32_t)-1 ) {
+			pxlist* cpx;
+			int blockpoints = b.xy_size() / 2;
+			cpx = px + index;
+			if ( cpx->px != NULL ) {
+				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + blockpoints)*2) );
+				assert( cpx->px != NULL );
+				cpx->numpx += blockpoints;
+			} else {
+				cpx->px = (uint16_t*)malloc( sizeof(uint16_t)*blockpoints*2 );
+				cpx->numpx = blockpoints;
+			}
+			for (int pi = 0; pi < b.xy_size(); ++pi) {
+				cpx->px[pi] = b.xy(pi);
+			}
+		} else {
+			fprintf(stderr, "%013llu no index!\n", tubid );
+		}
+	}
+	return true;
+}
+
 inline int mystrmatch( const char* src, const char* key ) {
 	while ( *key != '\0' ) {
 		if ( *src != *key ) {
@@ -266,6 +322,10 @@ void MapDrawer::runDrendCommandFile(
 		} else if ( mystrmatch( cf + pos, "-px" ) ) {
 			GETARG();
 			readUPix( &sov, tmp );
+			free( tmp ); tmp = NULL;
+		} else if ( mystrmatch( cf + pos, "--mppb" ) ) {
+			GETARG();
+			readMapRasterization( &sov, tmp );
 			free( tmp ); tmp = NULL;
 		} else if ( mystrmatch( cf + pos, "clearpx" ) ) {
 			SKIPCMD();
