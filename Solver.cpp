@@ -495,6 +495,11 @@ int _readOrFail( int fd, void* ib, size_t len ) {
 #define compressBound( n ) ( (n) + ((n) / 500) + 12 )
 #endif
 
+// Format (variable endianness, use fileversion to detect):
+// uint32 fileversion
+// uint32 numPoints
+// uint32 compressed size
+// byte[compressed size] compressed data
 static int saveZSolution( const char* filename, POPTYPE* winner, int numPoints ) {
 	int dumpfd;
 	ZFILE_INT fileversion = ZFILE_VERSION;

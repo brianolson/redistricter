@@ -128,8 +128,8 @@ include tiger/tiger.make
 %.pb.cc %.pb.h : %.proto
 	protoc $< --cpp_out=$(@D)
 
-org/bolson/redistricter/Redata.java:	redata.proto
-	protoc $< --java_out=$(@D)
+java/org/bolson/redistricter/Redata.java:	redata.proto
+	protoc $< --java_out=java
 
 protoio.o:	redata.pb.h
 PBPointOutput.o:	redata.pb.h
