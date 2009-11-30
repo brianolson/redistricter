@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -52,6 +53,44 @@ public class MapData {
 		int[] data;
 	}
 	ArrayList<OtherData> other = new ArrayList<OtherData>();
+	
+	protected long[] sortedUbids = null;
+	protected int[] sortedUbidIndecies = null;
+	
+	public void buildSortedUbids() {
+		sortedUbids = new long[ubids.length];
+		sortedUbidIndecies = new int[ubids.length];
+		for (int i = 0; i < ubids.length; ++i) {
+			sortedUbids[i] = ubids[i];
+			sortedUbidIndecies[i] = i;
+		}
+		boolean notDone = true;
+		while (notDone) {
+			notDone = false;
+			for (int i = 1; i < sortedUbids.length; ++i) {
+				if (sortedUbids[i] < sortedUbids[i-1]) {
+					notDone = true;
+					long tu = sortedUbids[i];
+					sortedUbids[i] = sortedUbids[i-1];
+					sortedUbids[i - 1] = tu;
+					int ti = sortedUbidIndecies[i];
+					sortedUbidIndecies[i] = sortedUbidIndecies[i-1];
+					sortedUbidIndecies[i-1] = ti;
+				}
+			}
+		}
+	}
+	
+	public int indexForUbid(long ubid) {
+		if (sortedUbids == null) {
+			buildSortedUbids();
+		}
+		int ai = Arrays.binarySearch(sortedUbids, ubid);
+		if (ai < 0) {
+			return -1;
+		}
+		return sortedUbidIndecies[ai];
+	}
 	
 	public StringBuffer toStringBuffer(StringBuffer sb) {
 		sb.append("MapData(");

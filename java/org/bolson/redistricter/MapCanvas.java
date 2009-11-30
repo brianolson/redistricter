@@ -174,14 +174,55 @@ public class MapCanvas /*extends Canvas*/ {
 		}
 	}
 	
+	public static final byte ff = (byte)255;
+	public static final byte ha = (byte)128;
+	
+	/**
+	 * array of byte[4] ABGR sets
+	 */
+	public static final byte[][] colors = {
+		{ff, ff, 0, 0},
+		{ff, 0, ff, 0},
+		{ff, 0, 0, ff},
+		{ff, ff, ff, 0},
+		{ff, ff, 0, ff},
+		{ff, 0, ff, ff},
+		{ff, ha, ha, ha},
+	};
+	
 	public void drawToImage(BufferedImage im, byte[] dsz) {
 		DataBuffer db = im.getRaster().getDataBuffer();
+		int imwidth = im.getWidth();
+		int imheight = im.getHeight();
 		if (db instanceof DataBufferByte) {
 			DataBufferByte dbb = (DataBufferByte)db;
 			byte[][] layers = dbb.getBankData();
 			assert layers.length == 1;
-			assert dsz.length == all.they.size();
+			byte[] buf = layers[0];
 			for (MBlock block : all.they) {
+				// ABGR
+				int dszi = data.indexForUbid(block.ubid);
+				if (dszi < 0) {
+					System.err.println("no index for ubid: " + block.ubid);
+					continue;
+				}
+				byte winner = dsz[dszi];
+				byte[] color = colors[winner % colors.length];
+				for (int i = 0; i < block.xy.length; i += 2) {
+					int y = block.xy[i + 1];
+					if (y >= imheight) {
+						continue;
+					}
+					int x = block.xy[i];
+					if (x >= imwidth) {
+						continue;
+					}
+					int pi = (imwidth * 4 * block.xy[i + 1]) + (4 * block.xy[i]);
+					buf[pi + 0] = color[0];
+					buf[pi + 1] = color[1];
+					buf[pi + 2] = color[2];
+					buf[pi + 3] = color[3];
+				}
 				// TODO
 			}
 		}
