@@ -192,7 +192,7 @@ class runallstates(object):
 				self.openBestLog(argv[i])
 			else:
 				astu = arg.upper()
-				if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")):
+				if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
 					self.statearglist.append(astu)
 				else:
 					sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))

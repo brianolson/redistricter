@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "config.h"
 
