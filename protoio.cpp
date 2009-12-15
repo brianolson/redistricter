@@ -173,7 +173,7 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 #if READ_INT_AREA
 	if (rd.area_size() > 0) {
 		assert(rd.area_size() == gd->numPoints);
-		gd->area = new uint32_t[gd->numPoints];
+		gd->area = new uint64_t[gd->numPoints];
 		for (int i = 0; i < gd->numPoints; ++i) {
 			gd->area[i] = rd.area(i);
 		}

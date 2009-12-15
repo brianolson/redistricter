@@ -91,7 +91,7 @@ public:
 #endif
 
 #if READ_INT_AREA
-	uint32_t* area;
+	uint64_t* area;
 #endif
 
 #if READ_INT_POP

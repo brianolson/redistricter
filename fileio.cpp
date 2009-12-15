@@ -280,7 +280,7 @@ int GeoData::readBin( int fd, const char* fname ) {
 	}
 #endif
 #if READ_INT_AREA
-	area = new uint32_t[numPoints];
+	area = new uint64_t[numPoints];
 	s = sizeof(*area) * numPoints;
 	err = ::read( fd, area, s );
 	if ( err != s ) {
@@ -405,7 +405,7 @@ int Uf1::load() {
 	pos = new double[numPoints*2];
 #endif
 #if READ_INT_AREA
-	area = new uint32_t[numPoints];
+	area = new uint64_t[numPoints];
 #endif
 #if READ_INT_POP
 	pop = new int[numPoints];
@@ -461,8 +461,12 @@ int Uf1::load() {
 		{
 			char* endp;
 			errno = 0;
-			area[i] = strtoul( buf, &endp, 10 );
-			assert( errno == 0 );
+			area[i] = strtoull( buf, &endp, 10 );
+			if (errno != 0) {
+				perror("strtoull");
+				fprintf(stderr, "failed to parse \"%s\" => %llu\n", buf, area[i]);
+				assert( errno == 0 );
+			}
 			assert( endp != buf );
 		}
 #endif /* READ_INT_AREA*/
@@ -611,7 +615,7 @@ int GeoBin::load() {
 	p += s;
 #endif
 #if READ_INT_AREA
-	area = new uint32_t[numPoints];
+	area = new uint64_t[numPoints];
 	s = sizeof(int)*numPoints;
 	if ( endianness ) {
 		for ( int i = 0; i < numPoints; i++ ) {

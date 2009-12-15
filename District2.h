@@ -85,7 +85,7 @@ public:
 
 	static void step();
 
-	inline void _addFirstToCenter( double x, double y, uint32_t tarea ) {
+	inline void _addFirstToCenter( double x, double y, uint64_t tarea ) {
 	    if ( tarea == 0 ) {
 		distx = wx = x;
 		disty = wy = y;
