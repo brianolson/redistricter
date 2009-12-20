@@ -26,7 +26,7 @@ POLYOBJS+=tiger/record1.o tiger/record2.o tiger/mmaped.o
 POLYOBJS+=tiger/rasterizeTiger.o PBPointOutput.o redata.pb.o
 THINGSTOCLEAN+=${POLYOBJS}
 
-tiger/makepolys.o:	tiger/recordI.h tiger/record2.h
+tiger/makepolys.o:	tiger/record1.h tiger/record2.h tiger/recordA.h tiger/recordI.h
 
 tiger/makepolys:	${POLYOBJS}
 	${CXX} ${CXXFLAGS} ${LDFLAGS} ${POLYOBJS} -o tiger/makepolys

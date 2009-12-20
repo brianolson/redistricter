@@ -1,8 +1,11 @@
 #import "SolverM.h"
 #import "SolverPixView.h"
+#include "GeoData.h"
 #include "MapDrawer.h"
 #include "Solver.h"
 #include "GrabIntermediateStorage.h"
+
+#include <unistd.h>
 
 #define sov ((Solver*)cppSolver)
 #define mapr ((MapDrawer*)cppMapDrawer)
@@ -259,6 +262,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	if ( sov == NULL ) return;
 	//fprintf(stderr,"SolverM.drawGL\n");
 	pthread_mutex_lock( &sovLock );
+	sov->recordDrawTime();
 	mapr->paintPixels( sov );
 	NSDrawBitmap(rect, mapr->width, mapr->height, 8, 3, 24, mapr->width * 3,
 		NO, NO, NSDeviceRGBColorSpace, &(mapr->data) );
@@ -572,8 +576,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	pthread_mutex_unlock( &sovLock );
 }
 
-- (void)loadMpout:(const char*)mpoutName {
-	mapr->readUPix( sov, mpoutName );
+- (void)adjustPixToRasterization {
 	if ( isPixView ) {
 		NSSize newSize;
 		newSize.width = mapr->width;
@@ -630,6 +633,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	argc = parseArgvFromFile(filename, &argv);
 	if ( argc > 0 ) {
 		char* mpoutName = NULL;
+		char* mppbName = NULL;
 		for ( int i = 1; i < argc; ++i ) {
 			// find any mpout arg, load, and strip the args.
 			if ( ! strcmp(argv[i], "mpout:") ) {
@@ -643,11 +647,28 @@ extern "C" void setDebugDistrictNumber(int index);
 				argv[i] = NULL;
 				argc -= 2;
 				break;
+			} else if ( ! strcmp(argv[i], "mppb:") ) {
+				mppbName = argv[i+1];
+				int j = i + 2;
+				while ( j < argc ) {
+					argv[i] = argv[j];
+					i++;
+					j++;
+				}
+				argv[i] = NULL;
+				argc -= 2;
+				break;
 			}
 		}
 		sov->handleArgs(argc, argv);
 		sov->megaInit();
-		[self loadMpout:mpoutName];
+		if (mpoutName != NULL) {
+			mapr->readUPix( sov, mpoutName );
+			[self adjustPixToRasterization];
+		} else if (mppbName != NULL) {
+			mapr->readMapRasterization( sov, mppbName );
+			[self adjustPixToRasterization];
+		}
 		free(argv);
 	}
 
@@ -693,7 +714,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	sov->districts = -10; // negative sign is a flag that means the value may be overriden by the file loaded
 	sov->megaInit();
 	if ( suffixpos != NULL ) {
-		char* mpoutName = (char*)malloc( strlen(dataPath) + 5 );
+		char* mpoutName = (char*)malloc( strlen(dataPath) + 6 );
 		suffixpos--;
 		char* strsrc = dataPath;
 		char* strdst = mpoutName;
@@ -702,8 +723,27 @@ extern "C" void setDebugDistrictNumber(int index);
 			strdst++; strsrc++;
 		}
 		strcpy( strdst, ".mpout" );
-		//fprintf(stderr,"loading %s\n", mpoutName);
-		[self loadMpout:mpoutName];
+		if (access(mpoutName, R_OK) == 0) {
+			//fprintf(stderr,"loading %s\n", mpoutName);
+			mapr->readUPix( sov, mpoutName );
+			[self adjustPixToRasterization];
+		} else {
+			strsrc = dataPath;
+			strdst = mpoutName;
+			while (strsrc != suffixpos) {
+				*strdst = *strsrc;
+				strdst++; strsrc++;
+			}
+			strcpy( strdst, ".mppb" );
+			if (access(mpoutName, R_OK) == 0) {
+				//fprintf(stderr,"loading %s\n", mpoutName);
+				mapr->readMapRasterization( sov, mpoutName );
+				[self adjustPixToRasterization];
+			} else {
+				fprintf(stderr, "no loadable map!\n");
+				mapr->setSize( sov->pngWidth, sov->pngHeight );
+			}
+		}
 		free( mpoutName );
 	} else {
 		mapr->setSize( sov->pngWidth, sov->pngHeight );

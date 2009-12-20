@@ -54,7 +54,7 @@ public:
 	pxlist() : numpx( 0 ), px( NULL ) {};
 };
 
-void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
+bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	mmaped mf;
 	uintptr_t filemem;
 	mf.open( upfname );
@@ -76,7 +76,7 @@ void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 			endianness = 1;
 		} else if ( vers != 1 ) {
 			printf("unkown upix version %u (0x%x)\n", vers, vers );
-			exit(1);
+			assert(0);
 		}
 	}
 	{
@@ -142,6 +142,7 @@ void MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	}
 	
 	mf.close();
+	return true;
 }
 
 bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path ) {

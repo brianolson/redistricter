@@ -23,7 +23,7 @@ MapDrawer();
 
 void maybeClearDataAndRows();
 void initDataAndRows();
-void readUPix( const Solver* sov, const char* upfname );
+bool readUPix( const Solver* sov, const char* upfname );
 bool readMapRasterization( const Solver* sov, const char* mppb_path );
 inline void setSize(int width, int height) {
 	this->width = width;

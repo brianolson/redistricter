@@ -1,4 +1,5 @@
 #include "District2GLDebug.h"
+#include "GeoData.h"
 #include "NodeColoring.h"
 #include "Solver.h"
 

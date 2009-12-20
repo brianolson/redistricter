@@ -86,7 +86,7 @@
 
 - (void*)runThreadProc;
 
-- (void)loadMpout:(const char*)mpoutName;
+- (void)adjustPixToRasterization;
 - (void)setupSolver;
 - (void)setupDebugDistrictMenu;
 - (void)setupNodeColoringMenu;

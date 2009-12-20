@@ -5,6 +5,7 @@
 #include <math.h>
 #include <assert.h>
 #include <sys/time.h>
+#include "GeoData.h"
 #include "Solver.h"
 #include <OpenGL/gl.h>
 #include "GrabIntermediateStorage.h"

@@ -393,7 +393,10 @@ public class MapCanvas /*extends Canvas*/ {
 		}
 		System.out.println(it.toString());
 		if (outname != null) {
+			long start = System.currentTimeMillis();
 			it.writePngFile(new FileOutputStream(outname), dsz);
+			double dt = (System.currentTimeMillis() - start) * 0.0001;
+			System.out.println(dt + " seconds");
 		}
 	}
 	
