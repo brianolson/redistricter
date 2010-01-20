@@ -21,7 +21,7 @@ MapDrawer::MapDrawer()
 width(-1), height(-1),
 px(NULL),
 minlat(NAN), minlon(NAN), maxlat(NAN), maxlon(NAN),
-bytesPerPixel(3) {}
+bytesPerPixel(4) {}
 
 void MapDrawer::maybeClearDataAndRows() {
 	if ( data != NULL ) {
@@ -52,6 +52,140 @@ public:
 	int numpx;
 	uint16_t* px;
 	pxlist() : numpx( 0 ), px( NULL ) {};
+	~pxlist() {
+		if (px != NULL) {
+			free(px);
+		}
+	}
+};
+
+class pxlistElement {
+public:
+	pxlist* it;
+	pxlistElement* next;
+	// index within internal arrays in sf1-geo order
+	int index;
+	
+	pxlistElement(pxlist* list, int index_, pxlistElement* next_) : it(list), next(next_), index(index_) {
+		// pass
+	}
+	
+private:
+	static int numAllocatedBlocks;
+	static pxlistElement** allocatedBlocks;
+	static pxlistElement* freeList;
+	static const int allocBlockSize = 100;
+public:
+	void* operator new(size_t) {
+		if (freeList == NULL) {
+			if (allocatedBlocks == NULL) {
+				allocatedBlocks = (pxlistElement**)malloc(sizeof(pxlistElement*));
+			} else {
+				allocatedBlocks = (pxlistElement**)realloc(allocatedBlocks, sizeof(pxlistElement*) * (numAllocatedBlocks + 1));
+			}
+			allocatedBlocks[numAllocatedBlocks] = (pxlistElement*)malloc(sizeof(pxlistElement*) * allocBlockSize);
+			for (int i = 0; i < allocBlockSize; ++i) {
+				allocatedBlocks[numAllocatedBlocks][i].next = freeList;
+				freeList = &(allocatedBlocks[numAllocatedBlocks][i]);
+			}
+			numAllocatedBlocks++;
+		}
+		pxlistElement* out = freeList;
+		freeList = freeList->next;
+		return out;
+	}
+	void operator delete(void* it) {
+		pxlistElement* e = (pxlistElement*)it;
+		e->next = freeList;
+		freeList = e;
+	}
+};
+// static
+int pxlistElement::numAllocatedBlocks = 0;
+pxlistElement** pxlistElement::allocatedBlocks = NULL;
+pxlistElement* pxlistElement::freeList = NULL;
+
+class pxlistGrid {
+public:
+	int rows;
+	int cols;
+	int width;
+	int height;
+	pxlistElement** they;
+	
+	pxlistGrid() : rows(-1), cols(-1), width(-1), height(-1), they(NULL) {
+		// pass
+	}
+	
+	void build(int rows_, int cols_, pxlist* px, int numPoints, int width_, int height_) {
+		if (they != NULL) {
+			for (int i = 0; i < rows*cols; ++i) {
+				pxlistElement* cur = they[i];
+				while (cur != NULL) {
+					pxlistElement* next = cur->next;
+					delete cur;
+					cur = next;
+				}
+			}
+			delete [] they;
+		}
+		rows = rows_;
+		cols = cols_;
+		width = width_;
+		height = height_;
+		they = new pxlistElement*[rows * cols];
+		// buckets to which this pxlist should be added.
+		int* cells = new int[rows*cols];
+		int numcells;
+		for (int i = 0; i < numPoints; ++i) {
+			pxlist* cur = &(px[i]);
+			numcells = 0;
+			for (int p = 0; p < cur->numpx; ++p) {
+				int pcell = pointToBucket(cur->px[p*2], cur->px[p*2 + 1]);
+				for (int c = 0; c < numcells; ++c) {
+					if (pcell == cells[c]) {
+						pcell = -1;
+						break;
+					}
+				}
+				if (pcell >= 0) {
+					cells[numcells] = pcell;
+					numcells++;
+				}
+			}
+			for (int c = 0; c < numcells; ++c) {
+				they[cells[c]] = new pxlistElement(cur, i, they[cells[c]]);
+			}
+		}
+	}
+	
+	inline int pointToBucket(int x, int y) {
+		return ((y / height) * cols) + (x / width);
+	}
+	
+#if 0
+	// TODO DELETE
+	inline pxlistElement* rc(int x, int y) {
+		assert(x >= 0);
+		assert(x < rows);
+		assert(y >= 0);
+		assert(y <= cols);
+		return they[(y*rows) + x];
+	}
+#endif
+	
+	int pointToIndex(int x, int y) {
+		pxlistElement* cur = they[pointToBucket(x, y)];
+		while (cur != NULL) {
+			for (int i = 0; i < cur->it->numpx; ++i) {
+				if ((cur->it->px[i*2] == x) && (cur->it->px[i*2 + 1] == y)) {
+					return cur->index;
+				}
+			}
+			cur = cur->next;
+		}
+		return -1;
+	}
 };
 
 bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
@@ -376,6 +510,9 @@ void MapDrawer::clearToBackgroundColor() {
 			px[0] = backgroundColor[0];
 			px[1] = backgroundColor[1];
 			px[2] = backgroundColor[2];
+			if (bytesPerPixel == 4) {
+				px[3] = 0; // 0% alpha
+			}
 		}
 	}
 }
@@ -453,16 +590,7 @@ void MapDrawer::paintPoints( Solver* sov ) {
 		int y, x;
 		y = (int)oy;
 		x = (int)ox;
-#if 1
 		setPoint(x, y, color[0], color[1], color[2]);
-#else
-		unsigned char* row;
-		row = data + (y*width*bytesPerPixel);
-		x *= bytesPerPixel;
-		row[x  ] = color[0];
-		row[x+1] = color[1];
-		row[x+2] = color[2];
-#endif
 	}
 }
 
@@ -511,16 +639,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 				fprintf(stderr,"index %d y (%d) out of bounds\n", i, y );
 				continue;
 			}
-#if 1
 			setPoint(x, y, color[0], color[1], color[2]);
-#else
-			unsigned char* row;
-			row = data + (y*width*bytesPerPixel);
-			x *= bytesPerPixel;
-			row[x  ] = color[0];
-			row[x+1] = color[1];
-			row[x+2] = color[2];
-#endif
 		}
 	}
 }

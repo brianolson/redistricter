@@ -47,6 +47,9 @@ void runDrendCommandFile( Solver& sov, const char* commandFileName );
 		row[x  ] = red;
 		row[x+1] = green;
 		row[x+2] = blue;
+		if (bytesPerPixel == 4) {
+			row[x+3] = 0xff; // 100% alpha
+		}
 	}
 };
 

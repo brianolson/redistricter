@@ -44,7 +44,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	paramValues = [NSMutableArray arrayWithCapacity:len];
 	for (int i = 0; i < len; ++i) {
 		const char* str = [s getParameterLabelByIndex:i];
-		[paramNames addObject:[NSString stringWithCString:str]];
+		[paramNames addObject:[NSString stringWithCString:str encoding:[NSString defaultCStringEncoding]]];
 		double vald = [s getParameterValueByIndex:i];
 #if 1
 		NSNumber* val = [NSNumber numberWithDouble:vald];
@@ -190,7 +190,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	int i = 0;
 	const char* setFactoryName;
 	while ((setFactoryName = Solver::getSetFactoryName(i)) != NULL) {
-		[solverTypeMenu addItemWithTitle:[NSString stringWithCString:setFactoryName]];
+		[solverTypeMenu addItemWithTitle:[NSString stringWithCString:setFactoryName encoding:[NSString defaultCStringEncoding]]];
 		++i;
 	}
 	[solverTypeMenu selectItemAtIndex:0];
@@ -264,8 +264,8 @@ extern "C" void setDebugDistrictNumber(int index);
 	pthread_mutex_lock( &sovLock );
 	sov->recordDrawTime();
 	mapr->paintPixels( sov );
-	NSDrawBitmap(rect, mapr->width, mapr->height, 8, 3, 24, mapr->width * 3,
-		NO, NO, NSDeviceRGBColorSpace, &(mapr->data) );
+	NSDrawBitmap(rect, mapr->width, mapr->height, 8, 4, 32, mapr->width * 4,
+		NO, YES, NSDeviceRGBColorSpace, &(mapr->data) );
 	pthread_mutex_unlock( &sovLock );
 }
 
@@ -787,7 +787,7 @@ extern "C" void setDebugDistrictNumber(int index);
 	int i = 0;
 	const char* nodeColoringName;
 	while ((nodeColoringName = getNodeColoringName(i)) != NULL) {
-		[nodeColoringMenu addItemWithTitle:[NSString stringWithCString:nodeColoringName]];
+		[nodeColoringMenu addItemWithTitle:[NSString stringWithCString:nodeColoringName encoding:[NSString defaultCStringEncoding]]];
 		++i;
 	}
 	[nodeColoringMenu selectItemAtIndex:0];
@@ -814,7 +814,7 @@ extern "C" void setDebugDistrictNumber(int index);
 		snprintf(buf + statStrLen, sizeof(buf) - statStrLen, "fps=%lf", sov->fps );
 	}
 	pthread_mutex_unlock( &sovLock );
-	[stats setStringValue:[NSString stringWithCString:buf]];
+	[stats setStringValue:[NSString stringWithCString:buf encoding:[NSString defaultCStringEncoding]]];
 	[self setExtraText];
 }
 

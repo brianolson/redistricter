@@ -747,7 +747,7 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
 	for ( int y = 0; y < pngHeight; y++ ) {
 		rows[y] = data + (y*pngWidth*3);
 	}
-	memset( data, 0x0, pngWidth*pngHeight*3*sizeof(unsigned char) );
+	memset( data, 0x0, pngWidth*pngHeight*4*sizeof(unsigned char) );
 
 	Adjacency ta;
 	calculateAdjacency_r(&ta, gd->numPoints, districts, soln, nodes);
@@ -773,10 +773,11 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
 		unsigned char* row;
 		row = data + (y*pngWidth*3);
 		x = (int)ox;
-		x *= 3;
+		x *= 4;
 		row[x  ] = color[0];//((unsigned char)( (((unsigned int)color[0]) * 3)/7 ));
 		row[x+1] = color[1];//((unsigned char)( (((unsigned int)color[1]) * 3)/7 ));
 		row[x+2] = color[2];//((unsigned char)( (((unsigned int)color[2]) * 3)/7 ));
+		row[x+3] = 0xff; // 100% alpha
 	}
 	
 	myDoPNG( outname, rows, pngHeight, pngWidth );

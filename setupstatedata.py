@@ -448,10 +448,13 @@ class StateData(object):
 			ha = open(handargspath, 'w')
 			ha.write('-g 10000\n')
 			ha.close
-		# TODO: create ${stl}109.dsz
 		self.writeMakeFragment(options, dpath)
 		start = time.time()
-		status = subprocess.call(['make', '-k', '-f', os.path.join(dpath, '.make'), self.stl + '_all'])
+		makecmd = ['make', '-k', self.stl + '_all']
+		status = subprocess.call(makecmd)
+		if status != 0:
+			sys.stderr.write(
+				'command "%s" failed with %d\n' % (' '.join(makecmd), status))
 		print 'final make took %f seconds' % (time.time() - start)
 		
 

@@ -87,7 +87,7 @@ void myDoPNG( const char* outname, unsigned char** rows, int height, int width )
 	
 	png_set_IHDR(png_ptr, info_ptr, width, height,
 		/*bit_depth*/8,
-		/*color_type*/PNG_COLOR_TYPE_RGB,
+		/*color_type*/PNG_COLOR_TYPE_RGBA,
 		/*interlace_type*/PNG_INTERLACE_NONE,
 		/*compression_type*/PNG_COMPRESSION_TYPE_DEFAULT,
 		/*filter_method*/PNG_FILTER_TYPE_DEFAULT);

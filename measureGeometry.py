@@ -149,12 +149,19 @@ class geom(object):
 			self.basewidth = self.width
 			self.baseheight = 480
 
-	measure_head_tpl = string.Template("""congressional districts: $cdlist
--d $numdists
+	measure_head_tpl = string.Template("""-d $numdists
+--minlon $minlon
+--maxlon $maxlon
+--minlat $minlat
+--maxlat $maxlat
+--pngW $pngw
+--pngH $pngh
+
+# the important stuff is above the previous blank line.
+# more free-form trivia below.
     (minlon,maxlon), (minlat,maxlat)
 bb: ($minlon,$maxlon), ($minlat,$maxlat)
---minlon $minlon --maxlon $maxlon --minlat $minlat --maxlat $maxlat
-
+congressional districts: $cdlist
 """)
 
 	def writeMeasure(self, out):
@@ -165,7 +172,9 @@ bb: ($minlon,$maxlon), ($minlat,$maxlat)
 			'minlat': self.minlat,
 			'maxlat': self.maxlat,
 			'numdists': self.numCDs(),
-			'cdlist': cdlist}))
+			'cdlist': cdlist,
+			'pngw': int(self.basewidth * 4),
+			'pngh': int(self.baseheight * 4)}))
 		
 		out.write("""dlon/dlat
 %f/%f
