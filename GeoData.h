@@ -90,15 +90,11 @@ public:
 	}
 #endif
 
-#if READ_INT_AREA
 	uint64_t* area;
-#endif
 
-#if READ_INT_POP
 	int32_t* pop;
 	int totalpop;
 	int maxpop;
-#endif
 #if READ_UBIDS
 	// Ubid Sort Thing
 	class UST {
@@ -170,6 +166,11 @@ class Uf1 : public GeoData {
 	virtual int numDistricts();
 	
 	// get Unique Block ID, the ull interpretation of county tract and block concatenated
+	// decimal digits {county, tract, block}: CCCTTTTTTBBBB
+	// Bit packing could give county=10, tract=20, block=14: 44 bits
+	// county=short, tract=int, block=short: 64 bits
+	// ubid: 64 bits
+	// TODO: drop ubid as cross file reference and use LOGRECNO as proper.
 	uint64_t ubid( int index );
 	
 	// get "Logical Record Number" which links to deeper census data.
@@ -182,15 +183,8 @@ public:
 };
 
 
-class GeoBin : public GeoData {
-	virtual int load();
-	//virtual int numDistricts();
-};
-
-
 GeoData* openZCTA( char* inputname );
 GeoData* openUf1( char* inputname );
-GeoData* openBin( char* inputname );
 GeoData* protobufGeoDataTag( char* inputname );
 
 #endif /* GEODATA_H */

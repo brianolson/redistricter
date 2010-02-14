@@ -35,6 +35,19 @@ District2Set::District2Set(Solver* sovIn)
 	: DistrictSet(sovIn), grabdebug(NULL),
 	debugStats(NULL),
 	fixupFrequency(1.0), fixupBucket(0.0) {
+#if 1
+	notContiguous = NULL;
+#else
+	// TODO: this results in worse answers. maybe linkfixup needs extending.
+	notContiguous = new Bitmap(sov->gd->numPoints);
+	for (int i = 0; i < sov->gd->numPoints; ++i) {
+		if ((sov->gd->pop[i] == 0) && (sov->gd->area[i] == 0)) {
+			notContiguous->set(i);
+		} else {
+			notContiguous->clear(i);
+		}
+	}
+#endif
 }
 
 char* District2Set::debugText() {
@@ -138,21 +151,19 @@ void District2Set::getStats(SolverStats* stats) {
 	const GeoData* gd = sov->gd;
 	for ( int i = 0; i < gd->numPoints; i++ ) {
 		if ( winner[i] == NODISTRICT ) {
-			nod++;
-#if READ_INT_POP
-			nodpop += gd->pop[i];		
-#endif
+			if ((gd->pop[i] == 0) && (gd->area[i] == 0)) {
+				// let it go
+			} else {
+				nod++;
+				nodpop += gd->pop[i];
+			}
 		} else {
-#if READ_INT_POP && (READ_INT_POS || READ_DOUBLE_POS)
+#if READ_INT_POS || READ_DOUBLE_POS
 			double dx, dy;
 			District2* cd;
 			cd = &(dists[winner[i]]);
-#if READ_INT_POS || READ_DOUBLE_POS
-			dx = cd->distx - gd->pos[i*2  ];
-			dy = cd->disty - gd->pos[i*2+1];
-#else
-#error "what?"
-#endif
+			dx = cd->cx() - gd->pos[i*2  ];
+			dy = cd->cy() - gd->pos[i*2+1];
 			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
 #endif
 		}
@@ -402,9 +413,10 @@ int bolson_assert( const char* file, int line, const char* assertion ) {
 #define DISTRICT_EDGEISTLEN_DEFAULT 137
 #endif
 
-District2::District2() : AbstractDistrict(0.0,0.0), numNodes( 0 ),
+District2::District2() : numNodes( 0 ),
 	edgelistLen( 0 ), edgelistCap( DISTRICT_EDGEISTLEN_DEFAULT ),
-	pop( 0.0 ), wx( 0.0 ), wy( 0.0 )//distx( 0.0 ), disty( 0.0 )
+	pop( 0.0 ), landCenterX( 0.0 ), landCenterY( 0.0 ),
+	popCenterX( 0.0 ), popCenterY( 0.0 )
 {
 	edgelist = (int*)malloc( sizeof(int) * DISTRICT_EDGEISTLEN_DEFAULT );
 	assert(edgelist != NULL);
@@ -426,14 +438,6 @@ void District2::validate(const char* file, int line) {
 #define UNWEIGHTED_CENTER 01
 #endif
 
-#if READ_INT_AREA
-#define addFirstToCenter() area = sov->gd->area[n];_addFirstToCenter( x, y, sov->gd->area[n] )
-#elif UNWEIGHTED_CENTER
-#define addFirstToCenter() _addFirstToCenter( x, y )
-#else
-#define addFirstToCenter() _addFirstToCenter( x, y, npop )
-#endif
-
 void District2::addFirst( Solver* sov, int n, POPTYPE dist ) {
 	Node* nodes;
 	POPTYPE* pit;
@@ -448,20 +452,16 @@ void District2::addFirst( Solver* sov, int n, POPTYPE dist ) {
 	npop = sov->gd->pop[n];
 	//printf("District::add(,, n=%d, dist=%d,,, npop=%9.0lf)\n", n, dist, npop );
 	numNodes++;
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
 	assert( pop == 0.0 );
 
 	//printf("district %d has zero pop at add", dist );
 	pop = npop;
-	
-	addFirstToCenter();
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
+
+	uint64_t tarea = sov->gd->area[n];
+	landCenterX = tarea * x;
+	landCenterY = tarea * y;
+	popCenterX = npop * x;
+	popCenterY = npop * y;
 	pit[n] = dist;
 	Node* nit = nodes + n;
 	nit->order = 0;
@@ -484,39 +484,13 @@ int District2::add( Solver* sov, int n, POPTYPE dist ) {
 	y = sov->gd->pos[(n)*2+1];
 	npop = sov->gd->pop[n];
 	//printf("District::add(,, n=%d, dist=%d,,, npop=%9.0lf)\n", n, dist, npop );
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
-	if ( pop == 0.0 ) {
-		//printf("district %d has zero pop at add", dist );
-		pop = npop;
-		addFirstToCenter();
-	} else {
-		pop += npop;
-#if READ_INT_AREA
-		uint32_t narea = sov->gd->area[n];
-		area += narea;
-		wx += narea * x;
-		wy += narea * y;
-		distx = wx / area;
-		disty = wy / area;
-#elif UNWEIGHTED_CENTER
-		wx += x;
-		wy += y;
-		distx = wx / (numNodes+1);
-		disty = wy / (numNodes+1);
-#else
-		wx += npop * x;
-		wy += npop * y;
-		distx = wx / pop;
-		disty = wy / pop;
-#endif
-	}
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
+	pop += npop;
+	popCenterX += npop * x;
+	popCenterY += npop * y;
+	uint32_t narea = sov->gd->area[n];
+	area += narea;
+	landCenterX += narea * x;
+	landCenterY += narea * y;
 	pit[n] = dist;
 	Node* nit = nodes + n;
 	numNodes++;
@@ -540,6 +514,7 @@ int District2::add( Solver* sov, int n, POPTYPE dist ) {
 	return 0;
 }
 
+#if 0
 class BreadthFirstNode {
 public:
 	int nodeIndex;
@@ -558,6 +533,7 @@ public:
 		delete this;
 	}
 };
+#endif
 
 void District2::addEdge( int n ) {
 	validate();
@@ -601,44 +577,15 @@ int District2::remove( /*Node* nodes, POPTYPE* pit, */Solver* sov, int n, POPTYP
 	int i;
 	pop -= npop;
 	numNodes--;
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
-#if READ_INT_AREA
 	uint32_t narea = sov->gd->area[n];
-	wx -= narea * x;
-	wy -= narea * y;
+	landCenterX -= narea * x;
+	landCenterY -= narea * y;
 	area -= narea;
-	if ( area == 0 ) {
-		printf("district %d has zero pop at remove", dist );
-		distx = wx;
-		disty = wy;
-	} else {
-		distx = wx / area;
-		disty = wy / area;
-	}
-#elif UNWEIGHTED_CENTER
-	wx -= x;
-	wy -= y;
-	distx = wx / numNodes;
-	disty = wy / numNodes;
-#else
-	wx -= npop * x;
-	wy -= npop * y;
+	popCenterX -= npop * x;
+	popCenterY -= npop * y;
 	if ( pop == 0 ) {
 		printf("district %d has zero pop at remove", dist );
-		distx = wx;
-		disty = wy;
-	} else {
-		distx = wx / pop;
-		disty = wy / pop;
 	}
-#endif
-	assert( ! isnan( distx ) );
-	assert( ! isnan( disty ) );
-	assert( ! isinf( distx ) );
-	assert( ! isinf( disty ) );
 	Node* nit = nodes + n;
 	removeEdge( n );
 	// decrease order of ex-neighbors
@@ -663,6 +610,14 @@ int District2::remove( /*Node* nodes, POPTYPE* pit, */Solver* sov, int n, POPTYP
 
 	return 0;
 }
+
+double District2::centerX() {
+	return cx();
+}
+double District2::centerY() {
+	return cy();
+}
+
 
 #define unsetDist( d, i ) dists[(d)].remove( sov, (i), (d), gd->pos[(i)*2], gd->pos[(i)*2+1], gd->pop[i] )
 
@@ -749,8 +704,8 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 	double dx, dy;
 	bx = gd->pos[nein*2  ];
 	by = gd->pos[nein*2+1];
-	dx = bx - distx;
-	dy = by - disty;
+	dx = bx - cx();
+	dy = by - cy();
 	tm = sqrt( (dx * dx) + (dy * dy) );
 	//tm /= 8.0;
 	double edgeRelativeDistance;
@@ -771,8 +726,8 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 			return HUGE_VAL; // don't take other district's last node.
 //			odEdgeRelativeDistance = 0.0;
 		} else {
-			dx = bx - od->distx;
-			dy = by - od->disty;
+			dx = bx - od->cx();
+			dy = by - od->cy();
 			tm = sqrt( (dx * dx) + (dy * dy) );
 			odEdgeRelativeDistance = (tm / od->edgeMeanR - 1.0) * -1.0;
 		}
@@ -829,8 +784,8 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 		double rs;
 		District2* od;
 		od = (District2*)&(dists[di]);
-		dx = bx - od->distx;
-		dy = by - od->disty;
+		dx = bx - od->cx();
+		dy = by - od->cy();
 		rs = (dx * dx) + (dy * dy);
 #if FIELD_VS_AVG_POP
 		popField += (avgDistPop - od->pop) / rs;
@@ -981,8 +936,8 @@ int District2::grab( District2Set* d2set, POPTYPE d ) {
 	for ( i = 0; i < edgelistLen; i++ ) {
 		int eln = edgelist[i];
 		double dx, dy;
-		dx = gd->pos[eln*2  ] - distx;
-		dy = gd->pos[eln*2+1] - disty;
+		dx = gd->pos[eln*2  ] - cx();
+		dy = gd->pos[eln*2+1] - cy();
 		edgeMeanR += (/*edgeRScrap[eli] = */sqrt( (dx * dx) + (dy * dy) ));
 	}
 	edgeMeanR /= edgelistLen;
@@ -1051,7 +1006,7 @@ int District2::grab( District2Set* d2set, POPTYPE d ) {
 	} else if ( pop < sov->districtPopTarget ) {
 #if GRABSPEW || 01
 		printf("warning: district %d cannot grab, (%10g,%10g) %d nodes, %d on edge\n",
-			d, distx, disty, numNodes, edgelistLen );
+			d, cx(), cy(), numNodes, edgelistLen );
 		for ( i = 0; i < edgelistLen; i++ ) {
 			Node* cdn;
 			int eln;
@@ -1134,8 +1089,9 @@ public:
 	}
 };
 
-static void bfSearchDistrict(int* bfsearchq, POPTYPE d, Node* nodes,
-		POPTYPE* winner, Bitmap& hit, ContiguousGroup* cur, int numPoints) {
+void bfSearchDistrict(int* bfsearchq, POPTYPE d, Node* nodes,
+		POPTYPE* winner, Bitmap& hit, ContiguousGroup* cur, int numPoints,
+		Bitmap* notContiguous = NULL) {
 	// breadth-first search
 	int bfin = 1;
 	int bfout = 0;
@@ -1145,7 +1101,8 @@ static void bfSearchDistrict(int* bfsearchq, POPTYPE d, Node* nodes,
 		for ( int ni = 0; ni < n->numneighbors; ++ni ) {
 			int nin;
 			nin = n->neighbors[ni];
-			if ( (winner[nin] == d) && (! hit.test(nin)) ) {
+			if ( (winner[nin] == d) && (! hit.test(nin)) &&
+			     ((notContiguous == NULL) || (!notContiguous->test(nin))) ) {
 				bfsearchq[bfin] = nin;
 				bfin = (bfin + 1) % numPoints;
 				hit.set(nin);
@@ -1250,7 +1207,7 @@ static void bfSearchDistrictThreaded(int* bfsearchq, POPTYPE d, Node* nodes,
 #endif
 
 // Returns: true if need to continue
-static bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq) {
+bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq, Bitmap* notContiguous) {
 	POPTYPE* winner = sov->winner;
 	const GeoData* gd = sov->gd;
 	int numPoints = gd->numPoints;
@@ -1261,7 +1218,8 @@ static bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* grou
 		if ( winner[i] == NODISTRICT ) {
 			// If there are any unclaimed, it's too early to bother.
 			return false; //goto fixup_end;
-		} else if ( ! hit.test(i) ) {
+		} else if ( (! hit.test(i)) &&
+			    ((notContiguous == NULL) || (!notContiguous->test(i))) ) {
 			POPTYPE d = winner[i];
 			bfsearchq[0] = i;
 			hit.set(i);
@@ -1277,13 +1235,13 @@ static bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* grou
 				assert(cur != NULL);
 				groups[d].next = cur;
 			}
-			bfSearchDistrict( bfsearchq, d, nodes, winner, hit, cur, numPoints );
+			bfSearchDistrict( bfsearchq, d, nodes, winner, hit, cur, numPoints, notContiguous );
 		}
 	}
 	return anyBroken;
 }
 
-static int disownSmallGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq, int districts) {
+int disownSmallGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq, int districts) {
 	POPTYPE* winner = sov->winner;
 	const GeoData* gd = sov->gd;
 	int numPoints = gd->numPoints;
@@ -1377,12 +1335,12 @@ void District2Set::assignReposessedNodes(int* bfsearchq, int pointsRepod) {
 				if ( d != NODISTRICT ) {
 					if ( closest == NODISTRICT ) {
 						closest = d;
-						dx = (*this)[d].centerX() - bx;
-						dy = (*this)[d].centerY() - by;
+						dx = static_cast<District2*>(they[d])->cx() - bx;
+						dy = static_cast<District2*>(they[d])->cy() - by;
 						crcr = ((dx * dx) + (dy * dy));
 					} else if ( d != closest ) {
-						dx = (*this)[d].centerX() - bx;
-						dy = (*this)[d].centerY() - by;
+						dx = static_cast<District2*>(they[d])->cx() - bx;
+						dy = static_cast<District2*>(they[d])->cy() - by;
 						double tr = ((dx * dx) + (dy * dy));
 						if ( tr < crcr ) {
 							crcr = tr;
@@ -1420,7 +1378,7 @@ void District2Set::fixupDistrictContiguity() {
 	
 	// For each point, if we haven't already seen it, breadth-first-search
 	// out from it noting a ContiguousGroup for its district.
-	bool keepGoing = findContiguousGroups( sov, hit, groups, bfsearchq );
+	bool keepGoing = findContiguousGroups( sov, hit, groups, bfsearchq, notContiguous );
 	if ( ! keepGoing ) {
 		goto fixup_end;
 	}
@@ -1449,11 +1407,11 @@ void District2Set::recalc() {
 	//int numPoints = gd->numPoints;
 	for ( POPTYPE d = 0; d < districts; ++d ) {
 		dists[d].pop = 0.0;
-#if READ_INT_AREA
 		dists[d].area = 0.0;
-#endif
-		dists[d].wx = 0.0;
-		dists[d].wy = 0.0;
+		dists[d].landCenterX = 0.0;
+		dists[d].landCenterY = 0.0;
+		dists[d].popCenterX = 0.0;
+		dists[d].popCenterY = 0.0;
 		dists[d].edgelistLen = 0;
 		assert(dists[d].edgelistCap >= DISTRICT_EDGEISTLEN_DEFAULT);
 	}
@@ -1471,19 +1429,13 @@ void District2Set::recalc() {
 		npop = gd->pop[n];
 
 		dists[d].pop += npop;
-#if READ_INT_AREA
 		uint32_t narea = gd->area[n];
 		//assert(narea >= 0);
 		dists[d].area += narea;
-		dists[d].wx += narea * x;
-		dists[d].wy += narea * y;
-#elif UNWEIGHTED_CENTER
-		dists[d].wx += x;
-		dists[d].wy += y;
-#else
-		dists[d].wx += npop * x;
-		dists[d].wy += npop * y;
-#endif
+		dists[d].landCenterX += narea * x;
+		dists[d].landCenterY += narea * y;
+		dists[d].popCenterX += npop * x;
+		dists[d].popCenterX += npop * y;
 		
 		tn = sov->nodes + n;
 		for ( int i = 0; i < tn->numneighbors; i++ ) {
@@ -1492,18 +1444,6 @@ void District2Set::recalc() {
 				break;
 			}
 		}
-	}
-	for ( POPTYPE d = 0; d < districts; ++d ) {
-#if READ_INT_AREA
-		dists[d].distx = dists[d].wx / dists[d].area;
-		dists[d].disty = dists[d].wy / dists[d].area;
-#elif UNWEIGHTED_CENTER
-		dists[d].distx = dists[d].wx / (dists[d].numNodes+1);
-		dists[d].disty = dists[d].wy / (dists[d].numNodes+1);
-#else
-		dists[d].distx = dists[d].wx / dists[d].pop;
-		dists[d].disty = dists[d].wy / dists[d].pop;
-#endif
 	}
 }
 

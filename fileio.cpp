@@ -135,7 +135,6 @@ int GeoData::writeBin( int fd, const char* fname ) {
 		//::close( fd );
 		return -1;
 	}
-#if READ_INT_POP
 	s = sizeof(*pop) * numPoints;
 	err = write( fd, pop, s );
 	if ( err != s ) {
@@ -143,8 +142,6 @@ int GeoData::writeBin( int fd, const char* fname ) {
 		//::close( fd );
 		return -1;
 	}
-#endif
-#if READ_INT_AREA
 	s = sizeof(*area) * numPoints;
 	err = write( fd, area, s );
 	if ( err != s ) {
@@ -152,7 +149,6 @@ int GeoData::writeBin( int fd, const char* fname ) {
 		//::close( fd );
 		return -1;
 	}
-#endif
 #if READ_UBIDS
 	{
 		void* buf = malloc( sizeof(uint64_t)*numPoints );
@@ -262,7 +258,6 @@ int GeoData::readBin( int fd, const char* fname ) {
 			maxy = pos[i*2+1];
 		}
 	}
-#if READ_INT_POP
 	pop = new int[numPoints];
 	totalpop = 0;
 	s = sizeof(*pop) * numPoints;
@@ -278,8 +273,6 @@ int GeoData::readBin( int fd, const char* fname ) {
 		}
 		totalpop += pop[i];
 	}
-#endif
-#if READ_INT_AREA
 	area = new uint64_t[numPoints];
 	s = sizeof(*area) * numPoints;
 	err = ::read( fd, area, s );
@@ -290,10 +283,10 @@ int GeoData::readBin( int fd, const char* fname ) {
 	}
 	if ( endianness ) {
 		for ( int i = 0; i < numPoints; i++ ) {
+		  // TODO: ERROR 64 bit! Scrap this and only use protobuf
 			area[i] = swap32( area[i] );
 		}
 	}
-#endif
 #if READ_UBIDS
 	ubids = new UST[numPoints];
 	{
@@ -385,6 +378,20 @@ static inline int countADistrict(void* data, int i, char** dsts, int num) {
 	return num;
 }
 
+/*
+http://www.census.gov/prod/cen2000/doc/sf1.pdf
+
+6,8	state postal code
+8,11	summary level
+18,25	logical record number
+27,29	state (census)
+29,31	state (fips)
+31,34	county
+55,61	cenus tract
+61,62	block group
+62,66	block
+
+*/
 int Uf1::load() {
 	int i;
 	char buf[128];
@@ -404,14 +411,10 @@ int Uf1::load() {
 #if READ_DOUBLE_POS
 	pos = new double[numPoints*2];
 #endif
-#if READ_INT_AREA
 	area = new uint64_t[numPoints];
-#endif
-#if READ_INT_POP
 	pop = new int[numPoints];
 	totalpop = 0;
 	maxpop = 0;
-#endif
 #if READ_UBIDS
 	ubids = new UST[numPoints];
 #endif
@@ -456,7 +459,6 @@ int Uf1::load() {
 		}
 #endif /* read pos */
 
-#if READ_INT_AREA
 		copyGeoUf1Field( buf, data, i, 172, 186 );
 		{
 			char* endp;
@@ -469,9 +471,7 @@ int Uf1::load() {
 			}
 			assert( endp != buf );
 		}
-#endif /* READ_INT_AREA*/
 
-#if READ_INT_POP
 		// population
 		copyGeoUf1Field( buf, data, i, 292, 301 );
 		pop[i] = atoi( buf );
@@ -479,7 +479,6 @@ int Uf1::load() {
 		if ( pop[i] > maxpop ) {
 			maxpop = pop[i];
 		}
-#endif
 #if READ_UBIDS
 		ubids[i].ubid = ubid( i );
 		ubids[i].index = i;
@@ -534,132 +533,6 @@ POPTYPE Uf1::oldDist( int index ) {
 		}
 		return ERRDISTRICT;
 	}
-int GeoBin::load() {
-	size_t s;
-	uintptr_t p = (uintptr_t)data;
-	int32_t endianness;
-	endianness = *((int32_t*)p);
-	p += sizeof(endianness);
-	if (endianness == 1) {
-		// good, set endianness to 0 to indicate natural order.
-		endianness = 0;
-	} else if (endianness == 0x01000000) {
-		endianness = 1;
-	} else {
-		fprintf(stderr,"not a known gbin version\n");
-		return -1;
-	}
-	if ( endianness ) {
-		fprintf(stderr,"reading reverse endia gbin\n");
-		numPoints = swap32( *((uint32_t*)p) );
-	} else {
-		numPoints = *((uint32_t*)p);
-	}
-	p += sizeof(numPoints);
-#if READ_INT_POS
-	pos = new int[numPoints*2];
-	assert(pos != NULL);
-	maxx = maxy = INT_MIN;
-	minx = miny = INT_MAX;
-#define ecopypos( i ) (int)swap32(*((uint32_t*)(p + ((i)*4))))
-#endif
-#if READ_DOUBLE_POS
-	pos = new double[numPoints*2];
-#define ecopypos( i ) (int)swap64(*((uint64_t*)(p + ((i)*8))))
-#endif
-	s = sizeof(*pos) * numPoints * 2;
-	if ( endianness ) {
-		for ( int i = 0; i < numPoints*2; i++ ) {
-			pos[i] = ecopypos(i);
-		}
-	} else {
-		memcpy( pos, (void*)p, s );
-	}
-	p += s;
-	for ( int i = 0; i < numPoints; i++ ) {
-		if ( pos[i*2  ] < minx ) {
-			minx = pos[i*2  ];
-		}
-		if ( pos[i*2  ] > maxx ) {
-			maxx = pos[i*2  ];
-		}
-		if ( pos[i*2+1] < miny ) {
-			miny = pos[i*2+1];
-		}
-		if ( pos[i*2+1] > maxy ) {
-			maxy = pos[i*2+1];
-		}
-	}
-#if READ_INT_POP
-	pop = new int[numPoints];
-	totalpop = 0;
-	maxpop = 0;
-	s = sizeof(int)*numPoints;
-	if ( endianness ) {
-		for ( int i = 0; i < numPoints; i++ ) {
-			pop[i] = (int)swap32(*((uint32_t*)(p + ((i)*4))));
-			totalpop += pop[i];
-			if ( pop[i] > maxpop ) {
-				maxpop = pop[i];
-			}
-		}
-	} else {
-		memcpy( pop, (void*)p, s );
-		for ( int i = 0; i < numPoints; i++ ) {
-			totalpop += pop[i];
-			if ( pop[i] > maxpop ) {
-				maxpop = pop[i];
-			}
-		}
-	}
-	p += s;
-#endif
-#if READ_INT_AREA
-	area = new uint64_t[numPoints];
-	s = sizeof(int)*numPoints;
-	if ( endianness ) {
-		for ( int i = 0; i < numPoints; i++ ) {
-			area[i] = swap32(*((uint32_t*)(p + ((i)*4))));
-		}
-	} else {
-		memcpy( area, (void*)p, s );
-	}
-	p += s;
-#endif
-#if READ_UBIDS
-	ubids = new UST[numPoints];
-	{
-		void* buf = malloc( sizeof(uint64_t)*numPoints );
-		uint32_t* ib = (uint32_t*)buf;
-		uint64_t* sb = (uint64_t*)buf;
-		// copy ensures that array will be well aligned.
-		memcpy( ib, (void*)p, sizeof(uint32_t)*numPoints );
-		if ( endianness ) {
-			for ( int i = 0; i < numPoints; i++ ) {
-				ubids[i].index = swap32( ib[i] );
-			}
-		} else {
-			for ( int i = 0; i < numPoints; i++ ) {
-				ubids[i].index = ib[i];
-			}
-		}
-		p += sizeof(uint32_t)*numPoints;
-		// copy ensures that array will be well aligned.
-		memcpy( sb, (void*)p, sizeof(uint64_t)*numPoints );
-		if ( endianness ) {
-			for ( int i = 0; i < numPoints; i++ ) {
-				ubids[i].ubid = swap64( sb[i] );
-			}
-		} else {
-			for ( int i = 0; i < numPoints; i++ ) {
-				ubids[i].ubid = sb[i];
-			}
-		}
-		free( buf );
-	}
-#endif
-	return 0;
-}
 
 GeoData* openZCTA( char* inputname ) {
 	ZCTA* toret = new ZCTA();
@@ -668,11 +541,6 @@ GeoData* openZCTA( char* inputname ) {
 }
 GeoData* openUf1( char* inputname ) {
 	Uf1* toret = new Uf1();
-	toret->open( inputname );
-	return toret;
-}
-GeoData* openBin( char* inputname ) {
-	GeoBin* toret = new GeoBin();
 	toret->open( inputname );
 	return toret;
 }
@@ -739,20 +607,6 @@ uint32_t GeoData::indexOfRecno( uint32_t rn ) {
 	}
 	return (uint32_t)-1;
 }
-#if 0
-/* linear search, sloooow */
-uint32_t GeoData::recnoOfIndex( uint32_t index ) {
-	if (recno_map == NULL) {
-		return (uint32_t)-1;
-	}
-	for ( int i = 0; i < numPoints; i++ ) {
-		if ( recno_map[i].index == index ) {
-			return recno_map[i].recno;
-		}
-	}
-	return (uint32_t)-1;
-}
-#endif
 
 int Uf1::countDistricts() {
 	if (data == NULL) {

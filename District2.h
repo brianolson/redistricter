@@ -4,6 +4,7 @@
 #include "AbstractDistrict.h"
 #include "DistrictSet.h"
 
+class Bitmap;
 class District2Set;
 class GrabTaskParams;
 class Solver;
@@ -18,11 +19,9 @@ public:
 	double edgeMeanR;
 	
 	double pop;
-	double area;
-	// weighted x and y, center is (x/pop,y/pop)
-	double wx, wy;
-	// x/pop, y/pop
-	//double distx, disty;
+	uint64_t area;
+	double landCenterX, landCenterY;
+	double popCenterX, popCenterY;
 	double moment;
 	
 	District2();
@@ -36,6 +35,8 @@ public:
 	virtual int add( Solver* sov, int n, POPTYPE dist );
 	void addFirst( Solver* sov, int n, POPTYPE dist );
 	virtual int remove( Solver* sov, int n, POPTYPE dist, double x, double y, double npop );
+	virtual double centerX();
+	virtual double centerY();
 	
 	void refresh( Node* nodes, POPTYPE* pit, double* xy, double* popRadii, POPTYPE dist );
 	void calcMoment( Node* nodes, POPTYPE* pit, double* xy, double* popRadii, POPTYPE dist );
@@ -85,43 +86,17 @@ public:
 
 	static void step();
 
-	inline void _addFirstToCenter( double x, double y, uint64_t tarea ) {
-	    if ( tarea == 0 ) {
-		distx = wx = x;
-		disty = wy = y;
-	    } else {
-		wx = tarea * x;
-		wy = tarea * y;
-		distx = wx / area;
-		disty = wy / area;
-	    }
-	}
-	inline void _addFirstToCenter( double x, double y ) {
-	    distx = wx = x;
-	    disty = wy = y;
-	}
-	inline void _addFirstToCenter( double x, double y, double npop ) {
-	    if ( npop == 0.0 ) {
-		//printf("adding block %d with zero pop", n );
-		distx = wx = x;
-		disty = wy = y;
-	    } else {
-		wx = npop * x;
-		wy = npop * y;
-		distx = wx / pop;
-		disty = wy / pop;
-	    }
-	}
-
-	/* AbstractDistrict implementation */
-	//virtual double centerX();
-	//virtual double centerY();
 #if 1
 	inline void validate(const char* file = ((const char*)0), int line = -1) {}
 #define NO_D2_VALIDATE 1
 #else
 	void validate(const char* file = ((const char*)0), int line = -1);
 #endif
+ protected:
+	inline double cx() { return landCenterX / area; }
+	inline double cy() { return landCenterY / area; }
+
+	friend class District2Set;
 };
 
 class GrabIntermediateStorage;
@@ -162,6 +137,8 @@ public:
 	double fixupBucket;
 	
 	double currentRandomFactor;
+
+	Bitmap* notContiguous;
 };
 
 #endif

@@ -147,15 +147,16 @@ Solver::~Solver() {
 #endif
 }
 
-#if HAVE_PROTOBUF
-int writeToProtoFile(Solver* sov, const char* filename);
-int readFromProtoFile(Solver* sov, const char* filename);
-
 // doesn't do anything, just a tag to switch on in Solver::load()
 GeoData* protobufGeoDataTag( char* inputname ) {
 	assert(0);
+	exit(1);
 	return NULL;
 }
+
+#if HAVE_PROTOBUF
+int writeToProtoFile(Solver* sov, const char* filename);
+int readFromProtoFile(Solver* sov, const char* filename);
 
 int Solver::writeProtobuf( const char* fname ) {
 	return writeToProtoFile(this, fname);
@@ -165,10 +166,6 @@ int Solver::writeProtobuf( const char* fname ) {
 void Solver::load() {
 	int err = -1;
 #if HAVE_PROTOBUF
-	if ( geoFact == openBin ) {
-		// try proto anyway
-		err = readFromProtoFile(this, inputname);
-	}
 	if ( err >= 0 ) {
 		// success. done.
 	} else if ( geoFact == protobufGeoDataTag ) {
@@ -184,11 +181,7 @@ void Solver::load() {
 		if ( err < 0 ) {
 			return;
 		}
-		if ( geoFact == openBin ) {
-			readLinksBin();
-		} else {
-			readLinksFile();
-		}
+		readLinksFile();
 	}
 	
 	if ( districts <= 0 ) {
@@ -262,12 +255,8 @@ void Solver::readLinksBin() {
 	// TODO: make this some sort of sane encapsulation, or merge the two classes file concepts since I never actually use them separately.
 	p += sizeof(gd->numPoints);
 	p += sizeof(*(gd->pos)) * gd->numPoints * 2;
-#if READ_INT_POP
 	p += sizeof(int)*gd->numPoints;
-#endif
-#if READ_INT_AREA
-	p += sizeof(uint32_t)*gd->numPoints;
-#endif
+	p += sizeof(gd->area[0])*gd->numPoints;
 #if READ_UBIDS
 	p += sizeof(uint32_t)*gd->numPoints;
 	p += sizeof(uint64_t)*gd->numPoints;
@@ -739,7 +728,7 @@ void Solver::doPNG() {
 	doPNG(winner, pngname);
 }
 void Solver::doPNG(POPTYPE* soln, const char* outname) {
-	unsigned char* data = (unsigned char*)malloc(pngWidth*pngHeight*3*sizeof(unsigned char) );
+	unsigned char* data = (unsigned char*)malloc(pngWidth*pngHeight*4*sizeof(unsigned char) );
 	unsigned char** rows = (unsigned char**)malloc(pngHeight*sizeof(unsigned char*) );
 	assert( data != NULL );
 	assert( rows != NULL );
@@ -798,11 +787,11 @@ int Solver::handleArgs( int argc, char** argv ) {
 			i++;
 			inputname = argv[i];
 			geoFact = openUf1;
+#if HAVE_PROTOBUF
 		} else if ( ! strcmp( argv[i], "-B" ) ) {
 			i++;
 			inputname = argv[i];
-			geoFact = openBin;
-#if HAVE_PROTOBUF
+			geoFact = protobufGeoDataTag;
 		} else if ( ! strcmp( argv[i], "-P" ) ) {
 			i++;
 			inputname = argv[i];
@@ -1000,7 +989,7 @@ int Solver::main( int argc, char** argv ) {
 	POPTYPE* bestSpreadMap = (POPTYPE*)malloc( sizeof(POPTYPE) * gd->numPoints );
 	POPTYPE* bestKmppMap = (POPTYPE*)malloc( sizeof(POPTYPE) * gd->numPoints );
 	// don't count kmpp till half way, early solutions cheat.
-	int bestKmppStart = gencount + (generations / 2);
+	//int bestKmppStart = gencount + (generations / 2);
 	int genmax = gencount + generations;
 	assert(bestStdMap != NULL);
 	assert(bestSpreadMap != NULL);
@@ -1038,8 +1027,24 @@ int Solver::main( int argc, char** argv ) {
 		SolverStats* curst;
 		curst = getDistrictStats();
 		double spread = curst->popmax - curst->popmin;
-		if ( (gencount > bestKmppStart) && (curst->nod == 0) &&
-			 (spread < maxSpreadAbsolute) && ((spread / districtPopTarget) < maxSpreadFraction) ) {
+		bool allDistrictsClaimed = curst->nod == 0;
+		bool absoluteSpreadOk = spread < maxSpreadAbsolute;
+		bool spreadFractionOk = (spread / districtPopTarget) < maxSpreadFraction;
+		// TODO: maybe keep stats on these things?
+#if 0
+		fprintf(stderr, "nod=%d ", curst->nod);
+		if (absoluteSpreadOk) {
+		  fprintf(stderr, "AOK ");
+		} else {
+		  fprintf(stderr, "(%f >= %f) ", spread, maxSpreadAbsolute);
+		}
+		if (spreadFractionOk) {
+		  fprintf(stderr, "FOK\n");
+		} else {
+		  fprintf(stderr, "(%f >= %f)\n", (spread / districtPopTarget), maxSpreadFraction);
+		}
+#endif
+		if ( allDistrictsClaimed && absoluteSpreadOk && spreadFractionOk ) {
 			if ( bestStd == NULL ) {
 				bestStd = new SolverStats();
 				*bestStd = *curst;

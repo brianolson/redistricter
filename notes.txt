@@ -45,18 +45,65 @@ Can't seem to find 109th congressional districts down to block level.
 http://www.census.gov/geo/www/cd109th/tables109.html
 http://ftp2.census.gov/census_2000/datasets/109_Congressional_Districts/109_CD_HundredPercent/California/cageo_h09.zip
 
+NEW TIGER FORMAT
+http://www.census.gov/geo/www/tiger/
+started in 2008 but the old format was still working with the census 2000 data, but I'll need to upgrade!
+
+new format, for new data:
+http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock.zip
+
+new format, for census2000 data:
+http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock00.zip
+
+
+*_tabblock00.dbf
+	state		two digit fips code
+	county		three digit code
+	tract		six digit
+	block		four digit
+	blockid		which appears to be the previous four concatenated, 15 digits
+	name		string(10)
+	mtfcc		maf/tiger feature class code
+	ur		urban/rural
+	uace		urban area code
+	funcstat	funcional status
+	aland		land area
+	awater		water area
+	intplat		interior point, lat,lon
+	intplon
+
+*_tabblock.dbf
+	statefp		two digit fips code
+	statens		8 char ansi code
+	countyfp	three digit code
+	statefp00	two digit fips code for 2000 census
+	countyfp00	three digit code for 2000 census
+	tractce00	six digit code for 2000 census
+	blockce00	four digit code for 2000 census
+	suffix1ce	one char suffix to all that
+	blkidfp		char[16] = statefp00+countyfp00+tractce00+blockce00+suffix1ce
+	name		char[11]
+	mtfcc		maf/tiger feature class code
+	ur		urban/rural
+	uace		urban area code
+	funcstat	funcional status
+	aland		land area
+	awater		water area
+	intplat		interior point, lat,lon
+	intplon
+
+And I get the sense from this that the specifics may change for the 2011 release.
+
+
 
 TO DO
-enforce district contiguity.
 
-All 50 states (or at all the states with more than one district: AL AZ AR CA CO
-CT FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO NE NV NH NJ NM NY NC OH
-OK OR PA RI SC TN TX UT VA WA WV WI
-NOT: AK DE MT ND SD VT WY)
+use unzip source in C++ utility for unpack/process? ftp://ftp.info-zip.org/pub/infozip/src/
+use Java std library unzip for unpack/process?
 
-Calculate ethnic stat per generated district. What would the VRA require?
+Calculate voting-rights-act compliant good-gerrymandering majority-minority districts.
 
-make automatic download/run client (might just be perl with a web/cgi thing on
+make automatic download/run client (might just be python with a web/cgi thing on
 the server side) to do redistricting@home
 
 http://www.redistrictinggame.com/

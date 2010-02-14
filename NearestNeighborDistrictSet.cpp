@@ -23,7 +23,7 @@ inline double jitter(double max, double period, double t) {
 
 class NearestNeighborDistrict : public AbstractDistrict {
 public:
-	//double x, y;
+	double distx, disty;
 	double weight;
 	double dx, dy;
 	double poperr;
@@ -31,7 +31,8 @@ public:
 	int pop;
 	NearestNeighborDistrict() : weight(1.0) {}
 	NearestNeighborDistrict(double xin, double yin)
-		: AbstractDistrict(xin, yin), weight(1.0) {}
+		: distx(xin), disty(yin), weight(1.0) {}
+
 	void set(double xin, double yin) {
 		distx = xin;
 		disty = yin;
@@ -39,8 +40,8 @@ public:
 	virtual int add( Solver* sov, int n, POPTYPE dist ) { assert(0); return 0; };
 	virtual int remove( Solver* sov, int n, POPTYPE dist,
 		double x, double y, double npop ) { assert(0); return 0; };
-/*	virtual double centerX() { return x; };
-	virtual double centerY() { return y; };*/
+	virtual double centerX() { return distx; };
+	virtual double centerY() { return disty; };
 };
 
 NearestNeighborDistrictSet::NearestNeighborDistrictSet(Solver* sovIn)
@@ -572,18 +573,14 @@ void NearestNeighborDistrictSet::getStats(SolverStats* stats) {
 	for ( int i = 0; i < gd->numPoints; i++ ) {
 		if ( winner[i] == NODISTRICT ) {
 			nod++;
-#if READ_INT_POP
 			nodpop += gd->pop[i];		
-#endif
 		} else {
-#if READ_INT_POP && (READ_INT_POS || READ_DOUBLE_POS)
+#if READ_INT_POS || READ_DOUBLE_POS
 			double dx, dy;
 			NearestNeighborDistrict* cd;
 			cd = &(dists[winner[i]]);
-#if READ_INT_POS || READ_DOUBLE_POS
 			dx = cd->distx - gd->pos[i*2  ];
 			dy = cd->disty - gd->pos[i*2+1];
-#endif
 			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
 #endif
 		}

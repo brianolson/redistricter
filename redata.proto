@@ -8,7 +8,7 @@ message RedistricterData {
 	repeated int32 intpoints = 1;  // lon,lat pairs, microdegrees
 	repeated double fpoints = 2;  // lon,lat pairs, degrees
 	repeated int32 population = 3;
-	repeated int32 area = 4;  // square meters
+	repeated uint64 area = 4;  // square meters
 	repeated uint64 ubids = 5;  // universal block identifier (my internal number)
 	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs

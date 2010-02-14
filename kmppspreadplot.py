@@ -109,6 +109,7 @@ class svgplotter(object):
     minyp = self.ty(self.miny)
     maxxp = self.tx(self.maxx)
     maxyp = self.ty(self.maxy)
+    self.fout.write('<g font-size="12">\n')
     self.fout.write(
         '<path d="M %f %f L %f,%f" stroke="green" stroke-width="1"/>\n' % (
         minxp, minyp, minxp, minyp + 10))
@@ -143,36 +144,70 @@ class svgplotter(object):
     self.fout.write(
         '<text x="%f" y="%f" text-anchor="middle" dominant-baseline="text-before-edge">district population spread</text>\n' %
         ((minxp + maxxp) / 2.0, minyp + 5))
-    
+
+    self.fout.write(
+        '<text x="%f" y="%f" text-anchor="middle" dominant-baseline="text-before-edge" stroke-color="#666666">(%d runs)</text>\n' %
+        (minxp + ((maxxp - minxp) * 0.75), minyp + 5, len(self.points)))
+
+    self.fout.write('</g>\n')
     self.fout.write('</svg>\n')
     self.fout.close()
     self.fout = None
 
 def main(argv):
   try:
-    opts, args = getopt.gnu_getopt(argv[1:], 'i:', ['png=', 'svg='])
+    opts, args = getopt.gnu_getopt(argv[1:], 'i:', ['png=', 'svg=', 'multidir'])
   except getopt.GetoptError:
     sys.exit(1)
   #out = sys.stdout
   out = None
+  pngarg = None
+  svgarg = None
+  multidir_mode = False
   for option, optarg in opts:
     if option == '--png':
       #out = gnuplot_out(optarg)
-      out = gnuplotter(optarg)
+      #out = gnuplotter(optarg)
+      pngarg = optarg
     elif option == '--svg':
-      out = svgplotter(optarg)
+      #out = svgplotter(optarg)
+      svgarg = optarg
     elif option == '-i':
       args.append(optarg)
+    elif option == '--multidir':
+      multidir_mode = True
     else:
       sys.stderr.write('wtf? option="%s" optarg="%s"\n' %
                        (option, optarg))
       sys.exit(1)
-  if args:
+  if multidir_mode:
     for x in args:
-      walk_statsums(out, x)
+      sys.stdout.write('%s' % x)
+      if pngarg:
+        path = os.path.join(x, pngarg)
+        sys.stdout.write(' %s' % path)
+        pngout = gnuplotter(path)
+        walk_statsums(pngout, x)
+        pngout.close()
+      if svgarg:
+        path = os.path.join(x, svgarg)
+        sys.stdout.write(' %s' % path)
+        svgout = svgplotter(path)
+        walk_statsums(svgout, x)
+        svgout.close()
+      sys.stdout.write('\n')
   else:
-    walk_statsums(out, '.')
-  out.close()
+    if pngarg:
+      out = gnuplotter(pngarg)
+    elif svgarg:
+      out = svgplotter(svgarg)
+    assert out
+    if args:
+      for x in args:
+        walk_statsums(out, x)
+    else:
+      walk_statsums(out, '.')
+    out.close()
 
 if __name__ == '__main__':
   main(sys.argv)

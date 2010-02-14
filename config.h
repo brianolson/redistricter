@@ -42,14 +42,6 @@
 #define READ_DOUBLE_POS 0
 #endif
 
-#ifndef READ_INT_AREA
-#define READ_INT_AREA 1
-#endif
-
-#ifndef READ_INT_POP
-#define READ_INT_POP 1
-#endif
-
 #ifndef READ_UBIDS
 #define READ_UBIDS 1
 #endif

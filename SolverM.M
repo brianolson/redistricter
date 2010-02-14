@@ -702,8 +702,6 @@ extern "C" void setDebugDistrictNumber(int index);
 	char* suffixpos = NULL;
 	if ( strstr( dataPath, "zcta" ) != NULL ) {
 		sov->geoFact = openZCTA;
-	} else if ( (suffixpos = strstr( dataPath, "gbin" )) != NULL ) {
-		sov->geoFact = openBin;
 	} else if ( (suffixpos = strstr( dataPath, "pb" )) != NULL ) {
 		sov->geoFact = protobufGeoDataTag;
 	} else {

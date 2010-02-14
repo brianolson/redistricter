@@ -173,7 +173,7 @@ class runallstates(object):
 				self.exe = maybe_exe
 			elif arg == "--runsecs":
 				i += 1
-				self.end = start + datetime.timedelta(seconds=float(argv[i]))
+				self.end = self.start + datetime.timedelta(seconds=float(argv[i]))
 			elif arg == "--":
 				i += 1
 				self.extrargs = " " + argv[i]
@@ -306,9 +306,12 @@ class runallstates(object):
 		if self.stoppath and os.path.exists(self.stoppath):
 			self.stopreason = self.stoppath + ' exists'
 			return True
-		if (self.end is not None) and (datetime.datetime.now() < self.end):
-			self.stopreason = 'ran past end time'
-			return True
+		if self.end is not None:
+			now = datetime.datetime.now()
+			if now > self.end:
+				self.stopreason = 'ran past end time (now=%s end=%s)' % (
+					now, self.end)
+				return True
 		return False
 
 	def maybe_mkdir(self, path):

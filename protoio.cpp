@@ -44,20 +44,16 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 #else
 #error "neither int nor double pos"
 #endif
-#if READ_INT_POP
 	google::protobuf::RepeatedField<int32>* pop = rd.mutable_population();
 	pop->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
 		pop->Add(gd->pop[i]);
 	}
-#endif
-#if READ_INT_AREA
-	google::protobuf::RepeatedField<int32>* area = rd.mutable_area();
+	google::protobuf::RepeatedField<uint64>* area = rd.mutable_area();
 	area->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
 		area->Add(gd->area[i]);
 	}
-#endif
 #if READ_UBIDS
 	google::protobuf::RepeatedField<uint64>* ubids = rd.mutable_ubids();
 	ubids->Reserve(gd->numPoints);
@@ -155,7 +151,6 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			++pi;
 		}
 	}
-#if READ_INT_POP
 	if (rd.population_size() > 0) {
 		assert(rd.population_size() == gd->numPoints);
 		gd->pop = new int32_t[gd->numPoints];
@@ -169,8 +164,6 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			gd->totalpop += gd->pop[i];
 		}
 	}
-#endif
-#if READ_INT_AREA
 	if (rd.area_size() > 0) {
 		assert(rd.area_size() == gd->numPoints);
 		gd->area = new uint64_t[gd->numPoints];
@@ -178,7 +171,6 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			gd->area[i] = rd.area(i);
 		}
 	}
-#endif
 #if READ_UBIDS
 	fprintf(stderr, "reading ubids\n");
 	if (rd.ubids_size() > 0) {

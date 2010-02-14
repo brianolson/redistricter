@@ -104,7 +104,7 @@ foreach $stu ( <??> ) {
 			}
 		}
 	print <<EOF;
-<tr><td class=st>${stu}</td><td class=i><a href="${stu}/${one}/${stu}_ba.png"><img src="${stu}/${one}/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
+<tr><td class="st">${stu}</td><td class="i"><a href="${stu}/${one}/${stu}_ba.png"><img src="${stu}/${one}/${stu}_ba_500.png" alt="$stu current and proposed districting"></a></td>$statsum_part</tr>
 EOF
     } else {
       print <<EOF;

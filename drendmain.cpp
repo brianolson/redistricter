@@ -121,7 +121,7 @@ int main( int argc, char** argv ) {
 		char* statstr = new char[10000];
 		sov.getDistrictStats(statstr, 10000);
 		fputs( statstr, stdout );
-		delete statstr;
+		delete [] statstr;
 	}
 	//sov.init();
 	
