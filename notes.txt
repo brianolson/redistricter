@@ -47,6 +47,8 @@ http://ftp2.census.gov/census_2000/datasets/109_Congressional_Districts/109_CD_H
 
 NEW TIGER FORMAT
 http://www.census.gov/geo/www/tiger/
+http://www.census.gov/geo/www/tiger/tgrshp2009/tgrshp2009.html
+http://www.census.gov/geo/www/tiger/tgrshp2009/TGRSHP09.pdf
 started in 2008 but the old format was still working with the census 2000 data, but I'll need to upgrade!
 
 new format, for new data:
@@ -55,6 +57,9 @@ http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock.zi
 new format, for census2000 data:
 http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock00.zip
 
+http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/
+http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/tl_2009_25_tabblock.zip
+http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/tl_2009_25_tabblock00.zip
 
 *_tabblock00.dbf
 	state		two digit fips code

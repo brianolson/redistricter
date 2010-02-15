@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-"""Parse an ESRI Shapefile, or at least parse enough to read Census data.
+"""Parse Census 2009 shapefile bundled files.
+
+http://www.census.gov/geo/www/tiger/tgrshp2009/TGRSHP09.pdf
+
+Parse an ESRI Shapefile, or at least parse enough to read Census data.
 
 http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf
 
@@ -139,7 +143,7 @@ class Polygon(object):
 		 self.xmin, self.ymin, self.xmax, self.ymax,
 		 self.numParts, self.numPoints) = struct.unpack(
 		    '<iddddii', rawbytes)
-		assert shapetype == 5
+		assert shapetype == 5, 'expected shape 5, got %s' % shapetype
 		countHistInc(part_count_hist_, self.numParts)
 		countHistInc(point_count_hist_, self.numPoints)
 
