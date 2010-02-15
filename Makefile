@@ -131,5 +131,10 @@ include tiger/tiger.make
 java/org/bolson/redistricter/Redata.java:	redata.proto
 	protoc $< --java_out=java
 
+tools.jar:	java/org/bolson/redistricter/Redata.java java/org/bolson/redistricter/*.java jars/protobuf.jar
+	mkdir -p classes
+	cd java && find . -name \*.java | xargs javac -cp ../jars/protobuf.jar -g -d ../classes
+	cd classes && jar cvf ../tools.jar org
+
 protoio.o:	redata.pb.h
 PBPointOutput.o:	redata.pb.h

@@ -1,5 +1,6 @@
 package org.bolson.redistricter;
 
+import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.FileOutputStream;
@@ -12,7 +13,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.zip.GZIPOutputStream;
@@ -20,6 +23,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.google.protobuf.ByteString;
+
+// TODO: break up this monster source of many static innerclasses into package level classes in their own sources?
 
 // Things I need from the shapefile bundle:
 // Block adjacency
@@ -171,6 +176,45 @@ public class ShapefileBundle {
 		}
 	}
 	
+	static interface SetLink {
+		/**
+		 * Record a link between two blocks.
+		 * @param a blockid
+		 * @param b blockid
+		 * @return true if link is new, false if not new or don't know.
+		 */
+		public boolean setLink(byte[] a, byte[] b);
+	}
+	static class MapSetLinkWrapper implements SetLink {
+		public Map<byte[], Set<byte[]> > out;
+		MapSetLinkWrapper(Map<byte[], Set<byte[]> > it) {
+			out = it;
+		}
+		public boolean setLink(byte[] a, byte[] b) {
+			int c = cmp(a, b);
+			byte[] lower;
+			byte[] upper;
+			if (c < 0) {
+				lower = a;
+				upper = b;
+			} else if (c > 0) {
+				lower = b;
+				upper = a;
+			} else {
+				assert(false);
+				return false;
+			}
+			Set<byte[]> rhset;
+			if (!out.containsKey(lower)) {
+				rhset = new HashSet<byte[]>();
+				out.put(lower, rhset);
+			} else {
+				rhset = out.get(lower);
+			}
+			return rhset.add(upper);
+		}
+	}
+	
 	static class PolygonBucket {
 		public double minx, maxx, miny, maxy;
 		public ArrayList<Polygon> polys = new ArrayList<Polygon>();
@@ -220,33 +264,14 @@ public class ShapefileBundle {
 			}
 			return count;
 		}
-		public int mapLinks(Map<byte[], Set<byte[]> > out, Polygon b) {
+		public int mapLinks(SetLink out, Polygon b) {
 			int count = 0;
 			for (Polygon a : polys) {
 				if (a == b) {
 					continue;
 				}
 				if (a.hasTwoPointsInCommon(b)) {
-					int c = cmp(a.blockid, b.blockid);
-					Polygon lower, upper;
-					if (c < 0) {
-						lower = a;
-						upper = b;
-					} else if (c > 0) {
-						lower = b;
-						upper = a;
-					} else {
-						assert(false);
-						continue;
-					}
-					Set<byte[]> rhset;
-					if (!out.containsKey(lower.blockid)) {
-						rhset = new HashSet<byte[]>();
-						out.put(lower.blockid, rhset);
-					} else {
-						rhset = out.get(lower.blockid);
-					}
-					if (rhset.add(upper.blockid)) {
+					if (out.setLink(a.blockid, b.blockid)) {
 						count++;
 					}
 				}
@@ -377,7 +402,7 @@ public class ShapefileBundle {
 			return count;
 		}
 		
-		public int mapLinks(Map<byte[], Set<byte[]> > out, Polygon p) {
+		public int mapLinks(SetLink out, Polygon p) {
 			int minix = bucketX(p.xmin);
 			int maxix = bucketX(p.xmax);
 			int miniy = bucketY(p.ymin);
@@ -547,14 +572,15 @@ public class ShapefileBundle {
 		    		return;
 		    	}
 		    }
-		    int i = ctx.xIntersects - 1;
-		    while (i >= 0) {
-		    	if (x < ctx.xIntersectScratch[i]) {
-		    		ctx.xIntersectScratch[i+1] = ctx.xIntersectScratch[i];
+		    int i = ctx.xIntersects;
+		    while (i > 0) {
+		    	if (x < ctx.xIntersectScratch[i-1]) {
+		    		ctx.xIntersectScratch[i] = ctx.xIntersectScratch[i-1];
+		    		--i;
+		    	} else {
+		    		break;
 		    	}
-		    	--i;
 		    }
-		    ++i;
 		    ctx.xIntersectScratch[i] = x;
 		    ctx.xIntersects++;
 		}
@@ -855,8 +881,11 @@ public class ShapefileBundle {
 		return -1;
 	}
 	
-	public Redata.MapRasterization makeRasterization(int px, int py) {
-		// TODO: could multi-thread this.
+	int blocklimit = 0x7fffffff;
+	static final int randColorRange = 150;
+	static final int randColorOffset = 100;
+	
+	public Redata.MapRasterization makeRasterization(int px, int py, BufferedImage mask) {
 		RasterizationContext ctx = new RasterizationContext(this, px, py);
 		Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
 		rastb.setSizex(px);
@@ -866,17 +895,41 @@ public class ShapefileBundle {
 			p.rasterize(ctx);
 			Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
 			bb.setUbid(blockidToUbid(p.blockid));
+			// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
 			//bb.setBlockid(ByteString.copyFrom(p.blockid));
 			for (int i = 0; i < ctx.pxPos; ++i) {
 				bb.addXy(ctx.pixels[i]);
 			}
+			if (mask != null) {
+				/*
+				int argb = 0xff000000 |
+					(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
+					(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
+					((int)(Math.random() * randColorRange) + randColorOffset);
+					*/
+				int argb = ((int)(Math.random() * randColorRange) + randColorOffset);
+				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
+				for (int i = 0; i < ctx.pxPos; i += 2) {
+					mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
+				}
+			}
 			rastb.addBlock(bb);
+			if (--blocklimit < 0) {
+				break;
+			}
 		}
 		return rastb.build();
 	}
-	public void writeRasterization(OutputStream os, int px, int py) throws IOException {
-		Redata.MapRasterization mr = makeRasterization(px, py);
+	public void writeRasterization(OutputStream os, int px, int py, OutputStream maskPngOut) throws IOException {
+		BufferedImage maskImage = null;
+		if (maskPngOut != null) {
+			maskImage = new BufferedImage(px, py, BufferedImage.TYPE_4BYTE_ABGR);
+		}
+		Redata.MapRasterization mr = makeRasterization(px, py, maskImage);
 		mr.writeTo(os);
+		if (maskPngOut != null) {
+			MapCanvas.writeBufferedImageAsPNG(maskPngOut, maskImage);
+		}
 	}
 	
 	public void read(String filename) throws IOException {
@@ -933,7 +986,70 @@ public class ShapefileBundle {
 		}
 		return count;
 	}
-	public int mapLinks(Map<byte[], Set<byte[]> > out) {
+	
+	public static class SynchronizingSetLink implements SetLink {
+		SetLink out;
+		public SynchronizingSetLink(SetLink sub) {
+			out = sub;
+		}
+		@Override
+		public boolean setLink(byte[] a, byte[] b) {
+			boolean x;
+			synchronized (out) {
+				x = out.setLink(a, b);
+			}
+			return x;
+		}
+	}
+	public static class MapLinkThread implements Runnable {
+		Iterator<Polygon> polys;
+		SetLink out;
+		PolygonBucketArray pba;
+		public int count = 0;
+		
+		public MapLinkThread(Iterator<Polygon> source, SetLink dest, PolygonBucketArray data) {
+			polys = source;
+			out = dest;
+			pba = data;
+		}
+		
+		@Override
+		public void run() {
+			while (true) {
+				Polygon p = null;
+				synchronized (polys) {
+					if (!polys.hasNext()) {
+						return;
+					}
+					p = polys.next();
+				}
+				count += pba.mapLinks(out, p);
+			}
+		}
+	}
+	public int mapLinks(SetLink out, int threads) {
+		int count = 0;
+		MapLinkThread[] linkers = new MapLinkThread[threads];
+		Thread[] runners = new Thread[threads];
+		SetLink sout = new SynchronizingSetLink(out);
+		Iterator<Polygon> pi = polys.iterator();
+		for (int i = 0; i < threads; ++i) {
+			linkers[i] = new MapLinkThread(pi, sout, pba);
+			runners[i] = new Thread(linkers[i]);
+			runners[i].start();
+		}
+		for (int i = 0; i < threads; ++i) {
+			try {
+				runners[i].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			count += linkers[i].count;
+		}
+		return count;
+	}
+
+	public int mapLinks(SetLink out) {
 		int count = 0;
 		for (Polygon p : polys) {
 			count += pba.mapLinks(out, p);
@@ -997,9 +1113,8 @@ public class ShapefileBundle {
 		String inname = null;
 		String linksOut = null;
 		String rastOut = null;
-		boolean doLinks = false;
-		boolean doRast = false;
-		
+		String maskOutName = null;
+		int threads = 3;
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
@@ -1015,6 +1130,12 @@ public class ShapefileBundle {
 			} else if (argv[i].equals("--rast")) {
 				i++;
 				rastOut = argv[i];
+			} else if (argv[i].equals("--mask")) {
+				i++;
+				maskOutName = argv[i];
+			} else if (argv[i].equals("--threads")) {
+				i++;
+				threads = Integer.parseInt(argv[i]);
 			} else {
 				System.err.println("bogus arg: " + argv[i]);
 				System.exit(1);
@@ -1037,7 +1158,12 @@ public class ShapefileBundle {
 			} else {
 				links = new HashMap<byte[], Set<byte[]> >();
 			}
-			int linksMapped = x.mapLinks(links);
+			int linksMapped;
+			if (threads > 1) {
+				linksMapped = x.mapLinks(new MapSetLinkWrapper(links), threads);
+			} else {
+				linksMapped = x.mapLinks(new MapSetLinkWrapper(links));
+			}
 			end = System.currentTimeMillis();
 			System.out.println("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
 			start = end;
@@ -1075,7 +1201,11 @@ public class ShapefileBundle {
 			}
 			FileOutputStream fos = new FileOutputStream(rastOut);
 			GZIPOutputStream gos = new GZIPOutputStream(fos);
-			x.writeRasterization(gos, px, py);
+			OutputStream maskOutput = null;
+			if (maskOutName != null) {
+				maskOutput = new FileOutputStream(maskOutName);
+			}
+			x.writeRasterization(gos, px, py, maskOutput);
 			gos.flush();
 			fos.flush();
 			gos.close();

@@ -352,12 +352,16 @@ public class MapCanvas /*extends Canvas*/ {
 	}
 	
 	public void writePngFile(OutputStream fos, byte[] dsz) throws IOException {
+		writeBufferedImageAsPNG(fos, makeImage(dsz));
+	}
+	
+	public static void writeBufferedImageAsPNG(OutputStream fos, BufferedImage im) throws IOException {
 		ImageWriterSpi pngWriter = getPNGWriter();
 		ImageOutputStreamSpi oosws = getOSIOSS();
 		ImageWriter piw = pngWriter.createWriterInstance();
 		ImageOutputStream ios = oosws.createOutputStreamInstance( fos );
 		piw.setOutput( ios );
-		piw.write(makeImage(dsz));
+		piw.write(im);
 		fos.flush();
 	}
 
