@@ -1,6 +1,10 @@
 DEPENDENCIES:
+	C++ compiler
+	Java 2.5+
+	Python 2.4+
+	zlib compression library
 	google protocol buffers
-	http://code.google.com/p/protobuf/
+	http://code.google.com/p/protobuf/ *
 
 BUILDING:	
 
@@ -22,4 +26,30 @@ makeopts/Darwin.pre
 RUNNING:
 
 Make a directory, which I traditionally call "data", to hold the Census data.
-./setupstatedata.pl ga
+./setupstatedata.py ga
+
+The 'runallstates.py' script can be used to repeatedly run one or more states.
+./runallstates.py ga
+
+
+
+---
+* Setting up protobuf
+# Here's the cheat sheet for building this quickly.
+# On Mac, one of these (bash syntax):
+CXXFLAGS='-arch ppc -arch ppc64 -arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
+CXXFLAGS='-arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
+# Otherwise just:
+./configure
+
+# then build, C, Java, and optionally python
+make
+make check
+sudo make install
+cd java
+mvn test
+mvn install
+mvn package
+cd ../python
+python setup.py test
+python setup.py install
