@@ -50,7 +50,7 @@ message MapRasterization {
 		// "logical record number"
 		optional int32 recno = 6;
 		// String form preferred by TIGER data, concatenated state,county,tract,block
-		optional string blockid = 7;
+		optional bytes blockid = 7;
 		
 		// The pixels associated with this block. (x,y) pairs.
 		repeated int32 xy = 3;

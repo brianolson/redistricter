@@ -195,10 +195,14 @@ int main( int argc, char** argv ) {
 			fprintf(stderr,"processing %s\n", cf->str );
 		}
 		
+		// Read record I, line id and left-right info
 		pg.buildRTI();
+		
+		// Read record 2, secence of points for a line id
 		pg.buildShapes();
 		//builtRTAPU();
 		
+		// Read record 1, get ubids for each side of the line, append the line to a polygon appropriate to each side.
 		pg.processR1();
 		
 		pg.updatePixelSize2();
@@ -208,7 +212,7 @@ int main( int argc, char** argv ) {
 		} else if ( pointNOP ) {
 			pg.reconcile( pout, &PolyGroup::pointListNOP );
 		} else {
-			pg.reconcile( pout );
+			pg.reconcile( pout, &PolyGroup::rasterizePointList );
 		}
 		pg.clear();
 		cf = cf->next;

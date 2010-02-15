@@ -40,9 +40,11 @@ public:
 	void setRootName( char* n );
 	void processR1();
 
+#if 0
 	inline void reconcile( PointOutput* fout ) {
 		reconcile( fout, &PolyGroup::rasterizePointList );
 	}
+#endif
 	void reconcile( PointOutput* fout,
 		int (PolyGroup::* processPointList)(PointOutput*,uint64_t,point*) );
 

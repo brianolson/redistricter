@@ -64,14 +64,28 @@ void delpoint( point* p ) {
 	pool = p;
 }
 
+// Taken from record I
 class rtip {
 public:
+	// TIGER/Line ID, Permanent 1-Cell Number
 	uint32_t tlid;
+
+	// TIGER ID, Start, Permanent Zero-Cell Number
 	uint32_t start;
+
+	// TIGER ID, Eind, Permanent Zero-Cell Number
 	uint32_t end;
+	
+	// Polygon Identification Code, Left
 	uint32_t polyidl;
+	
+	// Polygon Identification Code, Right
 	uint32_t polyidr;
+	
+	// Census File Identification Code, Left
 	char cenidl[6];
+	
+	// Census File Identification Code, Right
 	char cenidr[6];
 	
 	rtip() : polyidl(NOPOLY), polyidr(NOPOLY) {
@@ -80,13 +94,20 @@ public:
 	}
 };
 
+// Record 2
 class rt2 {
 public:
+	// TIGER/Line ID, Permanent 1-Cell Number
 	uint32_t tlid;
+	
+	// sequence number, in case line needs multiple 10-lon-lat-pair blocks
 	uint32_t seq;
+	
+	// 10 pairs of lon-lat
 	int32_t lonlat[20];
 };
 
+// "RTAPU" = record A + polygon + ubid
 class rtaPolyUbid {
 public:
 	uint64_t ubid;
@@ -187,6 +208,7 @@ void PolyGroup::buildRTI() {
 		//printf("tlid %d, %.5s%10d %.5s%10d\n", tlid, cl, l ? l->polyid : 0, cr, r ? r->polyid : 0 );
 	}
 	
+	// sort on tlid
 	qsort( rtippool, numi, sizeof(rtip), compare_rtip );
 	
 	mi.close();
@@ -257,6 +279,7 @@ void PolyGroup::buildShapes() {
 		i2->lonlat[18] = r2.LONG10_longValue(i);
 		i2->lonlat[19] =  r2.LAT10_longValue(i);
 	}
+	// sort on tlid, then sequence number
 	qsort( shapes, num2, sizeof(rt2), compare_rt2 );
 	m2.close();
 }
@@ -778,6 +801,7 @@ void PolyGroup::reconcileRTAPUChunks( rtaPolyUbid* rp, PointOutput* fout,
 	tails[i] = prev;
 	//vf("\n");
 
+	// merge line strips and points for this polygon
 	for ( int last = nc-1; last >= 0; last-- ) {
 		for ( i = 0; i < last; i++ ) {
 			if ( *(heads[last]) == *(tails[i]) ) {

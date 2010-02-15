@@ -32,7 +32,7 @@ public class MapData {
 	/**
 	 * square meters
 	 */
-	public int[] area;
+	public long[] area;
 	/**
 	 * my internal number
 	 */
@@ -158,7 +158,7 @@ public class MapData {
 			}
 		}
 		if (it.getAreaCount() > 0) {
-			area = new int[it.getAreaCount()];
+			area = new long[it.getAreaCount()];
 			for (int i = 0; i < area.length; ++i) {
 				area[i] = it.getArea(i);
 			}

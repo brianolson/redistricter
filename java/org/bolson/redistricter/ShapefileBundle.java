@@ -9,13 +9,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import com.google.protobuf.ByteString;
 
 // Things I need from the shapefile bundle:
 // Block adjacency
@@ -399,6 +403,46 @@ public class ShapefileBundle {
 			}
 		}
 	}
+	
+	static class RasterizationContext {
+		public double minx;
+		public double miny;
+		public double maxx;
+		public double maxy;
+		public double pixelHeight;
+		public double pixelWidth;
+		public int xpx;
+		public int ypx;
+		public double[] xIntersectScratch = new double[100];
+		public int xIntersects = 0;
+		public int[] pixels = new int[200];
+		public int pxPos = 0;
+		
+		public RasterizationContext(ShapefileBundle shp, int px,
+				int py) {
+			xpx = px;
+			ypx = py;
+			minx = shp.shp.header.xmin;
+			miny = shp.shp.header.ymin;
+			maxx = shp.shp.header.xmax;
+			maxy = shp.shp.header.ymax;
+			pixelHeight = (maxy - miny) / ypx;
+			pixelWidth = (maxx - minx) / xpx;
+		}
+		public void growPixels() {
+			int[] npx = new int[pixels.length * 2];
+			System.arraycopy(pixels, 0, npx, 0, pixels.length);
+			pixels = npx;
+		}
+		public void addPixel(int x, int y) {
+			if (pxPos == pixels.length) {
+				growPixels();
+			}
+			pixels[pxPos] = x;
+			pixels[pxPos+1] = y;
+			pxPos += 2;
+		}
+	}
 
 	static class Polygon {
 		public double xmin, xmax, ymin, ymax;
@@ -448,9 +492,130 @@ public class ShapefileBundle {
 			return false;
 		}
 		
-		public int[] rasterize(double xZero, double yZero, double xPerPixel, double yPerPixel) {
-			// TODO: rasterize
-			return null;
+		/*
+		 _____________ maxlat
+		 |   |   |   |
+		 -------------
+		 |   |   |   |
+		 ------------- minlat
+	  minlon       maxlon
+	 
+	 every pixel should be in exactly one triangle, based on the center of the pixel.
+	 The outer edges of the pixel image will be at the min/max points.
+	 */
+		
+		/* for some y, what is the next pixel center below that? */
+		static final int pcenterBelow(double somey, double maxy, double pixelHeight) {
+			return (int)Math.floor( ((maxy - somey) / pixelHeight) + 0.5 );
+		}
+		/* for some x, what is the next pixel center to the right? */
+		static final int pcenterRight(double somex, double minx, double pixelWidth) {
+			return (int)Math.floor( ((somex - minx) / pixelWidth) + 0.5 );
+		}
+		static final double pcenterY( int py, double maxy, double pixelHeight ) {
+			return maxy - ((py + 0.5) * pixelHeight);
+		}
+		static final double pcenterX( int px, double minx, double pixelWidth ) {
+			return minx + ((px + 0.5) * pixelWidth);
+		}
+		
+		static final void intersect( double x1, double y1, double x2, double y2, double y, RasterizationContext ctx) {
+			if ( y1 < y2 ) {
+				if ( (y < y1) || (y > y2) ) {
+					return;
+				}
+		    } else if ( y1 > y2 ) {
+		    	if ( (y > y1) || (y < y2) ) {
+		    		return;
+		    	}
+		    } else {
+		    	if ( y != y1 ) {
+		    		return;
+		    	}
+		    }
+		    double x = (x1-x2) * ((y-y2) / (y1-y2)) + x2;
+		    if ( x1 < x2 ) {
+		    	if ( (x < x1) || (x > x2) ) {
+		    		return;
+		    	}
+		    } else if ( x1 > x2 ) {
+		    	if ( (x > x1) || (x < x2) ) {
+		    		return;
+		    	}
+		    } else {
+		    	if ( x != x1 ) {
+		    		return;
+		    	}
+		    }
+		    int i = ctx.xIntersects - 1;
+		    while (i >= 0) {
+		    	if (x < ctx.xIntersectScratch[i]) {
+		    		ctx.xIntersectScratch[i+1] = ctx.xIntersectScratch[i];
+		    	}
+		    	--i;
+		    }
+		    ++i;
+		    ctx.xIntersectScratch[i] = x;
+		    ctx.xIntersects++;
+		}
+		
+		/**
+		 * Calculate which pixels (pixel centers) this polygon covers.
+		 * RasterizationContext.pxPos should probably be 0 before entering this function,
+		 * unless you want to run pixels from multiple polygons together.
+		 * @param ctx geometry comes in here, scratch space for x intercepts, pixels out
+		 * @return list of x,y pairs of pixels that this polygon rasterizes to
+		 */
+		public void rasterize(RasterizationContext ctx) {
+			// double imMinx, double imMaxy, double pixelHeight, double pixelWidth, int ypx, int xpx
+			// Pixel 0,0 is top left at minx,maxy
+			int py = pcenterBelow(ymax, ctx.maxy, ctx.pixelHeight);
+			if (py < 0) {
+				py = 0;
+			}
+			double y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
+
+			if (ctx.xIntersectScratch.length < (points.length / 2)) {
+				// on the crazy outside limit, we intersect with all of the line segments, or something.
+				ctx.xIntersectScratch = new double[points.length / 2];
+			}
+
+			// for each scan row that fits within this polygon and the greater context...
+			while ((y >= ymin) && (py < ctx.ypx)) {
+				ctx.xIntersects = 0;
+				// Intersect each loop of lines at current scan line.
+				for (int parti = 0; parti < parts.length; ++parti) {
+					int partend;
+					if (parti + 1 < parts.length) {
+						partend = parts[parti+1] - 1;
+					} else {
+						partend = (points.length / 2) - 1;
+					}
+					for (int pointi = parts[parti]; pointi < partend; ++pointi) {
+						intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
+					}
+				}
+				//assert(ctx.xIntersects > 0);
+				assert(ctx.xIntersects % 2 == 0);
+				
+				// For all start-stop pairs, draw pixels from start edge to end edge
+				for (int xi = 0; xi < ctx.xIntersects; xi += 2) {
+					int px = pcenterRight(ctx.xIntersectScratch[xi], ctx.minx, ctx.pixelWidth);
+					if (px < 0) {
+						px = 0;
+					}
+					double x = pcenterX(px, ctx.minx, ctx.pixelWidth);
+					// Draw pixels from start edge to end edge
+					while ((x < ctx.xIntersectScratch[xi+1]) && (px < ctx.xpx)) {
+						ctx.addPixel(px, py);
+						px++;
+						x = pcenterX(px, ctx.minx, ctx.pixelWidth);
+					}
+				}
+				
+				py++;
+				y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
+			}
 		}
 		
 		public String toString() {
@@ -678,6 +843,42 @@ public class ShapefileBundle {
 	ArrayList<Polygon> polys = new ArrayList<Polygon>();
 	PolygonBucketArray pba = null;
 	
+	public static final long blockidToUbid(byte[] blockid) {
+		if (blockid.length == 15) {
+			long out = (int)(blockid[2]) - (int)('0');
+			for (int i = 3; i < blockid.length; ++i) {
+				out = out * 10;
+				out += (int)(blockid[i]) - (int)('0');
+			}
+			return out;
+		}
+		return -1;
+	}
+	
+	public Redata.MapRasterization makeRasterization(int px, int py) {
+		// TODO: could multi-thread this.
+		RasterizationContext ctx = new RasterizationContext(this, px, py);
+		Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
+		rastb.setSizex(px);
+		rastb.setSizey(py);
+		for (Polygon p : polys) {
+			ctx.pxPos = 0;
+			p.rasterize(ctx);
+			Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
+			bb.setUbid(blockidToUbid(p.blockid));
+			//bb.setBlockid(ByteString.copyFrom(p.blockid));
+			for (int i = 0; i < ctx.pxPos; ++i) {
+				bb.addXy(ctx.pixels[i]);
+			}
+			rastb.addBlock(bb);
+		}
+		return rastb.build();
+	}
+	public void writeRasterization(OutputStream os, int px, int py) throws IOException {
+		Redata.MapRasterization mr = makeRasterization(px, py);
+		mr.writeTo(os);
+	}
+	
 	public void read(String filename) throws IOException {
 		int lastSlash = filename.lastIndexOf('/');
 		String nameroot = filename.substring(lastSlash+1, filename.length() - 4);
@@ -780,42 +981,108 @@ public class ShapefileBundle {
 		}
 		return 0;
 	}
+	public static class BlockIdComparator implements Comparator<byte[]> {
+		@Override
+		public int compare(byte[] o1, byte[] o2) {
+			return ShapefileBundle.cmp(o1, o2);
+		}
+	}
 	
 	public static void main(String[] argv) throws IOException {
-		boolean tree = false;
+		boolean tree = true;
+		int px = -1;
+		int py = -1;
+		int boundx = 1920;
+		int boundy = 1080;
+		String inname = null;
+		String linksOut = null;
+		String rastOut = null;
+		boolean doLinks = false;
+		boolean doRast = false;
+		
+		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
-				ShapefileBundle x = new ShapefileBundle();
-				long start = System.currentTimeMillis();
-				x.read(argv[i]);
-				long end = System.currentTimeMillis();
-				System.out.println("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
-				//int linkCount = x.printLinks(new FileWriter("/tmp/foo.links"));
-				//int linkCount = x.printLinks(new FileOutputStream("/tmp/foo.links"));
-				Map<byte[], Set<byte[]> > links;
-				if (tree) {
-					links = new TreeMap<byte[], Set<byte[]> >();
-				} else {
-					links = new HashMap<byte[], Set<byte[]> >();
+				if (inname != null) {
+					System.err.println("only one input allowed, already had: " + inname);
+					System.exit(1);
+					return;
 				}
-				int linksMapped = x.mapLinks(links);
-				long linksCalculated = System.currentTimeMillis();
-				System.out.println("calculated " + linksMapped + " links in " + ((linksCalculated - end) / 1000.0) + " seconds, links.size()=" + links.size());
-				OutputStream out = new FileOutputStream("/tmp/foo.links");
-				int linkCount = 0;
-				for (byte[] key : links.keySet()) {
-					for (byte[] value : links.get(key)) {
-						linkCount++;
-						out.write(key);
-						out.write(',');
-						out.write(value);
-						out.write('\n');
-					}
-				}
-				out.close();
-				long linksWritten = System.currentTimeMillis();
-				System.out.println("wrote " + linkCount + " links in " + ((linksWritten - linksCalculated) / 1000.0) + " seconds");
+				inname = argv[i];
+			} else if (argv[i].equals("--links")) {
+				i++;
+				linksOut = argv[i];
+			} else if (argv[i].equals("--rast")) {
+				i++;
+				rastOut = argv[i];
+			} else {
+				System.err.println("bogus arg: " + argv[i]);
+				System.exit(1);
+				return;
 			}
+		}
+		
+		ShapefileBundle x = new ShapefileBundle();
+		long start = System.currentTimeMillis();
+		x.read(inname);
+		long end = System.currentTimeMillis();
+		System.out.println("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
+		start = end;
+		if (linksOut != null) {
+			//int linkCount = x.printLinks(new FileWriter("/tmp/foo.links"));
+			//int linkCount = x.printLinks(new FileOutputStream("/tmp/foo.links"));
+			Map<byte[], Set<byte[]> > links;
+			if (tree) {
+				links = new TreeMap<byte[], Set<byte[]> >(new BlockIdComparator());
+			} else {
+				links = new HashMap<byte[], Set<byte[]> >();
+			}
+			int linksMapped = x.mapLinks(links);
+			end = System.currentTimeMillis();
+			System.out.println("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
+			start = end;
+			OutputStream out = new FileOutputStream(linksOut);
+			int linkCount = 0;
+			for (byte[] key : links.keySet()) {
+				for (byte[] value : links.get(key)) {
+					linkCount++;
+					out.write(key);
+					out.write(',');
+					out.write(value);
+					out.write('\n');
+				}
+			}
+			out.close();
+			end = System.currentTimeMillis();
+			System.out.println("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
+			start = end;
+		}
+		if (rastOut != null) {
+			if (px == -1 || py == -1) {
+				double width = x.shp.header.xmax - x.shp.header.xmin;
+				double height = x.shp.header.ymax - x.shp.header.ymin;
+				double w2 = width * Math.cos(Math.abs((x.shp.header.ymax + x.shp.header.ymin) / 2.0) * Math.PI / 180.0);
+				double ratio = height / w2;
+				double boundRatio = (boundy * 1.0) / boundx;
+				if (ratio > boundRatio) {
+					// state is too tall
+					py = boundy;
+					px = (int)(py / ratio);
+				} else {
+					px = boundx;
+					py = (int)(ratio * px);
+				}
+			}
+			FileOutputStream fos = new FileOutputStream(rastOut);
+			GZIPOutputStream gos = new GZIPOutputStream(fos);
+			x.writeRasterization(gos, px, py);
+			gos.flush();
+			fos.flush();
+			gos.close();
+			fos.close();
+			end = System.currentTimeMillis();
+			System.out.println("rasterized and written in " + ((end - start) / 1000.0) + " seconds");
+			start = end;
 		}
 	}
 }
