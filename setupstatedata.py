@@ -95,11 +95,78 @@ ${dpath}/${stl}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 """)
 
 
+states = [
+	('Alabama',	'AL'),
+	('Alaska',	'AK'),
+	('Arizona',	'AZ'),
+	('Arkansas',	'AR'),
+	('California',	'CA'),
+	('Colorado',	'CO'),
+	('Connecticut',	'CT'),
+	('Delaware',	'DE'),
+	('Florida',	'FL'),
+	('Georgia',	'GA'),
+	('Hawaii',	'HI'),
+	('Idaho',	'ID'),
+	('Illinois',	'IL'),
+	('Indiana',	'IN'),
+	('Iowa',	'IA'),
+	('Kansas',	'KS'),
+	('Kentucky',	'KY'),
+	('Louisiana',	'LA'),
+	('Maine',	'ME'),
+	('Maryland',	'MD'),
+	('Massachusetts',	'MA'),
+	('Michigan',	'MI'),
+	('Minnesota',	'MN'),
+	('Mississippi',	'MS'),
+	('Missouri',	'MO'),
+	('Montana',	'MT'),
+	('Nebraska',	'NE'),
+	('Nevada',	'NV'),
+	('New Hampshire',	'NH'),
+	('New Jersey',	'NJ'),
+	('New Mexico',	'NM'),
+	('New York',	'NY'),
+	('North Carolina',	'NC'),
+	('North Dakota',	'ND'),
+	('Ohio',	'OH'),
+	('Oklahoma',	'OK'),
+	('Oregon',	'OR'),
+	('Pennsylvania',	'PA'),
+	('Rhode Island',	'RI'),
+	('South Carolina',	'SC'),
+	('South Dakota',	'SD'),
+	('Tennessee',	'TN'),
+	('Texas',	'TX'),
+	('Utah',	'UT'),
+	('Vermont',	'VT'),
+	('Virginia',	'VA'),
+	('Washington',	'WA'),
+	('West Virginia',	'WV'),
+	('Wisconsin',	'WI'),
+	('Wyoming',	'WY'),
+]
+
+def nameForPostalCode(code):
+	for x in states:
+		if x[1] == code:
+			return x[0]
+	return None
+
+def codeForState(stateName):
+	for x in states:
+		if x[0] == stateName:
+			return x[1]
+	return None
+
+
 class ProcessGlobals(object):
 	def __init__(self, options):
 		self.options = options
 		self.geourls = None
 		self.tigerlatest = None
+		self.tigerStateDirUrls = None
 
 	def getSF1Index(self):
 		"""Returns whole sf1 index html file in one buffer."""
@@ -162,7 +229,17 @@ class ProcessGlobals(object):
 				return x
 		return None
 	
-	def getTigerLatest(self):
+	def getTigerLatestShapefileEdition(self):
+		if self.tigerlatest is not None:
+			return self.tigerlatest
+		uf = urllib.urlopen(tigerbase)
+		raw = uf.read()
+		uf.close()
+		bestyear = None
+		editions = re.compile(r'href="TIGER(\d\d\d\d)/')
+	
+	def getTigerLatest(self, shapefile=False):
+		# TODO: allow matching of TIGER\d\d\d\d shapefile directories
 		if self.tigerlatest is not None:
 			return self.tigerlatest
 		uf = urllib.urlopen(tigerbase)
@@ -173,7 +250,7 @@ class ProcessGlobals(object):
 		bested = None
 		edmap = { 'f': 1, 's': 2, 't': 3 }
 		for m in editions.finditer(raw):
-			year = m.group(1)
+			year = int(m.group(1))
 			ed = m.group(2)
 			if (bestyear is None) or (year > bestyear):
 				bestyear = year
@@ -185,6 +262,44 @@ class ProcessGlobals(object):
 		# reconstruct absolute url to edition
 		self.tigerlatest = tigerbase + 'tiger' + bestyear + bested + 'e/'
 		return self.tigerlatest
+	
+	def getTigerShapefileDirUrls(self, fileOb=None, path=None, raw=None):
+		if raw is None:
+			if fileOb is not None:
+				raw = fileOb.read()
+			elif path is not None:
+				fileOb = open(path, 'rb')
+				raw = fileOb.read()
+				fileOb.close()
+		# dirUrl = 'http://www2.census.gov/geo/tiger/TIGER2009/'
+		dirUrl = self.getTigerLatest()
+		tigerRelease = re.search('TIGER\d\d\d\d', dirUrl).group()
+		rawCachePath = os.path.join(self.options.datadir, tigerRelease)
+		if raw is None:
+			if self.tigerStateDirUrls is not None:
+				return self.tigerStateDirUrls
+			if os.path.isfile(rawCachePath):
+				fileOb = open(rawCachePath, 'rb')
+				raw = fileOb.read()
+				fileOb.close()
+		if raw is None:
+			uf = urllib.urlopen(self.getTigerLatest())
+			raw = uf.read()
+			uf.close()
+			of = open(rawCachePath, 'wb')
+			of.write(raw)
+			of.close()
+		assert raw is not None
+		stateHrefRe = re.compile(r'href=\"(\d\d_[A-Z_/]+)\"', re.MULTILINE)
+		ms = stateHrefRe.findall(raw)
+		self.tigerStateDirUrls = {}
+		for state in self.states:
+			ucstate = state[0].upper().replace(' ','_')
+			for path in ms:
+				if ucstate in path:
+					self.tigerStateDirUrls[state[1]] = dirUrl + path
+		return self.tigerStateDirUrls
+
 
 class StateData(object):
 	def __init__(self, globals, st):
