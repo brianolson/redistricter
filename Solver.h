@@ -83,7 +83,9 @@ public:
 	
 	int handleArgs( int argc, char** argv );
 	void load();
-	void readLinksFile();
+	// If filename is null, add ".links" to inputname
+	void readLinksFile(const char* filename);
+	bool readLinksFileData(const char* data, size_t len);
 	void readLinksBin();
 	/** Binary Format:
 	[GeoData.h binary format for GeoData::writeBin(int,char*)

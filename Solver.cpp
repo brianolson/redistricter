@@ -181,7 +181,7 @@ void Solver::load() {
 		if ( err < 0 ) {
 			return;
 		}
-		readLinksFile();
+		readLinksFile(NULL);
 	}
 	
 	if ( districts <= 0 ) {
@@ -205,34 +205,54 @@ void Solver::load() {
 	districtPopTarget = totalpop / districts;
 }
 
-void Solver::readLinksFile() {
+void Solver::readLinksFile(const char* filename) {
 	// read edges from edge file
-	char* linkFileName = strdup( inputname );
-	assert(linkFileName != NULL);
-	{
-		size_t nlen = strlen( linkFileName ) + 8;
-		linkFileName = (char*)realloc( linkFileName, nlen );
-		assert(linkFileName != NULL);
-	}
-	strcat( linkFileName, ".links" );
+	char* linkFileName = NULL;
 	mmaped linksFile;
-	linksFile.open( linkFileName );
-#define sizeof_linkLine 27
-	numEdges = linksFile.sb.st_size / sizeof_linkLine;
-	edgeData = new int32_t[numEdges*2];
+	if (filename == NULL ) {
+		linkFileName = strdup( inputname );
+		assert(linkFileName != NULL);
+		{
+			size_t nlen = strlen( linkFileName ) + 8;
+			linkFileName = (char*)realloc( linkFileName, nlen );
+			assert(linkFileName != NULL);
+		}
+		strcat( linkFileName, ".links" );
+		linksFile.open( linkFileName );
+	} else {
+		linksFile.open( filename );
+	}
+	readLinksFileData((const char*)linksFile.data, linksFile.sb.st_size);
+	linksFile.close();
+	if (linkFileName != NULL) {
+		free( linkFileName );
+	}
+}
+bool Solver::readLinksFileData(const char* data, size_t len) {
 	char buf[14];
 	buf[13] = '\0';
 	int j = 0;
+	if ( data[26] == '\n') {
+		// old format, two CCCTTTTTTBBBB county-tract-block sets, and '\n'
+	} else if ( data[15] == ',' && data[31] == '\n' ) {
+		// new format, two SSCCCTTTTTTBBBB state-county-tract-block values with ',' between and '\n' after
+	} else {
+		fprintf(stderr, "bad format links file\n");
+		return false;
+	}
+#define sizeof_linkLine 27
+	numEdges = len / sizeof_linkLine;
+	edgeData = new int32_t[numEdges*2];
 	for ( unsigned int i = 0 ; i < numEdges; i++ ) {
 		uint64_t tubid;
-		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i, 13 );
+		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i, 13 );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
 			printf("ubid %lld => index %d\n", tubid, edgeData[j*2] );
 			continue;
 		}
-		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i + 13, 13 );
+		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + 13, 13 );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {
@@ -242,9 +262,9 @@ void Solver::readLinksFile() {
 		j++;
 	}
 	numEdges = j;
-	linksFile.close();
-	free( linkFileName );
+	return true;
 }
+
 void Solver::readLinksBin() {
 	uintptr_t p = (uintptr_t)gd->data;
 	int32_t endianness = 1;
