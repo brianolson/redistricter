@@ -60,6 +60,8 @@ class manybest(object):
 		self.dry_run = False
 		self.slogs = None
 		self.empties = None
+		# list of good runs found
+		self.they = None
 
 	def addSlog(self, path):
 		if self.root:
@@ -85,6 +87,8 @@ class manybest(object):
 	def setRoot(self, path):
 		self.root = os.path.realpath(path)
 		if not os.path.isdir(self.root):
+			if self.dry_run:
+				return
 			raise Error("-root must specify a directory")
 		for f in os.listdir(self.root):
 			fpath = os.path.join(self.root, f)
@@ -324,6 +328,8 @@ class manybest(object):
 			self.log_paths = glob.glob("*/statsum")
 		if not self.log_paths:
 			sys.stderr.write("no logs to process\n")
+			if self.dry_run:
+				return
 			sys.stderr.write(usage)
 			sys.exit(1)
 		self.skimLogs(self.log_paths)

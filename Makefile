@@ -4,6 +4,7 @@ UNAME:=$(shell uname)
 -include localvars.make
 
 all:	districter2 linkfixup drend rta2dsz analyze
+jall:	tools.jar
 
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze
 

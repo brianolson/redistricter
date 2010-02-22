@@ -747,7 +747,6 @@ public class ShapefileBundle {
 		public int getInt(byte[] data, int offset, int length) {
 			assert(length >= (this.startpos + this.length));
 			assert(type == NUMERIC);
-			// TODO: optimize away garbage String created here? parse ascii to int directly?
 			return Integer.parseInt(new String(data, offset + this.startpos, this.length));
 		}
 		
@@ -1049,6 +1048,8 @@ public class ShapefileBundle {
 		return count;
 	}
 
+	// TODO: check for whole-map contiguity, add fix-up links.
+	// Or I could just leave that to be done in the existing C++ tool.
 	public int mapLinks(SetLink out) {
 		int count = 0;
 		for (Polygon p : polys) {
