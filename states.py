@@ -64,3 +64,9 @@ def codeForState(stateName):
 		if x[0] == stateName:
 			return x[1]
 	return None
+
+def stateAbbreviations():
+	"""Iterate over two letter codes."""
+	for x in states:
+		yield x[1]
+

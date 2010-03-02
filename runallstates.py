@@ -1,6 +1,13 @@
 #!/usr/bin/python
 # Expects to run in the build dir with data/?? containing state data.
 # Using setupstatedata.pl in the standard way should do this.
+#
+# TODO: shiny GUI?
+# At the most basic, curses or Tk progress bars.
+# Or, render a recent map and display it.
+# Maybe rewrite this run script in C++ and build it into the districter binary?
+# (But I get free leak-resistance by not having a long-lived program,
+# and pickle is kinda handy.)
 
 import cPickle as pickle
 import datetime
@@ -198,6 +205,9 @@ class configuration(object):
 		self.args = []
 		self.enabled = None
 		self.geom = None
+		self.path = config
+		# readtime can be used to re-read changed files
+		self.readtime = None
 		if name is None:
 			if datadir is None:
 				raise Exception('one of name or datadir must not be None')
@@ -224,6 +234,9 @@ class configuration(object):
 		self.datadir = self.datadir.replace('$DATA', root)
 
 	datadir_state_re = re.compile(r'.*/([a-zA-Z]{2})/?$')
+
+	def isEnabled(self):
+		return (self.enabled is None) or self.enabled
 	
 	def applyConfigLine(self, line, dataroot=None):
 		line = line.strip()
@@ -247,6 +260,10 @@ class configuration(object):
 			logging.debug('old datadir=%s new datadir=%s', old_datadir, self.datadir)
 			if old_datadir != self.datadir:
 				self.readDatadirConfig()
+		elif line == 'enabled':
+			self.enabled = True
+		elif line == 'disabled':
+			self.enabled = False
 		else:
 			raise ParseError('bogus config line: "%s"\n' % line)
 		return True
@@ -259,14 +276,28 @@ class configuration(object):
 		common: arguments for any tool
 		datadir: path to datadir. Immediately reads config in datadir.
 		datadir!: path to datadir. does nothing.
+		enabled
+		disabled
 		empty lines and lines starting with '#' are ignored.
 		
 		$DATA is substituted with the global root datadir
 		"""
 		if isinstance(x, basestring):
+			self.path = x
+			self.readtime = time.time()
 			x = open(x, 'r')
 		for line in x:
 			self.applyConfigLine(line, dataroot)
+
+	def rereadIfUpdated(self):
+		if not self.path:
+			return
+		cf_stat = os.stat(self.path)
+		if self.readtime < cf_stat.st_mtime:
+			self.readtime = cf_stat.st_mtime
+			f = open(self.path, 'r')
+			for line in f:
+				self.applyConfigLine(line, dataroot)
 
 	def readDatadirConfig(self, datadir=None):
 		"""Read a datadir/geometry.pickle and calculate basic config.
@@ -302,8 +333,10 @@ class configuration(object):
 			self.args = mergeArgs(new_args, self.args)
 			logging.debug('merged args %s', self.args)
 			new_drendargs = [
-				'-P', datapath, '-d', self.geom.numCDs(),
-				'--pngW', self.geom.basewidth * 4, '--pngH', self.geom.baseheight * 4,
+				'-P', datapath,
+				'-d', str(self.geom.numCDs()),
+				'--pngW', str(self.geom.basewidth * 4),
+				'--pngH', str(self.geom.baseheight * 4),
 				'--loadSolution', 'link1/bestKmpp.dsz',
 				'--mppb', pxpath,
 				'--pngout', 'link1/%s_final2.png' % self.name]
@@ -353,6 +386,33 @@ class runallstates(object):
 		self.runlog = None  # file
 		self.bestlog = None  # file
 		self.bests = None  # map<stu, manybest.slog>
+		# used by getNextState and addStopReason
+		self.lock = None
+		# used by getNextState and runthread
+		self.qpos = 0
+
+	def addStopReason(self, reason):
+		if self.lock:
+			self.lock.acquire()
+		self.stopreason += reason
+		if self.lock:
+			self.lock.release()
+
+	def getNextState(self):
+		if self.lock:
+			self.lock.acquire()
+		stu = self.states[self.qpos]
+		self.qpos = (self.qpos + 1) % len(self.states)
+		if self.lock:
+			self.lock.release()
+		return stu
+
+	def runthread(self):
+		while not self.shouldstop():
+			# sleep 1 is a small price to pay to prevent stupid runaway loops
+			time.sleep(1)
+			stu = self.getNextState()
+			self.runstate(stu)
 
 	def readBestLog(self, path):
 		"""Read in a bestlog, loading latest state into memory."""
@@ -470,9 +530,9 @@ class runallstates(object):
 				# skip some common directory cruft
 				if cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v'):
 					continue
-				c = configuration(
-					name=cname, config=os.path.join(self.configdir, cname),
-					dataroot=self.datadir)
+				cpath = os.path.join(self.configdir, cname)
+				logging.debug('loading %s as %s, dataroot=%s', cname, cpath, self.datadir)
+				c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
 				assert c.name not in self.config
 				self.config[c.name] = c
 		if len(self.config) == 0:
@@ -484,6 +544,7 @@ class runallstates(object):
 			v.setRootDatadir(self.datadir)
 
 	def readStatedirs(self):
+		assert False
 		sys.stderr.write('readStatedirs is DISABLED\n')
 		return
 		#for s in self.statedirs:
@@ -510,6 +571,7 @@ class runallstates(object):
 		../drend -B ../data/${stu}/${stl}.${binsuffix} $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
 		"../drend" and "../data/" will be replaced with appropriate paths.
 		"""
+		assert False
 		stu = s[-2:]
 		stl = stu.lower()
 		if (not self.statearglist) and os.path.exists(os.path.join(s, "norun")):
@@ -575,13 +637,13 @@ class runallstates(object):
 		if self.dry_run:
 			return False
 		if self.stoppath and os.path.exists(self.stoppath):
-			self.stopreason = self.stoppath + ' exists'
+			self.addStopReason(self.stoppath + ' exists')
 			return True
 		if self.end is not None:
 			now = datetime.datetime.now()
 			if now > self.end:
-				self.stopreason = 'ran past end time (now=%s end=%s)' % (
-					now, self.end)
+				self.addStopReason('ran past end time (now=%s end=%s)' % (
+					now, self.end))
 				return True
 		return False
 
@@ -594,7 +656,13 @@ class runallstates(object):
 	def runstate(self, stu):
 		"""Wrapper around runstate_inner to aid in runlog."""
 		start_timestamp = timestamp()
-		ok = self.runstate_inner(stu, start_timestamp)
+		try:
+			ok = self.runstate_inner(stu, start_timestamp)
+		except Exception, e:
+			ok = False
+			sys.stderr.write(e)
+			self.addStopReason(str(e))
+			self.softfail = True
 		if (not self.dry_run) and (self.runlog is not None):
 			if ok:
 				okmsg = 'ok'
@@ -625,17 +693,18 @@ class runallstates(object):
 		statlog = os.path.join(ctd, "statlog")
 		statsum = os.path.join(ctd, "statsum")
 		if not self.dry_run:
+			self.config[stu].rereadIfUpdated()
 			fout = open(statlog, "w")
 			if not fout:
-				self.stopreason = "could not open \"%s\"" % statlog
+				self.addStopReason("could not open \"%s\"" % statlog)
 				sys.stderr.write(self.stopreason + "\n")
 				self.softfail = True
 				return False
 			fout.close()
 		cmd = niceArgs + [self.exe] + self.stdargs + self.solverMode + self.config[stu].args + self.extrargs
-		print "(cd %s && \\\n%s )" % (ctd, cmd)
+		print "(cd %s && \\\n%s )" % (ctd, ' '.join(cmd))
 		if not self.dry_run:
-			p = subprocess.Popen(cmd, shell=True, bufsize=4000, cwd=ctd,
+			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,
 				stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			errorlines = []
 			if has_poll:
@@ -643,7 +712,7 @@ class runallstates(object):
 			elif has_select:
 				errorlines = select_run(p, stu)
 			else:
-				self.stopreason = 'has neither poll nor select\n'
+				self.addStopReason('has neither poll nor select\n')
 				sys.stderr.write(self.stopreason + "\n")
 				self.softfail = True
 				return False
@@ -659,9 +728,9 @@ class runallstates(object):
 			except:
 				pass
 			if p.returncode != 0:
-				self.stopreason = "solver exited with status %d" % p.returncode
+				self.addStopReason("solver exited with status %d" % p.returncode)
 				if errorlines:
-					self.stopreason += '\n' + '\n'.join(errorlines)
+					self.addStopReason('\n' + '\n'.join(errorlines))
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
@@ -678,7 +747,7 @@ class runallstates(object):
 		if not self.dry_run:
 			ret = subprocess.call(["gzip", statlog])
 			if ret != 0:
-				self.stopreason = "gzip statlog failed %d" % ret
+				self.addStopReason("gzip statlog failed %d" % ret)
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
@@ -688,7 +757,7 @@ class runallstates(object):
 		if not self.dry_run:
 			ret = subprocess.Popen(cmd, cwd=ctd).wait()
 			if ret != 0:
-				self.stopreason = "tar g failed %d" % ret
+				self.addStopReason("tar g failed %d" % ret)
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
@@ -712,49 +781,67 @@ class runallstates(object):
 			mb.run()
 		except manybest.NoRunsException:
 			pass
-		drendargs = self.config[stu].drendargs
-		final2_png = os.path.join("link1", stu + "_final2.png")
-		if (drendargs and ((mb.they and
-			not os.path.exists(os.path.join(stu, final2_png))) or self.dry_run)):
-			cmd = [os.path.join(self.bindir, "drend")] + drendargs
-			print "(cd %s && %s)" % (stu, cmd)
-			if not self.dry_run:
-				ret = subprocess.Popen(drendcmd, shell=True, cwd=stu).wait()
-				if ret != 0:
-					self.stopreason = "drend failed %d\n" % ret
-					sys.stderr.write(self.stopreason + '\n')
-					self.softfail = True
-					return False
-			start_png = os.path.join(self.datadir, stu, stu + "_start.png")
-			ba_png = os.path.join("link1", stu + "_ba.png")
-			cmd = ["convert", start_png, final2_png, "+append", ba_png]
-			print "(cd %s && %s)" % (stu, " ".join(cmd))
-			if not self.dry_run:
-				subprocess.Popen(cmd, cwd=stu).wait()
-			cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
-			print "(cd %s && %s)" % (stu, " ".join(cmd))
-			if not self.dry_run:
-				subprocess.Popen(cmd, cwd=stu).wait()
-		if (self.bestlog is not None) and mb.they:
-			best = mb.they[0]
-			oldbest = self.bests.get(stu)
-			if (oldbest is None) or (best.kmpp < oldbest.kmpp):
-				self.bests[stu] = best
-				if oldbest is None:
-					oldmsg = "was none"
-				else:
-					oldmsg = "old=%f" % oldbest.kmpp
-				outf = self.bestlog
-				if self.dry_run:
-					outf = sys.stderr
-				outf.write("%s\t%f\t%s\t%s\t%s\n" % (
-					stu,
-					best.kmpp,
-					os.path.join(stu, best.root),
-					datetime.datetime.now().isoformat(" "),
-					oldmsg))
-				outf.flush()
+		self.doDrend(stu, mb)
+		self.doBestlog(stu, mb)
 		return True
+
+	def doDrend(self, stu, mb):
+		drendargs = self.config[stu].drendargs
+		if not drendargs:
+			return
+		final2_png = os.path.join("link1", stu + "_final2.png")
+		if (not self.dry_run) and (
+		    (not mb.they) or os.path.exists(os.path.join(stu, final2_png))):
+			return
+		cmd = [os.path.join(self.bindir, "drend")] + drendargs
+		print "(cd %s && %s)" % (stu, ' '.join(cmd))
+		if not self.dry_run:
+			ret = subprocess.Popen(cmd, shell=False, cwd=stu).wait()
+			if ret != 0:
+				self.addStopReason("drend failed %d\n" % ret)
+				sys.stderr.write(self.stopreason + '\n')
+				self.softfail = True
+				return False
+		start_png = os.path.join(self.datadir, stu, stu + "_start.png")
+		if not os.path.exists(start_png):
+			logging.info('no start_png "%s"', start_png)
+			return
+		ba_png = os.path.join("link1", stu + "_ba.png")
+		cmd = ["convert", start_png, final2_png, "+append", ba_png]
+		print "(cd %s && %s)" % (stu, " ".join(cmd))
+		if not self.dry_run:
+			subprocess.Popen(cmd, cwd=stu).wait()
+		cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
+		print "(cd %s && %s)" % (stu, " ".join(cmd))
+		if not self.dry_run:
+			subprocess.Popen(cmd, cwd=stu).wait()
+		
+		
+
+	def doBestlog(self, stu, mb):
+		if self.bestlog is None:
+			return
+		if not mb.they:
+			return
+		best = mb.they[0]
+		oldbest = self.bests.get(stu)
+		if (oldbest is None) or (best.kmpp < oldbest.kmpp):
+			self.bests[stu] = best
+			if oldbest is None:
+				oldmsg = "was none"
+			else:
+				oldmsg = "old=%f" % oldbest.kmpp
+			outf = self.bestlog
+			if self.dry_run:
+				outf = sys.stderr
+			outf.write("%s\t%f\t%s\t%s\t%s\n" % (
+				stu,
+				best.kmpp,
+				os.path.join(stu, best.root),
+				datetime.datetime.now().isoformat(" "),
+				oldmsg))
+			outf.flush()
+		
 
 	def main(self, argv):
 		self.readArgs(argv)
@@ -777,40 +864,44 @@ class runallstates(object):
 		
 		if self.dry_run:
 			self.numthreads = 1
+			for stu in self.states:
+				self.runstate(stu)
+			return
 
 		if self.numthreads <= 1:
 			print "running one thread"
-			while not self.shouldstop():
-				time.sleep(1)
-				for stu in self.states:
-					good = self.runstate(stu)
-					#print "good=%s shouldstop=%s softfail=%s" % (good, shouldstop(), softfail)
-					if (not good) or self.shouldstop():
-						break
-				if self.dry_run:
-					break
+			self.runthread()
+##			while not self.shouldstop():
+##				time.sleep(1)
+##				for stu in self.states:
+##					good = self.runstate(stu)
+##					#print "good=%s shouldstop=%s softfail=%s" % (good, shouldstop(), softfail)
+##					if (not good) or self.shouldstop():
+##						break
+##				if self.dry_run:
+##					break
 		else:
 			print "running %d threads" % self.numthreads
-			qlock = threading.Lock()
-			qpos = [0]
-			def runthread(ql, qp):
-				while not self.shouldstop():
-					time.sleep(1)
-					ql.acquire()
-					stu = self.states[qp[0]]
-					qp[0] = (qp[0] + 1) % len(self.states)
-					ql.release()
-					self.runstate(stu)
+			self.lock = threading.Lock()
+##			def runthread(ql, qp):
+##				while not self.shouldstop():
+##					time.sleep(1)
+##					ql.acquire()
+##					stu = self.states[qp[0]]
+##					qp[0] = (qp[0] + 1) % len(self.states)
+##					ql.release()
+##					self.runstate(stu)
 			threads = []
 			for x in xrange(0, self.numthreads):
-				threads.append(threading.Thread(target=runthread, args=(qlock, qpos)))
+				threads.append(threading.Thread(target=runallstates.runthread, args=(self,)))
 			for x in threads:
 				x.start()
 			for x in threads:
 				x.join()
 
 		if not self.dry_run:
-			print self.stopreason
+			if self.stopreason:
+				print self.stopreason
 			if os.path.exists(self.stoppath):
 				os.remove(self.stoppath)
 

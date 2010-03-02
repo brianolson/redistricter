@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import gzip
+import os
 import re
 import subprocess
 import sys
@@ -85,7 +86,13 @@ plot '-' title 'no dist'
 
 def main(argv):
 	x = statlog()
-	x.readStatlogLines(sys.stdin)
+	fin = sys.stdin
+	if os.path.exists('statlog.gz'):
+		fin = gzip.open('statlog.gz', 'rb')
+	elif os.path.exists('statlog'):
+		fin = open('statlog', 'r')
+	x.readStatlogLines(fin)
+	fin.close()
 	subp = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE)
 	fout = subp.stdin
 	#fout = open('/tmp/ps.gnuplot', 'w')

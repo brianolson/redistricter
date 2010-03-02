@@ -46,6 +46,12 @@ def newerthan(a, b):
 		return True
 	return sa.st_mtime > sb.st_mtime
 
+def mkdir(path, options):
+	if not os.path.isdir(path):
+		if options.dryrun:
+			print 'mkdir ' + path
+		else:
+			os.mkdir(path)
 
 makefile_fragment_template = string.Template("""
 -include ${dpath}/makedefaults
@@ -108,6 +114,9 @@ class ProcessGlobals(object):
 		"""Returns whole sf1 index html file in one buffer."""
 		sf1ipath = os.path.join(self.options.datadir, sf1IndexName)
 		if not os.path.isfile(sf1ipath):
+			if self.options.dryrun:
+				print 'should fetch "%s"' % (sf1url)
+				return ''
 			uf = urllib.urlopen(sf1url)
 			sf1data = uf.read()
 			uf.close()
@@ -150,10 +159,13 @@ class ProcessGlobals(object):
 						gu = surl + gum.group(1)
 						print gu
 						geo_urls.append(gu)
-			fo = open(geopath, 'w')
-			for gu in geo_urls:
-				fo.write(gu + '\n')
-			fo.close()
+			if self.options.dryrun:
+				print 'would write "%s"' % (geopath)
+			else:
+				fo = open(geopath, 'w')
+				for gu in geo_urls:
+					fo.write(gu + '\n')
+				fo.close()
 			self.geourls = geo_urls
 			return geo_urls
 	
@@ -165,22 +177,18 @@ class ProcessGlobals(object):
 				return x
 		return None
 	
-	def getTigerLatestShapefileEdition(self):
-		if self.tigerlatest is not None:
-			return self.tigerlatest
-		uf = urllib.urlopen(tigerbase)
-		raw = uf.read()
-		uf.close()
+	def getTigerLatestShapefileEdition(self, raw):
 		bestyear = None
 		editions = re.compile(r'href="TIGER(\d\d\d\d)/')
-	
-	def getTigerLatest(self, shapefile=False):
-		# TODO: allow matching of TIGER\d\d\d\d shapefile directories
-		if self.tigerlatest is not None:
-			return self.tigerlatest
-		uf = urllib.urlopen(tigerbase)
-		raw = uf.read()
-		uf.close()
+		for m in editions.finditer(raw):
+			year = int(m.group(1))
+			if (bestyear is None) or (year > bestyear):
+				bestyear = year
+		if bestyear is None:
+			raise Error('found no tiger editions at "%s"' % tigerbase)
+		return '%sTIGER%04d/' % (tigerbase, bestyear)
+
+	def getTigerLatestLineEdition(self, raw):
 		editions = re.compile(r'href="tiger(\d\d\d\d)(.)e/')
 		bestyear = None
 		bested = None
@@ -196,7 +204,23 @@ class ProcessGlobals(object):
 		if bestyear is None:
 			raise Error('found no tiger editions at "%s"' % tigerbase)
 		# reconstruct absolute url to edition
-		self.tigerlatest = tigerbase + 'tiger' + bestyear + bested + 'e/'
+		return '%stiger%s%se/' % (tigerbase, bestyear, bested)
+	
+	def getTigerLatest(self):
+		# TODO: allow matching of TIGER\d\d\d\d shapefile directories
+		if self.tigerlatest is not None:
+			return self.tigerlatest
+		if self.options.dryrun:
+			print 'would fetch "%s"' % (tigerbase)
+			raw = ''
+		else:
+			uf = urllib.urlopen(tigerbase)
+			raw = uf.read()
+			uf.close()
+		if self.options.shapefile:
+			self.tigerlatest = self.getTigerLatestShapefileEdition(raw)
+		else:
+			self.tigerlatest = self.getTigerLatestLineEdition(raw)
 		return self.tigerlatest
 	
 	def getTigerShapefileDirUrls(self, fileOb=None, path=None, raw=None):
@@ -219,12 +243,16 @@ class ProcessGlobals(object):
 				raw = fileOb.read()
 				fileOb.close()
 		if raw is None:
-			uf = urllib.urlopen(self.getTigerLatest())
-			raw = uf.read()
-			uf.close()
-			of = open(rawCachePath, 'wb')
-			of.write(raw)
-			of.close()
+			if self.options.dryrun:
+				print 'would fetch "%s" -> %s' % (self.getTigerLatest(), rawCachePath)
+				raw = ''
+			else:
+				uf = urllib.urlopen(self.getTigerLatest())
+				raw = uf.read()
+				uf.close()
+				of = open(rawCachePath, 'wb')
+				of.write(raw)
+				of.close()
 		assert raw is not None
 		stateHrefRe = re.compile(r'href=\"(\d\d_[A-Z_/]+)\"', re.MULTILINE)
 		ms = stateHrefRe.findall(raw)
@@ -238,24 +266,30 @@ class ProcessGlobals(object):
 
 
 class StateData(object):
-	def __init__(self, globals, st):
+	def __init__(self, globals, st, options):
 		self.pg = globals
 		self.stl = st.lower()
 		self.stu = st.upper()
 		self.turl = None
+		self.turl_time = None
 		self.ziplist = None
 		self.geom = None
+		self.options = options
 	
 	def makeUf101(self, geozip, uf101):
 		if not os.path.isfile(geozip):
 			gurl = self.pg.getGeoUrl(self.stl)
-			print 'fetching ' + gurl
-			urllib.urlretrieve(gurl, geozip)
+			print 'fetching %s -> %s' % (gurl, geozip)
+			if not self.dryrun:
+				urllib.urlretrieve(gurl, geozip)
 		print geozip + ' -> ' + uf101
 		zf = zipfile.ZipFile(geozip, 'r')
 		raw = zf.read(self.stl + 'geo.uf1')
 		zf.close()
 		filter = 'uSF1  ' + self.stu + '101'
+		if self.dryrun:
+			print 'would write "%s"' % uf101
+			return
 		fo = open(uf101, 'w')
 		for line in raw.splitlines(True):
 			if line.startswith(filter):
@@ -270,6 +304,9 @@ class StateData(object):
 			tigerlatest = self.pg.getTigerLatest()
 			turl = tigerlatest + self.stu + '/'
 			print 'guessing tiger data source "%s", if this is wrong, edit "%s"' % (turl, turlpath)
+			if self.options.dryrun:
+				return turl
+			self.turl_time = time.time()
 			fo = open(turlpath, 'w')
 			fo.write(turl)
 			fo.write('\n')
@@ -289,15 +326,17 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 		indexpath = os.path.join(zipspath, 'index.html')
 		if not os.path.isfile(indexpath):
-			if not os.path.isdir(zipspath):
-				os.mkdir(zipspath)
+			mkdir(zipspath, self.options)
 			turl = self.getTigerBase(dpath)
 			uf = urllib.urlopen(turl)
 			raw = uf.read()
 			uf.close()
-			of = open(indexpath, 'w')
-			of.write(raw)
-			of.close()
+			if self.options.dryrun:
+				print 'would write "%s"' % (indexpath)
+			else:
+				of = open(indexpath, 'w')
+				of.write(raw)
+				of.close()
 		else:
 			f = open(indexpath, 'r')
 			raw = f.read()
@@ -318,7 +357,8 @@ class StateData(object):
 			zp = os.path.join(zipspath, z)
 			if not os.path.isfile(zp):
 				print 'fetching: ' + turl + z
-				urllib.urlretrieve(turl + z, zp)
+				if not self.options.dryrun:
+					urllib.urlretrieve(turl + z, zp)
 		return ziplist
 	
 	def makelinks(self, dpath):
@@ -342,6 +382,8 @@ class StateData(object):
 					break
 		if needlinks:
 			print '%s/{%s} -> %s' % (zipspath, ','.join(ziplist), linkspath)
+			if self.options.dryrun:
+				return linkspath
 			start = time.time()
 			linker = makelinks.linker()
 			for z in ziplist:
@@ -353,13 +395,13 @@ class StateData(object):
 			print 'makelinks took %f seconds' % (time.time() - start)
 		return linkspath
 	
-	def compileBinaryData(self, options, dpath):
+	def compileBinaryData(self, dpath):
 		uf1path = os.path.join(dpath, self.stl + '101.uf1')
 		linkspath = uf1path + '.links'
 		outpath = None
-		binpath = os.path.join(options.bindir, 'linkfixup')
+		binpath = os.path.join(self.options.bindir, 'linkfixup')
 		cmd = [binpath, '-U', self.stl + '101.uf1']
-		if options.protobuf:
+		if self.options.protobuf:
 			cmd.append('-p')
 			outpath = self.stl + '.pb'
 			cmd.append(outpath)
@@ -383,6 +425,8 @@ class StateData(object):
 #		if not (newerthan(uf1path, outpath) or newerthan(linkspath, outpath)):
 #			return
 		print 'cd %s && "%s"' % (dpath, '" "'.join(cmd))
+		if self.options.dryrun:
+			return
 		start = time.time()
 		status = subprocess.call(cmd, cwd=dpath)
 		print 'data compile took %f seconds' % (time.time() - start)
@@ -400,6 +444,9 @@ class StateData(object):
 				return
 			if raw is None:
 				raw = zf.read(name)
+			if self.options.dryrun:
+				print 'would extract "%s"' % (rawpath)
+				return
 			out = file(rawpath, 'wb')
 			out.write(raw)
 			out.close()
@@ -424,10 +471,10 @@ class StateData(object):
 					break
 		if needsmeasure:
 			print '%s/{%s} -> %s/{geometry.pickle,meausure,makedefaults}' % (zipspath, ','.join(ziplist), dpath)
+		if needsmeasure and not self.options.dryrun:
 			start = time.time()
 			g = measureGeometry.geom()
-			if not os.path.isdir(rawdir):
-				os.mkdir(rawdir)
+			mkdir(rawdir, self.options)
 			for z in ziplist:
 				zpath = os.path.join(zipspath, z)
 				g.checkZip(zpath,
@@ -450,16 +497,19 @@ class StateData(object):
 		self.geom = g
 		return self.geom
 	
-	def writeMakeFragment(self, options, dpath):
+	def writeMakeFragment(self, dpath):
 		mfpath = os.path.join(dpath, '.make')
 		if not newerthan(__file__, mfpath):
 			return
 		print '->', mfpath
-		out = open(mfpath, 'w')
-		if options.protobuf:
+		if self.options.protobuf:
 			stl_bin = self.stl + '.pb'
 		else:
 			stl_bin = self.stl + '.gbin'
+		if self.options.dryrun:
+			print 'would write "%s"' % (mfpath)
+			return
+		out = open(mfpath, 'w')
 		out.write(makefile_fragment_template.substitute({
 			'dpath': dpath,
 			'stu': self.stu,
@@ -470,58 +520,63 @@ class StateData(object):
 	def getextras(self, dpath, extras):
 		geourl = self.pg.getGeoUrl(self.stl)
 		zipspath = self.zipspath(dpath)
-		if not os.path.isdir(zipspath):
-			os.mkdir(zipspath)
+		mkdir(zipspath, self.options)
 		for x in extras:
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
 			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
 			if not os.path.isfile(xpath):
-				print 'fetching ' + xurl
-				urllib.urlretrieve(xurl, xpath)
+				print '%s -> %s' % (xurl, xpath)
+				if not self.options.dryrun:
+					urllib.urlretrieve(xurl, xpath)
 	
-	def dostate(self, options):
-		dpath = os.path.join(options.datadir, self.stu)
-		if not os.path.isdir(dpath):
-			os.mkdir(dpath)
-		if options.extras:
-			self.getextras(dpath, options.extras)
-			if options.extras_only:
+	def dostate(self):
+		dpath = os.path.join(self.options.datadir, self.stu)
+		mkdir(dpath, self.options)
+		if self.options.extras:
+			self.getextras(dpath, self.options.extras)
+			if self.options.extras_only:
 				return
 		geozip = os.path.join(dpath, self.stl + 'geo_uf1.zip')
 		uf101 = os.path.join(dpath, self.stl + '101.uf1')
 		if (not os.path.isfile(uf101)) or newerthan(geozip, uf101):
 			self.makeUf101(geozip, uf101)
 		self.makelinks(dpath)
-		self.compileBinaryData(options, dpath)
+		self.compileBinaryData(dpath)
 		geom = self.measureGeometry(dpath)
 		handargspath = os.path.join(dpath, 'handargs')
 		if not os.path.isfile(handargspath):
-			ha = open(handargspath, 'w')
-			ha.write('-g 10000\n')
-			ha.close
-		self.writeMakeFragment(options, dpath)
-		start = time.time()
+			if self.options.dryrun:
+				print 'would write "%s"' % (handargspath)
+			else:
+				ha = open(handargspath, 'w')
+				ha.write('-g 10000\n')
+				ha.close
+		self.writeMakeFragment(dpath)
 		makecmd = ['make', '-k', self.stl + '_all']
-		status = subprocess.call(makecmd)
-		if status != 0:
-			sys.stderr.write(
-				'command "%s" failed with %d\n' % (' '.join(makecmd), status))
-		print 'final make took %f seconds' % (time.time() - start)
+		if self.options.dryrun:
+			print 'would run "%s"' % (' '.join(makecmd))
+		else:
+			start = time.time()
+			status = subprocess.call(makecmd)
+			if status != 0:
+				sys.stderr.write(
+					'command "%s" failed with %d\n' % (' '.join(makecmd), status))
+			print 'final make took %f seconds' % (time.time() - start)
 		
 
 def main(argv):
 	argp = optparse.OptionParser()
 # commented out options aren't actually used.
-# TODO: implement --dry-run
-#	argp.add_option('-n', '--dry-run', action='store_false', dest='doit', default=True)
 #	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
 #	argp.add_option('--nopng', '--without_png', dest='png', action='store_false', default=True)
 #	argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
+	argp.add_option('-n', '--dry-run', action='store_true', dest='dryrun', default=False)
 	argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
 	argp.add_option('-d', '--data', dest='datadir', default='data')
 	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
+	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=False)
 	(options, args) = argp.parse_args()
 
 	if not os.path.isdir(options.datadir):
@@ -532,8 +587,8 @@ def main(argv):
 	for a in args:
 		print a
 		start = time.time()
-		sd = StateData(pg, a)
-		sd.dostate(options)
+		sd = StateData(pg, a, options)
+		sd.dostate()
 		print '%s took %f seconds' % (a, time.time() - start)
 
 if __name__ == '__main__':
