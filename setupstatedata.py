@@ -14,6 +14,7 @@ a two letter postal abbreviation for a state:
 ./setupstatedata.py ny
 """
 
+import logging
 import optparse
 import os
 import cPickle as pickle
@@ -27,6 +28,8 @@ import zipfile
 
 import measureGeometry
 import makelinks
+import shapefile
+import solution
 
 from states import *
 
@@ -53,53 +56,75 @@ def mkdir(path, options):
 		else:
 			os.mkdir(path)
 
+def cdFromUf1Line(line):
+	"""Return (cd, congress number) or (-1, None)."""
+	for start,congress_number in [
+		(142, 110),
+		(140, 109),
+		(138, 108),
+		(136, 106)]:
+		cd = line[start:start+2]
+		if cd != '  ':
+			try:
+				icd = int(cd)
+				assert icd >= 1
+				assert icd < 250
+				icd -= 1
+				return (icd, congress_number)
+			except:
+				pass
+	return (-1, None)
+
 makefile_fragment_template = string.Template("""
 -include ${dpath}/makedefaults
 -include ${dpath}/makeoptions
-
-${dpath}/${stl}109.dsz:	${dpath}/raw/*.RTA rta2dsz
-	./rta2dsz -B ${dpath}/${stl_bin} $${${stu}DISTOPT} ${dpath}/raw/*.RTA -o ${dpath}/${stl}109.dsz
-
-${dpath}/${stl}.gbin:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -o ${dpath}/${stl}.gbin
-
-${dpath}/${stl}.pb:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -p ${dpath}/${stl}.pb
 	
-${stl}_all:	${dpath}/${stu}_start_sm.jpg ${dpath}/${stl}_sm.mppb ${dpath}/${stu}_start_sm.png
+${stu}_all:	${dpath}/${stu}_start_sm.jpg ${dpath}/${stu}_sm.mppb ${dpath}/${stu}_start_sm.png
 
 ${dpath}/${stu}_start_sm.jpg:	${dpath}/${stu}_start.png
 	convert ${dpath}/${stu}_start.png -resize 150x150 ${dpath}/${stu}_start_sm.jpg
 
-${dpath}/${stu}_start.png:	drend ${dpath}/${stl}.mppb ${dpath}/${stl}109.dsz
-	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stl}.mppb --pngout ${dpath}/${stu}_start.png --loadSolution ${dpath}/${stl}109.dsz > ${dpath}/${stu}_start_stats
+${dpath}/${stu}_start.png:	${bindir}/drend ${dpath}/${stu}.mppb ${dpath}/${stu}current.dsz
+	${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}.mppb --pngout ${dpath}/${stu}_start.png --loadSolution ${dpath}/${stu}current.dsz > ${dpath}/${stu}_start_stats
 
-${dpath}/${stu}_start_sm.png:	drend ${dpath}/${stl}_sm.mppb ${dpath}/${stl}109.dsz
-	./drend -B ${dpath}/${stl_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stl}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stl}109.dsz
+${dpath}/${stu}_start_sm.png:	${bindir}/drend ${dpath}/${stu}_sm.mppb ${dpath}/${stu}current.dsz
+	${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stu}current.dsz
+""")
 
-${dpath}/${stl}.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stl}.mpout $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stl}mask.png ${dpath}/raw/*.RT1
+# don't need these, compileBinaryData does it
+compileBinaryData_rules_ = """
+${dpath}/${stu}.gbin:	${dpath}/.uf1 linkfixup
+	./linkfixup -U ${dpath}/.uf1 -o ${dpath}/${stu}.gbin
 
-${dpath}/${stl}_sm.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stl}_sm.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stl}mask_sm.png ${dpath}/raw/*.RT1
+${dpath}/${stu}.pb:	${dpath}/.uf1 linkfixup
+	./linkfixup -U ${dpath}/.uf1 -p ${dpath}/${stu}.pb
+"""
 
-${dpath}/${stl}_large.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stl}_large.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stl}mask_large.png ${dpath}/raw/*.RT1
+# we don't need these when building from shapefile
+old_makepolys_rules_ = ("""
+${dpath}/${stu}.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys -o ${dpath}/${stu}.mpout $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stu}mask.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_huge.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stl}_huge.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
+${dpath}/${stu}_sm.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys -o ${dpath}/${stu}_sm.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stu}mask_sm.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}.mppb $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stl}mask.png ${dpath}/raw/*.RT1
+${dpath}/${stu}_large.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys -o ${dpath}/${stu}_large.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stu}mask_large.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_sm.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_sm.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stl}mask_sm.png ${dpath}/raw/*.RT1
+${dpath}/${stu}_huge.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys -o ${dpath}/${stu}_huge.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_large.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_large.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stl}mask_large.png ${dpath}/raw/*.RT1
+${dpath}/${stu}.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}.mppb $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stu}mask.png ${dpath}/raw/*.RT1
 
-${dpath}/${stl}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stl}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stl}mask_huge.png ${dpath}/raw/*.RT1
+${dpath}/${stu}_sm.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_sm.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stu}mask_sm.png ${dpath}/raw/*.RT1
+
+${dpath}/${stu}_large.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_large.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stu}mask_large.png ${dpath}/raw/*.RT1
+
+${dpath}/${stu}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
+	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
 """)
 
 
@@ -207,7 +232,6 @@ class ProcessGlobals(object):
 		return '%stiger%s%se/' % (tigerbase, bestyear, bested)
 	
 	def getTigerLatest(self):
-		# TODO: allow matching of TIGER\d\d\d\d shapefile directories
 		if self.tigerlatest is not None:
 			return self.tigerlatest
 		if self.options.dryrun:
@@ -276,25 +300,57 @@ class StateData(object):
 		self.geom = None
 		self.options = options
 	
-	def makeUf101(self, geozip, uf101):
+	def makeUf101(self, geozip, uf101, dpath):
 		if not os.path.isfile(geozip):
 			gurl = self.pg.getGeoUrl(self.stl)
 			print 'fetching %s -> %s' % (gurl, geozip)
-			if not self.dryrun:
+			if not self.options.dryrun:
 				urllib.urlretrieve(gurl, geozip)
-		print geozip + ' -> ' + uf101
+		fo = None
+		cds = None
+		if newerthan(geozip, uf101):
+			print geozip + ' -> ' + uf101
+			if not self.options.dryrun:
+				fo = open(uf101, 'w')
+		currentDsz = os.path.join(dpath, self.stu + 'current.dsz')
+		if newerthan(geozip, currentDsz):
+			print geozip + ' -> ' + currentDsz
+			if not self.options.dryrun:
+				cds = []
+		if (fo is None) and (cds is None):
+			# nothing to do
+			return
 		zf = zipfile.ZipFile(geozip, 'r')
 		raw = zf.read(self.stl + 'geo.uf1')
 		zf.close()
 		filter = 'uSF1  ' + self.stu + '101'
-		if self.dryrun:
-			print 'would write "%s"' % uf101
-			return
-		fo = open(uf101, 'w')
+		congress_number = None  # enforce consistency
 		for line in raw.splitlines(True):
 			if line.startswith(filter):
-				fo.write(line)
-		fo.close()
+				if fo is not None:
+					fo.write(line)
+				if cds is not None:
+					cd, cong_num = cdFromUf1Line(line)
+					if congress_number is None:
+						congress_number = cong_num
+					if cong_num is not None:
+						assert cong_num == congress_number
+					cds.append(cd)
+		if fo is not None:
+			fo.close()
+		if cds is not None:
+			cdvals = {}
+			for x in cds:
+				if x != -1:
+					cdvals[x] = 1
+			print 'found congressional districts from %dth congress: %s' % (
+				congress_number, repr(cdvals.keys()))
+			currentSolution = open(currentDsz, 'wb')
+			currentSolution.write(solution.makeDsz(cds))
+			currentSolution.close()
+			makedefaults = open(os.path.join(dpath, 'makedefaults'), 'w')
+			makedefaults.write('CTDISTOPT ?= -d %d\n' % len(cdvals))
+			makedefaults.close()
 	
 	def getTigerBase(self, dpath):
 		if self.turl is not None:
@@ -302,7 +358,12 @@ class StateData(object):
 		turlpath = os.path.join(dpath, 'tigerurl')
 		if not os.path.isfile(turlpath):
 			tigerlatest = self.pg.getTigerLatest()
-			turl = tigerlatest + self.stu + '/'
+			if self.options.shapefile:
+				turl = '%s%02d_%s/' % (
+					tigerlatest, fipsForPostalCode(self.stu),
+					nameForPostalCode(self.stu).upper().replace(' ', '_'))
+			else:
+				turl = tigerlatest + self.stu + '/'
 			print 'guessing tiger data source "%s", if this is wrong, edit "%s"' % (turl, turlpath)
 			if self.options.dryrun:
 				return turl
@@ -342,8 +403,13 @@ class StateData(object):
 			raw = f.read()
 			f.close()
 		self.ziplist = []
-		for m in re.finditer(r'href="([^"]+.zip)"', raw, re.IGNORECASE):
-			self.ziplist.append(m.group(1))
+		if self.options.shapefile:
+			# TODO: in the future, get tabblock only but not tabblock00
+			for m in re.finditer(r'href="([^"]*tabblock00[^"]*.zip)"', raw, re.IGNORECASE):
+				self.ziplist.append(m.group(1))
+		else:
+			for m in re.finditer(r'href="([^"]+.zip)"', raw, re.IGNORECASE):
+				self.ziplist.append(m.group(1))
 		return self.ziplist
 	
 	def zipspath(self, dpath):
@@ -361,7 +427,55 @@ class StateData(object):
 					urllib.urlretrieve(turl + z, zp)
 		return ziplist
 	
+	def processShapefile(self, dpath):
+		bestzip = None
+		ziplist = self.downloadTigerZips(dpath)
+		for zname in ziplist:
+			if shapefile.betterShapefileZip(zname, bestzip):
+				bestzip = zname
+		zipspath = self.zipspath(dpath)
+		assert zipspath is not None
+		assert bestzip is not None
+		bestzip = os.path.join(zipspath, bestzip)
+		linksname = os.path.join(dpath, self.stl + '101.uf1.links')
+		mppb_name = os.path.join(dpath, self.stu + '.mppb')
+		mask_name = os.path.join(dpath, self.stu + 'mask.png')
+		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
+		masksm_name = os.path.join(dpath, self.stu + 'mask_sm.png')
+		args1 = []
+		if not os.path.exists(linksname):
+			print 'need %s' % linksname
+			args1 += ['--links', linksname]
+		if not os.path.exists(mppb_name):
+			print 'need %s' % mppb_name
+			args1 += ['--rast', mppb_name, '--mask', mask_name,
+				'--boundx', '1920', '--boundy', '1080']
+		if args1:
+			args1.append(bestzip)
+			command = shapefile.makeCommand(args1, self.options.bindir)
+			print ' '.join(command)
+			if not self.options.dryrun:
+				status = subprocess.call(command, shell=False, stdin=None)
+				if status != 0:
+					raise Exception('error (%d) executing: "%s"' % (status, ' '.join(command)))
+		if not os.path.exists(mppbsm_name):
+			print 'need %s' % mppbsm_name
+			command = shapefile.makeCommand([
+				'--rast', mppbsm_name, '--mask', masksm_name,
+				'--boundx', '640', '--boundy', '480', bestzip],
+				self.options.bindir)
+			print ' '.join(command)
+			if not self.options.dryrun:
+				status = subprocess.call(command, shell=False, stdin=None)
+				if status != 0:
+					raise Exception('error (%d) executing: "%s"' % (status, ' '.join(command)))
+		return linksname
+
 	def makelinks(self, dpath):
+		"""Deprecated. Use shapefile bundle."""
+		if self.options.shapefile:
+			return self.processShapefile(dpath)
+		logging.warning('Deprecated. Use shapefile bundle.')
 		linkspath = os.path.join(dpath, self.stl + '101.uf1.links')
 		zipspath = self.zipspath(dpath)
 		rawpath = os.path.join(dpath, 'raw')
@@ -433,6 +547,9 @@ class StateData(object):
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 	
+	def processShapefileBundle(self, dpath):
+		zipspath = self.zipspath(dpath)
+	
 	def measureGeometryParasite(self, dpath, fname, zf, name, raw):
 		ln = name.lower()
 		if (ln.endswith('.rt1') or
@@ -500,7 +617,7 @@ class StateData(object):
 	def writeMakeFragment(self, dpath):
 		mfpath = os.path.join(dpath, '.make')
 		if not newerthan(__file__, mfpath):
-			return
+			return mfpath
 		print '->', mfpath
 		if self.options.protobuf:
 			stl_bin = self.stl + '.pb'
@@ -508,14 +625,16 @@ class StateData(object):
 			stl_bin = self.stl + '.gbin'
 		if self.options.dryrun:
 			print 'would write "%s"' % (mfpath)
-			return
+			return mfpath
 		out = open(mfpath, 'w')
 		out.write(makefile_fragment_template.substitute({
 			'dpath': dpath,
 			'stu': self.stu,
 			'stl': self.stl,
-			'stl_bin': stl_bin}))
+			'stu_bin': stl_bin,
+			'bindir': self.options.bindir}))
 		out.close()
+		return mfpath
 
 	def getextras(self, dpath, extras):
 		geourl = self.pg.getGeoUrl(self.stl)
@@ -538,11 +657,10 @@ class StateData(object):
 				return
 		geozip = os.path.join(dpath, self.stl + 'geo_uf1.zip')
 		uf101 = os.path.join(dpath, self.stl + '101.uf1')
-		if (not os.path.isfile(uf101)) or newerthan(geozip, uf101):
-			self.makeUf101(geozip, uf101)
+		self.makeUf101(geozip, uf101, dpath)
 		self.makelinks(dpath)
 		self.compileBinaryData(dpath)
-		geom = self.measureGeometry(dpath)
+		#geom = self.measureGeometry(dpath)
 		handargspath = os.path.join(dpath, 'handargs')
 		if not os.path.isfile(handargspath):
 			if self.options.dryrun:
@@ -551,8 +669,8 @@ class StateData(object):
 				ha = open(handargspath, 'w')
 				ha.write('-g 10000\n')
 				ha.close
-		self.writeMakeFragment(dpath)
-		makecmd = ['make', '-k', self.stl + '_all']
+		makefile = self.writeMakeFragment(dpath)
+		makecmd = ['make', '-k', self.stu + '_all', '-f', makefile]
 		if self.options.dryrun:
 			print 'would run "%s"' % (' '.join(makecmd))
 		else:
@@ -576,7 +694,7 @@ def main(argv):
 	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
-	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=False)
+	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=True)
 	(options, args) = argp.parse_args()
 
 	if not os.path.isdir(options.datadir):

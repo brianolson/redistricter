@@ -206,7 +206,7 @@ class configuration(object):
 		self.enabled = None
 		self.geom = None
 		self.path = config
-		# readtime can be used to re-read changed files
+		# readtime can be used to re-read changed config files
 		self.readtime = None
 		if name is None:
 			if datadir is None:
@@ -215,6 +215,10 @@ class configuration(object):
 			if m is None:
 				raise Exception('failed to get state name from datadir path "%s"' % datadir)
 			self.name = m.group(1)
+		# set some basic args now that name is set.
+		self.args = ['-o', self.name + '_final.dsz']
+		self.drendargs = ['--loadSolution', 'link1/bestKmpp.dsz',
+			'--pngout', 'link1/%s_final2.png' % self.name]
 		if self.datadir is not None:
 			self.readDatadirConfig()
 		if config is not None:
@@ -316,32 +320,38 @@ class configuration(object):
 		stl = statecode.lower()
 		if os.path.exists(os.path.join(self.datadir, 'norun')):
 			self.enabled = False
+		
+		# set some basic args based on any datadir
+		datapath = os.path.join(self.datadir, stl + '.pb')
+		pxpath = os.path.join(self.datadir, stl + '.mppb')
+		datadir_args = ['-P', datapath]
+		logging.debug('datadir args %s', datadir_args)
+		self.args = mergeArgs(datadir_args, self.args)
+		logging.debug('merged args %s', self.args)
+		datadir_drend_args = ['-P', datapath, '--mppb', pxpath]
+		logging.debug('geom drend args %s', datadir_drend_args)
+		self.drendargs = mergeArgs(datadir_drend_args, self.drendargs)
+		logging.debug('merged drend args %s', self.drendargs)
+		
+		# set args from geometry.pickle if available
 		pgeompath = os.path.join(self.datadir, 'geometry.pickle')
 		if os.path.exists(pgeompath):
 			f = open(pgeompath, 'rb')
 			self.geom = pickle.load(f)
 			f.close()
-			datapath = os.path.join(self.datadir, stl + '.pb')
-			pxpath = os.path.join(self.datadir, stl + '.mppb')
-			new_args = [
-				'-P', datapath, '-d', self.geom.numCDs(),
-				'-o', self.name + '_final.dsz',
-#				'--pngout', self.name + '_final.png',
-#				'--pngW', geom.basewidth, '--pngH', geom.baseheight,
-				]
-			logging.debug('geom args %s', new_args)
-			self.args = mergeArgs(new_args, self.args)
+			geom_args = ['-d', self.geom.numCDs()]
+#			'--pngout', self.name + '_final.png',
+#			'--pngW', geom.basewidth, '--pngH', geom.baseheight,
+			logging.debug('geom args %s', geom_args)
+			self.args = mergeArgs(geom_args, self.args)
 			logging.debug('merged args %s', self.args)
-			new_drendargs = [
-				'-P', datapath,
+			geom_drendargs = [
 				'-d', str(self.geom.numCDs()),
-				'--pngW', str(self.geom.basewidth * 4),
-				'--pngH', str(self.geom.baseheight * 4),
-				'--loadSolution', 'link1/bestKmpp.dsz',
-				'--mppb', pxpath,
-				'--pngout', 'link1/%s_final2.png' % self.name]
-			logging.debug('geom drend args %s', new_drendargs)
-			self.drendargs = mergeArgs(new_drendargs, self.drendargs)
+#				'--pngW', str(self.geom.basewidth * 4),
+#				'--pngH', str(self.geom.baseheight * 4),
+				]
+			logging.debug('geom drend args %s', geom_drendargs)
+			self.drendargs = mergeArgs(geom_drendargs, self.drendargs)
 			logging.debug('merged drend args %s', self.drendargs)
 		else:
 			logging.warning('no %s', pgeompath)
@@ -366,8 +376,6 @@ class runallstates(object):
 		self.extrargs = []
 		self.dry_run = False
 		self.verbose = 1
-		# datadir/statedir paths
-		#self.statedirs = []
 		# added with --config
 		self.configArgList = []
 		# added with --configdir
@@ -376,10 +384,6 @@ class runallstates(object):
 		self.config = {}
 		# list of STU uppercase state abbreviations
 		self.states = []
-		# map from STU to arg string
-		#self.basicargs = {}
-		# map from STU to fully formed drend command line (string)
-		#self.drendcmds = {}
 		self.softfail = False
 		self.stoppath = None
 		self.stopreason = ''
@@ -416,6 +420,8 @@ class runallstates(object):
 
 	def readBestLog(self, path):
 		"""Read in a bestlog, loading latest state into memory."""
+		if not os.path.exists(path):
+			return {}
 		rbestlog = open(path, "r")
 		bests = {}
 		for line in rbestlog:
@@ -477,6 +483,7 @@ class runallstates(object):
 				i += 1
 				assert self.configdir is None
 				self.configdir = argv[i]
+				self.loadConfigdir(self.configdir)
 			elif arg == "--threads":
 				i += 1
 				self.numthreads = int(argv[i])
@@ -494,7 +501,8 @@ class runallstates(object):
 				self.openBestLog(argv[i])
 			else:
 				astu = arg.upper()
-				if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
+				#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
+				if os.path.isdir(os.path.join(self.datadir, astu)):
 					self.statearglist.append(astu)
 				else:
 					sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
@@ -514,122 +522,49 @@ class runallstates(object):
 		if not IsExecutableDir(self.datadir):
 			sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
 
+	def loadConfigdir(self, configdir):
+		for cname in os.listdir(configdir):
+			# skip some common directory cruft
+			if cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v'):
+				continue
+			cpath = os.path.join(configdir, cname)
+			logging.debug('loading %s as %s, dataroot=%s', cname, cpath, self.datadir)
+			c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
+			assert c.name not in self.config
+			self.config[c.name] = c
 
 	def loadConfigurations(self):
-		for st in self.statearglist:
-			assert st not in self.config
-			self.config[st] = configuration(
-				name=st, datadir=os.path.join(self.datadir, st))
 		for cname in self.configArgList:
 			c = configuration(
 				name=os.path.split(cname)[-1], config=cname, dataroot=self.datadir)
 			assert c.name not in self.config
 			self.config[c.name] = c
-		if self.configdir is not None:
-			for cname in os.listdir(self.configdir):
-				# skip some common directory cruft
-				if cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v'):
-					continue
-				cpath = os.path.join(self.configdir, cname)
-				logging.debug('loading %s as %s, dataroot=%s', cname, cpath, self.datadir)
-				c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
-				assert c.name not in self.config
-				self.config[c.name] = c
-		if len(self.config) == 0:
+		# moved to readArgs
+		#if self.configdir is not None:
+		#	self.loadConfigdir(self.configdir)
+		if self.config:
+			# filter config list by statearglist
+			all_config = self.config
+			self.config = {}
+			for st in self.statearglist:
+				if st in all_config:
+					it = all_config[st]
+					self.config[it.name] = it
+				else:
+					self.config[st] = configuration(
+						name=st, datadir=os.path.join(self.datadir, st))
+		else:
+			for st in self.statearglist:
+				assert st not in self.config
+				self.config[st] = configuration(
+					name=st, datadir=os.path.join(self.datadir, st))
+		if not self.config:
 			# get all the old defaults
 			for stdir in glob.glob(self.datadir + "/??"):
 				c = configuration(datadir=stdir)
 				self.config[c.name] = c
 		for k,v in self.config.iteritems():
 			v.setRootDatadir(self.datadir)
-
-	def readStatedirs(self):
-		assert False
-		sys.stderr.write('readStatedirs is DISABLED\n')
-		return
-		#for s in self.statedirs:
-		#	self.readStatedir(s)
-	
-	#TODO: delete this
-	def readStatedir(self, s):
-		"""Args for some state come from (in order of precedence, highest to lowest):
-		./${stu}_basicargs
-		./${stu}_drendcmd
-		
-		$state_data_dir/geometry.pickle
-		
-		$state_data_dir/basicargs
-		$state_data_dir/drendcmd
-		
-		geometry.pickle is a measureGeometry.geom object generated by measureGeometry or as in setupstatedata.py . This is the preferred default.
-		
-		basicargs files should have one line of the form:
-		-B data/${stu}/${stl}.${binsuffix} --pngout ${stu}_final.png -d $numdists -o ${stu}_final.dsz --pngW 640 --pngH 480
-		"data/" will be replaced with a path to the specified data dir
-		
-		drendcmd files should have one line of the form:
-		../drend -B ../data/${stu}/${stl}.${binsuffix} $distnumopt $pngsize --loadSolution bestKmpp.dsz -px ../data/${stu}/${stl}.mpout --pngout ${stu}_final2.png
-		"../drend" and "../data/" will be replaced with appropriate paths.
-		"""
-		assert False
-		stu = s[-2:]
-		stl = stu.lower()
-		if (not self.statearglist) and os.path.exists(os.path.join(s, "norun")):
-			return
-		pgeompath = os.path.join(s, 'geometry.pickle')
-		geom = None
-		try:
-			f = open(pgeompath, 'rb')
-			geom = pickle.load(f)
-			f.close()
-		except:
-			pass
-		ba_path = stu + "_basicargs"
-		if (not os.path.exists(ba_path)) and (geom is not None):
-			self.basicargs[stu] = (
-				'-B %s --pngout %s_final.png -d %d -o %s_final.dsz --pngW %d --pngH %d' %
-				(os.path.join(s, stl + '.pb'), stu, geom.numCDs(), stu,
-				 geom.basewidth, geom.baseheight))
-		else:
-			ba_path = os.path.join(s, "basicargs")
-			if not os.path.exists(ba_path):
-				sys.stderr.write("error: %s missing basicargs\n" % stu)
-				return
-			fin = open(ba_path, "r")
-			ba = ""
-			if fin:
-				ba = fin.readline()
-				fin.close()
-				if ba:
-					ba = ba.strip(" \t\n\r")
-					ba = ba.replace("-B data", "-B " + self.datadir)
-			else:
-				return
-			self.basicargs[stu] = ba
-		dc_path = stu + "_drendcmd"
-		if (not os.path.exists(dc_path)) and (geom is not None):
-			drendpath = os.path.join(self.bindir, 'drend')
-			datapath = os.path.join(s, stl + '.pb')
-			pxpath = os.path.join(s, stl + '.mpout')
-			self.drendcmds[stu] = (
-				'%s -B %s -d %d --pngW %d --pngH %d --loadSolution link1/bestKmpp.dsz -px %s --pngout link1/%s_final2.png' % 
-				(drendpath, datapath, geom.numCDs(), geom.basewidth * 4, geom.baseheight * 4,
-				 pxpath, stu))
-		else:
-			dc_path = os.path.join(s, "drendcmd")
-			fin = open(dc_path, "r")
-			if fin:
-				dc = fin.readline()
-				fin.close()
-				if dc:
-					dc = dc.strip(" \t\n\r")
-					dc = dc.lstrip("# \t")
-					dc = dc.replace("../data", self.datadir)
-					dc = dc.replace("../drend", os.path.join(self.bindir, "drend"))
-					dc = dc.replace("--pngout ", "--pngout link1/")
-					dc = dc.replace("--loadSolution ", "--loadSolution link1/")
-					self.drendcmds[stu] = dc
-		self.states.append(stu)
 
 	def shouldstop(self):
 		if self.softfail:
@@ -677,16 +612,6 @@ class runallstates(object):
 		"""This is the primary sequence of actions to run the solver on a state."""
 		if not os.path.exists(stu):
 			self.maybe_mkdir(stu)
-		#ha = ""
-		#ha_path = stu + "_handargs"
-		#if not os.path.exists(ha_path):
-		#	ha_path = os.path.join(self.datadir, stu, "handargs")
-		#fin = open(ha_path, "r")
-		#if fin:
-		#	ha = fin.readline()
-		#	fin.close()
-		#	ha = ha.strip(" \t\n\r")
-		#	ha = " " + ha
 		ctd = os.path.join(stu, start_timestamp)
 		self.maybe_mkdir(ctd)
 		self.maybe_mkdir(os.path.join(ctd,"g"))
@@ -849,7 +774,6 @@ class runallstates(object):
 		self.loadConfigurations()
 		for c in self.config.itervalues():
 			print c
-		#self.readStatedirs()
 		
 		self.states = self.config.keys()
 		
@@ -871,26 +795,9 @@ class runallstates(object):
 		if self.numthreads <= 1:
 			print "running one thread"
 			self.runthread()
-##			while not self.shouldstop():
-##				time.sleep(1)
-##				for stu in self.states:
-##					good = self.runstate(stu)
-##					#print "good=%s shouldstop=%s softfail=%s" % (good, shouldstop(), softfail)
-##					if (not good) or self.shouldstop():
-##						break
-##				if self.dry_run:
-##					break
 		else:
 			print "running %d threads" % self.numthreads
 			self.lock = threading.Lock()
-##			def runthread(ql, qp):
-##				while not self.shouldstop():
-##					time.sleep(1)
-##					ql.acquire()
-##					stu = self.states[qp[0]]
-##					qp[0] = (qp[0] + 1) % len(self.states)
-##					ql.release()
-##					self.runstate(stu)
 			threads = []
 			for x in xrange(0, self.numthreads):
 				threads.append(threading.Thread(target=runallstates.runthread, args=(self,)))

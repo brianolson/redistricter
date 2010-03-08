@@ -26,9 +26,14 @@ import com.google.protobuf.ByteString;
 
 // TODO: break up this monster source of many static innerclasses into package level classes in their own sources?
 
-// Things I need from the shapefile bundle:
-// Block adjacency
-// Rasterization
+/**
+ * Things I need from the shapefile bundle:
+ * Block adjacency
+ * Rasterization
+ * Geometry measurement {min,max}{lat,lon}
+ *
+ * This class implements both.
+ */
 public class ShapefileBundle {
 	
 	static int swap(int x) {
@@ -820,7 +825,7 @@ public class ShapefileBundle {
 			} else {
 				assert((version & 0x07) == 3);
 			}
-			System.out.println(this);
+			//System.out.println(this);
 			scratch[0] = in.readByte();
 			int startpos = 0;
 			while (scratch[0] != (byte)0x0d) {
@@ -828,7 +833,7 @@ public class ShapefileBundle {
 				DBaseFieldDescriptor nh = new DBaseFieldDescriptor(scratch, 0, 1+readPartTwoLen);
 				nh.startpos = startpos;
 				startpos += nh.length;
-				System.out.println(nh);
+				//System.out.println(nh);
 				fields.add(nh);
 				scratch[0] = in.readByte();
 			}
@@ -991,7 +996,7 @@ public class ShapefileBundle {
 		public SynchronizingSetLink(SetLink sub) {
 			out = sub;
 		}
-		@Override
+		//@Override // javac 1.5 doesn't like this
 		public boolean setLink(byte[] a, byte[] b) {
 			boolean x;
 			synchronized (out) {
@@ -1012,7 +1017,7 @@ public class ShapefileBundle {
 			pba = data;
 		}
 		
-		@Override
+		//@Override // javac 1.5 doesn't like this
 		public void run() {
 			while (true) {
 				Polygon p = null;
@@ -1099,11 +1104,20 @@ public class ShapefileBundle {
 		return 0;
 	}
 	public static class BlockIdComparator implements Comparator<byte[]> {
-		@Override
+		//@Override // javac 1.5 doesn't like this
 		public int compare(byte[] o1, byte[] o2) {
 			return ShapefileBundle.cmp(o1, o2);
 		}
 	}
+
+public static final String usage =
+"--links outname.links\n" +
+"--rast outname.mppb\n" +
+"--mask outname.png\n" +
+"--threads <int>\n" +
+"--boundx <int>\n" +
+"--boundy <int>\n" +
+"tl_2009_09_tabblock00.zip\n";
 	
 	public static void main(String[] argv) throws IOException {
 		boolean tree = true;
@@ -1137,11 +1151,24 @@ public class ShapefileBundle {
 			} else if (argv[i].equals("--threads")) {
 				i++;
 				threads = Integer.parseInt(argv[i]);
+			} else if (argv[i].equals("--boundx")) {
+				i++;
+				boundx = Integer.parseInt(argv[i]);
+			} else if (argv[i].equals("--boundy")) {
+				i++;
+				boundy = Integer.parseInt(argv[i]);
 			} else {
 				System.err.println("bogus arg: " + argv[i]);
+				System.err.print(usage);
 				System.exit(1);
 				return;
 			}
+		}
+
+		if (inname == null) {
+			System.err.println("no input shapefile zip bundle specified");
+			System.err.print(usage);
+			System.exit(1);
 		}
 		
 		ShapefileBundle x = new ShapefileBundle();

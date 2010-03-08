@@ -7,19 +7,16 @@ TYPE_OBJS += tiger/mmaped.o
 
 #CXXFLAGS += -g -Wall -MMD
 
-all:	tiger/mergeRT1 tiger/makepolys tiger/makeLinks
+all:	tiger/makepolys
+#all:	tiger/mergeRT1 tiger/makeLinks
 
 THINGSTOCLEAN+=tiger/mergeRT1 tiger/makepolys tiger/makeLinks ${TYPE_OBJS} ${TYPE_SOURCES} ${TYPE_HEADERS}
 
-tiger/makeLinks:	tiger/makeLinks.cpp tiger/record1.o tiger/mmaped.o
-	g++ ${CXXFLAGS} -g -o tiger/makeLinks tiger/makeLinks.cpp -Wall tiger/record1.o tiger/mmaped.o
+#tiger/makeLinks:	tiger/makeLinks.cpp tiger/record1.o tiger/mmaped.o
+#	g++ ${CXXFLAGS} -g -o tiger/makeLinks tiger/makeLinks.cpp -Wall tiger/record1.o tiger/mmaped.o
 
-tiger/mergeRT1:	tiger/mergeRT1.cpp tiger/record1.o tiger/mmaped.o
-	g++ ${CXXFLAGS} -g -o tiger/mergeRT1 tiger/mergeRT1.cpp -Wall tiger/record1.o tiger/mmaped.o
-
-#records.a:	$(TYPE_OBJS)
-#	ar -r -c records.a $(TYPE_OBJS)
-#	ranlib records.a
+#tiger/mergeRT1:	tiger/mergeRT1.cpp tiger/record1.o tiger/mmaped.o
+#	g++ ${CXXFLAGS} -g -o tiger/mergeRT1 tiger/mergeRT1.cpp -Wall tiger/record1.o tiger/mmaped.o
 
 POLYOBJS:=tiger/makepolys.o tiger/recordA.o tiger/recordI.o
 POLYOBJS+=tiger/record1.o tiger/record2.o tiger/mmaped.o

@@ -3,6 +3,8 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/gzip_stream.h>
 
+using google::protobuf::int64;
+
 PBPointOutput::PBPointOutput(int fileDescriptor)
 	: fd(fileDescriptor), rast(NULL), block(NULL) {
 	rast = new MapRasterization();
@@ -18,7 +20,8 @@ PBPointOutput::~PBPointOutput() {
 }
 
 bool PBPointOutput::writePoint(uint64_t ubid, int px, int py) {
-	if ((block == NULL) || (block->ubid() != ubid)) {
+	if ((block == NULL) ||
+	    (block->ubid() != static_cast<int64>(ubid))) {
 		block = rast->add_block();
 		block->set_ubid(ubid);
 	}
