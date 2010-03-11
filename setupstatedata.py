@@ -14,6 +14,7 @@ a two letter postal abbreviation for a state:
 ./setupstatedata.py ny
 """
 
+import glob
 import logging
 import optparse
 import os
@@ -75,7 +76,36 @@ def cdFromUf1Line(line):
 				pass
 	return (-1, None)
 
-makefile_fragment_template = string.Template("""
+CURSOL_RE_ = re.compile(r'(..)(\d\d\d).dsz')
+
+def linkBestCurrentSolution(dpath):
+	alldsz = glob.glob(dpath + '/*dsz')
+	currentLink = None
+	bestDsz = None
+	bestN = None
+	stu = None
+	for x in alldsz:
+		if x.endswith('current.dsz'):
+			assert os.path.islink(x)
+			currentLink = os.readlink(x)
+			continue
+		fname = os.path.basename(x)
+		m = CURSOL_RE_.match(fname)
+		assert m is not None, ('failed to parse %s' % fname)
+		nstu = m.group(1).upper()
+		if stu is None:
+			stu = nstu
+		assert nstu == stu
+		nth = int(m.group(2))
+		if (bestDsz is None) or (nth > bestN):
+			bestN = nth
+			bestDsz = fname
+	if bestDsz is None:
+		return None
+	os.symlink(bestDsz, os.path.join(dpath, stu + 'current.dsz'))
+	return bestDsz
+
+basic_make_rules_ = """
 -include ${dpath}/makedefaults
 -include ${dpath}/makeoptions
 	
@@ -89,7 +119,7 @@ ${dpath}/${stu}_start.png:	${bindir}/drend ${dpath}/${stu}.mppb ${dpath}/${stu}c
 
 ${dpath}/${stu}_start_sm.png:	${bindir}/drend ${dpath}/${stu}_sm.mppb ${dpath}/${stu}current.dsz
 	${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stu}current.dsz
-""")
+"""
 
 # don't need these, compileBinaryData does it
 compileBinaryData_rules_ = """
@@ -126,6 +156,9 @@ ${dpath}/${stu}_large.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 ${dpath}/${stu}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
 """)
+
+makefile_fragment_template = string.Template(
+	basic_make_rules_ + old_makepolys_rules_)
 
 
 class ProcessGlobals(object):
@@ -345,9 +378,11 @@ class StateData(object):
 					cdvals[x] = 1
 			print 'found congressional districts from %dth congress: %s' % (
 				congress_number, repr(cdvals.keys()))
-			currentSolution = open(currentDsz, 'wb')
+			cnDsz = os.path.join(dpath, '%s%d.dsz' % (self.stu, congress_number))
+			currentSolution = open(cnDsz, 'wb')
 			currentSolution.write(solution.makeDsz(cds))
 			currentSolution.close()
+			linkBestCurrentSolution(dpath)
 			makedefaults = open(os.path.join(dpath, 'makedefaults'), 'w')
 			makedefaults.write('CTDISTOPT ?= -d %d\n' % len(cdvals))
 			makedefaults.close()
@@ -695,6 +730,7 @@ def main(argv):
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
 	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=True)
+	argp.add_option('--noshapefile', dest='shapefile', action='store_false')
 	(options, args) = argp.parse_args()
 
 	if not os.path.isdir(options.datadir):
