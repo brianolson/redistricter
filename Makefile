@@ -6,7 +6,7 @@ UNAME:=$(shell uname)
 all:	districter2 linkfixup drend rta2dsz analyze
 jall:	tools.jar
 
-THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze
+THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze tools.jar
 
 
 #OG:=-O2 -DNDEBUG=1
@@ -107,7 +107,7 @@ tabledesc/redata_pb2.py:	redata.proto
 #	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
 
 clean:
-	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h
+	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h java/org/bolson/redistricter/Redata.java
 
 run:	districter2
 	./districter2 -U build/input.uf1 -g 100 --pngout fl_test.png --pngW 400 --pngH 400 --oldCDs -d -10 -o fl_test_oz
