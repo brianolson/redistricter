@@ -916,12 +916,14 @@ public class ShapefileBundle {
 	static final int randColorRange = 150;
 	static final int randColorOffset = 100;
 	boolean colorMask = false;
+	boolean colorMaskRandom = false;
 	
 	public Redata.MapRasterization makeRasterization(int px, int py, BufferedImage mask) {
 		RasterizationContext ctx = new RasterizationContext(this, px, py);
 		Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
 		rastb.setSizex(px);
 		rastb.setSizey(py);
+		int polyindex = 0;
 		for (Polygon p : polys) {
 			ctx.pxPos = 0;
 			p.rasterize(ctx);
@@ -933,13 +935,16 @@ public class ShapefileBundle {
 				bb.addXy(ctx.pixels[i]);
 			}
 			if (mask != null) {
-				
 				int argb;
 				if (colorMask) {
-					argb = 0xff000000 |
-					(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
-					(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
-					((int)(Math.random() * randColorRange) + randColorOffset);
+					if (colorMaskRandom) {
+						argb = 0xff000000 |
+						(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
+						(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
+						((int)(Math.random() * randColorRange) + randColorOffset);
+					} else {
+						argb = MapCanvas.colorsARGB[polyindex % MapCanvas.colorsARGB.length];
+					}
 				} else {
 					argb = ((int)(Math.random() * randColorRange) + randColorOffset);
 					argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
@@ -952,6 +957,7 @@ public class ShapefileBundle {
 			if (--blocklimit < 0) {
 				break;
 			}
+			polyindex++;
 		}
 		return rastb.build();
 	}

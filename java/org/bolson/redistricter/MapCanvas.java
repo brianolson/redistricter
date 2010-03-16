@@ -179,16 +179,42 @@ public class MapCanvas /*extends Canvas*/ {
 	
 	/**
 	 * array of byte[4] ABGR sets
+	 * same colors as default list in renderDistricts.cpp
 	 */
 	public static final byte[][] colors = {
-		{ff, ff, 0, 0},
-		{ff, 0, ff, 0},
-		{ff, 0, 0, ff},
-		{ff, ff, ff, 0},
-		{ff, ff, 0, ff},
-		{ff, 0, ff, ff},
-		{ff, ha, ha, ha},
+		{ff, ff,  0,  0,},	// 0 red
+		{ff,  0, ff,  0,},	// 1 green
+		{ff,  0,  0, ff,},	// 2 blue
+		{ff, ff, ff,  0,},	// 3 yellow
+		{ff, ff,  0, ff,},	// 4 magenta
+		{ff,  0, ff, ff,},	// 5 cyan
+		{ff, ff, ff, ff,},	// 6 white
+		{ff, (byte)0x99, (byte)0x99, (byte)0x99,},	// 7 grey
+		{ff, ff, ha,  0,},	// 8 orange
+		{ff, ff,  0, ha,},	// 9 pink
+		{ff, ff, ha, ha,},
+		{ff, ha, ha,  0,},
+		{ff, ha,  0, ha,},
+		{ff,  0, ff, ha,},
+		{ff,  0, ha, ff,},
+		{ff, ha, ff,  0,},
+		{ff, ha, ff, ha,},
+		{ff, ha,  0, ff,},
+		{ff, ha, ha, ff,},
 	};
+	
+	public static final int[] colorsARGB;
+	static {
+		colorsARGB = new int[colors.length];
+		for (int i = 0; i < colors.length; ++i) {
+			colorsARGB[i] =
+				((0x00ff & colors[i][0]) << 24) |
+				((0x00ff & colors[i][1]) << 16) |
+				((0x00ff & colors[i][2]) << 8) |
+				(0x00ff & colors[i][3]);
+			System.err.println(colors[i][0] + "," + colors[i][1] + "," + colors[i][2] + "," + colors[i][3] + " -> " + colorsARGB[i]);
+		}
+	}
 	
 	public void drawToImage(BufferedImage im, byte[] dsz) {
 		DataBuffer db = im.getRaster().getDataBuffer();
