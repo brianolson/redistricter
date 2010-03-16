@@ -157,9 +157,7 @@ ${dpath}/${stu}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
 	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
 """)
 
-makefile_fragment_template = string.Template(
-	basic_make_rules_ + old_makepolys_rules_)
-
+makefile_fragment_template = string.Template(basic_make_rules_)
 
 class ProcessGlobals(object):
 	def __init__(self, options):
@@ -384,7 +382,8 @@ class StateData(object):
 			currentSolution.close()
 			linkBestCurrentSolution(dpath)
 			makedefaults = open(os.path.join(dpath, 'makedefaults'), 'w')
-			makedefaults.write('CTDISTOPT ?= -d %d\n' % len(cdvals))
+			makedefaults.write('%sDISTOPT ?= -d %d\n' % (
+				self.stu, len(cdvals)))
 			makedefaults.close()
 	
 	def getTigerBase(self, dpath):
@@ -736,6 +735,9 @@ def main(argv):
 	if not os.path.isdir(options.datadir):
 		raise Error('data dir "%s" does not exist' % options.datadir)
 
+	if not options.shapefile:
+		makefile_fragment_template = string.Template(
+			basic_make_rules_ + old_makepolys_rules_)
 	pg = ProcessGlobals(options)
 
 	for a in args:

@@ -17,7 +17,7 @@ def makeCommand(extra_args, bindir=None):
 	if bindir is None:
 		bindir = os.path.dirname(os.path.abspath(__file__))
 	classpath = os.path.join(bindir, 'tools.jar') + ':' + globJarsToClasspath(os.path.join(bindir, 'jars'))
-	return ['java', '-Xmx500M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
+	return ['java', '-enableassertions', '-Xmx500M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
 
 
 BUNDLE_NAME_RE_ = re.compile(r'.*tl_(\d\d\d\d)_(\d\d)_tabblock(0?0?).zip$', re.IGNORECASE)
@@ -79,6 +79,7 @@ def main(argv):
 	command = makeCommand(argv[1:])
 	print ' '.join(command)
 	p = subprocess.Popen(command, shell=False, stdin=None)
+	p.wait()
 
 if __name__ == '__main__':
 	main(sys.argv)

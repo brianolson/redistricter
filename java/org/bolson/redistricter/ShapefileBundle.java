@@ -35,6 +35,10 @@ import com.google.protobuf.ByteString;
  * This class implements both.
  */
 public class ShapefileBundle {
+	// TODO: requires Java 1.6
+	//static java.util.logging.Logger log = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
+	static java.util.logging.Logger log = java.util.logging.Logger.getLogger(
+		"org.bolson.redistricter");
 	
 	static int swap(int x) {
 		return
@@ -825,7 +829,6 @@ public class ShapefileBundle {
 			} else {
 				assert((version & 0x07) == 3);
 			}
-			//System.out.println(this);
 			scratch[0] = in.readByte();
 			int startpos = 0;
 			while (scratch[0] != (byte)0x0d) {
@@ -833,12 +836,12 @@ public class ShapefileBundle {
 				DBaseFieldDescriptor nh = new DBaseFieldDescriptor(scratch, 0, 1+readPartTwoLen);
 				nh.startpos = startpos;
 				startpos += nh.length;
-				//System.out.println(nh);
 				fields.add(nh);
 				scratch[0] = in.readByte();
 			}
 			recordLength = startpos;
 			scratch = new byte[recordLength];
+			log.log(log.getLevel().FINE, "{0}", this);
 		}
 		byte[] next() throws IOException {
 			byte code;
@@ -856,8 +859,32 @@ public class ShapefileBundle {
 		}
 		
 		public String toString() {
-			return "(DBF " + Integer.toHexString(version) + " " + year + "-" + month + "-" + day + " numRecords=" + numRecords +
-			" numHeaderBytes=" + numHeaderBytes + " numRecordBytes=" + numRecordBytes + ")";
+			StringBuffer sb = new StringBuffer("(DBF ");
+			sb.append(Integer.toHexString(version));
+			sb.append(" ");
+			sb.append(year);
+			sb.append("-");
+			sb.append(month);
+			sb.append("-");
+			sb.append(day);
+			sb.append(" numRecords=");
+			sb.append(numRecords);
+			sb.append(" numHeaderBytes=");
+			sb.append(numHeaderBytes);
+			sb.append(" numRecordBytes=");
+			sb.append(numRecordBytes);
+			sb.append(" fields:{");
+			boolean first = true;
+			for (DBaseFieldDescriptor f : fields) {
+				if (first) {
+					first = false;
+				} else {
+					sb.append(", ");
+				}
+				sb.append(f);
+			}
+			sb.append("})");
+			return sb.toString();
 		}
 		public DBaseFieldDescriptor getField(String name) {
 			for (DBaseFieldDescriptor field : fields) {
@@ -888,6 +915,7 @@ public class ShapefileBundle {
 	int blocklimit = 0x7fffffff;
 	static final int randColorRange = 150;
 	static final int randColorOffset = 100;
+	boolean colorMask = false;
 	
 	public Redata.MapRasterization makeRasterization(int px, int py, BufferedImage mask) {
 		RasterizationContext ctx = new RasterizationContext(this, px, py);
@@ -905,14 +933,17 @@ public class ShapefileBundle {
 				bb.addXy(ctx.pixels[i]);
 			}
 			if (mask != null) {
-				/*
-				int argb = 0xff000000 |
+				
+				int argb;
+				if (colorMask) {
+					argb = 0xff000000 |
 					(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
 					(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
 					((int)(Math.random() * randColorRange) + randColorOffset);
-					*/
-				int argb = ((int)(Math.random() * randColorRange) + randColorOffset);
-				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
+				} else {
+					argb = ((int)(Math.random() * randColorRange) + randColorOffset);
+					argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
+				}
 				for (int i = 0; i < ctx.pxPos; i += 2) {
 					mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
 				}
@@ -951,26 +982,39 @@ public class ShapefileBundle {
 		
 		dbf = new DBase();
 		dbf.setInputStream(new DataInputStream(dbfIs));
+		read(shp, dbf);
+		f.close();
+	}
 		
-		
+	public void read(Shapefile shp, DBase dbf) throws IOException {
+		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
+		if (blockIdField == null) {
+			blockIdField = dbf.getField("BLKIDFP00");
+		}
+		if (blockIdField == null) {
+			blockIdField = dbf.getField("NAMELSAD");
+		}
+		if (blockIdField == null) {
+			log.log(log.getLevel().WARNING, "BLKIDFP nor BLKIDFP00 not in DBase file: {0}", dbf);
+		}
 		Polygon p = shp.next();
-		byte[] rowbytes;// = dbf.next();
-		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP00");
-		assert(blockIdField != null);
 		
 		pba = new PolygonBucketArray(shp, 20, 20);
 
 		while (p != null) {
-			rowbytes = dbf.next();
-			assert(rowbytes != null);
-			//p.blockid = blockIdField.getString(rowbytes, 0, rowbytes.length);
-			p.blockid = blockIdField.getBytes(rowbytes, 0, rowbytes.length);
+			byte[] rowbytes = dbf.next();
+			if (blockIdField != null) {
+				assert(rowbytes != null);
+				//p.blockid = blockIdField.getString(rowbytes, 0, rowbytes.length);
+				p.blockid = blockIdField.getBytes(rowbytes, 0, rowbytes.length);
+			} else {
+				p.blockid = null;
+			}
 			polys.add(p);
 			pba.add(p);
 			//System.out.println(p);
 			p = shp.next();
 		}
-		f.close();
 	}
 	public int records() {
 		assert(shp.recordCount == dbf.readCount);
@@ -1130,6 +1174,7 @@ public static final String usage =
 		String rastOut = null;
 		String maskOutName = null;
 		int threads = 3;
+		boolean colorMask = false;
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
@@ -1145,6 +1190,8 @@ public static final String usage =
 			} else if (argv[i].equals("--rast")) {
 				i++;
 				rastOut = argv[i];
+			} else if (argv[i].equals("--color-mask")) {
+				colorMask = true;
 			} else if (argv[i].equals("--mask")) {
 				i++;
 				maskOutName = argv[i];
@@ -1157,6 +1204,8 @@ public static final String usage =
 			} else if (argv[i].equals("--boundy")) {
 				i++;
 				boundy = Integer.parseInt(argv[i]);
+			} else if (argv[i].equals("--verbose")) {
+				log.setLevel(log.getLevel().FINEST);
 			} else {
 				System.err.println("bogus arg: " + argv[i]);
 				System.err.print(usage);
@@ -1172,10 +1221,11 @@ public static final String usage =
 		}
 		
 		ShapefileBundle x = new ShapefileBundle();
+		x.colorMask = colorMask;
 		long start = System.currentTimeMillis();
 		x.read(inname);
 		long end = System.currentTimeMillis();
-		System.out.println("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
+		log.info("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
 		start = end;
 		if (linksOut != null) {
 			//int linkCount = x.printLinks(new FileWriter("/tmp/foo.links"));
@@ -1193,7 +1243,7 @@ public static final String usage =
 				linksMapped = x.mapLinks(new MapSetLinkWrapper(links));
 			}
 			end = System.currentTimeMillis();
-			System.out.println("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
+			log.info("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
 			start = end;
 			OutputStream out = new FileOutputStream(linksOut);
 			int linkCount = 0;
@@ -1208,7 +1258,7 @@ public static final String usage =
 			}
 			out.close();
 			end = System.currentTimeMillis();
-			System.out.println("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
+			log.info("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
 			start = end;
 		}
 		if (rastOut != null) {
@@ -1239,7 +1289,7 @@ public static final String usage =
 			gos.close();
 			fos.close();
 			end = System.currentTimeMillis();
-			System.out.println("rasterized and written in " + ((end - start) / 1000.0) + " seconds");
+			log.info("rasterized and written in " + ((end - start) / 1000.0) + " seconds");
 			start = end;
 		}
 	}
