@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
@@ -25,7 +26,11 @@ import javax.imageio.stream.ImageOutputStream;
 
 import org.bolson.redistricter.Redata.MapRasterization;
 
-public class MapCanvas /*extends Canvas*/ {
+/**
+ * Turn MapRasterization and solution into pixels and PNG file.
+ * @author bolson
+ */
+public class MapCanvas {
 	int minx;
 	int maxx;
 	int miny;
@@ -62,6 +67,7 @@ public class MapCanvas /*extends Canvas*/ {
 		public int[] xy;
 		public long ubid = -1;
 		public int recno = -1;
+		public byte[] blockid = null;
 		
 		public void CopyFrom(MapRasterization.Block it) {
 			if (it.hasUbid()) {
@@ -70,9 +76,29 @@ public class MapCanvas /*extends Canvas*/ {
 			if (it.hasRecno()) {
 				recno = it.getRecno();
 			}
+			if (it.hasBlockid()) {
+				blockid = it.getBlockid().toByteArray();
+			}
 			xy = new int[it.getXyCount()];
 			for (int i = 0; i < xy.length; ++i) {
 				xy[i] = it.getXy(i);
+			}
+		}
+		
+		public String toString() {
+			if (blockid == null) {
+				return "(MBlock ubid=" + ubid + " recno=" + recno + ", " +
+					(xy.length / 2) + " points)";
+			} else {
+				String blockidstring = "broken";
+				try {
+					blockidstring = new String(blockid, "utf-8"); 
+				} catch (UnsupportedEncodingException e) {
+					// don't care
+				}
+				return "(MBlock ubid=" + ubid + " recno=" + recno +
+					" blockid=\"" + blockidstring + "\", " +
+					(xy.length / 2) + " points)";
 			}
 		}
 	}
@@ -80,10 +106,10 @@ public class MapCanvas /*extends Canvas*/ {
 	public static class MBlockRange {
 		public ArrayList<MBlock> they = new ArrayList<MBlock>();
 		// values likely to get overridden by first thing added
-		public int minx = 9999999;
-		public int miny = 9999999;
-		public int maxx = -9999999;
-		public int maxy = -9999999;
+		public int minx = 999999999;
+		public int miny = 999999999;
+		public int maxx = -999999999;
+		public int maxy = -999999999;
 		
 		public void add(MapRasterization.Block it) {
 			MBlock mb = new MBlock();
@@ -105,7 +131,16 @@ public class MapCanvas /*extends Canvas*/ {
 			out.append(")");
 			return out;
 		}
+		public String toString() {
+			StringBuffer out = new StringBuffer();
+			return appendToStringBuffer(out).toString();
+		}
 
+		/**
+		 * Adds block to this range.
+		 * Scans block for min/max in x and y.
+		 * @param mb
+		 */
 		private void add(MBlock mb) {
 			for (int i = 0; i < mb.xy.length; i += 2) {
 				if (mb.xy[i  ] < minx) {
@@ -130,9 +165,25 @@ public class MapCanvas /*extends Canvas*/ {
 		 * @param out Destination for new MBlockRange objects.
 		 */
 		public void splitX(int count, ArrayList<MBlockRange> out) {
-			// TODO WRITEME
 			out.clear();
-			out.add(this);
+			int dx = (maxx - minx) / count;
+			int curmin = minx;
+			int curmax = minx + dx;
+			while (curmin < maxx) {
+				MBlockRange cur = new MBlockRange();
+				out.add(cur);
+				for (MBlock it : they) {
+					for (int i = 0; i < it.xy.length; i+=2) {
+						if (it.xy[i] >= curmin && it.xy[i] < curmax) {
+							cur.add(it);
+							break;
+						}
+					}
+				}
+				curmin += dx;
+				curmax += dx;
+			}
+			//out.add(this);
 		}
 	}
 
@@ -146,32 +197,13 @@ public class MapCanvas /*extends Canvas*/ {
 		for (int i = 0; i < newpix.getBlockCount(); ++i) {
 			all.add(newpix.getBlock(i));
 		}
+		minx = all.minx;
+		miny = all.miny;
+		maxx = all.maxx;
+		maxy = all.maxy;
+
 		ranges = new ArrayList<MBlockRange>();
 		all.splitX(10, ranges);
-		// gather stats of subranges
-		boolean firstSubrange = true;
-		for (MBlockRange subrange : ranges) {
-			if (firstSubrange) {
-				minx = subrange.minx;
-				miny = subrange.miny;
-				maxx = subrange.maxx;
-				maxy = subrange.maxy;
-				firstSubrange = false;
-			} else {
-				if (subrange.miny > miny) {
-					miny = subrange.miny;
-				}
-				if (subrange.maxy < maxy) {
-					maxy = subrange.maxy;
-				}
-				if (subrange.minx > minx) {
-					minx = subrange.minx;
-				}
-				if (subrange.maxx < maxx) {
-					maxx = subrange.maxx;
-				}
-			}
-		}
 	}
 	
 	public static final byte ff = (byte)255;
@@ -212,9 +244,16 @@ public class MapCanvas /*extends Canvas*/ {
 				((0x00ff & colors[i][1]) << 16) |
 				((0x00ff & colors[i][2]) << 8) |
 				(0x00ff & colors[i][3]);
-			System.err.println(colors[i][0] + "," + colors[i][1] + "," + colors[i][2] + "," + colors[i][3] + " -> " + colorsARGB[i]);
+			//System.err.println(colors[i][0] + "," + colors[i][1] + "," + colors[i][2] + "," + colors[i][3] + " -> " + colorsARGB[i]);
 		}
 	}
+	
+	// TODO: merge county and place shapefiles under block assignments.
+	// dave's redistricting does it by darkening county borders,
+	// writing the county name at an approximate centroid, and
+	// lightening places and writing place names at an approximate centroid.
+	
+	// TODO: draw district name/number in each district
 	
 	public void drawToImage(BufferedImage im, byte[] dsz) {
 		DataBuffer db = im.getRaster().getDataBuffer();
@@ -251,6 +290,8 @@ public class MapCanvas /*extends Canvas*/ {
 				}
 				// TODO
 			}
+		} else {
+			System.err.println("don't know how to handle image DataBuffer: " + db.toString());
 		}
 		System.out.println(db.getClass().getName());
 		switch (db.getDataType()) {

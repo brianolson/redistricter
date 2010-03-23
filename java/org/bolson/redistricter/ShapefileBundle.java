@@ -2,7 +2,6 @@ package org.bolson.redistricter;
 
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -100,89 +100,6 @@ public class ShapefileBundle {
 	static double bytesToDoubleLE(byte[] data, int pos) {
 		long l = bytesToLongLE(data, pos);
 		return Double.longBitsToDouble(l);
-	}
-	
-	static class ShapefileHeader {
-		/*
-		 * 	'fileCode': ShapefileHeaderField(0,4,'>i'),
-	'fileLength': ShapefileHeaderField(24,28,'>i'),
-	'version': ShapefileHeaderField(28,32,'<i'),
-	'shapeType': ShapefileHeaderField(32,36,'<i'),
-	'xmin': ShapefileHeaderField(36,44,'<d'),
-	'ymin': ShapefileHeaderField(44,52,'<d'),
-	'xmax': ShapefileHeaderField(52,60,'<d'),
-	'ymax': ShapefileHeaderField(60,68,'<d'),
-	'zmin': ShapefileHeaderField(68,76,'<d'),
-	'zmax': ShapefileHeaderField(76,84,'<d'),
-	'mmin': ShapefileHeaderField(84,92,'<d'),
-	'mmax': ShapefileHeaderField(92,100,'<d'),
-
-		 */
-		int fileCode;
-		int fileLength;
-		int version;
-		int shapeType;
-		double xmin, ymin, xmax, ymax, zmin, zmax, mmin, mmax;
-		public void read(DataInputStream in) throws IOException {
-			byte[] data = new byte[100];
-			in.readFully(data);
-			fileCode = bytesToInt(data, 0);
-			fileLength = bytesToInt(data, 24);
-			version = bytesToIntLE(data, 28);
-			shapeType = bytesToIntLE(data, 32);
-			xmin = bytesToDoubleLE(data, 36);
-			ymin = bytesToDoubleLE(data, 44);
-			xmax = bytesToDoubleLE(data, 52);
-			ymax = bytesToDoubleLE(data, 60);
-			zmin = bytesToDoubleLE(data, 68);
-			zmax = bytesToDoubleLE(data, 76);
-			mmin = bytesToDoubleLE(data, 84);
-			mmax = bytesToDoubleLE(data, 92);
-		}
-		
-		public String toString() {
-			return "(Shapefile code=" + fileCode + " length=" + fileLength + " version=" + version +
-			" shape=" + shapeType +
-			" x=[" + xmin + "," + xmax + "] y=[" + ymin + "," + ymax +
-			"] z=[" + zmin + "," + zmax + "] m=[" + mmin + "," + mmax + "])";
-		}
-	}
-	static class Shapefile {
-		DataInputStream in;
-		public ShapefileHeader header = null;
-		byte[] recordHeader = new byte[8];
-		byte[] recordBuffer = null;
-		public int recordCount = 0;
-		
-		public void setInputStream(InputStream in) {
-			if (in instanceof DataInputStream) {
-				this.in = (DataInputStream)in;
-			} else {
-				this.in = new DataInputStream(in);
-			}
-		}
-		public Polygon next() throws IOException {
-			if (header == null) {
-				header = new ShapefileHeader();
-				header.read(in);
-				System.out.println(header);
-			}
-			int recordContentLength;
-			try {
-				in.skipBytes(4);//int recordNumber = in.readInt();
-				recordContentLength = in.readInt() * 2;
-			} catch (EOFException e) {
-				return null;
-			}
-			if (recordBuffer == null || recordBuffer.length < recordContentLength) {
-				recordBuffer = new byte[recordContentLength];
-			}
-			in.readFully(recordBuffer, 0, recordContentLength);
-			int type = bytesToIntLE(recordBuffer, 0);
-			assert(type == 5);
-			recordCount++;
-			return new Polygon(recordBuffer, 0, recordContentLength);
-		}
 	}
 	
 	static interface SetLink {
@@ -698,203 +615,6 @@ public class ShapefileBundle {
 			return out.toString();
 		}
 	}
-	public static class DBaseFieldDescriptor {
-
-		public String name;
-		public byte type;
-		public byte length;
-		public byte count;
-		
-		/**
-		 * Byte offset within a fixed-length record.
-		 */
-		public int startpos;
-		
-		public static final byte NUMERIC = (byte)'N';
-		public static final byte CHARACTER = (byte)'C';
-		
-		public DBaseFieldDescriptor(byte[] data, int offset, int length) {
-			parseHeader(data, offset, length);
-		}
-		
-		/*
-		 * 		if len(rawbytes) == 48:
-			(self.name, self.ftype, self.length, self.count,
-			 unused_1,
-			 self.mdx,
-			 unused_2,
-			 self.nextAutoincrementValue,
-			 unused_3
-			 ) = struct.unpack('<32scBBHBHII', rawbytes)
-		elif len(rawbytes) == 32:
-			(self.name, # 11s
-			 self.ftype, # c
-			 unused_1, # I
-			 self.length, self.count, # BB
-			 unused_2
-			 ) = struct.unpack('<11scIBB14s', rawbytes)
-		self.name = self.name.strip(' \t\r\n\0')
-
-		 */
-		public void parseHeader(byte[] data, int offset, int length) {
-			if (length == 32) {
-				this.name = new String(data, offset, 11);
-				this.type = data[offset+11];
-				this.length = data[offset + 16];
-				this.count = data[offset + 17];
-			} else if (length == 48) {
-				this.name = new String(data, offset, 32);
-				this.type = data[offset+32];
-				this.length = data[offset + 33];
-				this.count = data[offset + 34];
-			} else {
-				assert(false);
-			}
-			this.name = this.name.trim();
-		}
-		
-		public int getInt(byte[] data, int offset, int length) {
-			assert(length >= (this.startpos + this.length));
-			assert(type == NUMERIC);
-			return Integer.parseInt(new String(data, offset + this.startpos, this.length));
-		}
-		
-		public String getString(byte[] data, int offset, int length) {
-			assert(length >= (this.startpos + this.length));
-			assert(type == CHARACTER);
-			return new String(data, offset + this.startpos, this.length);
-		}
-		
-		public byte[] getBytes(byte[] data, int offset, int length) {
-			assert(length >= (this.startpos + this.length));
-			assert(type == CHARACTER);
-			byte[] out = new byte[this.length];
-			System.arraycopy(data, offset + this.startpos, out, 0, this.length);
-			return out;
-		}
-	
-		public String toString() {
-			return "(" + name + " type=" + ((char)type) + " length=" + length + " count=" + count + ")";
-		}
-	}
-	public static class DBase {
-		byte version;
-		int year;
-		byte month;
-		byte day;
-		int numRecords;
-		int numHeaderBytes;
-		int numRecordBytes;
-		byte incomplete;
-		byte encrypted;
-		byte mdx;
-		byte language;
-		String driverName = null;
-		
-		DataInputStream in;
-		byte[] scratch = new byte[48];
-		public ArrayList<DBaseFieldDescriptor> fields = new ArrayList<DBaseFieldDescriptor>();
-		/**
-		 * Each record is fixed length.
-		 */
-		int recordLength;
-		
-		int readCount = 0;
-		
-		/**
-		 * Immediately reads header data.
-		 * @param x stream to read from
-		 * @throws IOException 
-		 */
-		public void setInputStream(DataInputStream x) throws IOException {
-			in = x;
-			in.readFully(scratch, 0, 32);
-			version = scratch[0];
-			year = scratch[1] + 1900;
-			month = scratch[2];
-			day = scratch[3];
-			numRecords = bytesToIntLE(scratch, 4);
-			numHeaderBytes = bytesToUShortLE(scratch, 8);
-			numRecordBytes = bytesToUShortLE(scratch, 10);
-			incomplete = scratch[14];
-			encrypted = scratch[15];
-			mdx = scratch[28];
-			language = scratch[29];
-			int readPartTwoLen = 31;
-			if ((version & 0x07) == 4) {
-				in.readFully(scratch, 0, 32);
-				driverName = new String(scratch, 0, 32);
-				in.skipBytes(4);
-				readPartTwoLen = 47;
-			} else {
-				assert((version & 0x07) == 3);
-			}
-			scratch[0] = in.readByte();
-			int startpos = 0;
-			while (scratch[0] != (byte)0x0d) {
-				in.readFully(scratch, 1, readPartTwoLen);
-				DBaseFieldDescriptor nh = new DBaseFieldDescriptor(scratch, 0, 1+readPartTwoLen);
-				nh.startpos = startpos;
-				startpos += nh.length;
-				fields.add(nh);
-				scratch[0] = in.readByte();
-			}
-			recordLength = startpos;
-			scratch = new byte[recordLength];
-			log.log(log.getLevel().FINE, "{0}", this);
-		}
-		byte[] next() throws IOException {
-			byte code;
-			try {
-				code = in.readByte();
-				if (code == (byte)0x1a) {
-					return null;
-				}
-			} catch (EOFException e) {
-				return null;
-			}
-			in.readFully(scratch, 0, recordLength);
-			readCount++;
-			return scratch;
-		}
-		
-		public String toString() {
-			StringBuffer sb = new StringBuffer("(DBF ");
-			sb.append(Integer.toHexString(version));
-			sb.append(" ");
-			sb.append(year);
-			sb.append("-");
-			sb.append(month);
-			sb.append("-");
-			sb.append(day);
-			sb.append(" numRecords=");
-			sb.append(numRecords);
-			sb.append(" numHeaderBytes=");
-			sb.append(numHeaderBytes);
-			sb.append(" numRecordBytes=");
-			sb.append(numRecordBytes);
-			sb.append(" fields:{");
-			boolean first = true;
-			for (DBaseFieldDescriptor f : fields) {
-				if (first) {
-					first = false;
-				} else {
-					sb.append(", ");
-				}
-				sb.append(f);
-			}
-			sb.append("})");
-			return sb.toString();
-		}
-		public DBaseFieldDescriptor getField(String name) {
-			for (DBaseFieldDescriptor field : fields) {
-				if (field.name.equals(name)) {
-					return field;
-				}
-			}
-			return null;
-		}
-	}
 	Shapefile shp = null;
 	DBase dbf = null;
 	ArrayList<Polygon> polys = new ArrayList<Polygon>();
@@ -927,12 +647,21 @@ public class ShapefileBundle {
 		for (Polygon p : polys) {
 			ctx.pxPos = 0;
 			p.rasterize(ctx);
-			Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
-			bb.setUbid(blockidToUbid(p.blockid));
-			// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
-			//bb.setBlockid(ByteString.copyFrom(p.blockid));
-			for (int i = 0; i < ctx.pxPos; ++i) {
-				bb.addXy(ctx.pixels[i]);
+			if (p.blockid != null) {
+				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
+				Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
+				if (p.blockid.length == 15) {
+					bb.setUbid(blockidToUbid(p.blockid));
+				} else {
+					// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
+					bb.setBlockid(ByteString.copyFrom(p.blockid));
+				}
+				for (int i = 0; i < ctx.pxPos; ++i) {
+					bb.addXy(ctx.pixels[i]);
+				}
+				rastb.addBlock(bb);
+			} else {
+				log.warning("polygon with no blockid");
 			}
 			if (mask != null) {
 				int argb;
@@ -949,11 +678,11 @@ public class ShapefileBundle {
 					argb = ((int)(Math.random() * randColorRange) + randColorOffset);
 					argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
 				}
+				log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
 				for (int i = 0; i < ctx.pxPos; i += 2) {
 					mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
 				}
 			}
-			rastb.addBlock(bb);
 			if (--blocklimit < 0) {
 				break;
 			}
@@ -1001,7 +730,7 @@ public class ShapefileBundle {
 			blockIdField = dbf.getField("NAMELSAD");
 		}
 		if (blockIdField == null) {
-			log.log(log.getLevel().WARNING, "BLKIDFP nor BLKIDFP00 not in DBase file: {0}", dbf);
+			log.log(Level.WARNING, "BLKIDFP nor BLKIDFP00 not in DBase file: {0}", dbf);
 		}
 		Polygon p = shp.next();
 		
@@ -1164,12 +893,15 @@ public static final String usage =
 "--links outname.links\n" +
 "--rast outname.mppb\n" +
 "--mask outname.png\n" +
+"--color-mask\n" +
 "--threads <int>\n" +
 "--boundx <int>\n" +
 "--boundy <int>\n" +
+"--verbose\n" +
 "tl_2009_09_tabblock00.zip\n";
 	
 	public static void main(String[] argv) throws IOException {
+		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
 		boolean tree = true;
 		int px = -1;
 		int py = -1;
@@ -1211,7 +943,8 @@ public static final String usage =
 				i++;
 				boundy = Integer.parseInt(argv[i]);
 			} else if (argv[i].equals("--verbose")) {
-				log.setLevel(log.getLevel().FINEST);
+				log.setLevel(Level.FINEST);
+				log.info(log.getLevel().toString());
 			} else {
 				System.err.println("bogus arg: " + argv[i]);
 				System.err.print(usage);
