@@ -386,6 +386,15 @@ public class ShapefileBundle {
 			pixels = npx;
 		}
 		public void addPixel(int x, int y) {
+			// TODO: this is lame. clean up the math so I don't need a pixels of spill.
+			if (y == ypx) {return;}
+			if (y == -1) {return;}
+			if (x == xpx) {return;}
+			if (x == -1) {return;}
+			assert(x >= 0);
+			assert(x < xpx);
+			assert(y >= 0);
+			assert(y < ypx);
 			if (pxPos == pixels.length) {
 				growPixels();
 			}
@@ -395,6 +404,12 @@ public class ShapefileBundle {
 		}
 	}
 
+	/**
+	 * An ESRI Shapefile Polygon (type 5) object.
+	 * Knows how to rasterize itself.
+	 * @author Brian Olson
+	 *
+	 */
 	static class Polygon {
 		public double xmin, xmax, ymin, ymax;
 		public int[] parts;
@@ -402,9 +417,22 @@ public class ShapefileBundle {
 		//public String blockid;
 		public byte[] blockid;
 		
+		/**
+		 * Calls init.
+		 * @param data
+		 * @param offset
+		 * @param length
+		 * @see #init(byte[],int,int)
+		 */
 		public Polygon(byte[] data, int offset, int length) {
 			init(data, offset, length);
 		}
+		/**
+		 * Parse binary data into structure in memory.
+		 * @param data The bytes after the (numer,length) record header.
+		 * @param offset offset into data[]
+		 * @param length number of bytes in record
+		 */
 		public void init(byte[] data, int offset, int length) {
 			int pos = 0;
 			int type = bytesToIntLE(data, pos); pos += 4;
@@ -426,8 +454,53 @@ public class ShapefileBundle {
 				pos += 8;
 			}
 			assert(pos == length);
+			assert(isConsistent());
+		}
+		/**
+		 * Check that all point are within min-max and that loops are closed.
+		 * @return true if all is well
+		 */
+		public boolean isConsistent() {
+			for (int i = 0; i < parts.length; ++i) {
+				int start = parts[i];
+				int end;
+				if ((i + 1) < parts.length) {
+					end = parts[i+1] - 1;
+				} else {
+					end = (points.length / 2) - 1;
+				}
+				start *= 2;
+				end *= 2;
+				if (points[start] != points[end]) {
+					return false;
+				}
+				if (points[start + 1] != points[end + 1]) {
+					return false;
+				}
+			}
+			for (int i = 0; i < points.length; i += 2) {
+				if (points[i] > xmax) {
+					return false;
+				}
+				if (points[i] < xmin) {
+					return false;
+				}
+				if (points[i+1] > ymax) {
+					return false;
+				}
+				if (points[i+1] < ymin) {
+					return false;
+				}
+			}
+			return true;
 		}
 		
+		/**
+		 * Compare points lists, return true if two are shared.
+		 * TODO: this would be better if it were two <em>consecutive</em> points. OR, use per-county edge+face data for block adjacency.
+		 * @param b the other Polygon
+		 * @return true if both polygons have two points in common.
+		 */
 		public boolean hasTwoPointsInCommon(Polygon b) {
 			boolean haveOne = false;
 			for (int i = 0; i < points.length; i += 2) {
@@ -455,21 +528,40 @@ public class ShapefileBundle {
 	 The outer edges of the pixel image will be at the min/max points.
 	 */
 		
-		/* for some y, what is the next pixel center below that? */
+		/** for some y, what is the next pixel center below that? */
 		static final int pcenterBelow(double somey, double maxy, double pixelHeight) {
 			return (int)Math.floor( ((maxy - somey) / pixelHeight) + 0.5 );
 		}
-		/* for some x, what is the next pixel center to the right? */
+		/** for some x, what is the next pixel center to the right? */
 		static final int pcenterRight(double somex, double minx, double pixelWidth) {
 			return (int)Math.floor( ((somex - minx) / pixelWidth) + 0.5 );
 		}
+		/** for some y, what is the nearest pixel center? */
+		static final int posToPixelY(double somey, double maxy, double pixelHeight) {
+			return (int)Math.round( ((maxy - somey) / pixelHeight) + 0.5 );
+		}
+		/** for some x, what is the nearest pixel center? */
+		static final int posToPixelX(double somex, double minx, double pixelWidth) {
+			return (int)Math.round( ((somex - minx) / pixelWidth) + 0.5 );
+		}
+		/** The y coordinate of the center of a pixel */
 		static final double pcenterY( int py, double maxy, double pixelHeight ) {
 			return maxy - ((py + 0.5) * pixelHeight);
 		}
+		/** The x coordinate of the center of a pixel */
 		static final double pcenterX( int px, double minx, double pixelWidth ) {
 			return minx + ((px + 0.5) * pixelWidth);
 		}
 		
+		/**
+		 * Scanning row at y, set x intercept for line segment (x1,y1)(x2,y2) in ctx. 
+		 * @param x1
+		 * @param y1
+		 * @param x2
+		 * @param y2
+		 * @param y
+		 * @param ctx
+		 */
 		static final void intersect( double x1, double y1, double x2, double y2, double y, RasterizationContext ctx) {
 			if ( y1 < y2 ) {
 				if ( (y < y1) || (y > y2) ) {
@@ -516,7 +608,7 @@ public class ShapefileBundle {
 		 * RasterizationContext.pxPos should probably be 0 before entering this function,
 		 * unless you want to run pixels from multiple polygons together.
 		 * @param ctx geometry comes in here, scratch space for x intercepts, pixels out
-		 * @return list of x,y pairs of pixels that this polygon rasterizes to
+		 * @return list of x,y pairs of pixels that this polygon rasterizes to (left in ctx)
 		 */
 		public void rasterize(RasterizationContext ctx) {
 			// double imMinx, double imMaxy, double pixelHeight, double pixelWidth, int ypx, int xpx
@@ -567,6 +659,102 @@ public class ShapefileBundle {
 				
 				py++;
 				y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
+			}
+		}
+		
+		/**
+		 * TODO: draw just the outline of the Polygon. Bresenham!
+		 * @param ctx Destination for pixels of the outline of the Polygon.
+		 */
+		public void drawEdges(RasterizationContext ctx) {
+			for (int parti = 0; parti < parts.length; ++parti) {
+				// for each loop of lines...
+				int partend;
+				if (parti + 1 < parts.length) {
+					partend = parts[parti+1] - 1;
+				} else {
+					partend = (points.length / 2) - 1;
+				}
+				for (int pointi = parts[parti]; pointi < partend; ++pointi) {
+					// for each line in each loop, draw it
+					bresenham(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], ctx);
+				}
+			}
+		}
+		
+		public static void bresenham(double x0, double y0, double x1, double y1, RasterizationContext ctx) {
+			bresenham(
+					/*
+					posToPixelX(x0, ctx.minx, ctx.pixelWidth),
+					posToPixelY(y0, ctx.maxy, ctx.pixelHeight),
+					posToPixelX(x1, ctx.minx, ctx.pixelWidth),
+					posToPixelY(y1, ctx.maxy, ctx.pixelHeight),
+					*/
+					pcenterRight(x0, ctx.minx, ctx.pixelWidth),
+					pcenterBelow(y0, ctx.maxy, ctx.pixelHeight),
+					pcenterRight(x1, ctx.minx, ctx.pixelWidth),
+					pcenterBelow(y1, ctx.maxy, ctx.pixelHeight),
+
+					ctx
+					);
+		}
+		public static void bresenham(int x0, int y0, int x1, int y1, RasterizationContext ctx) {
+			/* http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+			 function line(x0, x1, y0, y1)
+			     boolean steep := abs(y1 - y0) > abs(x1 - x0)
+			     if steep then
+			         swap(x0, y0)
+			         swap(x1, y1)
+			     if x0 > x1 then
+			         swap(x0, x1)
+			         swap(y0, y1)
+			     int deltax := x1 - x0
+			     int deltay := abs(y1 - y0)
+			     int error := deltax / 2
+			     int ystep
+			     int y := y0
+			     if y0 < y1 then ystep := 1 else ystep := -1
+			     for x from x0 to x1
+			         if steep then plot(y,x) else plot(x,y)
+			         error := error - deltay
+			         if error < 0 then
+			             y := y + ystep
+			             error := error + deltax
+						 */
+			boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+			if (steep) {
+				// "x" is the steep axis that always increments, "y" sometimes increments.
+				int t = x0;
+				x0 = y0;
+				y0 = t;
+				t = x1;
+				x1 = y1;
+				y1 = t;
+			}
+			if (x0 > x1) {
+				int t = x0;
+				x0 = x1;
+				x1 = t;
+				t = y0;
+				y0 = y1;
+				y1 = t;
+			}
+			int deltax = x1 - x0;
+			int deltay = Math.abs(y1 - y0);
+			int error = deltax / 2;
+			int y = y0;
+			int ystep = (y0 < y1) ? 1 : -1;
+			for (int x = x0; x <= x1; x++) {
+				if (steep) {
+					ctx.addPixel(y, x);
+				} else {
+					ctx.addPixel(x, y);
+				}
+				error -= deltay;
+				if (error < 0) {
+					y += ystep;
+					error += deltax;
+				}
 			}
 		}
 		
@@ -638,6 +826,133 @@ public class ShapefileBundle {
 	boolean colorMask = false;
 	boolean colorMaskRandom = false;
 	
+	public interface RasterizationReciever {
+		/**
+		 * Set the size of the total rasterization we are about to make.
+		 * @param x
+		 * @param y
+		 */
+		void setSize(int x, int y);
+		
+		/**
+		 * Polygon loaded from Shapefile, with pixels in the RasterizationContext.
+		 * @param ctx pixels in here, ctx.pixels[] in x,y pairs
+		 * @param p other info in here
+		 */
+		void setRasterizedPolygon(RasterizationContext ctx, Polygon p);
+	}
+	
+	public static class BufferedImageRasterizer implements RasterizationReciever {
+		BufferedImage mask;
+		boolean colorMask = true;
+		boolean colorMaskRandom = true;
+		int polyindex = 0;
+		
+		BufferedImageRasterizer(BufferedImage imageOut) {
+			mask = imageOut;
+		}
+		
+		@Override
+		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
+			int argb;
+			if (colorMask) {
+				if (colorMaskRandom) {
+					argb = 0xff000000 |
+					(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
+					(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
+					((int)(Math.random() * randColorRange) + randColorOffset);
+				} else {
+					argb = MapCanvas.colorsARGB[polyindex % MapCanvas.colorsARGB.length];
+				}
+			} else {
+				argb = ((int)(Math.random() * randColorRange) + randColorOffset);
+				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
+			}
+			log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
+			for (int i = 0; i < ctx.pxPos; i += 2) {
+				mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
+			}
+		}
+
+		@Override
+		/**
+		 * Doesn't actually set size in this implementation, but asserts that buffer is at least that big.
+		 */
+		public void setSize(int x, int y) {
+			assert(mask.getHeight() >= y);
+			assert(mask.getWidth() >= x);
+		}
+		
+	}
+	
+	public static class MapRasterizationReceiver implements RasterizationReciever {
+		public Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
+		
+		@Override
+		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
+			if (p.blockid != null) {
+				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
+				Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
+				if (p.blockid.length == 15) {
+					bb.setUbid(blockidToUbid(p.blockid));
+				} else {
+					// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
+					bb.setBlockid(ByteString.copyFrom(p.blockid));
+				}
+				for (int i = 0; i < ctx.pxPos; ++i) {
+					bb.addXy(ctx.pixels[i]);
+				}
+				rastb.addBlock(bb);
+			} else {
+				log.warning("polygon with no blockid");
+			}
+		}
+
+		@Override
+		public void setSize(int x, int y) {
+			rastb.setSizex(x);
+			rastb.setSizey(y);
+		}
+		
+	}
+	
+	public interface PolygonDrawMode {
+		void draw(Polygon p, RasterizationContext ctx);
+	}
+	public static class PolygonDrawEdges implements PolygonDrawMode {
+		public void draw(Polygon p, RasterizationContext ctx) {
+			p.drawEdges(ctx);
+		}
+		public static final PolygonDrawEdges singleton = new PolygonDrawEdges();
+		/** Only use the singleton */
+		private PolygonDrawEdges() {}
+	}
+	public static class PolygonFillRasterize implements PolygonDrawMode {
+		@Override
+		public void draw(Polygon p, RasterizationContext ctx) {
+			p.rasterize(ctx);
+		}
+		public static final PolygonFillRasterize singleton = new PolygonFillRasterize();
+		/** Only use the singleton */
+		private PolygonFillRasterize() {}
+	}
+	
+	public void makeRasterization(int px, int py, Iterable<RasterizationReciever> they, PolygonDrawMode drawMode) {
+		RasterizationContext ctx = new RasterizationContext(this, px, py);
+		for (RasterizationReciever rr : they) {
+			rr.setSize(px, py);
+		}
+		for (Polygon p : polys) {
+			ctx.pxPos = 0;
+			drawMode.draw(p, ctx);
+			for (RasterizationReciever rr : they) {
+				rr.setRasterizedPolygon(ctx, p);
+			}
+			if (--blocklimit < 0) {
+				break;
+			}
+		}
+	}
 	public Redata.MapRasterization makeRasterization(int px, int py, BufferedImage mask) {
 		RasterizationContext ctx = new RasterizationContext(this, px, py);
 		Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
@@ -691,19 +1006,40 @@ public class ShapefileBundle {
 		return rastb.build();
 	}
 	public void writeRasterization(OutputStream os, int px, int py, OutputStream maskPngOut) throws IOException {
+		ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
 		BufferedImage maskImage = null;
 		if (maskPngOut != null) {
 			maskImage = new BufferedImage(px, py, BufferedImage.TYPE_4BYTE_ABGR);
+			outputs.add(new BufferedImageRasterizer(maskImage));
 		}
-		Redata.MapRasterization mr = makeRasterization(px, py, maskImage);
-		mr.writeTo(os);
+		MapRasterizationReceiver mrr = null;
+		if (os != null) {
+			mrr = new MapRasterizationReceiver();
+			outputs.add(mrr);
+		}
+		//Redata.MapRasterization mr = makeRasterization(px, py, maskImage);
+		PolygonDrawMode mode = PolygonFillRasterize.singleton;
+		if (true) {
+			mode = PolygonDrawEdges.singleton;
+		}
+		makeRasterization(px, py, outputs, mode);
+		if (mrr != null) {
+			Redata.MapRasterization mr = mrr.rastb.build();
+			mr.writeTo(os);
+		}
 		if (maskPngOut != null) {
 			MapCanvas.writeBufferedImageAsPNG(maskPngOut, maskImage);
 		}
 	}
 	
+	/**
+	 * Read shapefile bundle from foo.zip
+	 * @param filename
+	 * @throws IOException
+	 */
 	public void read(String filename) throws IOException {
 		int lastSlash = filename.lastIndexOf('/');
+		assert(filename.endsWith(".zip"));
 		String nameroot = filename.substring(lastSlash+1, filename.length() - 4);
 		
 		ZipFile f = new ZipFile(filename);
@@ -720,7 +1056,15 @@ public class ShapefileBundle {
 		read(shp, dbf);
 		f.close();
 	}
-		
+	
+	/**
+	 * Read a Shapefile and DBase pair.
+	 * Loads all the polygons from the Shapefile and identifiers from the 
+	 * corresponding records in the DBase file.
+	 * @param shp
+	 * @param dbf
+	 * @throws IOException
+	 */
 	public void read(Shapefile shp, DBase dbf) throws IOException {
 		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
 		if (blockIdField == null) {
@@ -740,7 +1084,6 @@ public class ShapefileBundle {
 			byte[] rowbytes = dbf.next();
 			if (blockIdField != null) {
 				assert(rowbytes != null);
-				//p.blockid = blockIdField.getString(rowbytes, 0, rowbytes.length);
 				p.blockid = blockIdField.getBytes(rowbytes, 0, rowbytes.length);
 			} else {
 				p.blockid = null;
