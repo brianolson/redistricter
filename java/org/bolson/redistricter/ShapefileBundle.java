@@ -24,7 +24,8 @@ import java.util.zip.ZipFile;
 
 import com.google.protobuf.ByteString;
 
-// TODO: break up this monster source of many static innerclasses into package level classes in their own sources?
+// TODO: draw water differently
+// TODO: use one ShapefileBundle as a master scale template for others to be rendered as overlays
 
 /**
  * Things I need from the shapefile bundle:
@@ -825,6 +826,7 @@ public class ShapefileBundle {
 	static final int randColorOffset = 100;
 	boolean colorMask = false;
 	boolean colorMaskRandom = false;
+	public boolean outline = false;
 	
 	public interface RasterizationReciever {
 		/**
@@ -1019,7 +1021,7 @@ public class ShapefileBundle {
 		}
 		//Redata.MapRasterization mr = makeRasterization(px, py, maskImage);
 		PolygonDrawMode mode = PolygonFillRasterize.singleton;
-		if (true) {
+		if (outline) {
 			mode = PolygonDrawEdges.singleton;
 		}
 		makeRasterization(px, py, outputs, mode);
@@ -1232,6 +1234,38 @@ public class ShapefileBundle {
 		}
 	}
 
+	public void doLinks(String linksOut, boolean tree, int threads) throws IOException {
+		long start = System.currentTimeMillis();
+		Map<byte[], Set<byte[]> > links;
+		if (tree) {
+			links = new TreeMap<byte[], Set<byte[]> >(new BlockIdComparator());
+		} else {
+			links = new HashMap<byte[], Set<byte[]> >();
+		}
+		int linksMapped;
+		if (threads > 1) {
+			linksMapped = mapLinks(new MapSetLinkWrapper(links), threads);
+		} else {
+			linksMapped = mapLinks(new MapSetLinkWrapper(links));
+		}
+		long end = System.currentTimeMillis();
+		log.info("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
+		start = end;
+		OutputStream out = new FileOutputStream(linksOut);
+		int linkCount = 0;
+		for (byte[] key : links.keySet()) {
+			for (byte[] value : links.get(key)) {
+				linkCount++;
+				out.write(key);
+				out.write(',');
+				out.write(value);
+				out.write('\n');
+			}
+		}
+		out.close();
+		end = System.currentTimeMillis();
+		log.info("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
+	}
 public static final String usage =
 "--links outname.links\n" +
 "--rast outname.mppb\n" +
@@ -1240,6 +1274,7 @@ public static final String usage =
 "--threads <int>\n" +
 "--boundx <int>\n" +
 "--boundy <int>\n" +
+"--outline\n" +
 "--verbose\n" +
 "tl_2009_09_tabblock00.zip\n";
 	
@@ -1256,6 +1291,7 @@ public static final String usage =
 		String maskOutName = null;
 		int threads = 3;
 		boolean colorMask = false;
+		boolean outline = false;
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
@@ -1285,6 +1321,8 @@ public static final String usage =
 			} else if (argv[i].equals("--boundy")) {
 				i++;
 				boundy = Integer.parseInt(argv[i]);
+			} else if (argv[i].equals("--outline")) {
+				outline = true;
 			} else if (argv[i].equals("--verbose")) {
 				log.setLevel(Level.FINEST);
 				log.info(log.getLevel().toString());
@@ -1304,46 +1342,17 @@ public static final String usage =
 		
 		ShapefileBundle x = new ShapefileBundle();
 		x.colorMask = colorMask;
+		x.outline  = outline;
 		long start = System.currentTimeMillis();
 		x.read(inname);
 		long end = System.currentTimeMillis();
 		log.info("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
 		start = end;
 		if (linksOut != null) {
-			//int linkCount = x.printLinks(new FileWriter("/tmp/foo.links"));
-			//int linkCount = x.printLinks(new FileOutputStream("/tmp/foo.links"));
-			Map<byte[], Set<byte[]> > links;
-			if (tree) {
-				links = new TreeMap<byte[], Set<byte[]> >(new BlockIdComparator());
-			} else {
-				links = new HashMap<byte[], Set<byte[]> >();
-			}
-			int linksMapped;
-			if (threads > 1) {
-				linksMapped = x.mapLinks(new MapSetLinkWrapper(links), threads);
-			} else {
-				linksMapped = x.mapLinks(new MapSetLinkWrapper(links));
-			}
-			end = System.currentTimeMillis();
-			log.info("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
-			start = end;
-			OutputStream out = new FileOutputStream(linksOut);
-			int linkCount = 0;
-			for (byte[] key : links.keySet()) {
-				for (byte[] value : links.get(key)) {
-					linkCount++;
-					out.write(key);
-					out.write(',');
-					out.write(value);
-					out.write('\n');
-				}
-			}
-			out.close();
-			end = System.currentTimeMillis();
-			log.info("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
-			start = end;
+			x.doLinks(linksOut, tree, threads);
+			start = System.currentTimeMillis();
 		}
-		if (rastOut != null) {
+		if ((rastOut != null) || (maskOutName != null)) {
 			if (px == -1 || py == -1) {
 				double width = x.shp.header.xmax - x.shp.header.xmin;
 				double height = x.shp.header.ymax - x.shp.header.ymin;
@@ -1359,17 +1368,44 @@ public static final String usage =
 					py = (int)(ratio * px);
 				}
 			}
-			FileOutputStream fos = new FileOutputStream(rastOut);
-			GZIPOutputStream gos = new GZIPOutputStream(fos);
+			
+			ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
+			
+			BufferedImage maskImage = null;
 			OutputStream maskOutput = null;
 			if (maskOutName != null) {
+				maskImage = new BufferedImage(px, py, BufferedImage.TYPE_4BYTE_ABGR);
+				outputs.add(new BufferedImageRasterizer(maskImage));
 				maskOutput = new FileOutputStream(maskOutName);
 			}
-			x.writeRasterization(gos, px, py, maskOutput);
-			gos.flush();
-			fos.flush();
-			gos.close();
-			fos.close();
+			
+			FileOutputStream fos = null;
+			GZIPOutputStream gos = null;
+			MapRasterizationReceiver mrr = null;
+			if (rastOut != null) {
+				fos = new FileOutputStream(rastOut);
+				gos = new GZIPOutputStream(fos);
+				mrr = new MapRasterizationReceiver();
+				outputs.add(mrr);
+			}
+			
+			PolygonDrawMode mode = PolygonFillRasterize.singleton;
+			if (outline) {
+				mode = PolygonDrawEdges.singleton;
+			}
+			x.makeRasterization(px, py, outputs, mode);
+			
+			if (mrr != null && gos != null && fos != null) {
+				Redata.MapRasterization mr = mrr.rastb.build();
+				mr.writeTo(gos);
+				gos.flush();
+				fos.flush();
+				gos.close();
+				fos.close();
+			}
+			if (maskOutput != null && maskImage != null) {
+				MapCanvas.writeBufferedImageAsPNG(maskOutput, maskImage);
+			}
 			end = System.currentTimeMillis();
 			log.info("rasterized and written in " + ((end - start) / 1000.0) + " seconds");
 			start = end;
