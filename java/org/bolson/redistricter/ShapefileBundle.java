@@ -1,5 +1,8 @@
 package org.bolson.redistricter;
 
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -821,6 +824,25 @@ public class ShapefileBundle {
 		return -1;
 	}
 	
+	public static final String blockidToString(byte[] blockid) {
+		int start = 0;
+		int end = -1;
+		while (Character.isWhitespace(blockid[start])) {
+			start++;
+		}
+		end = blockid.length;
+		while (end > start) {
+			end--;
+			if (!Character.isWhitespace(blockid[end])) {
+				if (end != blockid.length) {
+					end++;
+				}
+				break;
+			}
+		}
+		return new String(blockid, start, end);
+	}
+	
 	int blocklimit = 0x7fffffff;
 	static final int randColorRange = 150;
 	static final int randColorOffset = 100;
@@ -844,14 +866,30 @@ public class ShapefileBundle {
 		void setRasterizedPolygon(RasterizationContext ctx, Polygon p);
 	}
 	
+	/**
+	 * Write pixels to a java.awt.image.BufferedImage
+	 * @author bolson
+	 * @see java.awt.image.BufferedImage
+	 */
 	public static class BufferedImageRasterizer implements RasterizationReciever {
 		BufferedImage mask;
-		boolean colorMask = true;
-		boolean colorMaskRandom = true;
+		public boolean colorMask = true;
+		public boolean colorMaskRandom = true;
 		int polyindex = 0;
+		public boolean doPolyNames = true;
+		public java.awt.Font baseFont = new Font("Helvectica", 0, 12);
+		public java.awt.Color textColor = new java.awt.Color(235, 235, 235, 50);
+		Graphics2D g_ = null;
 		
 		BufferedImageRasterizer(BufferedImage imageOut) {
 			mask = imageOut;
+		}
+		
+		Graphics2D graphics() {
+			if (g_ == null) {
+				g_ = mask.createGraphics();
+			}
+			return g_;
 		}
 		
 		@Override
@@ -871,8 +909,49 @@ public class ShapefileBundle {
 				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
 			}
 			log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
+			int minx = ctx.pixels[0];
+			int maxx = ctx.pixels[0];
+			int miny = ctx.pixels[1];
+			int maxy = ctx.pixels[1];
 			for (int i = 0; i < ctx.pxPos; i += 2) {
 				mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
+				if (minx > ctx.pixels[i]) {
+					minx = ctx.pixels[i];
+				}
+				if (maxx < ctx.pixels[i]) {
+					maxx = ctx.pixels[i];
+				}
+				if (miny > ctx.pixels[i+1]) {
+					miny = ctx.pixels[i+1];
+				}
+				if (maxy < ctx.pixels[i+1]) {
+					maxy = ctx.pixels[i+1];
+				}
+			}
+			if (doPolyNames) {
+				Graphics2D g = graphics();
+				String polyName = blockidToString(p.blockid);
+				Rectangle2D stringsize = baseFont.getStringBounds(polyName, g.getFontRenderContext());
+				// target height ((maxy - miny) / 5.0)
+				// actual height stringsize.getHeight()
+				// baseFont size 12.0
+				// newFontSize  / 12.0 === target / actual
+				// newFontSize = (target / actual) * 12.0
+				double ysize = 12.0 * ((maxy - miny) / 3.0) / stringsize.getHeight();
+				double xsize = 12.0 * ((maxx - minx) * 0.9) / stringsize.getWidth();
+				double newFontSize;
+				if (ysize < xsize) {
+					newFontSize = ysize;
+				} else {
+					newFontSize = xsize;
+				}
+				Font currentFont = baseFont.deriveFont((float)newFontSize);
+				g.setFont(currentFont);
+				g.setColor(textColor);
+				stringsize = currentFont.getStringBounds(polyName, g.getFontRenderContext());
+				g.drawString(polyName, 
+						(float)((maxx + minx - stringsize.getWidth()) / 2),
+						(float)((maxy + miny + stringsize.getHeight()) / 2));
 			}
 		}
 
@@ -887,6 +966,11 @@ public class ShapefileBundle {
 		
 	}
 	
+	/**
+	 * Write pixels to a MapRasterization protobuf.
+	 * @author bolson
+	 * @see Redata.MapRasterization
+	 */
 	public static class MapRasterizationReceiver implements RasterizationReciever {
 		public Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
 		
