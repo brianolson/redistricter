@@ -359,6 +359,53 @@ public class ShapefileBundle {
 		}
 	}
 	
+	public static class RasterizationOptions {
+		public double minx = Double.NaN;
+		public double miny = Double.NaN;
+		public double maxx = Double.NaN;
+		public double maxy = Double.NaN;
+		public int xpx = -1;
+		public int ypx = -1;
+		
+		public void setBoundsFromShapefile(ShapefileBundle shp, boolean override) {
+			if (override || Double.isNaN(minx)) {
+				minx = shp.shp.header.xmin;
+			}
+			if (override || Double.isNaN(miny)) {
+				miny = shp.shp.header.ymin;
+			}
+			if (override || Double.isNaN(maxx)) {
+				maxx = shp.shp.header.xmax;
+			}
+			if (override || Double.isNaN(maxy)) {
+				maxy = shp.shp.header.ymax;
+			}
+		}
+		
+		/**
+		 * Set xpx,ypx, up to boundx,boundy.
+		 * @param boundx
+		 * @param boundy
+		 */
+		public void updatePixelSize(int boundx, int boundy) {
+			double width = maxx - minx;
+			assert(width > 0.0);
+			double height = maxy - miny;
+			assert(height > 0.0);
+			double w2 = width * Math.cos(Math.abs((maxy + miny) / 2.0) * Math.PI / 180.0);
+			double ratio = height / w2;
+			double boundRatio = (boundy * 1.0) / boundx;
+			if (ratio > boundRatio) {
+				// state is too tall
+				ypx = boundy;
+				xpx = (int)(ypx / ratio);
+			} else {
+				xpx = boundx;
+				ypx = (int)(ratio * xpx);
+			}
+		}
+	}
+	
 	static class RasterizationContext {
 		public double minx;
 		public double miny;
@@ -373,6 +420,13 @@ public class ShapefileBundle {
 		public int[] pixels = new int[200];
 		public int pxPos = 0;
 		
+		/**
+		 * 
+		 * @param shp
+		 * @param px
+		 * @param py
+		 * @deprecated
+		 */
 		public RasterizationContext(ShapefileBundle shp, int px,
 				int py) {
 			xpx = px;
@@ -381,8 +435,28 @@ public class ShapefileBundle {
 			miny = shp.shp.header.ymin;
 			maxx = shp.shp.header.xmax;
 			maxy = shp.shp.header.ymax;
+			updateParams();
+		}
+		public RasterizationContext(RasterizationOptions opts) {
+			xpx = opts.xpx;
+			ypx = opts.ypx;
+			minx = opts.minx;
+			miny = opts.miny;
+			maxx = opts.maxx;
+			maxy = opts.maxy;
+			updateParams();
+		}
+		/** Call this after changing {min,max}{x,y} or [xy]px */
+		public void updateParams() {
 			pixelHeight = (maxy - miny) / ypx;
 			pixelWidth = (maxx - minx) / xpx;
+		}
+		public void setBounds(double xmin, double ymin, double xmax, double ymax) {
+			minx = xmin;
+			miny = ymin;
+			maxx = xmax;
+			maxy = ymax;
+			updateParams();
 		}
 		public void growPixels() {
 			int[] npx = new int[pixels.length * 2];
@@ -418,8 +492,8 @@ public class ShapefileBundle {
 		public double xmin, xmax, ymin, ymax;
 		public int[] parts;
 		public double[] points;
-		//public String blockid;
 		public byte[] blockid;
+		boolean isWater = false;
 		
 		/**
 		 * Calls init.
@@ -611,12 +685,20 @@ public class ShapefileBundle {
 		 * Calculate which pixels (pixel centers) this polygon covers.
 		 * RasterizationContext.pxPos should probably be 0 before entering this function,
 		 * unless you want to run pixels from multiple polygons together.
+		 * 
+		 * Top left pixel is (0,0), but geometry coordinates have bottom left (0,0), so
+		 * Y is inverted throughout.
+		 * 
 		 * @param ctx geometry comes in here, scratch space for x intercepts, pixels out
 		 * @return list of x,y pairs of pixels that this polygon rasterizes to (left in ctx)
 		 */
 		public void rasterize(RasterizationContext ctx) {
 			// double imMinx, double imMaxy, double pixelHeight, double pixelWidth, int ypx, int xpx
 			// Pixel 0,0 is top left at minx,maxy
+			double rymax = ymax;
+			if (rymax > ctx.maxy){
+				rymax = ctx.maxy;
+			}
 			int py = pcenterBelow(ymax, ctx.maxy, ctx.pixelHeight);
 			if (py < 0) {
 				py = 0;
@@ -813,13 +895,12 @@ public class ShapefileBundle {
 	PolygonBucketArray pba = null;
 	
 	public static final long blockidToUbid(byte[] blockid) {
-		if (blockid.length == 15) {
-			long out = (int)(blockid[2]) - (int)('0');
-			for (int i = 3; i < blockid.length; ++i) {
-				out = out * 10;
-				out += (int)(blockid[i]) - (int)('0');
+		if (blockid.length <= 19) {
+			try {
+				return DBaseFieldDescriptor.byteArrayToLong(blockid);
+			} catch (NumberFormatException e) {
+				return -1;
 			}
-			return out;
 		}
 		return -1;
 	}
@@ -846,9 +927,10 @@ public class ShapefileBundle {
 	int blocklimit = 0x7fffffff;
 	static final int randColorRange = 150;
 	static final int randColorOffset = 100;
-	boolean colorMask = false;
-	boolean colorMaskRandom = false;
+	//boolean colorMask = false;
+	//boolean colorMaskRandom = false;
 	public boolean outline = false;
+	private RasterizationOptions rastOpts;
 	
 	public interface RasterizationReciever {
 		/**
@@ -879,6 +961,7 @@ public class ShapefileBundle {
 		public boolean doPolyNames = true;
 		public java.awt.Font baseFont = new Font("Helvectica", 0, 12);
 		public java.awt.Color textColor = new java.awt.Color(235, 235, 235, 50);
+		public int waterColor = 0x996666ff;
 		Graphics2D g_ = null;
 		
 		BufferedImageRasterizer(BufferedImage imageOut) {
@@ -908,7 +991,10 @@ public class ShapefileBundle {
 				argb = ((int)(Math.random() * randColorRange) + randColorOffset);
 				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
 			}
-			log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
+			if (p.isWater) {
+				argb = waterColor;
+			}
+			//log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
 			int minx = ctx.pixels[0];
 			int maxx = ctx.pixels[0];
 			int miny = ctx.pixels[1];
@@ -979,14 +1065,20 @@ public class ShapefileBundle {
 			if (p.blockid != null) {
 				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
 				Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
-				if (p.blockid.length == 15) {
-					bb.setUbid(blockidToUbid(p.blockid));
+				long ubid = blockidToUbid(p.blockid);
+				if (ubid >= 0) {
+					bb.setUbid(ubid);
 				} else {
-					// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
 					bb.setBlockid(ByteString.copyFrom(p.blockid));
 				}
-				for (int i = 0; i < ctx.pxPos; ++i) {
-					bb.addXy(ctx.pixels[i]);
+				if (p.isWater) {
+					for (int i = 0; i < ctx.pxPos; ++i) {
+						bb.addWaterxy(ctx.pixels[i]);
+					}
+				} else {
+					for (int i = 0; i < ctx.pxPos; ++i) {
+						bb.addXy(ctx.pixels[i]);
+					}
 				}
 				rastb.addBlock(bb);
 			} else {
@@ -1023,10 +1115,10 @@ public class ShapefileBundle {
 		private PolygonFillRasterize() {}
 	}
 	
-	public void makeRasterization(int px, int py, Iterable<RasterizationReciever> they, PolygonDrawMode drawMode) {
-		RasterizationContext ctx = new RasterizationContext(this, px, py);
+	public void makeRasterization(Iterable<RasterizationReciever> they, PolygonDrawMode drawMode) {
+		RasterizationContext ctx = new RasterizationContext(rastOpts);
 		for (RasterizationReciever rr : they) {
-			rr.setSize(px, py);
+			rr.setSize(rastOpts.xpx, rastOpts.ypx);
 		}
 		for (Polygon p : polys) {
 			ctx.pxPos = 0;
@@ -1037,84 +1129,6 @@ public class ShapefileBundle {
 			if (--blocklimit < 0) {
 				break;
 			}
-		}
-	}
-	public Redata.MapRasterization makeRasterization(int px, int py, BufferedImage mask) {
-		RasterizationContext ctx = new RasterizationContext(this, px, py);
-		Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
-		rastb.setSizex(px);
-		rastb.setSizey(py);
-		int polyindex = 0;
-		for (Polygon p : polys) {
-			ctx.pxPos = 0;
-			p.rasterize(ctx);
-			if (p.blockid != null) {
-				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
-				Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
-				if (p.blockid.length == 15) {
-					bb.setUbid(blockidToUbid(p.blockid));
-				} else {
-					// TODO: 2010 data will probably need to move to blockid, or maybe redefinition of ubid
-					bb.setBlockid(ByteString.copyFrom(p.blockid));
-				}
-				for (int i = 0; i < ctx.pxPos; ++i) {
-					bb.addXy(ctx.pixels[i]);
-				}
-				rastb.addBlock(bb);
-			} else {
-				log.warning("polygon with no blockid");
-			}
-			if (mask != null) {
-				int argb;
-				if (colorMask) {
-					if (colorMaskRandom) {
-						argb = 0xff000000 |
-						(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
-						(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
-						((int)(Math.random() * randColorRange) + randColorOffset);
-					} else {
-						argb = MapCanvas.colorsARGB[polyindex % MapCanvas.colorsARGB.length];
-					}
-				} else {
-					argb = ((int)(Math.random() * randColorRange) + randColorOffset);
-					argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
-				}
-				log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
-				for (int i = 0; i < ctx.pxPos; i += 2) {
-					mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
-				}
-			}
-			if (--blocklimit < 0) {
-				break;
-			}
-			polyindex++;
-		}
-		return rastb.build();
-	}
-	public void writeRasterization(OutputStream os, int px, int py, OutputStream maskPngOut) throws IOException {
-		ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
-		BufferedImage maskImage = null;
-		if (maskPngOut != null) {
-			maskImage = new BufferedImage(px, py, BufferedImage.TYPE_4BYTE_ABGR);
-			outputs.add(new BufferedImageRasterizer(maskImage));
-		}
-		MapRasterizationReceiver mrr = null;
-		if (os != null) {
-			mrr = new MapRasterizationReceiver();
-			outputs.add(mrr);
-		}
-		//Redata.MapRasterization mr = makeRasterization(px, py, maskImage);
-		PolygonDrawMode mode = PolygonFillRasterize.singleton;
-		if (outline) {
-			mode = PolygonDrawEdges.singleton;
-		}
-		makeRasterization(px, py, outputs, mode);
-		if (mrr != null) {
-			Redata.MapRasterization mr = mrr.rastb.build();
-			mr.writeTo(os);
-		}
-		if (maskPngOut != null) {
-			MapCanvas.writeBufferedImageAsPNG(maskPngOut, maskImage);
 		}
 	}
 	
@@ -1143,6 +1157,28 @@ public class ShapefileBundle {
 		f.close();
 	}
 	
+	public static class CompositeDBaseField extends DBaseFieldDescriptor {
+		protected ArrayList<DBaseFieldDescriptor> subFields = new ArrayList<DBaseFieldDescriptor>(); 
+
+		public CompositeDBaseField() {
+			super();
+			length = 0;
+		}
+		
+		public void add(DBaseFieldDescriptor field) {
+			subFields.add(field);
+			length += field.length;
+		}
+		
+		public int getBytes(byte[] data, int offset, int length, byte[] out, int outOffset) {
+			// TODO: assert(change in outOffset == this.length)
+			for (DBaseFieldDescriptor field : subFields) {
+				outOffset += field.getBytes(data, offset, length, out, outOffset);
+			}
+			return outOffset;
+		}
+	}
+		
 	/**
 	 * Read a Shapefile and DBase pair.
 	 * Loads all the polygons from the Shapefile and identifiers from the 
@@ -1152,15 +1188,43 @@ public class ShapefileBundle {
 	 * @throws IOException
 	 */
 	public void read(Shapefile shp, DBase dbf) throws IOException {
+		// BLKIDFP part of tabblock
 		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
 		if (blockIdField == null) {
+			// BLKIDFP00 tabblock00
 			blockIdField = dbf.getField("BLKIDFP00");
 		}
 		if (blockIdField == null) {
+			// NAMELSAD part of places
 			blockIdField = dbf.getField("NAMELSAD");
 		}
 		if (blockIdField == null) {
+			// maybe synthesize blockId from parts of faces file
+			DBaseFieldDescriptor state = dbf.getField("STATEFP00");
+			DBaseFieldDescriptor county = dbf.getField("COUNTYFP00");
+			DBaseFieldDescriptor tract = dbf.getField("TRACTCE00");
+			DBaseFieldDescriptor block = dbf.getField("BLOCKCE00");
+			DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
+			if ((state != null) && (county != null) && (tract != null) && (block != null) && (suffix != null)) {
+				CompositeDBaseField cfield = new CompositeDBaseField();
+				cfield.add(state);
+				cfield.add(county);
+				cfield.add(tract);
+				cfield.add(block);
+				cfield.add(suffix);
+				blockIdField = cfield;
+			}
+		}
+		if (blockIdField == null) {
 			log.log(Level.WARNING, "BLKIDFP nor BLKIDFP00 not in DBase file: {0}", dbf);
+		}
+		DBaseFieldDescriptor isWaterField = dbf.getField("LWFLAG");
+		byte[] lwflag = new byte[1];
+		DBaseFieldDescriptor waterArea = dbf.getField("AWATER");
+		DBaseFieldDescriptor landArea = dbf.getField("ALAND");
+		if (waterArea == null) {
+			waterArea = dbf.getField("AWATER00");
+			landArea = dbf.getField("ALAND00");
 		}
 		Polygon p = shp.next();
 		
@@ -1174,11 +1238,25 @@ public class ShapefileBundle {
 			} else {
 				p.blockid = null;
 			}
+			if (isWaterField != null) {
+				isWaterField.getBytes(rowbytes, 0, rowbytes.length, lwflag, 0);
+				if (lwflag[0] != (byte)'L') {
+					//log.info("lwflag=" + (char)(lwflag[0]));
+					p.isWater = true;
+				}
+			} else if ((waterArea != null) && (landArea != null)) {
+				long wa = waterArea.getLong(rowbytes, 0, rowbytes.length);
+				long la = landArea.getLong(rowbytes, 0, rowbytes.length);
+				if ((la == 0) && (wa > 0)) {
+					p.isWater = true;
+				}
+			}
 			polys.add(p);
 			pba.add(p);
 			//System.out.println(p);
 			p = shp.next();
 		}
+		// TODO: assert that polys and dbf are both empty at the end.
 	}
 	public int records() {
 		assert(shp.recordCount == dbf.readCount);
@@ -1365,8 +1443,7 @@ public static final String usage =
 	public static void main(String[] argv) throws IOException {
 		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
 		boolean tree = true;
-		int px = -1;
-		int py = -1;
+		//int px = -1;int py = -1;
 		int boundx = 1920;
 		int boundy = 1080;
 		String inname = null;
@@ -1376,6 +1453,7 @@ public static final String usage =
 		int threads = 3;
 		boolean colorMask = false;
 		boolean outline = false;
+		RasterizationOptions rastOpts = new RasterizationOptions();
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
@@ -1400,11 +1478,25 @@ public static final String usage =
 				i++;
 				threads = Integer.parseInt(argv[i]);
 			} else if (argv[i].equals("--boundx")) {
+				// upper bound on pixel size
 				i++;
 				boundx = Integer.parseInt(argv[i]);
 			} else if (argv[i].equals("--boundy")) {
+				// upper bound on pixel size
 				i++;
 				boundy = Integer.parseInt(argv[i]);
+			} else if (argv[i].equals("--minx")) {
+				i++;
+				rastOpts.minx = Double.parseDouble(argv[i]);
+			} else if (argv[i].equals("--maxx")) {
+				i++;
+				rastOpts.maxx = Double.parseDouble(argv[i]);
+			} else if (argv[i].equals("--miny")) {
+				i++;
+				rastOpts.miny = Double.parseDouble(argv[i]);
+			} else if (argv[i].equals("--maxy")) {
+				i++;
+				rastOpts.maxy = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--outline")) {
 				outline = true;
 			} else if (argv[i].equals("--verbose")) {
@@ -1425,7 +1517,6 @@ public static final String usage =
 		}
 		
 		ShapefileBundle x = new ShapefileBundle();
-		x.colorMask = colorMask;
 		x.outline  = outline;
 		long start = System.currentTimeMillis();
 		x.read(inname);
@@ -1437,29 +1528,19 @@ public static final String usage =
 			start = System.currentTimeMillis();
 		}
 		if ((rastOut != null) || (maskOutName != null)) {
-			if (px == -1 || py == -1) {
-				double width = x.shp.header.xmax - x.shp.header.xmin;
-				double height = x.shp.header.ymax - x.shp.header.ymin;
-				double w2 = width * Math.cos(Math.abs((x.shp.header.ymax + x.shp.header.ymin) / 2.0) * Math.PI / 180.0);
-				double ratio = height / w2;
-				double boundRatio = (boundy * 1.0) / boundx;
-				if (ratio > boundRatio) {
-					// state is too tall
-					py = boundy;
-					px = (int)(py / ratio);
-				} else {
-					px = boundx;
-					py = (int)(ratio * px);
-				}
-			}
+			x.rastOpts = rastOpts;
+			x.rastOpts.setBoundsFromShapefile(x, false);
+			x.rastOpts.updatePixelSize(boundx, boundy);
 			
 			ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
 			
 			BufferedImage maskImage = null;
 			OutputStream maskOutput = null;
 			if (maskOutName != null) {
-				maskImage = new BufferedImage(px, py, BufferedImage.TYPE_4BYTE_ABGR);
-				outputs.add(new BufferedImageRasterizer(maskImage));
+				maskImage = new BufferedImage(x.rastOpts.xpx, x.rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
+				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage);
+				bir.colorMask = colorMask;
+				outputs.add(bir);
 				maskOutput = new FileOutputStream(maskOutName);
 			}
 			
@@ -1477,7 +1558,7 @@ public static final String usage =
 			if (outline) {
 				mode = PolygonDrawEdges.singleton;
 			}
-			x.makeRasterization(px, py, outputs, mode);
+			x.makeRasterization(outputs, mode);
 			
 			if (mrr != null && gos != null && fos != null) {
 				Redata.MapRasterization mr = mrr.rastb.build();

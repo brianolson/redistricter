@@ -39,13 +39,12 @@ message DistrictMap {
 	repeated int32 district = 2;
 }
 
-// For some ubid, a list of pixels (x,y coords) to draw.
-// Alternative to custom binary ".mpout" file
+// For each block, a list of pixels (x,y coords) to draw.
 message MapRasterization {
 	repeated group Block = 1 {
 		// Pick one of {ubid, recno, blockid}
 		
-		// decimal digits {county, tract, block}: CCCTTTTTTBBBB
+		// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 		optional uint64 ubid = 2;
 		// "logical record number"
 		optional int32 recno = 6;
@@ -54,6 +53,9 @@ message MapRasterization {
 		
 		// The pixels associated with this block. (x,y) pairs.
 		repeated int32 xy = 3;
+		
+		// Pixels that should get 'water' treatment.
+		repeated int32 waterxy = 8;
 	}
 	optional int32 sizex = 4;
 	optional int32 sizey = 5;

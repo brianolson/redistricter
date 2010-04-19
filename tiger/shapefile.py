@@ -17,10 +17,11 @@ http://www.clicketyclick.dk/databases/xbase/format/dbf.html#DBF_STRUCT
 __author__ = "Brian Olson"
 
 
+import StringIO
 import struct
 import sys
 import time
-
+import zipfile
 
 class ShapefileHeaderField(object):
 	def __init__(self, start, stop, format):
@@ -49,7 +50,7 @@ FILE_HEADER_ = {
 	}
 
 
-SHAPE_TYPES = {
+SHAPE_TYPE_NAMES = {
 	0: 'Null Shape',
 	1: 'Point',
 	3: 'PolyLine',
@@ -91,19 +92,6 @@ def ParseRecordHeader(rawbytes):
 	Out: (record number, content length in 16 bit word count)"""
 	return struct.unpack('>ii', rawbytes)
 
-def ReadRecord(fin):
-	recordHeaderBytes = fin.read(8)
-	if (recordHeaderBytes is None) or (len(recordHeaderBytes) < 8):
-		return None
-	(num, shorts) = ParseRecordHeader(recordHeaderBytes)
-	rawbytes = fin.read(shorts * 2)
-	if (rawbytes is None) or (len(rawbytes) < (shorts * 2)):
-		return None
-	# TODO? check first int for object type?
-	p = Polygon()
-	p.parse(rawbytes)
-	return (num, p)
-
 
 part_count_hist_ = {}
 point_count_hist_ = {}
@@ -114,10 +102,7 @@ def countHistInc(h, n):
 	h[n] = ov + 1
 
 class Polygon(object):
-	"""
-	
-
-	"""
+	"""Container/parser for Shapefile Polygon element (5)."""
 	def __init__(self):
 		self.shapetype = 5
 		self.xmin = None
@@ -143,7 +128,7 @@ class Polygon(object):
 		 self.xmin, self.ymin, self.xmax, self.ymax,
 		 self.numParts, self.numPoints) = struct.unpack(
 		    '<iddddii', rawbytes)
-		assert shapetype == 5, 'expected shape 5, got %s' % shapetype
+		assert shapetype == self.shapetype, 'expected shape %d, got %s' % (self.shapetype, shapetype)
 		countHistInc(part_count_hist_, self.numParts)
 		countHistInc(point_count_hist_, self.numPoints)
 
@@ -157,23 +142,52 @@ class Polygon(object):
 		    ')(points ' +
 		    ' '.join(map(str,self.points)) + ')')
 
+class PolyLine(Polygon):
+	"""Container/parser for Shapefile PolyLine element (3)."""
+	# It's the same data layout as Polygon, just different interpretation.
+	# No last-point-duplicate-of-first-point, no closed loop.
+	def __init__(self):
+		Polygon.__init__(self)
+		self.shapetype = 3
+
+
+SHAPE_TYPES = {
+	3: PolyLine,
+	5: Polygon,
+	}
+
+def ReadRecord(fin):
+	recordHeaderBytes = fin.read(8)
+	if (recordHeaderBytes is None) or (len(recordHeaderBytes) < 8):
+		return None
+	(num, shorts) = ParseRecordHeader(recordHeaderBytes)
+	rawbytes = fin.read(shorts * 2)
+	if (rawbytes is None) or (len(rawbytes) < (shorts * 2)):
+		return None
+	(shapeType,) = struct.unpack('<i', rawbytes[0:4])
+	#assert shapeType in SHAPE_TYPES, 'shapeType=%s' % shapeType
+	p = SHAPE_TYPES[shapeType]()
+	p.parse(rawbytes)
+	return (num, p)
+
 
 class Shapefile(object):
 	def __init__(self):
 		self.count = 0
 		self.header = None
-		self.records = []
+		#self.records = []
 
 	def parseFile(self, f):
 		self.header = ShapefileHeader(f.read(100))
 		for i in FILE_HEADER_.iterkeys():
 			print i, self.header.__getattr__(i)
-		print 'ShapeType: ' + SHAPE_TYPES[self.header.shapeType]
+		print 'ShapeType: ' + SHAPE_TYPE_NAMES[self.header.shapeType]
 		while True:
 			num_p = ReadRecord(f)
 			if num_p is None:
 				break
-			self.records.append(num_p[1])
+			#self.records.append(num_p[1])
+			yield num_p[1]
 			self.count += 1
 
 
@@ -252,7 +266,7 @@ class CensusDBaseFile(object):
 		x = f.read(1)
 		while x != '\x1a':
 			line = f.read(self.recordLength)
-			self.parseLine(line)
+			yield self.parseLine(line)
 			self.recordCount += 1
 			x = f.read(1)
 
@@ -310,7 +324,8 @@ def readDbf(fname):
 	start = time.time()
 	f = open(fname, 'rb')
 	dbf = CensusDBaseFile()
-	dbf.readFile(f)
+	for rec in dbf.readFile(f):
+		pass
 	f.close()
 	stop = time.time()
 	print 'read %d records in %f seconds' % (
@@ -334,6 +349,24 @@ def readShapefile(fname):
 	print 'point counts:'
 	for i in point_counts:
 		print '%d\t%d' % (i, point_count_hist_[i])
+
+def readZipfile(fname):
+	zf = zipfile.ZipFile(fname)
+	dbrecords = []
+	polys = []
+	dbf = None
+	shp = None
+	for arg in zf.namelist():
+		if arg.endswith('.dbf'):
+			dbf = CensusDBaseFile()
+			for rec in dbf.readFile(StringIO.StringIO(zf.read(arg))):
+				dbrecords.append(rec)
+		elif arg.endswith('.shp'):
+			shp = Shapefile()
+			for rec in shp.parseFile(StringIO.StringIO(zf.read(arg))):
+				polys.append(rec)
+	assert len(dbrecords) == len(polys)
+	return (dbf,shp,dbrecords,polys)
 
 def main(argv):
 	for arg in argv[1:]:

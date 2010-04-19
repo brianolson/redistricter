@@ -18,6 +18,16 @@ public class DBaseFieldDescriptor {
 	public static final byte NUMERIC = (byte)'N';
 	public static final byte CHARACTER = (byte)'C';
 	
+	protected DBaseFieldDescriptor() {
+		// nop
+	}
+	protected DBaseFieldDescriptor(String name, byte type, byte length, byte count) {
+		this.name = name;
+		this.type = type;
+		this.length = length;
+		this.count = count;
+	}
+	
 	public DBaseFieldDescriptor(byte[] data, int offset, int length) {
 		parseHeader(data, offset, length);
 	}
@@ -58,10 +68,69 @@ public class DBaseFieldDescriptor {
 		this.name = this.name.trim();
 	}
 	
+	public static long byteArrayToLong(byte[] ar) throws NumberFormatException {
+		int pos = ar.length - 1;
+		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
+			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
+		}
+		long out = 0;
+		while ((pos >= 0) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+			out *= 10;
+			out += ar[pos] - (byte)'0';
+			pos--;
+		}
+		return out;
+	}
+	public static long byteArrayToLong(byte[] ar, int offset, int length) throws NumberFormatException {
+		int pos = offset + length - 1;
+		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
+			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
+		}
+		long out = 0;
+		while ((pos >= offset) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+			out *= 10;
+			out += ar[pos] - (byte)'0';
+			pos--;
+		}
+		return out;
+	}
+	
+	public static int byteArrayToInt(byte[] ar) throws NumberFormatException {
+		int pos = ar.length - 1;
+		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
+			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
+		}
+		int out = 0;
+		while ((pos >= 0) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+			out *= 10;
+			out += ar[pos] - (byte)'0';
+			pos--;
+		}
+		return out;
+	}
+	public static int byteArrayToInt(byte[] ar, int offset, int length) throws NumberFormatException {
+		int pos = offset + length - 1;
+		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
+			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
+		}
+		int out = 0;
+		while ((pos >= offset) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+			out *= 10;
+			out += ar[pos] - (byte)'0';
+			pos--;
+		}
+		return out;
+	}
+	
 	public int getInt(byte[] data, int offset, int length) {
 		assert(length >= (this.startpos + this.length));
 		assert(type == NUMERIC);
-		return Integer.parseInt(new String(data, offset + this.startpos, this.length));
+		return byteArrayToInt(data, offset + this.startpos, this.length);
+	}
+	public long getLong(byte[] data, int offset, int length) {
+		assert(length >= (this.startpos + this.length));
+		assert(type == NUMERIC);
+		return byteArrayToLong(data, offset + this.startpos, this.length);
 	}
 	
 	public String getString(byte[] data, int offset, int length) {
@@ -71,11 +140,24 @@ public class DBaseFieldDescriptor {
 	}
 	
 	public byte[] getBytes(byte[] data, int offset, int length) {
+		byte[] out = new byte[this.length];
+		getBytes(data, offset, length, out, 0);
+		return out;
+	}
+	/**
+	 * 
+	 * @param data
+	 * @param offset
+	 * @param length
+	 * @param out
+	 * @param outOffset
+	 * @return new offset into out where next byte might go
+	 */
+	public int getBytes(byte[] data, int offset, int length, byte[] out, int outOffset) {
 		assert(length >= (this.startpos + this.length));
 		assert(type == CHARACTER);
-		byte[] out = new byte[this.length];
-		System.arraycopy(data, offset + this.startpos, out, 0, this.length);
-		return out;
+		System.arraycopy(data, offset + this.startpos, out, outOffset, this.length);
+		return this.length;
 	}
 
 	public String toString() {

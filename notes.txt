@@ -60,6 +60,9 @@ http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock00.
 http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/
 http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/tl_2009_25_tabblock.zip
 http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/tl_2009_25_tabblock00.zip
+http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25017_Middlesex_County/tl_2009_25017_faces.zip
+
+I may be able to get better block-block links information from combining the TFID and reconstructed BlockID from the *_faces.zip topological faces file and the TFIDL,TFIDR from the *_edges.zip all lines file.
 
 *_tabblock00.dbf
 	state		two digit fips code
