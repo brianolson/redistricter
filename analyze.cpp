@@ -72,6 +72,7 @@ int main( int argc, char** argv ) {
 	bool distrow = true;
 	bool distcol = false;
 	bool quiet = false;
+	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
@@ -144,6 +145,9 @@ int main( int argc, char** argv ) {
 			distcol = true;
 		} else if (!strcmp(argv[i], "--nodistcol")) {
 			distcol = false;
+		} else if (!strcmp(argv[i], "--export")) {
+			++i;
+			exportPath = argv[i];
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;
@@ -167,6 +171,43 @@ int main( int argc, char** argv ) {
 			fputs(statstr, stdout);
 			delete statstr;
 		}
+	}
+	
+	if (exportPath != NULL) {
+		FILE* exportf = fopen(exportPath, "w");
+		if (exportf == NULL) {
+			perror(exportPath);
+			exit(1);
+			return 1;
+		}
+		uint64_t maxUbid = 0;
+		for (int i = 0; i < sov.gd->numPoints; ++i) {
+			if (sov.gd->ubids[i].ubid > maxUbid) {
+				maxUbid = sov.gd->ubids[i].ubid;
+			}
+		}
+		int length = 0;
+		while (maxUbid > 0) {
+			length++;
+			maxUbid /= 10;
+		}
+		if (length < 4) {
+			fprintf(stderr, "unusually short ubid length %d, max ubid=%lld, cowardly exiting\n", length, maxUbid);
+			exit(1); return 1;
+		} else if (length < 10) {
+			length = 10;  // round up to 6 tract + 4 block
+		} else if (length < 13) {
+			length = 13;  // round up to 3 county + 6 tract + 4 block
+		} else if (length < 15) {
+			length = 15;  // round up to 2 state + 3 county + 6 tract + 4 block
+		}
+		char format[30];
+		snprintf(format, sizeof(format), "%%0%dlld%%02d\n", length);
+		for (int i = 0; i < sov.gd->numPoints; ++i) {
+			uint64_t ubid = sov.gd->ubidOfIndex(i);
+			fprintf(exportf, format, ubid, sov.winner[i]);
+		}
+		fclose(exportf);
 	}
 	
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
