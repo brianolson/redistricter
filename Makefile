@@ -106,9 +106,6 @@ tabledesc/redata_pb2.py:	redata.proto
 #uf1data:	${UFONEDATAOBJS}
 #	$(CXX) ${CXXFLAGS} $(UFONEDATAOBJS) $(LDFLAGS) -o uf1data
 
-clean:
-	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h java/org/bolson/redistricter/Redata.java
-
 run:	districter2
 	./districter2 -U build/input.uf1 -g 100 --pngout fl_test.png --pngW 400 --pngH 400 --oldCDs -d -10 -o fl_test_oz
 
@@ -138,6 +135,12 @@ tools.jar:	java/org/bolson/redistricter/Redata.java java/org/bolson/redistricter
 	mkdir -p classes
 	cd java && find . -name \*.java | xargs ${JAVAC} -cp ../jars/protobuf.jar -g -d ../classes
 	cd classes && jar cf ../tools.jar org
+
+THINGSTOCLEAN+=java/org/bolson/redistricter/Redata.java tools.jar
+
+
+clean:
+	rm -f ${THINGSTOCLEAN} *.pb.cc *.pb.h java/org/bolson/redistricter/Redata.java
 
 protoio.o:	redata.pb.h
 PBPointOutput.o:	redata.pb.h
