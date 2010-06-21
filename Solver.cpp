@@ -233,6 +233,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 	buf[13] = '\0';
 	int j = 0;
 	size_t sizeof_linkLine = 27;
+	size_t sizeof_ubid = 13;
 	int offseta = 0;
 	int offsetb = 13;
 	if ( data[26] == '\n') {
@@ -241,8 +242,9 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 	} else if ( data[15] == ',' && data[31] == '\n' ) {
 		// new format, two SSCCCTTTTTTBBBB state-county-tract-block values with ',' between and '\n' after
 		sizeof_linkLine = 32;
-		offseta = 2;
-		offsetb = 18;
+		sizeof_ubid = 15;
+		offseta = 0;
+		offsetb = 16;
 	} else {
 		fprintf(stderr, "bad format links file\n");
 		return false;
@@ -251,14 +253,14 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 	edgeData = new int32_t[numEdges*2];
 	for ( unsigned int i = 0 ; i < numEdges; i++ ) {
 		uint64_t tubid;
-		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offseta, 13 );
+		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offseta, sizeof_ubid );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
 			printf("ubid %lld => index %d\n", tubid, edgeData[j*2] );
 			continue;
 		}
-		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offsetb, 13 );
+		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offsetb, sizeof_ubid );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {

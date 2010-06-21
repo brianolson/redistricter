@@ -1,12 +1,10 @@
 package org.bolson.redistricter;
 
-import java.awt.Canvas;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,7 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
@@ -404,8 +401,7 @@ public class MapCanvas {
 				Object p;
 				p = si.next();
 				oosws = (ImageOutputStreamSpi)p;
-				Class oc;
-				oc = oosws.getOutputClass();
+				Class oc = oosws.getOutputClass();
 				if ( oc.equals( outstreamclass ) ) {
 					break;
 				}

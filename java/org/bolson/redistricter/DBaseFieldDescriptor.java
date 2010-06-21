@@ -69,28 +69,36 @@ public class DBaseFieldDescriptor {
 	}
 	
 	public static long byteArrayToLong(byte[] ar) throws NumberFormatException {
-		int pos = ar.length - 1;
+		int pos = 0;
+		while (Character.isWhitespace(ar[pos])) {
+			pos++;
+		}
 		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
 			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
 		}
 		long out = 0;
-		while ((pos >= 0) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+		int end = ar.length;
+		while ((pos < end) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
 			out *= 10;
 			out += ar[pos] - (byte)'0';
-			pos--;
+			pos++;
 		}
 		return out;
 	}
 	public static long byteArrayToLong(byte[] ar, int offset, int length) throws NumberFormatException {
-		int pos = offset + length - 1;
+		int pos = offset;
+		int end = offset + length;
+		while (Character.isWhitespace(ar[pos]) && (pos < end)) {
+			pos++;
+		}
 		if ((ar[pos] < (byte)'0') || (ar[pos] > (byte)'9')) {
 			throw new NumberFormatException("bad char in 1s place=" + (char)ar[pos]);
 		}
 		long out = 0;
-		while ((pos >= offset) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
+		while ((pos < end) && (ar[pos] >= (byte)'0') && (ar[pos] <= (byte)'9')) {
 			out *= 10;
 			out += ar[pos] - (byte)'0';
-			pos--;
+			pos++;
 		}
 		return out;
 	}

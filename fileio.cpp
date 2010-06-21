@@ -507,13 +507,15 @@ int Uf1::load() {
 	return 0;
 }
 uint64_t Uf1::ubid( int index ) {
-		char buf[3+6+4+1];
-		copyGeoUf1Field( buf    , data, index, 31, 34 ); // county
-		copyGeoUf1Field( buf + 3, data, index, 55, 61 ); // tract
-		copyGeoUf1Field( buf + 9, data, index, 62, 66 ); // block
-		//buf[13] = '\0';
-		return strtoull( buf, NULL, 10 );
-	}
+	// TODO: 2010 data will get one char longer.
+	char buf[2+3+6+4+1]; // state county tract block \0
+	copyGeoUf1Field( buf     , data, index, 29, 31 ); // state
+	copyGeoUf1Field( buf +  2, data, index, 31, 34 ); // county
+	copyGeoUf1Field( buf +  5, data, index, 55, 61 ); // tract
+	copyGeoUf1Field( buf + 11, data, index, 62, 66 ); // block
+	buf[15] = '\0';
+	return strtoull( buf, NULL, 10 );
+}
 // get "Logical Record Number" which links to deeper census data.
 uint32_t Uf1::logrecno( int index ) {
 	char buf[8];

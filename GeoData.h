@@ -165,12 +165,9 @@ class Uf1 : public GeoData {
 	virtual int load();
 	virtual int numDistricts();
 	
-	// get Unique Block ID, the ull interpretation of county tract and block concatenated
-	// decimal digits {county, tract, block}: CCCTTTTTTBBBB
-	// Bit packing could give county=10, tract=20, block=14: 44 bits
-	// county=short, tract=int, block=short: 64 bits
-	// ubid: 64 bits
-	// TODO: drop ubid as cross file reference and use LOGRECNO as proper.
+	// Get Unique Block ID, the ull interpretation of county tract and block concatenated
+	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
+	// Ubid links to geometry data which tags blocks by this string.
 	uint64_t ubid( int index );
 	
 	// get "Logical Record Number" which links to deeper census data.

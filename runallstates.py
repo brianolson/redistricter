@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Expects to run in the build dir with data/?? containing state data.
-# Using setupstatedata.pl in the standard way should do this.
+# Using setupstatedata.py in the standard way should do this.
 #
 # TODO: shiny GUI?
 # At the most basic, curses or Tk progress bars.
@@ -147,6 +147,7 @@ HAS_PARAM_ = {
 	'--d2': False,
 	'--maxSpreadFraction': True,
 	'--maxSpreadAbsolute': True,
+	'--mppb': True,
 }
 # TODO: check mutually exclusive arguments in mergeArgs
 EXCLUSIVE_CLASSES_ = [

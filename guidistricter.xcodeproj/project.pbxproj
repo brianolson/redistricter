@@ -76,6 +76,9 @@
 		1F8427D60CCB222500ACC6A4 /* DistrictSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427D10CCB222500ACC6A4 /* DistrictSet.cpp */; };
 		1F89FB1E0A79A8890064DDAF /* Solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F4D0C6F090C2B58003CE55B /* Solver.cpp */; };
 		1F89FB1F0A79A88C0064DDAF /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
+		1F903D7311CEE0140058F139 /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
+		1F903D9911CEFEFB0058F139 /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
+		1F903D9C11CEFF220058F139 /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
 		1F9B310410C05E9B0026FEE7 /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
 		1F9B310C10C060140026FEE7 /* libprotobuf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9B310B10C060140026FEE7 /* libprotobuf.dylib */; };
 		1F9B310D10C060140026FEE7 /* libprotobuf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9B310B10C060140026FEE7 /* libprotobuf.dylib */; };
@@ -748,6 +751,8 @@
 				1F2E3DCD0F1994D200A1A037 /* uf1.cpp in Sources */,
 				1F2E3DCF0F1994E000A1A037 /* StatThing.cpp in Sources */,
 				1F2DFD1C0F3DDA34008FF766 /* logging.cpp in Sources */,
+				1F903D9911CEFEFB0058F139 /* protoio.cpp in Sources */,
+				1F903D9C11CEFF220058F139 /* redata.pb.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -811,6 +816,7 @@
 				1F5FF80F0F2418120087B09F /* StatThing.cpp in Sources */,
 				1F2DFD1D0F3DDA34008FF766 /* logging.cpp in Sources */,
 				1F9B310410C05E9B0026FEE7 /* redata.pb.cc in Sources */,
+				1F903D7311CEE0140058F139 /* protoio.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1016,6 +1022,10 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
@@ -1036,6 +1046,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
@@ -1054,6 +1068,10 @@
 				ARCHS = x86_64;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
@@ -1329,6 +1347,10 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					GOOGLE_PROTOBUF_NO_RTTI,
+					HAVE_PROTOBUF,
+				);
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1356,7 +1378,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
-				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					GOOGLE_PROTOBUF_NO_RTTI,
+					HAVE_PROTOBUF,
+				);
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1382,6 +1407,10 @@
 			buildSettings = {
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					GOOGLE_PROTOBUF_NO_RTTI,
+					HAVE_PROTOBUF,
+				);
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1404,8 +1433,9 @@
 		1FEF15BE0A577CFD000B2C93 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
 				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_MODEL_TUNING = "";
@@ -1419,8 +1449,9 @@
 		1FEF15BF0A577CFD000B2C93 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
 				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = GOOGLE_PROTOBUF_NO_RTTI;
@@ -1430,8 +1461,9 @@
 		1FEF15C00A577CFD000B2C93 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
 				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = GOOGLE_PROTOBUF_NO_RTTI;
@@ -1484,8 +1516,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -1505,8 +1537,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -1526,8 +1558,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
