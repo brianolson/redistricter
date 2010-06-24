@@ -507,14 +507,38 @@ int Uf1::load() {
 	return 0;
 }
 uint64_t Uf1::ubid( int index ) {
-	// TODO: 2010 data will get one char longer.
-	char buf[2+3+6+4+1]; // state county tract block \0
-	copyGeoUf1Field( buf     , data, index, 29, 31 ); // state
-	copyGeoUf1Field( buf +  2, data, index, 31, 34 ); // county
-	copyGeoUf1Field( buf +  5, data, index, 55, 61 ); // tract
-	copyGeoUf1Field( buf + 11, data, index, 62, 66 ); // block
-	buf[15] = '\0';
-	return strtoull( buf, NULL, 10 );
+	char buf[2+3+6+1+4+1];
+	char* line = reinterpret_cast<char*>(
+		reinterpret_cast<uintptr_t>(data) + (index * sizeof_GeoUf1));
+	unsigned int offset = 0;
+#define UF1_UBID_CHAR(pos) buf[offset] = line[pos]; offset++;
+	UF1_UBID_CHAR(29); // state
+	UF1_UBID_CHAR(30); // state
+	UF1_UBID_CHAR(31); // county
+	UF1_UBID_CHAR(32); // county
+	UF1_UBID_CHAR(33); // county
+	UF1_UBID_CHAR(55); // tract
+	UF1_UBID_CHAR(56); // tract
+	UF1_UBID_CHAR(57); // tract
+	UF1_UBID_CHAR(58); // tract
+	UF1_UBID_CHAR(59); // tract
+	UF1_UBID_CHAR(60); // tract
+	UF1_UBID_CHAR(62); // block
+	UF1_UBID_CHAR(63); // block
+	UF1_UBID_CHAR(64); // block
+	UF1_UBID_CHAR(65); // block
+	// TODO: 2010 data may add one char block suffix
+	assert(offset < sizeof(buf));
+	buf[offset] = '\0';
+#undef UF1_UBID_CHAR
+	char* endp;
+	uint64_t out = strtoull( buf, &endp, 10 );
+	if (endp != (buf + offset)) {
+		fprintf(stderr, "bogus ubid \"%s\" at index %d\n", buf, index);
+		assert(endp == (buf + offset));
+		return (uint64_t)-1;
+	}
+	return out;
 }
 // get "Logical Record Number" which links to deeper census data.
 uint32_t Uf1::logrecno( int index ) {

@@ -165,9 +165,11 @@ class Uf1 : public GeoData {
 	virtual int load();
 	virtual int numDistricts();
 	
-	// Get Unique Block ID, the ull interpretation of county tract and block concatenated
+	// Get Unique Block ID, the ull interpretation of concatenated
 	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	// Ubid links to geometry data which tags blocks by this string.
+	// This is eqivalent to Cenus 2000 tiger shapefile BLOCKID.
+	// TODO: 2010 shapefile has an extra digit appended.
 	uint64_t ubid( int index );
 	
 	// get "Logical Record Number" which links to deeper census data.
