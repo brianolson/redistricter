@@ -1115,6 +1115,8 @@ public class ShapefileBundle {
 	
 	public void makeRasterization(Iterable<RasterizationReciever> they, PolygonDrawMode drawMode) {
 		RasterizationContext ctx = new RasterizationContext(rastOpts);
+		assert rastOpts.xpx > 0;
+		assert rastOpts.ypx > 0;
 		for (RasterizationReciever rr : they) {
 			rr.setSize(rastOpts.xpx, rastOpts.ypx);
 		}

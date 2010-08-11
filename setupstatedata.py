@@ -14,6 +14,9 @@ a two letter postal abbreviation for a state:
 ./setupstatedata.py ny
 """
 
+# TODO: write a --clean mode to delete all generated files.
+# Downloaded data may remain.
+
 import glob
 import logging
 import optparse

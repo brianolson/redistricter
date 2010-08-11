@@ -125,12 +125,16 @@ int main( int argc, char** argv ) {
 	}
 	//sov.init();
 	
+	bool ok = true;
 	if ( upxfname != NULL ) {
 		mr.readUPix( &sov, upxfname );
 	} else if ( mppbfname != NULL ) {
-		mr.readMapRasterization( &sov, mppbfname );
+		ok = mr.readMapRasterization( &sov, mppbfname );
 	} else {
 		mr.setSize( sov.pngWidth, sov.pngHeight );
+	}
+	if (!ok) {
+		return 1;
 	}
 	
 	// init PNG image data area

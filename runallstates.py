@@ -324,7 +324,7 @@ class configuration(object):
 		
 		# set some basic args based on any datadir
 		datapath = os.path.join(self.datadir, stl + '.pb')
-		pxpath = os.path.join(self.datadir, stl + '.mppb')
+		pxpath = os.path.join(self.datadir, statecode + '.mppb')
 		datadir_args = ['-P', datapath]
 		logging.debug('datadir args %s', datadir_args)
 		self.args = mergeArgs(datadir_args, self.args)

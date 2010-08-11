@@ -281,6 +281,10 @@ bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 
 bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path ) {
 	int fd = open(mppb_path, O_RDONLY);
+	if (fd < 0) {
+		perror(mppb_path);
+		return false;
+	}	
 	google::protobuf::io::FileInputStream pbfin(fd);
 	google::protobuf::io::GzipInputStream zin(&pbfin);
 	MapRasterization map;
@@ -292,7 +296,9 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 	pbfin.Close();
 	
 	width = map.sizex();
+	assert(width > 0);
 	height = map.sizey();
+	assert(height > 0);
 	
 	if (px != NULL) {
 		delete [] px;
