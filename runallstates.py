@@ -212,6 +212,7 @@ class configuration(object):
 		self.enabled = None
 		self.geom = None
 		self.path = config
+		self.dataroot = dataroot
 		# readtime can be used to re-read changed config files
 		self.readtime = None
 		if name is None:
@@ -254,6 +255,8 @@ class configuration(object):
 		line = line.strip()
 		if (len(line) == 0) or line.startswith('#'):
 			return True
+		if dataroot is None:
+			dataroot = self.dataroot
 		if dataroot is not None:
 			line = line.replace('$DATA', dataroot)
 		if line.startswith('solve:'):
@@ -310,7 +313,7 @@ class configuration(object):
 			self.readtime = cf_stat.st_mtime
 			f = open(self.path, 'r')
 			for line in f:
-				self.applyConfigLine(line, dataroot)
+				self.applyConfigLine(line, self.dataroot)
 
 	def readDatadirConfig(self, datadir=None):
 		"""Read a datadir/geometry.pickle and calculate basic config.
