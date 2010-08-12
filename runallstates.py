@@ -22,6 +22,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 
 # local imports
 import manybest
@@ -225,7 +226,8 @@ class configuration(object):
 		self.drendargs = ['--loadSolution', 'link1/bestKmpp.dsz',
 			'--pngout', 'link1/%s_final2.png' % self.name]
 		if self.datadir is not None:
-			self.readDatadirConfig()
+			ok = self.readDatadirConfig()
+			assert ok
 		if config is not None:
 			self.readConfigFile(config, dataroot)
 	
@@ -269,7 +271,8 @@ class configuration(object):
 			self.datadir = line[8:].strip()
 			logging.debug('old datadir=%s new datadir=%s', old_datadir, self.datadir)
 			if old_datadir != self.datadir:
-				self.readDatadirConfig()
+				if not self.readDatadirConfig():
+					raise ParseError('problem with datadir "%s"' % self.datadir)
 		elif line == 'enabled':
 			self.enabled = True
 		elif line == 'disabled':
@@ -317,11 +320,13 @@ class configuration(object):
 			assert self.datadir is not None
 		else:
 			self.datadir = datadir
+		if not os.path.isdir(self.datadir):
+			return False
 		m = configuration.datadir_state_re.match(self.datadir)
 		if m is None:
 			sys.stderr.write(
 				'could not parse a state code out of datadir "%s"\n' % self.datadir)
-			return None
+			return False
 		statecode = m.group(1)
 		stl = statecode.lower()
 		if os.path.exists(os.path.join(self.datadir, 'norun')):
@@ -362,6 +367,7 @@ class configuration(object):
 		else:
 			logging.warning('no %s', pgeompath)
 		print self
+		return True
 
 
 class runallstates(object):
@@ -535,9 +541,12 @@ class runallstates(object):
 				continue
 			cpath = os.path.join(configdir, cname)
 			logging.debug('loading %s as %s, dataroot=%s', cname, cpath, self.datadir)
-			c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
-			assert c.name not in self.config
-			self.config[c.name] = c
+			try:
+				c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
+				assert c.name not in self.config
+				self.config[c.name] = c
+			except:
+				sys.stderr.write('failed to load config "%s"\n' % cpath)
 
 	def loadConfigurations(self):
 		for cname in self.configArgList:
@@ -601,8 +610,9 @@ class runallstates(object):
 			ok = self.runstate_inner(stu, start_timestamp)
 		except Exception, e:
 			ok = False
-			e_str = 'runstate_inner(%s,) failed with: %s' (stu, str(e))
-			sys.stderr.write(e_str + '\n' + repr(sys.exc_info()) + '\n')
+			e_str = 'runstate_inner(%s,) failed with: %s' % (stu, traceback.format_exc())
+			sys.stderr.write(e_str + '\n')
+			traceback.print_exc()
 			self.addStopReason(e_str)
 			self.softfail = True
 		if (not self.dry_run) and (self.runlog is not None):

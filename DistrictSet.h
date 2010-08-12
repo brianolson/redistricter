@@ -33,6 +33,9 @@ public:
 	virtual double getParameterByIndex(int index) = 0;
 	virtual void setParameterByIndex(int index, double value) = 0;
 	
+	// how long should this run?
+	virtual int defaultGenerations() = 0;
+
 	// How many are they?
 	int districts;
 	

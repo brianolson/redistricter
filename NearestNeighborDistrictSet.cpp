@@ -676,3 +676,7 @@ void NearestNeighborDistrictSet::setParameterByIndex(int index, double value) {
 			assert(0);
 	}
 }
+
+int NearestNeighborDistrictSet::defaultGenerations() {
+	return 15000;
+}

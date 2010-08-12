@@ -124,6 +124,8 @@ public:
 	virtual double getParameterByIndex(int index);
 	virtual void setParameterByIndex(int index, double value);
 
+	virtual int defaultGenerations();
+
 	void recalc();
 
 	POPTYPE* sorti;

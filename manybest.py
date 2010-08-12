@@ -184,7 +184,7 @@ class manybest(object):
 			png_list = glob.glob(os.path.join(png_root, '??_final2.png'))
 			png = None
 			if png_list and len(png_list) == 1:
-				png = png_list[1]
+				png = png_list[0]
 			if png is None or not os.path.isfile(png):
 				png = os.path.join(png_root, "bestKmpp.png")
 			if not os.path.isfile(png):

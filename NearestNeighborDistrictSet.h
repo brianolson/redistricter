@@ -41,6 +41,8 @@ public:
 	virtual double getParameterByIndex(int index);
 	virtual void setParameterByIndex(int index, double value);
 
+	virtual int defaultGenerations();
+
 	static double kNu;
 	static double kInc;
 	static double kDec;

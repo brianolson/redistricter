@@ -50,6 +50,10 @@ District2Set::District2Set(Solver* sovIn)
 #endif
 }
 
+int District2Set::defaultGenerations() {
+	return sov->gd->numPoints * 10 / districts;
+}
+
 char* District2Set::debugText() {
 	char* dstext = NULL;
 	char* gdtext = NULL;

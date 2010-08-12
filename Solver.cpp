@@ -1008,7 +1008,7 @@ int Solver::main( int argc, char** argv ) {
 	gd->close();
 	
 	if ( generations == -1 ) {
-		generations = gd->numPoints * 10 / districts;
+		generations = dists->defaultGenerations();
 	}
 	SolverStats* bestStd = NULL;
 	SolverStats* bestSpread = NULL;

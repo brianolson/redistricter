@@ -441,6 +441,16 @@ static __inline double intersect( double x1, double y1, double x2, double y2, do
 	}\
     }
 
+static inline int maybeAddXs(double* xs, int numx, double t) {
+	for (int i = 0; i < numx; ++i) {
+		if (xs[i] == t) {
+			return numx;
+		}
+	}
+	xs[numx] = t;
+	return numx + 1;
+}
+
 // called from reconcileRTAPUChunks
 int PolyGroup::rasterizePointList( PointOutput* fout, uint64_t ubid, point* plist ) {
 	int len = 0;
@@ -488,8 +498,9 @@ int PolyGroup::rasterizePointList( PointOutput* fout, uint64_t ubid, point* plis
 			int ni = i + 1;
 #if 1
 			INTERSECT_MACRO( points[i*2], points[i*2+1], points[ni*2], points[ni*2+1], y, t, loopfail );
-			xs[numx] = t;
-			numx++;
+			numx = maybeAddXs(xs, numx, t);
+			//xs[numx] = t;
+			//numx++;
 		    loopfail:
 			;
 #else
@@ -503,8 +514,9 @@ int PolyGroup::rasterizePointList( PointOutput* fout, uint64_t ubid, point* plis
 		i = len-1;
 #if 1
 		INTERSECT_MACRO( points[i*2], points[i*2+1], points[0], points[1], y, t, lastfail );
-		xs[numx] = t;
-		numx++;
+		numx = maybeAddXs(xs, numx, t);
+		//xs[numx] = t;
+		//numx++;
 	    lastfail:
 #else
 		t = intersect( points[i*2], points[i*2+1], points[0], points[1], y );
@@ -515,6 +527,7 @@ int PolyGroup::rasterizePointList( PointOutput* fout, uint64_t ubid, point* plis
 #endif
 		//printf("intersect y=%f (%d) %d\n", y, py, numx );
 		assert( numx > 0 );
+		// TODO: something odd is happening! (in KS)
 		assert( numx % 2 == 0 );
 		{
 		    int notdone;
