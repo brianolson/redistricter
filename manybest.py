@@ -178,9 +178,15 @@ class manybest(object):
 				empties.append(root)
 				continue
 			if self.root:
-				png = os.path.join(self.root, root, "bestKmpp.png")
+				png_root = os.path.join(self.root, root)
 			else:
-				png = os.path.join(root, "bestKmpp.png")
+				png_root = root
+			png_list = glob.glob(os.path.join(png_root, '??_final2.png'))
+			png = None
+			if png_list and len(png_list) == 1:
+				png = png_list[1]
+			if png is None or not os.path.isfile(png):
+				png = os.path.join(png_root, "bestKmpp.png")
 			if not os.path.isfile(png):
 				sys.stderr.write("no %s\n" % png)
 				continue

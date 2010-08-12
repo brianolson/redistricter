@@ -92,11 +92,13 @@ def poll_run(p, stu):
 		for (fd, event) in poller.poll(500):
 			if p.stdout.fileno() == fd:
 				line = p.stdout.readline()
-				sys.stdout.write("O " + stu + ": " + line)
+				if line:
+					sys.stdout.write("O " + stu + ": " + line)
 			elif p.stderr.fileno() == fd:
 				line = p.stderr.readline()
-				sys.stdout.write("E " + stu + ": " + line)
-				lastlines(lastelines, 10, line)
+				if line:
+					sys.stdout.write("E " + stu + ": " + line)
+					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
 	return lastelines
@@ -110,11 +112,13 @@ def select_run(p, stu):
 		for fd in il:
 			if (p.stdout.fileno() == fd) or (fd == p.stdout):
 				line = p.stdout.readline()
-				sys.stdout.write("O " + stu + ": " + line)
+				if line:
+					sys.stdout.write("O " + stu + ": " + line)
 			elif (p.stderr.fileno() == fd) or (fd == p.stderr):
 				line = p.stderr.readline()
-				sys.stdout.write("E " + stu + ": " + line)
-				lastlines(lastelines, 10, line)
+				if line:
+					sys.stdout.write("E " + stu + ": " + line)
+					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
 	return lastelines
@@ -236,7 +240,8 @@ class configuration(object):
 		for i in xrange(len(self.args)):
 			if isinstance(self.drendargs[i], basestring):
 				self.drendargs[i] = self.drendargs[i].replace('$DATA', root)
-		self.datadir = self.datadir.replace('$DATA', root)
+		if self.datadir:
+			self.datadir = self.datadir.replace('$DATA', root)
 
 	datadir_state_re = re.compile(r'.*/([a-zA-Z]{2})/?$')
 
@@ -596,8 +601,9 @@ class runallstates(object):
 			ok = self.runstate_inner(stu, start_timestamp)
 		except Exception, e:
 			ok = False
-			sys.stderr.write(e)
-			self.addStopReason(str(e))
+			e_str = 'runstate_inner(%s,) failed with: %s' (stu, str(e))
+			sys.stderr.write(e_str + '\n' + repr(sys.exc_info()) + '\n')
+			self.addStopReason(e_str)
 			self.softfail = True
 		if (not self.dry_run) and (self.runlog is not None):
 			if ok:
@@ -644,13 +650,15 @@ class runallstates(object):
 				return False
 			try:
 				for line in p.stdin:
-					sys.stdout.write("O " + stu + ": " + line)
+					if line:
+						sys.stdout.write("O " + stu + ": " + line)
 			except:
 				pass
 			try:
 				for line in p.stderr:
-					sys.stdout.write("E " + stu + ": " + line)
-					lastlines(errorlines, 10, line)
+					if line:
+						sys.stdout.write("E " + stu + ": " + line)
+						lastlines(errorlines, 10, line)
 			except:
 				pass
 			if p.returncode != 0:
