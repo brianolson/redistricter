@@ -13,6 +13,7 @@ import cPickle as pickle
 import datetime
 import glob
 import logging
+import optparse
 import os
 import random
 import re
@@ -373,12 +374,18 @@ class configuration(object):
 		return True
 
 
+def ignoreFile(cname):
+	return cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v')
+
+
 class runallstates(object):
 	def __init__(self):
-		self.datadir = os.environ.get("DISTRICT_DATA")
+		self.bindir = os.environ.get('REDISTRICTER_BIN')
+		if self.bindir is None:
+			self.bindir = os.path.dirname(os.path.abspath(__file__))
+		self.datadir = os.environ.get("REDISTRICTER_DATA")
 		if self.datadir is None:
-			self.datadir = os.path.join(os.getcwd(), "data")
-		self.bindir = None
+			self.datadir = os.path.join(self.bindir, "data")
 		self.exe = None
 		self.solverMode = []
 		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
@@ -397,6 +404,9 @@ class runallstates(object):
 		self.configdir = None
 		# map from STU/config-name to configuration objects
 		self.config = {}
+		# list of regex to check against config file path
+		self.config_include = []
+		self.config_exclude = []
 		# list of STU uppercase state abbreviations
 		self.states = []
 		self.softfail = False
@@ -465,84 +475,85 @@ class runallstates(object):
 		self.runlog = open(path, "a")
 	
 	def readArgs(self, argv):
-		"""Reads argv[1:]"""
-		i = 1
-		while i < len(argv):
-			arg = argv[i]
-			if arg == "--data":
-				i += 1
-				self.datadir = argv[i]
-			elif arg == "--bin":
-				i += 1
-				self.bindir = argv[i]
-				if not IsExecutableFile( os.path.join(self.bindir, "districter2")):
-					sys.stderr.write( "bogus bin dir \"%s\" does not contain districter2\n" % bindir )
-					sys.exit(1)
-			elif arg == "--exe":
-				i += 1
-				maybe_exe = argv[i]
-				if not IsExecutableFile( maybe_exe ):
-					sys.stderr.write( "bogus exe \"%s\" is not executable\n" % maybe_exe )
-					sys.exit(1)
-				self.exe = maybe_exe
-			elif arg == "--runsecs":
-				i += 1
-				self.end = self.start + datetime.timedelta(seconds=float(argv[i]))
-			elif arg == "--":
-				i += 1
-				self.extrargs = " " + argv[i]
-			elif arg == "--config":
-				i += 1
-				self.configArgList.append(argv[i])
-			elif arg == "--configdir":
-				i += 1
-				assert self.configdir is None
-				self.configdir = argv[i]
-				self.loadConfigdir(self.configdir)
-			elif arg == "--threads":
-				i += 1
-				self.numthreads = int(argv[i])
-			elif (arg == "--dry-run") or (arg == "-n"):
-				self.dry_run = True
-			elif arg == "--d2":
-				self.solverMode = self.d2args
-			elif arg == "--nn":
-				self.solverMode = []
-			elif arg == "--runlog":
-				i += 1
-				self.openRunLog(argv[i])
-			elif arg == "--bestlog":
-				i += 1
-				self.openBestLog(argv[i])
+		argp = optparse.OptionParser()
+		argp.add_option('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
+		argp.add_option('--bindir', '--bin', dest='bindir', default=self.bindir)
+		argp.add_option('--exe', dest='exepath', default=None)
+		argp.add_option('--runsecs', dest='runsecs', type='float', default=None)
+		argp.add_option('--config', dest='configList', action='append', default=[])
+		argp.add_option('--config-include', dest='config_include', action='append', default=[])
+		argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[])
+		argp.add_option('--configdir', dest='configdir', default=None)
+		argp.add_option('--threads', dest='threads', type='int', default=1)
+		argp.add_option('--dry-run', '-n', dest='dry_run', action='store_true', default=False)
+		argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
+		argp.add_option('--d2', dest='mode', action='store_const', const='d2')
+		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
+		argp.add_option('--runlog', dest='runlog', default=None)
+		argp.add_option('--bestlog', dest='bestlog', default=None)
+		(options, args) = argp.parse_args()
+		for arg in args:
+			astu = arg.upper()
+			#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
+			if os.path.isdir(os.path.join(self.datadir, astu)):
+				self.statearglist.append(astu)
 			else:
-				astu = arg.upper()
-				#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
-				if os.path.isdir(os.path.join(self.datadir, astu)):
-					self.statearglist.append(astu)
-				else:
-					sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
-					sys.exit(1)
-			i += 1
+				sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
+				sys.exit(1)
+		self.datadir = os.path.realpath(options.datadir)
+		self.bindir = os.path.realpath(options.bindir)
+		if options.exepath:
+			self.exe = os.path.realpath(options.exepath)
+		if options.runsecs is not None:
+			self.end = self.start + options.runsecs
+		self.configArgList = options.configList
+		self.configdir = options.configdir
+		self.numthreads = options.threads
+		self.dry_run = options.dry_run
+		if options.mode == 'd2':
+			self.solverMode = self.d2args
+		else:
+			self.solverMode = []
+		if options.runlog is not None:
+			self.openRunLog(options.runlog)
+		if options.bestlog is not None:
+			self.openBestLog(options.bestlog)
+		for pattern in options.config_include:
+			self.config_include.append(re.compile(pattern))
+		for pattern in options.config_exclude:
+			self.config_exclude.append(re.compile(pattern))
 
 
 	def checkSetup(self):
 		if self.exe is None:
-			if self.bindir is None:
-				self.bindir = os.getcwd()
+			assert self.bindir is not None
 			self.exe = os.path.join(self.bindir, "districter2")
-			if not IsExecutableFile(self.exe):
-				sys.stderr.write("bogus exe \"%s\" is not executable\n" % self.exe)
-				sys.exit(1)
-
+		if not IsExecutableFile(self.exe):
+			sys.stderr.write("bogus exe \"%s\" is not executable\n" % self.exe)
+			sys.exit(1)
 		if not IsExecutableDir(self.datadir):
 			sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
 
+	def allowConfigPath(self, path):
+		if self.config_include:
+			# must match all
+			for pattern in self.config_include:
+				if not pattern.match(path):
+					return False
+		for pattern in self.config_exclude:
+			if pattern.match(path):
+				return False
+		return True
+
 	def loadConfigdir(self, configdir):
+		"""Load a directory filled with config files."""
 		for cname in os.listdir(configdir):
 			# skip some common directory cruft
-			if cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v'):
+			if ignoreFile(cname):
 				continue
 			cpath = os.path.join(configdir, cname)
+			if not self.allowConfigPath(cpath):
+				continue
 			logging.debug('loading %s as %s, dataroot=%s', cname, cpath, self.datadir)
 			try:
 				c = configuration(name=cname, datadir=None, config=cpath, dataroot=self.datadir)
@@ -552,37 +563,45 @@ class runallstates(object):
 				sys.stderr.write('failed to load config "%s"\n' % cpath)
 
 	def loadConfigurations(self):
+		"""1. Things explicitly listed by --config; else
+		2. Things in --configdir; else
+		3. XX/config/*
+		
+		2 and 3 are filtered by --config-include --config-exclude"""
+		# 1. --config
 		for cname in self.configArgList:
 			c = configuration(
 				name=os.path.split(cname)[-1], config=cname, dataroot=self.datadir)
 			assert c.name not in self.config
 			self.config[c.name] = c
-		# moved to readArgs
-		#if self.configdir is not None:
-		#	self.loadConfigdir(self.configdir)
 		if self.config:
-			# filter config list by statearglist
-			all_config = self.config
-			self.config = {}
-			for st in self.statearglist:
-				if st in all_config:
-					it = all_config[st]
-					self.config[it.name] = it
-				else:
-					self.config[st] = configuration(
-						name=st, datadir=os.path.join(self.datadir, st))
-		else:
-			for st in self.statearglist:
-				assert st not in self.config
-				self.config[st] = configuration(
-					name=st, datadir=os.path.join(self.datadir, st))
+			return
+		# 2. --configdir
+		if self.configdir is not None:
+			self.loadConfigdir(self.configdir)
+		if self.config:
+			return
+		# 3. data/??/config/*
+		for xx in os.listdir(self.datadir):
+			stu = xx.upper()
+			if self.statearglist and stu not in self.statearglist:
+				continue
+			for variant in os.listdir(os.path.join(self.datadir, stu, 'config')):
+				if ignoreFile(variant):
+					continue
+				cname = stu + '_' + variant
+				self.config[cname] = configuration(
+					name=cname,
+					datadir=os.path.join(self.datadir, stu),
+					config=os.path.join(self.datadir, stu, 'config', variant),
+					dataroot=self.datadir)
+		# 4. fall back to old no-config state data dirs
+		logging.warning('no configs, trying old setup')
 		if not self.config:
 			# get all the old defaults
 			for stdir in glob.glob(self.datadir + "/??"):
-				c = configuration(datadir=stdir)
+				c = configuration(datadir=stdir, dataroot=self.datadir)
 				self.config[c.name] = c
-		for k,v in self.config.iteritems():
-			v.setRootDatadir(self.datadir)
 
 	def shouldstop(self):
 		if self.softfail:

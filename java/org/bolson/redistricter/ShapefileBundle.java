@@ -956,7 +956,7 @@ public class ShapefileBundle {
 		public boolean colorMask = true;
 		public boolean colorMaskRandom = true;
 		int polyindex = 0;
-		public boolean doPolyNames = true;
+		public boolean doPolyNames = false;
 		public java.awt.Font baseFont = new Font("Helvectica", 0, 12);
 		public java.awt.Color textColor = new java.awt.Color(235, 235, 235, 50);
 		public int waterColor = 0x996666ff;
@@ -973,7 +973,6 @@ public class ShapefileBundle {
 			return g_;
 		}
 		
-		@Override
 		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
 			int argb;
 			if (colorMask) {
@@ -1039,7 +1038,7 @@ public class ShapefileBundle {
 			}
 		}
 
-		@Override
+		// @Override // one of my Java 1.5 doesn't like this
 		/**
 		 * Doesn't actually set size in this implementation, but asserts that buffer is at least that big.
 		 */
@@ -1058,7 +1057,7 @@ public class ShapefileBundle {
 	public static class MapRasterizationReceiver implements RasterizationReciever {
 		public Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
 		
-		@Override
+		// @Override // one of my Java 1.5 doesn't like this
 		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
 			if (p.blockid != null) {
 				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
@@ -1084,7 +1083,7 @@ public class ShapefileBundle {
 			}
 		}
 
-		@Override
+		// @Override  // one of my Java 1.5 doesn't like this
 		public void setSize(int x, int y) {
 			rastb.setSizex(x);
 			rastb.setSizey(y);
@@ -1104,7 +1103,6 @@ public class ShapefileBundle {
 		private PolygonDrawEdges() {}
 	}
 	public static class PolygonFillRasterize implements PolygonDrawMode {
-		@Override
 		public void draw(Polygon p, RasterizationContext ctx) {
 			p.rasterize(ctx);
 		}
@@ -1120,7 +1118,17 @@ public class ShapefileBundle {
 		for (RasterizationReciever rr : they) {
 			rr.setSize(rastOpts.xpx, rastOpts.ypx);
 		}
-		for (Polygon p : polys) {
+		int percent = -1;
+		int psize = polys.size();
+		for (int i = 0; i < psize; ++i) {
+			Polygon p = polys.get(i);
+			{
+				int newPercent = (i * 100) / psize;
+				if (newPercent != percent) {
+					percent = newPercent;
+					log.fine(Integer.toString(percent) + "%");
+				}
+			}
 			ctx.pxPos = 0;
 			drawMode.draw(p, ctx);
 			for (RasterizationReciever rr : they) {
@@ -1524,10 +1532,14 @@ public static final String usage =
 		log.info("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
 		start = end;
 		if (linksOut != null) {
+			log.info("calculating links");
 			x.doLinks(linksOut, tree, threads);
-			start = System.currentTimeMillis();
+			end = System.currentTimeMillis();
+			log.info("done in " + ((end - start) / 1000.0) + " seconds");
+			start = end;
 		}
 		if ((rastOut != null) || (maskOutName != null)) {
+			log.info("rasterizing");
 			x.rastOpts = rastOpts;
 			x.rastOpts.setBoundsFromShapefile(x, false);
 			x.rastOpts.updatePixelSize(boundx, boundy);
@@ -1537,6 +1549,8 @@ public static final String usage =
 			BufferedImage maskImage = null;
 			OutputStream maskOutput = null;
 			if (maskOutName != null) {
+				log.info("will make mask \"" + maskOutName + "\"");
+				log.info("x=" + x.rastOpts.xpx + " y=" + x.rastOpts.ypx);
 				maskImage = new BufferedImage(x.rastOpts.xpx, x.rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
 				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage);
 				bir.colorMask = colorMask;
@@ -1548,6 +1562,7 @@ public static final String usage =
 			GZIPOutputStream gos = null;
 			MapRasterizationReceiver mrr = null;
 			if (rastOut != null) {
+				log.info("will make rast data \"" + rastOut + "\"");
 				fos = new FileOutputStream(rastOut);
 				gos = new GZIPOutputStream(fos);
 				mrr = new MapRasterizationReceiver();

@@ -30,6 +30,7 @@ import time
 import urllib
 import zipfile
 
+import generaterunconfigs
 import measureGeometry
 import makelinks
 import shapefile
@@ -707,6 +708,10 @@ class StateData(object):
 				ha.write('-g 10000\n')
 				ha.close
 		makefile = self.writeMakeFragment(dpath)
+		generaterunconfigs.run(
+			datadir=self.options.datadir,
+			stulist=[self.stu],
+			dryrun=self.options.dryrun)
 		makecmd = ['make', '-k', self.stu + '_all', '-f', makefile]
 		if self.options.dryrun:
 			print 'would run "%s"' % (' '.join(makecmd))
@@ -720,6 +725,12 @@ class StateData(object):
 		
 
 def main(argv):
+	default_bindir = os.environ.get('REDISTRICTER_BIN')
+	if default_bindir is None:
+		default_bindir = os.path.dirname(os.path.abspath(__file__))
+	default_datadir = os.environ.get('REDISTRICTER_DATA')
+	if default_datadir is None:
+		default_datadir = os.path.join(default_bindir, 'data')
 	argp = optparse.OptionParser()
 # commented out options aren't actually used.
 #	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)
@@ -727,8 +738,8 @@ def main(argv):
 #	argp.add_option('--unpackall', action='store_true', dest='unpackall', default=False)
 	argp.add_option('-n', '--dry-run', action='store_true', dest='dryrun', default=False)
 	argp.add_option('--gbin', action='store_false', dest='protobuf', default=True)
-	argp.add_option('-d', '--data', dest='datadir', default='data')
-	argp.add_option('--bindir', dest='bindir', default=os.path.dirname(os.path.abspath(__file__)))
+	argp.add_option('-d', '--data', dest='datadir', default=default_datadir)
+	argp.add_option('--bindir', dest='bindir', default=default_bindir)
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
 	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=True)

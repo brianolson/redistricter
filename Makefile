@@ -27,7 +27,8 @@ JAVAC?=javac
 #CXXFLAGS+=-DNEAREST_NEIGHBOR_MULTITHREAD=1
 
 
-LDPNG=-lpng12
+#LDPNG=-lpng12
+LDPNG=-lpng14
 LDFLAGS+=${LDPNG} -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
@@ -50,7 +51,7 @@ districter2:	$(D2OBJS)
 	$(CXX) $(D2OBJS) $(LDFLAGS) ${CXXFLAGS} -o districter2
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
 #districter2:	 District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp
-#	${CXX} -o districter2 ${CXXFLAGS} District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp  -lpng12 -lz
+#	${CXX} -o districter2 ${CXXFLAGS} District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp ${LDFLAGS}
 
 d2prof:	${CORESRCS} nonguimain.cpp
 	${CXX} -m64 -o districter2 -g -pg ${CCOMMONFLAGS} ${CORESRCS} nonguimain.cpp ${LDFLAGS}
