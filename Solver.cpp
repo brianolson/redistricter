@@ -229,8 +229,8 @@ void Solver::readLinksFile(const char* filename) {
 	}
 }
 bool Solver::readLinksFileData(const char* data, size_t len) {
-	char buf[14];
-	buf[13] = '\0';
+	char buf[20];
+	memset(buf, 0, sizeof(buf));
 	int j = 0;
 	size_t sizeof_linkLine = 27;
 	size_t sizeof_ubid = 13;

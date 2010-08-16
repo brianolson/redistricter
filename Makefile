@@ -27,8 +27,9 @@ JAVAC?=javac
 #CXXFLAGS+=-DNEAREST_NEIGHBOR_MULTITHREAD=1
 
 
-#LDPNG=-lpng12
-LDPNG=-lpng14
+#TODO: this is getting rediculous, might be time for autoconf. ew. autoconf.
+LDPNG=-lpng12
+#LDPNG=-lpng14
 LDFLAGS+=${LDPNG} -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
