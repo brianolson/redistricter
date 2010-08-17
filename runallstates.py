@@ -348,6 +348,7 @@ class configuration(object):
 		self.drendargs = mergeArgs(datadir_drend_args, self.drendargs)
 		logging.debug('merged drend args %s', self.drendargs)
 		
+		# TODO: delete this, setupstatedata.py isn't generating it anymore
 		# set args from geometry.pickle if available
 		pgeompath = os.path.join(self.datadir, 'geometry.pickle')
 		if os.path.exists(pgeompath):
@@ -368,8 +369,6 @@ class configuration(object):
 			logging.debug('geom drend args %s', geom_drendargs)
 			self.drendargs = mergeArgs(geom_drendargs, self.drendargs)
 			logging.debug('merged drend args %s', self.drendargs)
-		else:
-			logging.warning('no %s', pgeompath)
 		print self
 		return True
 
@@ -419,6 +418,8 @@ class runallstates(object):
 		self.lock = None
 		# used by getNextState and runthread
 		self.qpos = 0
+		# dict from optparse
+		self.options = {}
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -491,7 +492,12 @@ class runallstates(object):
 		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
 		argp.add_option('--runlog', dest='runlog', default=None)
 		argp.add_option('--bestlog', dest='bestlog', default=None)
+		argp.add_option('--server', dest='server', default=None)
+		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 		(options, args) = argp.parse_args()
+		self.options = options
+		if options.verbose:
+			logging.getLogger().setLevel(logging.DEBUG)
 		for arg in args:
 			astu = arg.upper()
 			#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
@@ -501,7 +507,9 @@ class runallstates(object):
 				sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
 				sys.exit(1)
 		self.datadir = os.path.realpath(options.datadir)
+		options.datadir = self.datadir
 		self.bindir = os.path.realpath(options.bindir)
+		options.bindir = self.bindir
 		if options.exepath:
 			self.exe = os.path.realpath(options.exepath)
 		if options.runsecs is not None:
@@ -528,20 +536,22 @@ class runallstates(object):
 		if self.exe is None:
 			assert self.bindir is not None
 			self.exe = os.path.join(self.bindir, "districter2")
+			self.options.exepath = self.exe
 		if not IsExecutableFile(self.exe):
 			sys.stderr.write("bogus exe \"%s\" is not executable\n" % self.exe)
 			sys.exit(1)
 		if not IsExecutableDir(self.datadir):
 			sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
+			sys.exit(1)
 
 	def allowConfigPath(self, path):
 		if self.config_include:
 			# must match all
 			for pattern in self.config_include:
-				if not pattern.match(path):
+				if not pattern.search(path):
 					return False
 		for pattern in self.config_exclude:
-			if pattern.match(path):
+			if pattern.search(path):
 				return False
 		return True
 
@@ -561,6 +571,9 @@ class runallstates(object):
 				self.config[c.name] = c
 			except:
 				sys.stderr.write('failed to load config "%s"\n' % cpath)
+		if not self.config:
+			sys.stderr.write('error: --configdir="%s" but loaded no configs\n' % (configdir))
+			sys.exit(1)
 
 	def loadConfigurations(self):
 		"""1. Things explicitly listed by --config; else
@@ -579,22 +592,38 @@ class runallstates(object):
 		# 2. --configdir
 		if self.configdir is not None:
 			self.loadConfigdir(self.configdir)
-		if self.config:
 			return
 		# 3. data/??/config/*
 		for xx in os.listdir(self.datadir):
+			if not os.path.isdir(os.path.join(self.datadir, xx)):
+				logging.debug('data/"%s" not a dir', xx)
+				continue
 			stu = xx.upper()
 			if self.statearglist and stu not in self.statearglist:
+				logging.debug('"%s" not in state arg list', stu)
 				continue
-			for variant in os.listdir(os.path.join(self.datadir, stu, 'config')):
+			configdir = os.path.join(self.datadir, stu, 'config')
+			if not os.path.isdir(configdir):
+				logging.debug('no %s/config', xx)
+				continue
+			for variant in os.listdir(configdir):
 				if ignoreFile(variant):
+					logging.debug('ignore file %s/config/"%s"', xx, variant)
+					continue
+				cpath = os.path.join(self.datadir, xx, 'config', variant)
+				if not self.allowConfigPath(cpath):
+					logging.debug('filter out "%s"', cpath)
 					continue
 				cname = stu + '_' + variant
 				self.config[cname] = configuration(
 					name=cname,
-					datadir=os.path.join(self.datadir, stu),
-					config=os.path.join(self.datadir, stu, 'config', variant),
+					datadir=os.path.join(self.datadir, xx),
+					config=cpath,
 					dataroot=self.datadir)
+				logging.debug('set config "%s"', cname)
+		if (self.statearglist or self.config_include) and not self.config:
+			sys.stderr.write('error: failed to load any configs\n')
+			sys.exit(1)
 		# 4. fall back to old no-config state data dirs
 		logging.warning('no configs, trying old setup')
 		if not self.config:
@@ -813,6 +842,9 @@ class runallstates(object):
 		self.readArgs(argv)
 		self.checkSetup()
 		self.loadConfigurations()
+		if not self.config:
+			sys.stderr.write('error: no configurations\n')
+			sys.exit(1)
 		for c in self.config.itervalues():
 			print c
 		

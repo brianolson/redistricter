@@ -154,3 +154,8 @@ http://www.brennancenter.org/content/section/category/redistricting/
 Indiana Secretary of State Todd Rokita 
 http://www.in.gov/sos/
 http://www.rethinkingredistricting.com/
+
+
+
+clean, run inside data/??/:
+rm -f *.jpg *.png *.mppb *.pb *.links *.dsz drendcmd basicargs handargs makedefaults .make *.uf1 mrun?? measure geometry.pickle ??_start_stats .uf1
