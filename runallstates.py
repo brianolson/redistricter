@@ -740,12 +740,14 @@ class runallstates(object):
 			print "grep ^# %s > %s" % (statlog, statsum)
 			print "gzip %s" % statlog
 		if not self.dry_run:
+			# TODO: don't call out, do it in python
 			ret = subprocess.call(["gzip", statlog])
 			if ret != 0:
 				self.addStopReason("gzip statlog failed %d" % ret)
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
+		# TODO: use python standard tarfile library
 		cmd = ["tar", "jcf", "g.tar.bz2", "g"]
 		if self.dry_run or self.verbose:
 			print "(cd %s && %s)" % (ctd, " ".join(cmd))
@@ -756,6 +758,7 @@ class runallstates(object):
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
+		# TODO: use python standard library recursive remove
 		cmd = ["rm", "-rf", "g"]
 		if self.dry_run or self.verbose:
 			print "(cd %s && %s)" % (ctd, " ".join(cmd))

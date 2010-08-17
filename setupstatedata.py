@@ -14,9 +14,6 @@ a two letter postal abbreviation for a state:
 ./setupstatedata.py ny
 """
 
-# TODO: write a --clean mode to delete all generated files.
-# Downloaded data may remain.
-
 import glob
 import logging
 import optparse
@@ -686,7 +683,23 @@ class StateData(object):
 				if not self.options.dryrun:
 					urllib.urlretrieve(xurl, xpath)
 	
+	def clean(self):
+		dpath = os.path.join(self.options.datadir, self.stu)
+		for (dirpath, dirnames, filenames) in os.walk(dpath):
+			for fname in filenames:
+				fpath = os.path.join(dirpath, fname)
+				if fname.lower().endswith('.zip'):
+					logging.debug('not cleaning "%s"', fpath)
+					continue
+				if self.options.dryrun or self.options.verbose:
+					print 'rm ' + fpath
+				if not self.options.dryrun:
+					os.remove(fpath)
+
 	def dostate(self):
+		if self.options.clean:
+			self.clean()
+			return
 		dpath = os.path.join(self.options.datadir, self.stu)
 		mkdir(dpath, self.options)
 		if self.options.extras:
@@ -744,8 +757,12 @@ def main(argv):
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
 	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=True)
 	argp.add_option('--noshapefile', dest='shapefile', action='store_false')
+	argp.add_option('--clean', dest='clean', action='store_true', default=False)
+	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
 	(options, args) = argp.parse_args()
 
+	if options.verbose:
+		logging.getLogger().setLevel(logging.DEBUG)
 	if not os.path.isdir(options.datadir):
 		raise Error('data dir "%s" does not exist' % options.datadir)
 
