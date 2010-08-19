@@ -23,6 +23,7 @@ import re
 import string
 import subprocess
 import sys
+import tarfile
 import time
 import urllib
 import zipfile
@@ -683,6 +684,49 @@ class StateData(object):
 				if not self.options.dryrun:
 					urllib.urlretrieve(xurl, xpath)
 	
+	def acceptArchivePart(self, dirpath, fname):
+		flower = fname.lower()
+		for oksuffix in ['.pb', '.mppb', '.png', '.jpg', '_stats', '.html']:
+			if flower.endswith(oksuffix):
+				return True
+		if dirpath.endswith('config'):
+			return True
+		return False
+	
+	def archiveRunfiles(self):
+		if ((not os.path.isdir(self.options.archive_runfiles)) or 
+			(not os.access(self.options.archive_runfiles, os.X_OK|os.W_OK))):
+			sys.stderr.write('error: "%s" is not a writable directory\n' % self.options.archive_runfiles)
+			return None
+		destpath = os.path.join(self.options.archive_runfiles, self.stu + '_runfiles.tar.gz')
+		partpaths = []
+		needsupdate = False
+		dpath = os.path.join(self.options.datadir, self.stu)
+		for (dirpath, dirnames, filenames) in os.walk(dpath):
+			partpaths.append(dirpath)
+			if 'zips' in dirnames:
+				dirnames.remove('zips')
+			for fname in filenames:
+				if self.acceptArchivePart(dirpath, fname):
+					fpath = os.path.join(dirpath, fname)
+					if (not needsupdate) and newerthan(fpath, destpath):
+						needsupdate = True
+					partpaths.append(fpath)
+		if not needsupdate:
+			return destpath
+		out = tarfile.open(destpath, 'w|gz')
+		out.posix = True
+		for part in partpaths:
+			arcname = part
+			if part.startswith(self.options.datadir):
+				arcname = part[len(self.options.datadir):]
+				while arcname[0] == '/':
+					arcname = arcname[1:]
+			out.add(part, arcname, False)
+		out.close()
+		return destpath
+		
+
 	def clean(self):
 		dpath = os.path.join(self.options.datadir, self.stu)
 		for (dirpath, dirnames, filenames) in os.walk(dpath):
@@ -735,7 +779,10 @@ class StateData(object):
 				sys.stderr.write(
 					'command "%s" failed with %d\n' % (' '.join(makecmd), status))
 			print 'final make took %f seconds' % (time.time() - start)
-		
+		if self.options.archive_runfiles:
+			start = time.time()
+			outname = self.archiveRunfiles()
+			print 'wrote "%s" in %f seconds' % (outname, (time.time() - start))
 
 def main(argv):
 	default_bindir = os.environ.get('REDISTRICTER_BIN')
@@ -759,6 +806,7 @@ def main(argv):
 	argp.add_option('--noshapefile', dest='shapefile', action='store_false')
 	argp.add_option('--clean', dest='clean', action='store_true', default=False)
 	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
+	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
 	(options, args) = argp.parse_args()
 
 	if options.verbose:
