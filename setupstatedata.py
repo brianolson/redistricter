@@ -14,6 +14,7 @@ a two letter postal abbreviation for a state:
 ./setupstatedata.py ny
 """
 
+# standard
 import glob
 import logging
 import optparse
@@ -28,9 +29,11 @@ import time
 import urllib
 import zipfile
 
+# local
 import generaterunconfigs
 import measureGeometry
 import makelinks
+from newerthan import newerthan
 import shapefile
 import solution
 
@@ -39,18 +42,6 @@ from states import *
 sf1IndexName = 'SF1index.html'
 sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
 tigerbase = 'http://www2.census.gov/geo/tiger/'
-
-def newerthan(a, b):
-	"""Return true if a is newer than b, or a exists and b doesn't."""
-	try:
-		sa = os.stat(a)
-	except:
-		return False
-	try:
-		sb = os.stat(b)
-	except:
-		return True
-	return sa.st_mtime > sb.st_mtime
 
 def mkdir(path, options):
 	if not os.path.isdir(path):

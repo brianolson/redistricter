@@ -1,0 +1,20 @@
+#!/bin/bash -x
+#
+# Things to do in the run dir:
+# touch stop runloopstop
+# touch stop reload
+
+export REDISTRICTER_BIN=/Users/bolson/src/redistricter
+export REDISTRICTER_DATA=/Users/bolson/src/redata/data
+
+while true; do
+	${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog
+	if [ -f reload ]; then
+		rm -f reload
+		exec ./runloop
+	fi
+	if [ -f runloopstop ]; then
+		rm -f runloopstop
+		exit 0
+	fi
+done
