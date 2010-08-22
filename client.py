@@ -6,6 +6,7 @@ import ConfigParser
 import httplib
 import logging
 import os
+import random
 import re
 try:
 	import cStringIO as StringIO
@@ -13,7 +14,9 @@ except:
 	import StringIO
 import tarfile
 import time
+import traceback
 import urllib
+import urlparse
 
 from newerthan import newerthan
 
@@ -46,6 +49,7 @@ class Client(object):
 		self.knownDatasets = []
 		self.config = ConfigParser.SafeConfigParser(CLIENT_DEFAULTS_)
 		self.config.add_section('config')
+		self.loadConfiguration()
 	
 	def configCachePath(self):
 		return os.path.join(self.options.datadir, '.configCache')
@@ -55,16 +59,17 @@ class Client(object):
 
 	def loadConfiguration(self):
 		cpath = self.configCachePath()
-		needsConfigFetch = False
-		try:
-			cstat = os.stat(cpath)
-			logging.info('reading cached config "%s"', cpath)
-			self.config.read(cpath)
-			if (cstat.st_mtime + self.config.getint('config', 'configCacheSeconds')) < time.time():
+		needsConfigFetch = self.options.force_config_reload
+		if not needsConfigFetch:
+			try:
+				cstat = os.stat(cpath)
+				logging.info('reading cached config "%s"', cpath)
+				self.config.read(cpath)
+				if (cstat.st_mtime + self.config.getint('config', 'configCacheSeconds')) < time.time():
+					needsConfigFetch = True
+			except Exception, e:
+				logging.info('stat("%s") failed: %s', cpath, e)
 				needsConfigFetch = True
-		except Exception, e:
-			logging.info('stat("%s") failed: %s', cpath, e)
-			needsConfigFetch = True
 		if not needsConfigFetch:
 			logging.info('config cache is new enough, not fetching')
 			f = open(self.datasetListPath(), 'r')
@@ -73,7 +78,10 @@ class Client(object):
 				self.knownDatasets.append(line)
 			return
 		# Fetch config from server
-		configurl = self.config.get('config', 'configurl')
+		if self.options.server:
+			configurl = self.options.server
+		else:
+			configurl = self.config.get('config', 'configurl')
 		logging.info('fetching config from "%s"', configurl)
 		f = urllib.urlopen(configurl)
 		raw = f.read()
@@ -105,8 +113,10 @@ class Client(object):
 
 	def headLastModified(self, url):
 		try:
-			conn = httplib.HTTPConnection()
-			conn.request('HEAD', url)
+			urlparts = urlparse.urlparse(url)
+			conn = httplib.HTTPConnection(urlparts[1])
+			conn.request('HEAD', urlparts[2], headers={
+				'Host':urlparts[1].split(':')[0]})
 			response = conn.getresponse()
 			lastmodsrv = time.mktime(response.msg.getdate('last-modified'))
 			nowsrv = time.mktime(response.msg.getdate('date'))
@@ -115,6 +125,7 @@ class Client(object):
 			return lastmod
 		except Exception, e:
 			logging.warning('failed to HEAD lastmod from "%s": %s', url, e)
+			traceback.print_exc()
 		return None
 
 	def fetchIfServerCopyNewer(self, dataset):
@@ -154,12 +165,24 @@ class Client(object):
 		upm = open(markerPath, 'w')
 		upm.write(str(time.time()) + '\n')
 		upm.close()
+		return dirpath
 	
+	def getDataForStu(self, stu):
+		archivename = stu + '_runfiles.tar.gz'
+		if archivename in self.knownDatasets:
+			return self.unpackArchive(archivename)
+		return None
+	
+	def randomDatasetName(self):
+		return random.choice(self.knownDatasets)
+
 
 if __name__ == '__main__':
 	import optparse
 	argp = optparse.OptionParser()
 	argp.add_option('-d', '--data', '--datadir', dest='datadir', default='data')
+	argp.add_option('--server', dest='server', default=None, help='url of config page on server from which to download data')
+	argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 	(options, args) = argp.parse_args()
 	if options.verbose:

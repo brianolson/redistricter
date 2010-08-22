@@ -26,6 +26,7 @@ import time
 import traceback
 
 # local imports
+import client
 import manybest
 import measureGeometry
 
@@ -476,6 +477,7 @@ class runallstates(object):
 		self.runlog = open(path, "a")
 	
 	def readArgs(self, argv):
+		default_server = os.environ.get('REDISTRICTER_SERVER')
 		argp = optparse.OptionParser()
 		argp.add_option('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
 		argp.add_option('--bindir', '--bin', dest='bindir', default=self.bindir)
@@ -490,9 +492,10 @@ class runallstates(object):
 		argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
 		argp.add_option('--d2', dest='mode', action='store_const', const='d2')
 		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
-		argp.add_option('--runlog', dest='runlog', default=None)
-		argp.add_option('--bestlog', dest='bestlog', default=None)
-		argp.add_option('--server', dest='server', default=None)
+		argp.add_option('--runlog', dest='runlog', default=None, help='append a record of all solver runs here')
+		argp.add_option('--bestlog', dest='bestlog', default=None, help='append a record of each solver run that is best-so-far')
+		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
+		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 		(options, args) = argp.parse_args()
 		self.options = options
@@ -501,7 +504,10 @@ class runallstates(object):
 		for arg in args:
 			astu = arg.upper()
 			#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
-			if os.path.isdir(os.path.join(self.datadir, astu)):
+			if (os.path.isdir(os.path.join(self.datadir, astu)) or
+				self.options.server):
+				# Any existing directory, or if there's a server we might fetch it.
+				logging.debug('add stu "%s"', astu)
 				self.statearglist.append(astu)
 			else:
 				sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
@@ -541,8 +547,11 @@ class runallstates(object):
 			sys.stderr.write("bogus exe \"%s\" is not executable\n" % self.exe)
 			sys.exit(1)
 		if not IsExecutableDir(self.datadir):
-			sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
-			sys.exit(1)
+			if self.options.server:
+				os.makedirs(self.datadir)
+			else:
+				sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
+				sys.exit(1)
 
 	def allowConfigPath(self, path):
 		if self.config_include:
@@ -844,6 +853,15 @@ class runallstates(object):
 	def main(self, argv):
 		self.readArgs(argv)
 		self.checkSetup()
+		if self.options.server:
+			logging.info('configuring client of server "%s"', self.options.server)
+			cl = client.Client(self.options)
+			if self.statearglist:
+				for stu in self.statearglist:
+					cl.getDataForStu(stu)
+			else:
+				# Pick one randomly, fetch it
+				cl.unpackArchive(cl.randomDatasetName())
 		self.loadConfigurations()
 		if not self.config:
 			sys.stderr.write('error: no configurations\n')
