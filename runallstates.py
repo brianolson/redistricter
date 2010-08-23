@@ -492,6 +492,7 @@ class runallstates(object):
 		argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
 		argp.add_option('--d2', dest='mode', action='store_const', const='d2')
 		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
+		argp.add_option('--solver-arg', dest='solver_arg', action='append', default=[], help='argument passed to solver. may be repeated')
 		argp.add_option('--runlog', dest='runlog', default=None, help='append a record of all solver runs here')
 		argp.add_option('--bestlog', dest='bestlog', default=None, help='append a record of each solver run that is best-so-far')
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
@@ -527,7 +528,7 @@ class runallstates(object):
 		if options.mode == 'd2':
 			self.solverMode = self.d2args
 		else:
-			self.solverMode = []
+			self.solverMode = options.solver_arg
 		if options.runlog is not None:
 			self.openRunLog(options.runlog)
 		if options.bestlog is not None:

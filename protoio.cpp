@@ -208,6 +208,7 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	for (int i = 0; i < rd.edges_size(); ++i) {
 		sov->edgeData[i] = rd.edges(i);
 	}
+	fprintf(stderr, "done reading pb\n");
 	return 0;
 }
 

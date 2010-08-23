@@ -19,6 +19,7 @@
 
 #include <zlib.h>
 
+#include "arghandler.h"
 #include "Solver.h"
 #include "LinearInterpolate.h"
 #include "GrabIntermediateStorage.h"
@@ -28,6 +29,7 @@
 #include "swap.h"
 #include "GeoData.h"
 #include "renderDistricts.h"
+#include "LastNMinMax_inl.h"
 
 #if 01
 extern "C" double greatCircleDistance(double lat1,double long1,double lat2,double long2);
@@ -101,6 +103,8 @@ Solver::Solver() :
 	minx( INT_MAX ), miny( INT_MAX ), maxx( INT_MIN ), maxy( INT_MIN ),
 #endif
 	viewportRatio( 1.0 ), gencount( 0 ), blaf( NULL ),
+	recentKmpp( NULL ),
+	recentKmppGiveupFraction( 0.0005 ),
 	showLinks( 0 ),
 	renumber( NULL ),
 	_point_draw_array( NULL ), 
@@ -807,137 +811,94 @@ int Solver::handleArgs( int argc, char** argv ) {
 	int argcout = 1;
 	popRatioFactor.clear();
 	popRatioFactor.setPoint( -1, District2::popRatioFactor );
-	for ( int i = 1; i < argc; i++ ) {
-		if ( ! strcmp( argv[i], "-i" ) ) {
-			i++;
-			inputname = argv[i];
-		} else if ( ! strcmp( argv[i], "-U" ) ) {
-			i++;
-			inputname = argv[i];
-			geoFact = openUf1;
-#if HAVE_PROTOBUF
-		} else if ( ! strcmp( argv[i], "-B" ) ) {
-			i++;
-			inputname = argv[i];
-			geoFact = protobufGeoDataTag;
-		} else if ( ! strcmp( argv[i], "-P" ) ) {
-			i++;
-			inputname = argv[i];
-			geoFact = protobufGeoDataTag;
-#endif
-		} else if ( ! strcmp( argv[i], "-g" ) ) {
-			i++;
-			generations = atoi( argv[i] );
+	int argi = 1;
+	char* uf1InputName = NULL;
+	char* pbInputName = NULL;
+	const char* statLogName = NULL;
+	bool oldCDs = false;
+	bool blankDists = false;
+	bool quiet = false;
+	double popRatioFactorStart = NAN;
+	double popRatioFactorEnd = NAN;
+	const char* popRatioFactorPointString = NULL;
+	bool nearestNeighbor = false;
+	bool d2mode = false;
+	while (argi < argc) {
+		StringArg("i", &inputname);
+		StringArg("U", &uf1InputName);
+		StringArg("B", &pbInputName);
+		StringArg("P", &pbInputName);
+		IntArg("g", &generations);
+		IntArg("d", &districts);
+		StringArgWithCopy("o", &dumpname);
+		StringArgWithCopy("r", &loadname);
+		StringArgWithCopy("loadSolution", &loadname);
+		StringArgWithCopy("distout", &distfname);
+		StringArgWithCopy("coordout", &coordfname);
+		StringArgWithCopy("pngout", &pngname);
+		IntArg("pngW", &pngWidth);
+		IntArg("pngH", &pngHeight);
+		StringArg("statLog", &statLogName);
+		StringArgWithCopy("sLog", &solutionLogPrefix);
+		StringArgWithCopy("pLog", &pngLogPrefix);
+		BoolArg("oldCDs", &oldCDs);
+		BoolArg("blankDists", &blankDists);
+		BoolArg("q", &quiet);
+		DoubleArg("popRatioFactor", &popRatioFactorStart);
+		DoubleArg("popRatioFactorEnd", &popRatioFactorEnd);
+		StringArg("popRatioFactorPoints", &popRatioFactorPointString);
+		BoolArg("nearest-neighbor", &nearestNeighbor);
+		BoolArg("d2", &d2mode);
+		DoubleArg("maxSpreadFraction", &maxSpreadFraction);
+		DoubleArg("maxSpreadAbsolute", &maxSpreadAbsolute);
 #if 0
-		} else if ( ! strcmp( argv[i], "-p" ) ) {
-			i++;
-			popsize = atoi( argv[i] );
-#endif
-		} else if ( ! strcmp( argv[i], "-d" ) ) {
-			i++;
-			districts = atoi( argv[i] );
-		} else if ( ! strcmp( argv[i], "-o" ) ) {
-			i++;
-			dumpname = strdup( argv[i] );
-		} else if ( (! strcmp( argv[i], "-r" )) ||
-			    (! strcmp( argv[i], "--loadSolution")) ) {
-			i++;
-			loadname = strdup( argv[i] );
-		} else if ( ! strcmp( argv[i], "--distout" ) ) {
-			i++;
-			distfname = strdup( argv[i] );
-		} else if ( ! strcmp( argv[i], "--coordout" ) ) {
-			i++;
-			coordfname = strdup( argv[i] );
-#if WITH_PNG
-		} else if ( ! strcmp( argv[i], "--pngout" ) ) {
-			i++;
-			pngname = strdup( argv[i] );
-		} else if ( ! strcmp( argv[i], "--pngW" ) ) {
-			i++;
-			pngWidth = atoi( argv[i] );
-		} else if ( ! strcmp( argv[i], "--pngH" ) ) {
-			i++;
-			pngHeight = atoi( argv[i] );
-#endif
-		} else if ( ! strcmp( argv[i], "--statLog" ) ) {
-			i++;
-			statLog = fopen( argv[i], "w" );
-			if ( statLog == NULL ) {
-				perror( argv[i] );
-				exit(1);
-			}
-		} else if ( ! strcmp( argv[i], "--sLog" ) ) {
-			i++;
-			solutionLogPrefix = strdup( argv[i] );
-#if WITH_PNG
-		} else if ( ! strcmp( argv[i], "--pLog" ) ) {
-			i++;
-			pngLogPrefix = strdup( argv[i] );
-#endif
-		} else if ( ! strcmp( argv[i], "--oldCDs" ) ) {
-			initMode = initWithOldDistricts;
-		} else if ( ! strcmp( argv[i], "--blankDists" ) ) {
-			initMode = initWithNewDistricts;
-		} else if ( ! strcmp( argv[i], "-q" ) ) {
-			blaf = NULL;
-		} else if ( ! strcmp( argv[i], "--popRatioFactor" ) ) {
-			char* endp;
-			double td;
-			i++;
-			td = strtod( argv[i], &endp );
-			if ( endp == argv[i] ) {
-				fprintf( stderr, "bogus popRatioFactor \"%s\"\n", argv[i] );
-				exit(1);
-			}
-			popRatioFactor.setPoint(0, td);
-			District2::popRatioFactor = td;
-		} else if ( ! strcmp( argv[i], "--popRatioFactorEnd" ) ) {
-			char* endp;
-			double td;
-			i++;
-			td = strtod( argv[i], &endp );
-			if ( endp == argv[i] ) {
-				fprintf( stderr, "bogus popRatioFactorEnd \"%s\"\n", argv[i] );
-				exit(1);
-			}
-			popRatioFactor.setPoint(gencount + generations, td);
-		} else if ( ! strcmp( argv[i], "--popRatioFactorPoints" ) ) {
-			i++;
-			popRatioFactor.parse(argv[i]);
-		} else if ( ! strcmp( argv[i], "--nearest-neighbor" ) ) {
-			districtSetFactory = NearestNeighborDistrictSetFactory;
-		} else if ( ! strcmp( argv[i], "--d2" ) ) {
-			districtSetFactory = District2SetFactory;
-		} else if ( ! strcmp( argv[i], "--maxSpreadFraction" ) ) {
-			char* endp;
-			double td;
-			i++;
-			td = strtod( argv[i], &endp );
-			if ( endp == argv[i] ) {
-				fprintf( stderr, "bogus maxSpreadFraction \"%s\"\n", argv[i] );
-				exit(1);
-			}
-			maxSpreadFraction = td;
-		} else if ( ! strcmp( argv[i], "--maxSpreadAbsolute" ) ) {
-			char* endp;
-			double td;
-			i++;
-			td = strtod( argv[i], &endp );
-			if ( endp == argv[i] ) {
-				fprintf( stderr, "bogus maxSpreadAbsolute \"%s\"\n", argv[i] );
-				exit(1);
-			}
-			maxSpreadAbsolute = td;
-		} else {
-#if 0
-			argv[argcout] = argv[i];
-			argcout++;
+		argv[argcout] = argv[argi];
+		argcout++;
+		argi++;
 #else
-			fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[i] );
-			exit(1);
+		fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[argi] );
+		exit(1);
 #endif
+	}
+	if (uf1InputName != NULL) {
+		inputname = uf1InputName;
+		geoFact = openUf1;
+	}
+	if (pbInputName != NULL) {
+		inputname = pbInputName;
+		geoFact = protobufGeoDataTag;
+	}
+	if (statLogName != NULL) {
+		statLog = fopen(statLogName, "w");
+		if ( statLog == NULL ) {
+			perror(statLogName);
+			exit(1);
 		}
+	}
+	if (oldCDs) {
+		initMode = initWithOldDistricts;
+	}
+	if (blankDists) {
+		initMode = initWithNewDistricts;
+	}
+	if (quiet) {
+		blaf = NULL;
+	}
+	if (!isnan(popRatioFactorStart)) {
+		popRatioFactor.setPoint(0, popRatioFactorStart);
+		District2::popRatioFactor = popRatioFactorStart;
+	}
+	if (!isnan(popRatioFactorEnd)) {
+		popRatioFactor.setPoint(gencount + generations, popRatioFactorEnd);
+	}
+	if (popRatioFactorPointString != NULL) {
+		popRatioFactor.parse(popRatioFactorPointString);
+	}
+	if (nearestNeighbor) {
+		districtSetFactory = NearestNeighborDistrictSetFactory;
+	}
+	if (d2mode) {
+		districtSetFactory = District2SetFactory;
 	}
 	return argcout;
 }
@@ -1054,6 +1015,10 @@ int Solver::main( int argc, char** argv ) {
 #endif
 		SolverStats* curst;
 		curst = getDistrictStats();
+		if (recentKmpp != NULL) {
+			recentKmpp->put(curst->avgPopDistToCenterOfDistKm);
+			// TODO: give up if too slow for too long
+		}
 		double spread = curst->popmax - curst->popmin;
 		bool allDistrictsClaimed = curst->nod == 0;
 		bool absoluteSpreadOk = spread < maxSpreadAbsolute;
@@ -1561,4 +1526,12 @@ int parseArgvFromFile(const char* filename, char*** argvP) {
 	argv[ci] = NULL;
 	*argvP = argv;
 	return argc;
+}
+
+bool Solver::nonProgressGiveup() const {
+	if (recentKmpp == NULL) {
+		return false;
+	}
+	double varianceFraction = (recentKmpp->max() - recentKmpp->min()) / recentKmpp->last();
+	return varianceFraction < recentKmppGiveupFraction;
 }

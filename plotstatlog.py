@@ -6,11 +6,26 @@ import re
 import subprocess
 import sys
 
-gen_re = re.compile(r'gen (\d+)')
+gen_re = re.compile(r'gen(?:eration)? (\d+)')
 kmpp_re = re.compile(r'([0-9.]+) Km/person')
 std_re = re.compile(r'std=([0-9.]+)')
 spread_re = re.compile(r'max=([0-9.]+).*min=([0-9.]+)')
 nodist_re = re.compile(r'in no district .pop=([0-9.]+)')
+
+
+def xyRangeMinMax(seq, xmin, xmax):
+	"""For a sequence of (x,y) values, return (ymin,ymax) within some range of x."""
+	ymin = None
+	ymax = None
+	for (x,y) in seq:
+		if (x < xmin) or (x > xmax):
+			continue
+		if (ymin is None) or (y < ymin):
+			ymin = y
+		if (ymax is None) or (y > ymax):
+			ymax = y
+	return (ymin, ymax)
+
 
 class statlog(object):
 	def __init__(self):
@@ -74,6 +89,17 @@ plot '-' title 'std','-' title 'spread'
 			# TODO: write x\ty
 			out.write("%0.15g\n" % xy[1])
 		out.write('e\n')
+		out.write(
+"""set output 'kmpp_var.png'
+plot '-' title 'Km/person fractional range per 1000 steps'
+""")
+		for xy in self.kmpp:
+			(ymin, ymax) = xyRangeMinMax(self.kmpp, xy[0] - 1000, xy[0])
+			if (ymin is None) or (ymax is None):
+				continue
+			yf = (ymax - ymin) / xy[1]
+			out.write("%g\t%0.15g\n" % (xy[0], yf))
+		out.write('e\n')
 		if len(self.nodist) > 2:
 			out.write(
 """set output 'nodist.png'
@@ -93,11 +119,16 @@ def main(argv):
 		fin = open('statlog', 'r')
 	x.readStatlogLines(fin)
 	fin.close()
-	subp = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE)
-	fout = subp.stdin
-	#fout = open('/tmp/ps.gnuplot', 'w')
+	subp = None
+	if True:
+		subp = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE)
+		fout = subp.stdin
+	else:
+		fout = open('/tmp/ps.gnuplot', 'w')
 	x.writeGnuplotCommands(fout)
 	fout.close()
+	if subp is not None:
+		subp.wait()
 
 if __name__ == '__main__':
 	main(sys.argv)

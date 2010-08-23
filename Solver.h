@@ -11,6 +11,7 @@ class DistrictSet;
 class GeoData;
 class GrabIntermediateStorage;
 class Node;
+template<class T> class LastNMinMax;
 
 // TODO separate application state and solution state!
 class Solver {
@@ -77,6 +78,10 @@ public:
 	int gencount;
 
 	FILE* blaf;
+	
+	LastNMinMax<double>* recentKmpp;
+	double recentKmppGiveupFraction;
+	bool nonProgressGiveup() const;
 
 	Solver();
 	~Solver();

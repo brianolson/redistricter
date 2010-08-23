@@ -179,6 +179,7 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1F0E7BF71221D87A00769E1E /* LastNMinMax_inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LastNMinMax_inl.h; sourceTree = "<group>"; };
 		1F1862A70926A70D0025E521 /* linkfixup */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = linkfixup; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F1862B50926A79A0025E521 /* linkfixup.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = linkfixup.cpp; sourceTree = "<group>"; };
 		1F1862C90926B03A0025E521 /* Bitmap.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Bitmap.cpp; sourceTree = "<group>"; };
@@ -460,6 +461,7 @@
 				1FF95ADA0ED0D083009A375C /* GeoData.h */,
 				1F3BF6410C9DF085002D27AE /* GrabIntermediateStorage.cpp */,
 				1FF95AD40ED0D083009A375C /* GrabIntermediateStorage.h */,
+				1F0E7BF71221D87A00769E1E /* LastNMinMax_inl.h */,
 				1FE201A50C94ECBC008A10FE /* LinearInterpolate.cpp */,
 				1FF95AD30ED0D083009A375C /* LinearInterpolate.h */,
 				1F2DFD180F3DDA34008FF766 /* logging.h */,
