@@ -17,7 +17,7 @@ class solution(object):
 	def read_dsz(self, fname):
 		f = open(fname, 'rb')
 		raw = f.read()
-		self.read_dsz_data(self, raw)
+		self.read_dsz_data(raw)
 
 	def read_dsz_data(self, raw):
 		# try little endian first
