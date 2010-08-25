@@ -807,6 +807,27 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
 }
 #endif
 
+const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n v=n\n"
+"More details in Solver.cpp\n"
+"-P file             compiled state data\n"
+"-g n                generations (steps) to run\n"
+"-d n                number of districts to create\n"
+"-o file             dump solution here\n"
+"-loadSolution file  load previously generated solution\n"
+"-pngout file        where to write png of final solution\n"
+"-pngW n             width of image to make\n"
+"-pngH n             height of image to make\n"
+"-statLog statlog    file to write per-step stats to\n"
+"-sLog prefix        write out a solution file every few genrations to prefix%d.dsz\n"
+"-pLog prefix        write out a solution png every few genrations to prefix%d.png\n"
+"-oldCDs             use old districts as starting point\n"
+"-blankDists         start with empty map and make new districts\n"
+"-q                  quiet, less status printed\n"
+"-nearest-neighbor   use NearestNeighbor solver\n"
+"-d2                 use District2 solver\n"
+"-maxSpreadFraction  ignore results if district populations ((max - min)/avg) greater than this\n"
+"-maxSpreadAbsolute  ignore results if district populations (max - min) greater than this\n";
+
 int Solver::handleArgs( int argc, char** argv ) {
 	int argcout = 1;
 	popRatioFactor.clear();
@@ -824,17 +845,17 @@ int Solver::handleArgs( int argc, char** argv ) {
 	bool nearestNeighbor = false;
 	bool d2mode = false;
 	while (argi < argc) {
-		StringArg("i", &inputname);
-		StringArg("U", &uf1InputName);
-		StringArg("B", &pbInputName);
+		StringArg("i", &inputname);  // deprecated
+		StringArg("U", &uf1InputName);  // deprecated
+		StringArg("B", &pbInputName);  // deprecated
 		StringArg("P", &pbInputName);
 		IntArg("g", &generations);
 		IntArg("d", &districts);
 		StringArgWithCopy("o", &dumpname);
 		StringArgWithCopy("r", &loadname);
 		StringArgWithCopy("loadSolution", &loadname);
-		StringArgWithCopy("distout", &distfname);
-		StringArgWithCopy("coordout", &coordfname);
+		StringArgWithCopy("distout", &distfname);  // deprecated?
+		StringArgWithCopy("coordout", &coordfname);  // deprecated?
 		StringArgWithCopy("pngout", &pngname);
 		IntArg("pngW", &pngWidth);
 		IntArg("pngH", &pngHeight);
@@ -844,19 +865,20 @@ int Solver::handleArgs( int argc, char** argv ) {
 		BoolArg("oldCDs", &oldCDs);
 		BoolArg("blankDists", &blankDists);
 		BoolArg("q", &quiet);
-		DoubleArg("popRatioFactor", &popRatioFactorStart);
-		DoubleArg("popRatioFactorEnd", &popRatioFactorEnd);
-		StringArg("popRatioFactorPoints", &popRatioFactorPointString);
+		DoubleArg("popRatioFactor", &popRatioFactorStart);  // tuning for d2 solver
+		DoubleArg("popRatioFactorEnd", &popRatioFactorEnd);  // tuning for d2 solver
+		StringArg("popRatioFactorPoints", &popRatioFactorPointString);  // tuning for d2 solver
 		BoolArg("nearest-neighbor", &nearestNeighbor);
 		BoolArg("d2", &d2mode);
 		DoubleArg("maxSpreadFraction", &maxSpreadFraction);
 		DoubleArg("maxSpreadAbsolute", &maxSpreadAbsolute);
-#if 0
+#if 1
 		argv[argcout] = argv[argi];
 		argcout++;
 		argi++;
 #else
 		fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[argi] );
+		fputs( argHelp, stderr );
 		exit(1);
 #endif
 	}
@@ -925,7 +947,13 @@ int Solver::main( int argc, char** argv ) {
 	
 	blaf = stdout;
 	
-	handleArgs( argc, argv );
+	int argcout = handleArgs( argc, argv );
+	if (argcout != 1) {
+		fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[1] );
+		fputs( Solver::argHelp, stderr );
+		exit(1);
+		return 1;
+	}
 	
 	if ( statLog != NULL ) {
 		fprintf(statLog, "# %s", argv[0] );

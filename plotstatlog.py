@@ -74,20 +74,17 @@ set output 'kmpp.png'
 plot '-' title 'Km/person'
 """)
 		for xy in self.kmpp:
-			# TODO: write x\ty
-			out.write("%0.15g\n" % xy[1])
+			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write(
 """e
 set output 'statlog.png'
 plot '-' title 'std','-' title 'spread'
 """)
 		for xy in self.std:
-			# TODO: write x\ty
-			out.write("%0.15g\n" % xy[1])
+			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write('e\n')
 		for xy in self.spread:
-			# TODO: write x\ty
-			out.write("%0.15g\n" % xy[1])
+			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write('e\n')
 		out.write(
 """set output 'kmpp_var.png'

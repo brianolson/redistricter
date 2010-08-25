@@ -99,7 +99,14 @@ int main( int argc, char** argv ) {
 		}
 	}
 	argv[nargc]=NULL;
-	sov.handleArgs( nargc, argv );
+	int argcout = sov.handleArgs( nargc, argv );
+	if (argcout != 1) {
+		fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[1] );
+		fputs( usage, stderr );
+		fputs( Solver::argHelp, stderr );
+		exit(1);
+		return 1;
+	}
 	
 	if ( sov.loadname == NULL && commandFileName == NULL ) {
 		fprintf(stderr,"useless drend, null loadname and null command file name\n");

@@ -1,8 +1,33 @@
 #!/usr/bin/python
-# Expects to run in the build dir with data/?? containing state data.
-# Using setupstatedata.py in the standard way should do this.
-#
+
+"""Run the solver repeatedly, storing results, tracking the best.
+
+Uses compiled data setup by the setupstatedata.py script.
+Uses the `districter2` solver binary.
+Reads ${REDISTRICTER_DATA}/??/config/*
+There may be config/Congress config/Assembly and config/Senate, describing
+a state's US House and state legislature districting needs.
+
+In the data it is run in, this script creates ??_*/ directories
+(like CA_Congress) for results to be stored in. Each such configuration
+contains timestamped directories YYYYMMDD_HHMMSS/ for each run of the solver.
+(Many runs are needed to try various random solution starts.)
+The best solution will be sym-linked to by XX_Foo/link1
+XX_Foo/best/index.html will show the best 10 results so far.
+
+Inside each XX_Foo/YYYYMMDD_HHMMSS/ run directory should be:
+  statlog.gz recording statistics from the solver at many points through the run.
+  statsum which is a few key lines out of statlog
+  *.dsz solution files
+  *.png images of solutions
+
+./runallstates.py --help should be helpful too.
+"""
+
+__author__ = "Brian Olson"
+
 # TODO: shiny GUI?
+# TODO: http server with runlog, bestlog, and links to $stu/best/index.html
 # At the most basic, curses or Tk progress bars.
 # Or, render a recent map and display it.
 # Maybe rewrite this run script in C++ and build it into the districter binary?
@@ -29,8 +54,6 @@ import traceback
 import client
 import manybest
 import measureGeometry
-
-__author__ = "Brian Olson"
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)

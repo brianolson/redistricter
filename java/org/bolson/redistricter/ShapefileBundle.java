@@ -724,7 +724,15 @@ public class ShapefileBundle {
 					}
 				}
 				//assert(ctx.xIntersects > 0);
-				assert(ctx.xIntersects % 2 == 0);
+				if (ctx.xIntersects % 2 != 0) {
+					System.err.println("mismatch in line segments intersecting y=" + y);
+					System.err.println(this.toString());
+					assert(ctx.xIntersects % 2 == 0);
+					// if asserts are off, try to continue somewhat reasonably
+					py++;
+					y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
+					continue;
+				}
 				
 				// For all start-stop pairs, draw pixels from start edge to end edge
 				for (int xi = 0; xi < ctx.xIntersects; xi += 2) {

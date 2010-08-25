@@ -154,7 +154,14 @@ int main( int argc, char** argv ) {
 		}
 	}
 	argv[nargc]=NULL;
-	sov.handleArgs(nargc, argv);
+	int argcout = sov.handleArgs(nargc, argv);
+	if (argcout != 1) {
+		// TODO: print local usage here too
+		fprintf( stderr, "%s: bogus arg \"%s\"\n", argv[0], argv[1] );
+		fputs( Solver::argHelp, stderr );
+		exit(1);
+		return 1;
+	}
 	sov.load();
 	sov.initNodes();
 	sov.allocSolution();

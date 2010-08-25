@@ -176,6 +176,8 @@ public:
 
 	SolverStats* getDistrictStats();
 	int getDistrictStats( char* str, int len );
+	
+	static const char* argHelp;
 };
 
 class SolverStats {
