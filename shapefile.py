@@ -12,12 +12,15 @@ def globJarsToClasspath(dirname):
 	jars = glob.glob(dirname + '/*.jar')
 	return ':'.join(jars)
 
-def makeCommand(extra_args, bindir=None):
+def makeCommand(extra_args, bindir=None, enableassertions=False):
 	"""Return array of commands to run with subprocess."""
 	if bindir is None:
 		bindir = os.path.dirname(os.path.abspath(__file__))
 	classpath = os.path.join(bindir, 'tools.jar') + ':' + globJarsToClasspath(os.path.join(bindir, 'jars'))
-	return ['java', '-enableassertions', '-Xmx500M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
+	cmd = ['java']
+	if enableassertions:
+		cmd.append('-enableassertions')
+	return cmd + ['-Xmx1000M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
 
 
 BUNDLE_NAME_RE_ = re.compile(r'.*tl_(\d\d\d\d)_(\d\d)_tabblock(0?0?).zip$', re.IGNORECASE)
@@ -76,7 +79,7 @@ def processDatadir(datadir, stu, bindir=None, dryrun=True):
 			'--boundx', '640', '--boundy', '480', bestzip]
 
 def main(argv):
-	command = makeCommand(argv[1:])
+	command = makeCommand(argv[1:], enableassertions=True)
 	print ' '.join(command)
 	p = subprocess.Popen(command, shell=False, stdin=None)
 	p.wait()

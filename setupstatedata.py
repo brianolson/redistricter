@@ -479,7 +479,7 @@ class StateData(object):
 				'--boundx', '1920', '--boundy', '1080']
 		if args1:
 			args1.append(bestzip)
-			command = shapefile.makeCommand(args1, self.options.bindir)
+			command = shapefile.makeCommand(args1, self.options.bindir, self.options.strict)
 			print ' '.join(command)
 			if not self.options.dryrun:
 				status = subprocess.call(command, shell=False, stdin=None)
@@ -490,7 +490,7 @@ class StateData(object):
 			command = shapefile.makeCommand([
 				'--rast', mppbsm_name, '--mask', masksm_name,
 				'--boundx', '640', '--boundy', '480', bestzip],
-				self.options.bindir)
+				self.options.bindir, self.options.strict)
 			print ' '.join(command)
 			if not self.options.dryrun:
 				status = subprocess.call(command, shell=False, stdin=None)
@@ -797,6 +797,7 @@ def main(argv):
 	argp.add_option('--noshapefile', dest='shapefile', action='store_false')
 	argp.add_option('--clean', dest='clean', action='store_true', default=False)
 	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
+	argp.add_option('--strict', dest='strict', action='store_true', default=False)
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
 	(options, args) = argp.parse_args()
 

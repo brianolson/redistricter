@@ -667,10 +667,16 @@ public class ShapefileBundle {
 		    	}
 		    }
 		    int i = ctx.xIntersects;
+			// insert sort
 		    while (i > 0) {
 		    	if (x < ctx.xIntersectScratch[i-1]) {
 		    		ctx.xIntersectScratch[i] = ctx.xIntersectScratch[i-1];
 		    		--i;
+				} else if (x == ctx.xIntersectScratch[i-1]) {
+					// don't double-add a duplicate
+					// TODO: epsilon of 1/2 or 1/4 pixel size?
+					// TODO: if this is a point /\ or \/, drop it.
+					return;
 		    	} else {
 		    		break;
 		    	}
@@ -727,6 +733,28 @@ public class ShapefileBundle {
 				if (ctx.xIntersects % 2 != 0) {
 					System.err.println("mismatch in line segments intersecting y=" + y);
 					System.err.println(this.toString());
+					// Re-run and emit debug messages
+					ctx.xIntersects = 0;
+					int oldIntersects = ctx.xIntersects;
+					for (int parti = 0; parti < parts.length; ++parti) {
+						int partend;
+						if (parti + 1 < parts.length) {
+							partend = parts[parti+1] - 1;
+						} else {
+							partend = (points.length / 2) - 1;
+						}
+						for (int pointi = parts[parti]; pointi < partend; ++pointi) {
+							intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
+							if (ctx.xIntersects != oldIntersects) {
+								System.err.print("hit: (" + points[pointi*2] + ", " + points[pointi*2 + 1] + "),(" + points[pointi*2 + 2] + ", " + points[pointi*2 + 3] + ") x = [" + ctx.xIntersectScratch[0]);
+								for (int xi = 1; xi < ctx.xIntersects; ++xi) {
+									System.err.print(", " + ctx.xIntersectScratch[xi]);
+								}
+								System.err.println("]");
+								oldIntersects = ctx.xIntersects;
+							}
+						}
+					}
 					assert(ctx.xIntersects % 2 == 0);
 					// if asserts are off, try to continue somewhat reasonably
 					py++;
