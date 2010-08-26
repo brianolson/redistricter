@@ -760,13 +760,28 @@ void Solver::doPNG() {
 	doPNG(winner, pngname);
 }
 void Solver::doPNG(POPTYPE* soln, const char* outname) {
+	// TODO: default scale width by 1/cos(mean latitude)
+	double ratioError = (((maxy - miny * 1.0) / (maxx - minx)) / ((1.0 * pngHeight) / pngWidth));
+	if (ratioError > 1.05) {
+		// data is taller than png
+		int newPngWidth = pngHeight * ((maxx - minx * 1.0) / (maxy - miny));
+		assert(newPngWidth < pngWidth);
+		printf("newPngWidth=%d old pngWidth=%d\n", newPngWidth, pngWidth);
+		pngWidth = newPngWidth;
+	} else if (ratioError < 0.95) {
+		// data is wider than png
+		int newPngHeight = pngWidth * ((maxy - miny * 1.0) / (maxx - minx));
+		assert(newPngHeight < pngHeight);
+		printf("newPngHeight=%d old pngHeight=%d\n", newPngHeight, pngHeight);
+		pngHeight = newPngHeight;
+	}
 	unsigned char* data = (unsigned char*)malloc(pngWidth*pngHeight*4*sizeof(unsigned char) );
 	unsigned char** rows = (unsigned char**)malloc(pngHeight*sizeof(unsigned char*) );
 	assert( data != NULL );
 	assert( rows != NULL );
 	
 	for ( int y = 0; y < pngHeight; y++ ) {
-		rows[y] = data + (y*pngWidth*3);
+		rows[y] = data + (y*pngWidth*4);
 	}
 	memset( data, 0x0, pngWidth*pngHeight*4*sizeof(unsigned char) );
 
@@ -792,7 +807,7 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
 		int y, x;
 		y = (int)oy;
 		unsigned char* row;
-		row = data + (y*pngWidth*3);
+		row = rows[y]; //data + (y*pngWidth*3);
 		x = (int)ox;
 		x *= 4;
 		row[x  ] = color[0];//((unsigned char)( (((unsigned int)color[0]) * 3)/7 ));
