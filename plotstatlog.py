@@ -28,12 +28,22 @@ def xyRangeMinMax(seq, xmin, xmax):
 
 
 class statlog(object):
-	def __init__(self):
+	def __init__(self, path=None):
 		self.kmpp = []
 		self.std = []
 		self.spread = []
 		self.nodist = []
 		self.generation = None
+		if path is not None:
+			self.readPath(path)
+	
+	def readPath(self, path):
+		if path[-3:].lower() == '.gz':
+			fin = gzip.open(path, 'rb')
+		else:
+			fin = open(path, 'r')
+		self.readStatlogLines(fin)
+		fin.close()
 
 	def readStatlogLines(self, fin):
 		for line in fin:
@@ -106,6 +116,14 @@ plot '-' title 'no dist'
 			for xy in self.nodist:
 				out.write("%0.15g\n" % xy[1])
 
+	def writeJson(self, out):
+		parts = []
+		parts.append('"kmpp":[' + ','.join(['%g,%0.15g' % xy for xy in self.kmpp]) + ']')
+		parts.append('"std":[' + ','.join(['%g,%0.15g' % xy for xy in self.std]) + ']')
+		parts.append('"spread":[' + ','.join(['%g,%0.15g' % (xy[0], xy[1]) for xy in self.spread]) + ']')
+		if len(self.nodist) > 2:
+			parts.append('"nodist":[' + ','.join(['%g,%0.15g' % xy for xy in self.nodist]) + ']')
+		out.write('{' + ','.join(parts) + '}')
 
 def main(argv):
 	x = statlog()

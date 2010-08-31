@@ -413,7 +413,7 @@ class runallstates(object):
 		self.solverMode = []
 		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
 		self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--maxSpreadFraction', '0.01']
-		self.start = datetime.datetime.now();
+		self.start = time.time();
 		self.end = None
 		# built from argv, things we'll run
 		self.statearglist = []
@@ -511,6 +511,7 @@ class runallstates(object):
 		argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[])
 		argp.add_option('--configdir', dest='configdir', default=None)
 		argp.add_option('--threads', dest='threads', type='int', default=1)
+		argp.add_option('--port', dest='port', type='int', default=-1, help='port to serve stats on via HTTP')
 		argp.add_option('--dry-run', '-n', dest='dry_run', action='store_true', default=False)
 		argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
 		argp.add_option('--d2', dest='mode', action='store_const', const='d2')
@@ -674,7 +675,7 @@ class runallstates(object):
 			self.addStopReason(self.stoppath + ' exists')
 			return True
 		if self.end is not None:
-			now = datetime.datetime.now()
+			now = time.time()
 			if now > self.end:
 				self.addStopReason('ran past end time (now=%s end=%s)' % (
 					now, self.end))
@@ -909,6 +910,15 @@ class runallstates(object):
 			for stu in self.states:
 				self.runstate(stu)
 			return
+		
+		severthread = None
+		if self.options.port > 0:
+			import resultserver
+			serverthread = resultserver.startServer(self.options.port)
+			if serverthread is not None:
+				print "serving status at\nhttp://localhost:%d/" % self.options.port
+			else:
+				print "status serving failed to start"
 
 		if self.numthreads <= 1:
 			print "running one thread"

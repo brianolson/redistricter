@@ -362,6 +362,9 @@ class StateData(object):
 					cds.append(cd)
 		if fo is not None:
 			fo.close()
+		if congress_number is None:
+			# not one line had a valid cd,congress_number; bail
+			return
 		if cds is not None:
 			cdvals = {}
 			for x in cds:
