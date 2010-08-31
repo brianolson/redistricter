@@ -149,10 +149,8 @@ if (window.redistricter_statlog['nodist']) {
 
 class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def __init__(self, request, client_address, server, extensions=None):
-		print 'mu'
 		self.extensions = extensions
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
-		print 'mu2'
 	
 	def GET_dir(self, path, fpath):
 		they = os.listdir(fpath)
@@ -191,7 +189,6 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		return False
 	
 	def do_GET(self):
-		print "AAAA self.path=%s extensions=%s" % (self.path, repr(self.extensions))
 		if self.runExtensions():
 			return
 		path = self.path.lstrip('/')
@@ -210,12 +207,7 @@ class RuntimeExtensibleHandler(object):
 		self.extensions = extensions
 	
 	def __call__(self, request, client_address, server):
-		print 'BLARG' + repr(self)
 		return ResultServerHandler(request, client_address, server, self.extensions)
-
-def CallableInsertHandler(request, client_address, server):
-	print 'AONETUHAOSNETUHAOSNETUHAOESNTUH'
-	return ResultServerHandler(request, client_address, server)
 
 
 def runServer(port=8080):
@@ -229,8 +221,6 @@ def startServer(port=8080, exitIfLastThread=True, extensions=None):
 	SimpleHTTPServer.SimpleHTTPRequestHandler"""
 	reh = RuntimeExtensibleHandler(extensions)
 	httpd = BaseHTTPServer.HTTPServer( ('',port),  reh )
-	#httpd = BaseHTTPServer.HTTPServer( ('',port),  ResultServerHandler )
-	#t = threading.Thread(target=runServer, args=(port,))
 	t = threading.Thread(target=httpd.serve_forever, args=(port,))
 	t.setDaemon(exitIfLastThread)
 	t.start()
@@ -238,4 +228,8 @@ def startServer(port=8080, exitIfLastThread=True, extensions=None):
 
 
 if __name__ == '__main__':
-	runServer()
+	import optparse
+	argp = optparse.OptionParser()
+	argp.add_option('--port', dest='port', type='int', default=8080, help='port to serve stats on via HTTP')
+	(options, args) = argp.parse_args()
+	runServer(options.port)
