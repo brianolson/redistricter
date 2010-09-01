@@ -6,10 +6,12 @@ __author__ = "Brian Olson"
 
 
 import BaseHTTPServer
+import base64
 import os
 import SimpleHTTPServer
 import threading
 import time
+import zlib
 
 import plotstatlog
 
@@ -87,6 +89,18 @@ def tail(linesource, lines=10):
 	return out
 
 
+# base64.b64encode(zlib.compress(open('favicon.ico','rb').read(), 9))
+favicon_ico_zlib_b64 = 'eNpjYGAEQgEBAQYQ0GBkYBAD0UAMElEAYkYGFrDcAQZM8P//fwbWz38YmFL+M7Bx3GVo4fjEsJTBjeEKUO7VaiYGke3yDIIpDAysOmEMVoUTGA4cOMDQ0NDA4ODgANZvbMDAbMBgwMzADCIMmCEcAyAF5RuD5IGqcACofohiLDRcHqwak6Y1AAD7Wxzg'
+favicon_ico = None
+
+
+def getFavicon():
+	global favicon_ico
+	if favicon_ico is None:
+		favicon_ico = zlib.decompress(base64.b64decode(favicon_ico_zlib_b64))
+	return favicon_ico
+
+
 listing_css = (
 """td.fs{font-family:'courier';padding-left:1em;text-align:right;}"""
 """td.ft{font-family:'courier';padding-left:1em;text-align:right;}"""
@@ -95,9 +109,9 @@ listing_css = (
 """img.pt{border:1px solid blue;}"""
 """div.log{width:80ex;font-family:monospace;"""
 """border:1px solid black;padding:2px;display:inline-block;}"""
-"""canvas.graph{width:400px;height:300px;border:1px solid #333;}"""
+"""canvas.graph{border:1px solid #333;}"""
 """div.logline{}""")
-
+#width:400px;height:300px;
 
 def imgCallout(url, name):
 	"""For some image file in the directory, show a small version of it."""
@@ -126,10 +140,10 @@ def writeStatlogDisplay(dirpath, name, out):
 	if not js:
 		return
 	stats = plotstatlog.statlog(os.path.join(dirpath, name))
-	out.write("""<div class="ib"><div>km/p</div><canvas class="graph" id="g_kmpp"></canvas></div>
-<div class="ib"><div>std</div><canvas class="graph" id="g_std"></canvas></div>
-<div class="ib"><div>spread</div><canvas class="graph" id="g_spread"></canvas></div>
-<div class="ib" style="display:none"><div>nodist</div><canvas class="graph" id="g_nodist"></canvas></div>
+	out.write("""<div class="ib"><div>km/p</div><canvas width="400" height="300" class="graph" id="g_kmpp"></canvas></div>
+<div class="ib"><div>std</div><canvas width="400" height="300" class="graph" id="g_std"></canvas></div>
+<div class="ib"><div>spread</div><canvas width="400" height="300" class="graph" id="g_spread"></canvas></div>
+<div class="ib" style="display:none"><div>nodist</div><canvas width="400" height="300" class="graph" id="g_nodist"></canvas></div>
 <script>
 """)
 	out.write(js)
@@ -150,6 +164,7 @@ if (window.redistricter_statlog['nodist']) {
 class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def __init__(self, request, client_address, server, extensions=None):
 		self.extensions = extensions
+		self.dirExtra = None
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 	
 	def GET_dir(self, path, fpath):
@@ -173,6 +188,8 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				self.wfile.write(imgCallout(x, x))
 			if x[:7].lower() == 'statlog':
 				writeStatlogDisplay(fpath, x, self.wfile)
+		if self.dirExtra:
+			self.wfile.write(self.dirExtra)
 		self.wfile.write(htmlDirListing('', fpath, they))
 		self.wfile.write("""</body></html>\n""")
 	
@@ -190,6 +207,11 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
 	def do_GET(self):
 		if self.runExtensions():
+			return
+		if self.path == '/favicon.ico':
+			self.send_response(200)
+			self.end_headers()
+			self.wfile.write(getFavicon())
 			return
 		path = self.path.lstrip('/')
 		cwd = os.path.abspath(os.getcwd())

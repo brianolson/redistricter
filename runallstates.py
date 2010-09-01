@@ -444,6 +444,8 @@ class runallstates(object):
 		self.qpos = 0
 		# dict from optparse
 		self.options = {}
+		# What is currently running
+		self.currentOps = {}
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -461,12 +463,12 @@ class runallstates(object):
 			self.lock.release()
 		return stu
 
-	def runthread(self):
+	def runthread(self, label='x'):
 		while not self.shouldstop():
 			# sleep 1 is a small price to pay to prevent stupid runaway loops
 			time.sleep(1)
 			stu = self.getNextState()
-			self.runstate(stu)
+			self.runstate(stu, label)
 
 	def readBestLog(self, path):
 		"""Read in a bestlog, loading latest state into memory."""
@@ -688,11 +690,11 @@ class runallstates(object):
 		if not self.dry_run:
 			os.mkdir(path)
 
-	def runstate(self, stu):
+	def runstate(self, stu, label=None):
 		"""Wrapper around runstate_inner to aid in runlog."""
 		start_timestamp = timestamp()
 		try:
-			ok = self.runstate_inner(stu, start_timestamp)
+			ok = self.runstate_inner(stu, start_timestamp, label)
 		except Exception, e:
 			ok = False
 			e_str = 'runstate_inner(%s,) failed with: %s' % (stu, traceback.format_exc())
@@ -708,13 +710,17 @@ class runallstates(object):
 			self.runlog.write('%s %s - %s %s\n' % (
 				stu, start_timestamp, timestamp(), okmsg))
 			self.runlog.flush()
+		if label:
+			del(self.currentOps[label])
 		return ok
 
-	def runstate_inner(self, stu, start_timestamp):
+	def runstate_inner(self, stu, start_timestamp, label):
 		"""This is the primary sequence of actions to run the solver on a state."""
 		if not os.path.exists(stu):
 			self.maybe_mkdir(stu)
 		ctd = os.path.join(stu, start_timestamp)
+		if label:
+			self.currentOps[label] = ctd
 		self.maybe_mkdir(ctd)
 		self.maybe_mkdir(os.path.join(ctd,"g"))
 		statlog = os.path.join(ctd, "statlog")
@@ -873,7 +879,11 @@ class runallstates(object):
 				datetime.datetime.now().isoformat(" "),
 				oldmsg))
 			outf.flush()
-		
+	
+	def setCurrentRunningHtml(self, handler):
+		if handler.path == '/':
+			handler.dirExtra = ('<div><div>Currently Active:</div>' + 
+				''.join(['<div><a href="%s">%s</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
 
 	def main(self, argv):
 		self.readArgs(argv)
@@ -914,7 +924,10 @@ class runallstates(object):
 		severthread = None
 		if self.options.port > 0:
 			import resultserver
-			serverthread = resultserver.startServer(self.options.port)
+			def extensionFu(handler):
+				self.setCurrentRunningHtml(handler)
+				return False
+			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu)
 			if serverthread is not None:
 				print "serving status at\nhttp://localhost:%d/" % self.options.port
 			else:
@@ -928,7 +941,8 @@ class runallstates(object):
 			self.lock = threading.Lock()
 			threads = []
 			for x in xrange(0, self.numthreads):
-				threads.append(threading.Thread(target=runallstates.runthread, args=(self,)))
+				threadLabel = 't%d' % x
+				threads.append(threading.Thread(target=runallstates.runthread, args=(self,threadLabel), name=threadLabel))
 			for x in threads:
 				x.start()
 			for x in threads:

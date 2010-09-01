@@ -80,7 +80,10 @@ public:
 	FILE* blaf;
 	
 	LastNMinMax<double>* recentKmpp;
+	LastNMinMax<double>* recentSpread;
+	int giveupSteps;
 	double recentKmppGiveupFraction;
+	double recentSpreadGiveupFraction;
 	bool nonProgressGiveup() const;
 
 	Solver();
@@ -173,7 +176,7 @@ public:
 
 	double maxSpreadFraction;
 	double maxSpreadAbsolute;
-
+	
 	SolverStats* getDistrictStats();
 	int getDistrictStats( char* str, int len );
 	

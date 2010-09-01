@@ -104,7 +104,10 @@ Solver::Solver() :
 #endif
 	viewportRatio( 1.0 ), gencount( 0 ), blaf( NULL ),
 	recentKmpp( NULL ),
+	recentSpread( NULL ),
+	giveupSteps( 5000 ),
 	recentKmppGiveupFraction( 0.0005 ),
+	recentSpreadGiveupFraction( 0.0005 ),
 	showLinks( 0 ),
 	renumber( NULL ),
 	_point_draw_array( NULL ), 
@@ -887,6 +890,9 @@ int Solver::handleArgs( int argc, char** argv ) {
 		BoolArg("d2", &d2mode);
 		DoubleArg("maxSpreadFraction", &maxSpreadFraction);
 		DoubleArg("maxSpreadAbsolute", &maxSpreadAbsolute);
+		IntArg("giveupSteps", &giveupSteps);
+		DoubleArg("kmppGiveupFraction", &recentKmppGiveupFraction);
+		DoubleArg("spreadGiveupFraction", &recentSpreadGiveupFraction);
 #if 1
 		argv[argcout] = argv[argi];
 		argcout++;
@@ -936,6 +942,10 @@ int Solver::handleArgs( int argc, char** argv ) {
 	}
 	if (d2mode) {
 		districtSetFactory = District2SetFactory;
+	}
+	if (giveupSteps > 0) {
+		recentKmpp = new LastNMinMax<double>(giveupSteps);
+		recentSpread = new LastNMinMax<double>(giveupSteps);
 	}
 	return argcout;
 }
@@ -1060,9 +1070,11 @@ int Solver::main( int argc, char** argv ) {
 		curst = getDistrictStats();
 		if (recentKmpp != NULL) {
 			recentKmpp->put(curst->avgPopDistToCenterOfDistKm);
-			// TODO: give up if too slow for too long
 		}
 		double spread = curst->popmax - curst->popmin;
+		if (recentSpread != NULL) {
+			recentSpread->put(spread);
+		}
 		bool allDistrictsClaimed = curst->nod == 0;
 		bool absoluteSpreadOk = spread < maxSpreadAbsolute;
 		bool spreadFractionOk = (spread / districtPopTarget) < maxSpreadFraction;
@@ -1123,6 +1135,9 @@ int Solver::main( int argc, char** argv ) {
 			fflush(stdout);
 		}
 		step();
+		if ( (gencount > giveupSteps) && nonProgressGiveup() ) {
+			break;
+		}
 	}
 	
 	getrusage( RUSAGE_SELF, a );
@@ -1572,9 +1587,10 @@ int parseArgvFromFile(const char* filename, char*** argvP) {
 }
 
 bool Solver::nonProgressGiveup() const {
-	if (recentKmpp == NULL) {
+	if ((recentKmpp == NULL) || (recentSpread == NULL)) {
 		return false;
 	}
-	double varianceFraction = (recentKmpp->max() - recentKmpp->min()) / recentKmpp->last();
-	return varianceFraction < recentKmppGiveupFraction;
+	double kmppVarFraction = (recentKmpp->max() - recentKmpp->min()) / recentKmpp->last();
+	double spreadVarFraction = (recentSpread->max() - recentSpread->min()) / recentSpread->last();
+	return (kmppVarFraction < recentKmppGiveupFraction) && (spreadVarFraction < recentSpreadGiveupFraction);
 }
