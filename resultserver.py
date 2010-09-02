@@ -17,18 +17,22 @@ import plotstatlog
 
 
 plotlib = None
+plotlibModifiedTime = None
 
 def getPlotlibJs():
 	global plotlib
-	if plotlib is not None:
-		return plotlib
+	global plotlibModifiedTime
 	bindir = os.path.dirname(__file__)
 	for name in ['plotlib_compiled.js', 'plotlib.js']:
 		path = os.path.join(bindir, name)
 		if os.path.exists(path):
+			plstat = os.stat(path)
+			if (plotlib is not None) and (plotlibModifiedTime is not None) and (plotlibModifiedTime >= plstat.st_mtime):
+				return plotlib
 			f = open(path, 'r')
 			plotlib = f.read()
 			f.close()
+			plotlibModifiedTime = plstat.st_mtime
 			return plotlib
 	return None
 

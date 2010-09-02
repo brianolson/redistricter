@@ -50,23 +50,6 @@ PlotCommon.prototype.py = function(dy) {
 };
 
 PlotCommon.prototype.axisLabels = function(opt) {
-	if (opt && opt['ylabels']) {
-		
-	} else {
-		/* Label miny and maxy on right edge of graph. */
-		this.ctx.strokeStyle = '#555';
-		this.ctx.beginPath();
-		this.ctx.moveTo(this.px(this.maxx), this.py(this.maxy));
-		this.ctx.lineTo(this.px(this.maxx) + 3, this.py(this.maxy));
-		this.ctx.moveTo(this.px(this.maxx), this.py(this.miny));
-		this.ctx.lineTo(this.px(this.maxx) + 3, this.py(this.miny));
-		this.ctx.stroke();
-		this.ctx.textAlign = 'left';
-		this.ctx.textBaseline = 'bottom';
-		this.ctx.fillText(this.miny_str, this.px(this.maxx), this.py(this.miny));
-		this.ctx.textBaseline = 'top';
-		this.ctx.fillText(this.maxy_str, this.px(this.maxx), this.py(this.maxy));
-	}
 	if (opt && opt['xlabels']) {
 		
 	} else {
@@ -84,10 +67,29 @@ PlotCommon.prototype.axisLabels = function(opt) {
 		this.ctx.textAlign = 'right';
 		this.ctx.fillText(new String(this.maxx), this.px(this.maxx), this.py(this.miny));
 	}
+	if (opt && opt['ylabels']) {
+		
+	} else {
+		/* Label miny and maxy on right edge of graph. */
+		this.ctx.strokeStyle = '#555';
+		this.ctx.beginPath();
+		this.ctx.moveTo(this.px(this.maxx), this.py(this.maxy));
+		this.ctx.lineTo(this.px(this.maxx) + 3, this.py(this.maxy));
+		this.ctx.moveTo(this.px(this.maxx), this.py(this.miny));
+		this.ctx.lineTo(this.px(this.maxx) + 3, this.py(this.miny));
+		this.ctx.stroke();
+		this.ctx.textAlign = 'left';
+		this.ctx.textBaseline = 'bottom';
+		this.ctx.fillText(this.miny_str, this.px(this.maxx), this.py(this.miny));
+		this.ctx.textBaseline = 'top';
+		this.ctx.fillText(this.maxy_str, this.px(this.maxx), this.py(this.maxy));
+	}
 	if ((this.lasty != this.miny) && (this.lasty != this.maxy)) {
+		// Put the last Y value on the right edge in red.
 		this.ctx.fillStyle = '#900';
 		this.ctx.textAlign = 'left';
 		this.ctx.textBaseline = 'middle';
+		// TODO: something smart about how if lasty is close to miny or maxy, adjust text baselines so they don't clobber each other
 		this.ctx.fillText(new String(this.lasty), this.px(this.maxx), this.py(this.lasty));
 	}
 }

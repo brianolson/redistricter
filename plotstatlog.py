@@ -33,6 +33,7 @@ class statlog(object):
 		self.std = []
 		self.spread = []
 		self.nodist = []
+		self.lastNodistGeneration = None
 		self.generation = None
 		if path is not None:
 			self.readPath(path)
@@ -73,6 +74,7 @@ class statlog(object):
 			m = nodist_re.search(line)
 			if m:
 				xy = (self.generation, float(m.group(1)))
+				self.lastNodistGeneration = self.generation
 				self.nodist.append(xy)
 
 	def writeGnuplotCommands(self, out):
@@ -84,6 +86,8 @@ set output 'kmpp.png'
 plot '-' title 'Km/person'
 """)
 		for xy in self.kmpp:
+			if (self.lastNodistGeneration is not None) and (xy[0] <= self.lastNodistGeneration):
+				continue
 			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write(
 """e
@@ -91,9 +95,13 @@ set output 'statlog.png'
 plot '-' title 'std','-' title 'spread'
 """)
 		for xy in self.std:
+			if (self.lastNodistGeneration is not None) and (xy[0] <= self.lastNodistGeneration):
+				continue
 			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write('e\n')
 		for xy in self.spread:
+			if (self.lastNodistGeneration is not None) and (xy[0] <= self.lastNodistGeneration):
+				continue
 			out.write("%g\t%0.15g\n" % (xy[0], xy[1]))
 		out.write('e\n')
 		out.write(
@@ -101,6 +109,8 @@ plot '-' title 'std','-' title 'spread'
 plot '-' title 'Km/person fractional range per 1000 steps'
 """)
 		for xy in self.kmpp:
+			if (self.lastNodistGeneration is not None) and (xy[0] <= self.lastNodistGeneration):
+				continue
 			(ymin, ymax) = xyRangeMinMax(self.kmpp, xy[0] - 1000, xy[0])
 			if (ymin is None) or (ymax is None):
 				continue
@@ -116,13 +126,19 @@ plot '-' title 'no dist'
 			for xy in self.nodist:
 				out.write("%0.15g\n" % xy[1])
 
+	def xCommaYComma(self, xytuples, minGeneration):
+		return ','.join(['%g,%0.15g' % (xy[0], xy[1]) for xy in filter(
+			lambda x: (minGeneration is None) or (x[0] > minGeneration),
+			xytuples)])
+		
+
 	def writeJson(self, out):
 		parts = []
-		parts.append('"kmpp":[' + ','.join(['%g,%0.15g' % xy for xy in self.kmpp]) + ']')
-		parts.append('"std":[' + ','.join(['%g,%0.15g' % xy for xy in self.std]) + ']')
-		parts.append('"spread":[' + ','.join(['%g,%0.15g' % (xy[0], xy[1]) for xy in self.spread]) + ']')
+		parts.append('"kmpp":[' + self.xCommaYComma(self.kmpp, self.lastNodistGeneration) + ']')
+		parts.append('"std":[' + self.xCommaYComma(self.std, self.lastNodistGeneration) + ']')
+		parts.append('"spread":[' + self.xCommaYComma(self.spread, self.lastNodistGeneration) + ']')
 		if len(self.nodist) > 2:
-			parts.append('"nodist":[' + ','.join(['%g,%0.15g' % xy for xy in self.nodist]) + ']')
+			parts.append('"nodist":[' + self.xCommaYComma(self.nodist, None) + ']')
 		out.write('{' + ','.join(parts) + '}')
 
 def main(argv):
