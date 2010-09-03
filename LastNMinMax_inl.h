@@ -11,6 +11,7 @@ public:
 	T last() const {
 		return they_[pos_];
 	}
+	int count() const { return count_; }
 	
 private:
 	int size_;

@@ -1123,7 +1123,13 @@ int Solver::main( int argc, char** argv ) {
 				char ds[256];
 				//getDistrictStats( ds, sizeof(ds) );
 				curst->toString( ds, sizeof(ds) );
-				fprintf( statLog, "generation: %d\n%s\n", gencount, ds );
+				fprintf( statLog, "generation: %d\n%s", gencount, ds );
+				if ((recentKmpp != NULL) && (recentSpread != NULL)) {
+					fprintf( statLog, "kmpp var per %d=%f, spread var per %d=%f\n",
+						recentKmpp->count(), (1.0 * recentKmpp->max() - recentKmpp->min()) / recentKmpp->last(),
+						recentSpread->count(), (1.0 * recentSpread->max() - recentSpread->min()) / districtPopTarget);
+				}
+				fprintf( statLog, "\n");
 				statLogCountdown = statLogInterval;
 				fflush( statLog );
 			}
@@ -1591,6 +1597,6 @@ bool Solver::nonProgressGiveup() const {
 		return false;
 	}
 	double kmppVarFraction = (recentKmpp->max() - recentKmpp->min()) / recentKmpp->last();
-	double spreadVarFraction = (recentSpread->max() - recentSpread->min()) / recentSpread->last();
+	double spreadVarFraction = (recentSpread->max() - recentSpread->min()) / districtPopTarget;
 	return (kmppVarFraction < recentKmppGiveupFraction) && (spreadVarFraction < recentSpreadGiveupFraction);
 }

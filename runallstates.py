@@ -883,7 +883,7 @@ class runallstates(object):
 	def setCurrentRunningHtml(self, handler):
 		if handler.path == '/':
 			handler.dirExtra = ('<div><div>Currently Active:</div>' + 
-				''.join(['<div><a href="%s">%s</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
+				''.join(['<div><a href="%s/">%s/</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
 
 	def main(self, argv):
 		self.readArgs(argv)

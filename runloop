@@ -1,22 +1,22 @@
 #!/bin/bash -x
 #
 # Things to do in the run dir:
-# touch stop runloopstop
+# touch stop
 # touch stop reload
+#
+# touching 'reload' is handy if you've changed the arguments to runalstates.py below
 
-export REDISTRICTER_BIN=/Users/bolson/src/redistricter
-export REDISTRICTER_DATA=/Users/bolson/src/redata/data
+if [ -z ${REDISTRICTER_BIN} ]; then
+	echo "need to set environment variable REDISTRICTER_BIN"
+	exit 1
+fi
+if [ -z ${REDISTRICTER_DATA} ]; then
+	echo "need to set environment variable REDISTRICTER_DATA"
+	exit 1
+fi
 
-while true; do
-	${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog
-	if [ -f reload ]; then
-		rm -f reload
-		exec ./runloop
-	fi
-	if [ -f runloopstop ]; then
-		rm -f runloopstop
-		exit 0
-	fi
-	# if something is actually wrong, don't spin, retry hourly.
-	sleep 3600
-done
+${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog --d2 --port=8080
+if [ -f reload ]; then
+	rm -f reload
+	exec ./runloop
+fi
