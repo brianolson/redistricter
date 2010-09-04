@@ -8,6 +8,7 @@ __author__ = "Brian Olson"
 import BaseHTTPServer
 import base64
 import os
+import re
 import SimpleHTTPServer
 import threading
 import time
@@ -139,6 +140,41 @@ def tailFileDiv(dirpath, name, boxclass, lineclass, numlines=10):
 	return None
 
 
+def linkifyPath(x):
+	if os.path.exists(x):
+		if os.path.isdir(x) and not x.endswith('/'):
+			x = x + '/'
+		return '<a href="%s">%s</a>' % (x, x)
+	return x
+
+
+def linkifyBestlogReplacer(m):
+	x = m.group(0)
+	return linkifyPath(x)
+
+
+RUN_PATH_RE = re.compile(r'[A-Z][A-Z][_A-Za-z]*/[0-9_]+')
+
+
+def linkifyBestlog(bestlogText):
+	return RUN_PATH_RE.sub(linkifyBestlogReplacer, bestlogText)
+
+
+def linkifyRunlogReplacer(m):
+	x = m.group(0)
+	print x
+	x = x.replace(' ', '/')
+	print x
+	return linkifyPath(x)
+
+
+RUNLOG_PATH_RE = re.compile(r'[A-Z][A-Z][_A-Za-z]* [0-9_]+')
+
+
+def linkifyRunlog(runlogText):
+	return RUNLOG_PATH_RE.sub(linkifyRunlogReplacer, runlogText)
+
+
 def writeStatlogDisplay(dirpath, name, out):
 	js = getPlotlibJs()
 	if not js:
@@ -186,6 +222,10 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				continue
 			sfStuff = tailFileDiv(fpath, sf, 'log', 'logline', 10)
 			if sfStuff:
+				if sf == 'bestlog':
+					sfStuff = linkifyBestlog(sfStuff)
+				if sf == 'runlog':
+					sfStuff = linkifyRunlog(sfStuff)
 				self.wfile.write(sfStuff)
 		for x in they:
 			if x[-4:].lower() == '.png':
