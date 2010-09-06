@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -39,8 +40,12 @@ import com.google.protobuf.ByteString;
 public class ShapefileBundle {
 	// TODO: requires Java 1.6
 	//static java.util.logging.Logger log = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
-	static java.util.logging.Logger log = java.util.logging.Logger.getLogger(
-		"org.bolson.redistricter");
+	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
+	static {
+		java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
+		ch.setLevel(Level.ALL);
+		log.addHandler(ch);
+	}
 	
 	static int swap(int x) {
 		return
@@ -959,10 +964,6 @@ public class ShapefileBundle {
 	}
 	
 	int blocklimit = 0x7fffffff;
-	static final int randColorRange = 150;
-	static final int randColorOffset = 100;
-	//boolean colorMask = false;
-	//boolean colorMaskRandom = false;
 	public boolean outline = false;
 	private RasterizationOptions rastOpts;
 	
@@ -988,18 +989,46 @@ public class ShapefileBundle {
 	 * @see java.awt.image.BufferedImage
 	 */
 	public static class BufferedImageRasterizer implements RasterizationReciever {
-		BufferedImage mask;
-		public boolean colorMask = true;
-		public boolean colorMaskRandom = true;
-		int polyindex = 0;
-		public boolean doPolyNames = false;
-		public java.awt.Font baseFont = new Font("Helvectica", 0, 12);
-		public java.awt.Color textColor = new java.awt.Color(235, 235, 235, 50);
-		public int waterColor = 0x996666ff;
-		Graphics2D g_ = null;
+		/**
+		 * Destination for mask image.
+		 */
+		protected BufferedImage mask;
+		/**
+		 * Used to rotate through colors.
+		 */
+		protected int polyindex = 0;
+		/**
+		 * Drawing context for mask.
+		 * @see mask
+		 */
+		protected Graphics2D g_ = null;
 		
-		BufferedImageRasterizer(BufferedImage imageOut) {
+		/**
+		 * This should be treated as const. Read-only.
+		 */
+		public Options opts = null;
+		
+		public static class Options {
+			public boolean colorMask = true;
+			public boolean colorMaskRandom = true;
+			public boolean doPolyNames = false;
+			public java.awt.Font baseFont = new Font("Helvectica", 0, 12);
+			public java.awt.Color textColor = new java.awt.Color(235, 235, 235, 50);
+			public int waterColor = 0x996666ff;
+			public int randColorRange = 150;
+			public int randColorOffset = 10;
+		}
+		
+		/**
+		 * @param imageOut where to render to
+		 * @param optsIn may be null
+		 */
+		BufferedImageRasterizer(BufferedImage imageOut, Options optsIn) {
 			mask = imageOut;
+			opts = optsIn;
+			if (opts == null) {
+				opts = new Options();
+			}
 		}
 		
 		Graphics2D graphics() {
@@ -1011,8 +1040,10 @@ public class ShapefileBundle {
 		
 		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
 			int argb;
-			if (colorMask) {
-				if (colorMaskRandom) {
+			int randColorOffset = opts.randColorOffset;
+			int randColorRange = opts.randColorRange;
+			if (opts.colorMask) {
+				if (opts.colorMaskRandom) {
 					argb = 0xff000000 |
 					(((int)(Math.random() * randColorRange) + randColorOffset) << 16) |
 					(((int)(Math.random() * randColorRange) + randColorOffset) << 8) |
@@ -1025,7 +1056,7 @@ public class ShapefileBundle {
 				argb = argb | (argb << 8) | (argb << 16) | 0xff000000;
 			}
 			if (p.isWater) {
-				argb = waterColor;
+				argb = opts.waterColor;
 			}
 			//log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
 			int minx = ctx.pixels[0];
@@ -1047,10 +1078,10 @@ public class ShapefileBundle {
 					maxy = ctx.pixels[i+1];
 				}
 			}
-			if (doPolyNames) {
+			if (opts.doPolyNames) {
 				Graphics2D g = graphics();
 				String polyName = blockidToString(p.blockid);
-				Rectangle2D stringsize = baseFont.getStringBounds(polyName, g.getFontRenderContext());
+				Rectangle2D stringsize = opts.baseFont.getStringBounds(polyName, g.getFontRenderContext());
 				// target height ((maxy - miny) / 5.0)
 				// actual height stringsize.getHeight()
 				// baseFont size 12.0
@@ -1064,9 +1095,9 @@ public class ShapefileBundle {
 				} else {
 					newFontSize = xsize;
 				}
-				Font currentFont = baseFont.deriveFont((float)newFontSize);
+				Font currentFont = opts.baseFont.deriveFont((float)newFontSize);
 				g.setFont(currentFont);
-				g.setColor(textColor);
+				g.setColor(opts.textColor);
 				stringsize = currentFont.getStringBounds(polyName, g.getFontRenderContext());
 				g.drawString(polyName, 
 						(float)((maxx + minx - stringsize.getWidth()) / 2),
@@ -1207,11 +1238,17 @@ public class ShapefileBundle {
 		public CompositeDBaseField() {
 			super();
 			length = 0;
+			type = CHARACTER;
 		}
 		
 		public void add(DBaseFieldDescriptor field) {
 			subFields.add(field);
 			length += field.length;
+			if (name == null) {
+				name = field.name;
+			} else {
+				name = name + "+" + field.name;
+			}
 		}
 		
 		public int getBytes(byte[] data, int offset, int length, byte[] out, int outOffset) {
@@ -1248,14 +1285,15 @@ public class ShapefileBundle {
 			DBaseFieldDescriptor county = dbf.getField("COUNTYFP00");
 			DBaseFieldDescriptor tract = dbf.getField("TRACTCE00");
 			DBaseFieldDescriptor block = dbf.getField("BLOCKCE00");
-			DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
-			if ((state != null) && (county != null) && (tract != null) && (block != null) && (suffix != null)) {
+			//DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
+			// TODO: reintroduce suffix for 2010 data?
+			if ((state != null) && (county != null) && (tract != null) && (block != null) /*&& (suffix != null)*/) {
 				CompositeDBaseField cfield = new CompositeDBaseField();
 				cfield.add(state);
 				cfield.add(county);
 				cfield.add(tract);
 				cfield.add(block);
-				cfield.add(suffix);
+				//cfield.add(suffix);
 				blockIdField = cfield;
 			}
 		}
@@ -1270,6 +1308,16 @@ public class ShapefileBundle {
 			waterArea = dbf.getField("AWATER00");
 			landArea = dbf.getField("ALAND00");
 		}
+		
+		if (log.isLoggable(Level.FINE)) {
+			log.fine(shp.toString());
+			log.fine(dbf.toString());
+			log.fine("blockIdField=" + blockIdField);
+			log.fine("isWaterField=" + isWaterField);
+			log.fine("waterArea=" + waterArea);
+			log.fine("landArea=" + landArea);
+		}
+		
 		Polygon p = shp.next();
 		
 		pba = new PolygonBucketArray(shp, 20, 20);
@@ -1495,9 +1543,10 @@ public static final String usage =
 		String rastOut = null;
 		String maskOutName = null;
 		int threads = 3;
-		boolean colorMask = false;
+		//boolean colorMask = false;
 		boolean outline = false;
 		RasterizationOptions rastOpts = new RasterizationOptions();
+		BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
@@ -1514,7 +1563,7 @@ public static final String usage =
 				i++;
 				rastOut = argv[i];
 			} else if (argv[i].equals("--color-mask")) {
-				colorMask = true;
+				birOpts.colorMask = true;
 			} else if (argv[i].equals("--mask")) {
 				i++;
 				maskOutName = argv[i];
@@ -1545,7 +1594,7 @@ public static final String usage =
 				outline = true;
 			} else if (argv[i].equals("--verbose")) {
 				log.setLevel(Level.FINEST);
-				log.info(log.getLevel().toString());
+				//log.info(log.getLevel().toString());
 			} else {
 				System.err.println("bogus arg: " + argv[i]);
 				System.err.print(usage);
@@ -1588,8 +1637,7 @@ public static final String usage =
 				log.info("will make mask \"" + maskOutName + "\"");
 				log.info("x=" + x.rastOpts.xpx + " y=" + x.rastOpts.ypx);
 				maskImage = new BufferedImage(x.rastOpts.xpx, x.rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
-				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage);
-				bir.colorMask = colorMask;
+				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage, birOpts);
 				outputs.add(bir);
 				maskOutput = new FileOutputStream(maskOutName);
 			}

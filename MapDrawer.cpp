@@ -319,6 +319,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 			pxlist* cpx;
 			int blockpoints = b.xy_size() / 2;
 			cpx = px + index;
+			int nexti = cpx->numpx * 2;
 			if ( cpx->px != NULL ) {
 				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + blockpoints)*2) );
 				assert( cpx->px != NULL );
@@ -328,7 +329,23 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 				cpx->numpx = blockpoints;
 			}
 			for (int pi = 0; pi < b.xy_size(); ++pi) {
-				cpx->px[pi] = b.xy(pi);
+				assert(b.xy(pi) >= 0);
+				//assert(b.xy(pi) <= 65535);
+				if (pi & 1) {
+					assert(b.xy(pi) <= height);
+				} else {
+					assert(b.xy(pi) <= width);
+				}
+				cpx->px[nexti + pi] = b.xy(pi);
+				if (pi & 1) {
+					assert(cpx->px[pi] <= height);
+				} else {
+					assert(cpx->px[pi] <= width);
+				}
+			}
+			for (int xxxi = 0; xxxi < cpx->numpx; xxxi += 2) {
+				assert(cpx->px[xxxi] <= width);
+				assert(cpx->px[xxxi+1] <= height);
 			}
 		} else {
 			fprintf(stderr, "%013llu no index!\n", tubid );
@@ -620,6 +637,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 	
 	POPTYPE* winner = sov->winner;
 	int numPoints = sov->gd->numPoints;
+	int blocksSkipped = 0;
 	
 	for ( int i = 0; i < numPoints; i++ ) {
 		const unsigned char* color;
@@ -631,23 +649,25 @@ void MapDrawer::paintPixels( Solver* sov ) {
 		}
 		pxlist* cpx = px + i;
 		if ( cpx->numpx <= 0 ) {
+			blocksSkipped++;
 			continue;
 		}
 		for ( int j = 0; j < cpx->numpx; j++ ) {
 			int x, y;
 			x = cpx->px[j*2];
 			if ( x < 0 || x > width ) {
-				fprintf(stderr,"index %d x (%d) out of bounds\n", i, x );
+				fprintf(stderr,"index %d[%d] x=%d out of bounds (0<=x<=%d)\n", i, j, x, width );
 				continue;
 			}
 			y = cpx->px[j*2 + 1];
 			if ( y < 0 || y > height ) {
-				fprintf(stderr,"index %d y (%d) out of bounds\n", i, y );
+				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", i, y, height );
 				continue;
 			}
 			setPoint(x, y, color[0], color[1], color[2]);
 		}
 	}
+	fprintf(stderr, "%d blocks skipped\n", blocksSkipped);
 }
 
 void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green, uint8_t blue) {
@@ -660,12 +680,12 @@ void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green
 			int x, y;
 			x = cpx->px[j*2];
 			if ( x < 0 || x > width ) {
-				fprintf(stderr,"index %d x (%d) out of bounds\n", index, x );
+				fprintf(stderr,"index %d x (%d) out of bounds (0<=x<=%d)\n", index, x, width );
 				return;
 			}
 			y = cpx->px[j*2 + 1];
 			if ( y < 0 || y > height ) {
-				fprintf(stderr,"index %d y (%d) out of bounds\n", index, y );
+				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", index, y, height );
 				return;
 			}
 			setPoint(x, y, red, green, blue);
