@@ -371,7 +371,7 @@ public class MapCanvas {
 		ImageWriterSpi pngWriter = null;
 		try {
 			IIORegistry r = IIORegistry.getDefaultInstance();
-			Iterator si = r.getServiceProviders( Class.forName("javax.imageio.spi.ImageWriterSpi"), true );
+			Iterator<?> si = r.getServiceProviders( Class.forName("javax.imageio.spi.ImageWriterSpi"), true );
 			while ( si.hasNext() ) {
 				Object p;
 				p = si.next();
@@ -395,13 +395,13 @@ public class MapCanvas {
 		ImageOutputStreamSpi oosws = null;
 		try {
 			IIORegistry r = IIORegistry.getDefaultInstance();
-			Class outstreamclass = Class.forName("java.io.OutputStream");
-			Iterator si = r.getServiceProviders( Class.forName("javax.imageio.spi.ImageOutputStreamSpi"), true );
+			Class<?> outstreamclass = Class.forName("java.io.OutputStream");
+			Iterator<?> si = r.getServiceProviders( Class.forName("javax.imageio.spi.ImageOutputStreamSpi"), true );
 			while ( si.hasNext() ) {
 				Object p;
 				p = si.next();
 				oosws = (ImageOutputStreamSpi)p;
-				Class oc = oosws.getOutputClass();
+				Class<?> oc = oosws.getOutputClass();
 				if ( oc.equals( outstreamclass ) ) {
 					break;
 				}

@@ -12,14 +12,10 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -28,6 +24,7 @@ import com.google.protobuf.ByteString;
 
 // TODO: draw water differently
 // TODO: use one ShapefileBundle as a master scale template for others to be rendered as overlays
+// TODO: take this apart into many smaller files.
 
 /**
  * Things I need from the shapefile bundle:
@@ -41,11 +38,6 @@ public class ShapefileBundle {
 	// TODO: requires Java 1.6
 	//static java.util.logging.Logger log = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
 	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
-	static {
-		java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
-		ch.setLevel(Level.ALL);
-		log.addHandler(ch);
-	}
 	
 	static int swap(int x) {
 		return
@@ -148,220 +140,6 @@ public class ShapefileBundle {
 		}
 	}
 	
-	static class PolygonBucket {
-		public double minx, maxx, miny, maxy;
-		public ArrayList<Polygon> polys = new ArrayList<Polygon>();
-		PolygonBucket(double minx, double maxx, double miny, double maxy) {
-			this.minx = minx;
-			this.maxx = maxx;
-			this.miny = miny;
-			this.maxy = maxy;
-		}
-		public boolean contains(double x, double y) {
-			return ((x >= minx) && (x <= maxx) && (y >= miny) && (y <= maxy));
-		}
-		public boolean add(Polygon p) {
-			polys.add(p);
-			/*
-			if (contains(p.xmin, p.ymin) || contains(p.xmin, p.ymax) || contains(p.xmax,p.ymin) || contains(p.xmax, p.ymax)) {
-				polys.add(p);
-				return true;
-			}
-			return false;
-			*/
-			return true;
-		}
-		public int writeLinks(Writer out, Polygon b) throws IOException {
-			int count = 0;
-			for (Polygon a : polys) {
-				if (a == b) {
-					continue;
-				}
-				if (a.hasTwoPointsInCommon(b)) {
-					ShapefileBundle.writeLink(out, a, b);
-					count++;
-				}
-			}
-			return count;
-		}
-		public int writeLinks(OutputStream out, Polygon b) throws IOException {
-			int count = 0;
-			for (Polygon a : polys) {
-				if (a == b) {
-					continue;
-				}
-				if (a.hasTwoPointsInCommon(b)) {
-					ShapefileBundle.writeLink(out, a, b);
-					count++;
-				}
-			}
-			return count;
-		}
-		public int mapLinks(SetLink out, Polygon b) {
-			int count = 0;
-			for (Polygon a : polys) {
-				if (a == b) {
-					continue;
-				}
-				if (a.hasTwoPointsInCommon(b)) {
-					if (out.setLink(a.blockid, b.blockid)) {
-						count++;
-					}
-				}
-			}
-			return count;
-		}
-	}
-	static class PolygonBucketArray {
-		int width;
-		int height;
-		double minx, miny, maxx, maxy;
-		double dx, dy;
-		PolygonBucket[] they;
-		PolygonBucketArray(double minx, double miny, double maxx, double maxy, int width, int height) {
-			this.minx = minx;
-			this.miny = miny;
-			this.maxx = maxx;
-			this.maxy = maxy;
-			this.width = width;
-			this.height = height;
-			assert(maxy > miny);
-			assert(maxx > minx);
-			init();
-		}
-		
-		public PolygonBucketArray(Shapefile shp, int width, int height) {
-			this.minx = shp.header.xmin;
-			this.miny = shp.header.ymin;
-			this.maxx = shp.header.xmax;
-			this.maxy = shp.header.ymax;
-			this.width = width;
-			this.height = height;
-			init();
-		}
-		
-		protected void init() {
-			they = new PolygonBucket[width * height];
-			dx = (maxx - minx) / width;
-			dy = (maxy - miny) / height;
-			for (int x = 0; x < width; x++) {
-				double subminx = minx + dx * x;
-				double submaxx = maxx - dx * (width - (x + 1));
-				for (int y = 0; y < height; y++) {
-					double subminy = miny + dy * y;
-					double submaxy = maxy - dy * (height - (y + 1));
-					they[(x*height) + y] = new PolygonBucket(subminx, submaxx, subminy, submaxy);
-				}
-			}
-		}
-		
-		int bucketX(double x) {
-			assert(x >= minx);
-			assert(x <= maxx);
-			int ix;
-			if (x == maxx) {
-				ix = width - 1;
-			} else {
-				ix = (int)Math.floor((x - minx) / dx);
-			}
-			assert(ix >= 0);
-			assert(ix < width);
-			return ix;
-		}
-		
-		int bucketY(double y) {
-			assert(y >= miny);
-			assert(y <= maxy);
-			int iy;
-			if (y == maxy) {
-				iy = height - 1;
-			} else {
-				iy = (int)Math.floor((y - miny) / dy);
-			}
-			assert(iy >= 0);
-			assert(iy < height);
-			return iy;
-		}
-
-		PolygonBucket getBucket(double x, double y) {
-			assert(x >= minx);
-			assert(x <= maxx);
-			assert(y >= miny);
-			assert(y <= maxy);
-			int ix;
-			if (x == maxx) {
-				ix = width - 1;
-			} else {
-				ix = (int)Math.floor((x - minx) / dx);
-			}
-			int iy;
-			if (y == maxy) {
-				iy = height - 1;
-			} else {
-				iy = (int)Math.floor((y - miny) / dy);
-			}
-			assert(ix >= 0);
-			assert(ix < width);
-			assert(iy >= 0);
-			assert(iy < height);
-			return they[(ix * height) + iy];
-		}
-		
-		int writeLinks(Writer out, Polygon p) throws IOException {
-			int count = 0;
-			int minix = bucketX(p.xmin);
-			int maxix = bucketX(p.xmax);
-			int miniy = bucketY(p.ymin);
-			int maxiy = bucketY(p.ymax);
-			for (int ix = minix; ix <= maxix; ++ix) {
-				for (int iy = miniy; iy <= maxiy; ++iy) {
-					count += they[(ix * height) + iy].writeLinks(out, p);
-				}
-			}
-			return count;
-		}
-		
-		int writeLinks(OutputStream out, Polygon p) throws IOException {
-			int count = 0;
-			int minix = bucketX(p.xmin);
-			int maxix = bucketX(p.xmax);
-			int miniy = bucketY(p.ymin);
-			int maxiy = bucketY(p.ymax);
-			for (int ix = minix; ix <= maxix; ++ix) {
-				for (int iy = miniy; iy <= maxiy; ++iy) {
-					count += they[(ix * height) + iy].writeLinks(out, p);
-				}
-			}
-			return count;
-		}
-		
-		public int mapLinks(SetLink out, Polygon p) {
-			int minix = bucketX(p.xmin);
-			int maxix = bucketX(p.xmax);
-			int miniy = bucketY(p.ymin);
-			int maxiy = bucketY(p.ymax);
-			int count = 0;
-			for (int ix = minix; ix <= maxix; ++ix) {
-				for (int iy = miniy; iy <= maxiy; ++iy) {
-					count += they[(ix * height) + iy].mapLinks(out, p);
-				}
-			}
-			return count;
-		}
-		
-		void add(Polygon p) {
-			int minix = bucketX(p.xmin);
-			int maxix = bucketX(p.xmax);
-			int miniy = bucketY(p.ymin);
-			int maxiy = bucketY(p.ymax);
-			for (int ix = minix; ix <= maxix; ++ix) {
-				for (int iy = miniy; iy <= maxiy; ++iy) {
-					they[(ix * height) + iy].add(p);
-				}
-			}
-		}
-	}
-	
 	public static class RasterizationOptions {
 		public double minx = Double.NaN;
 		public double miny = Double.NaN;
@@ -369,19 +147,47 @@ public class ShapefileBundle {
 		public double maxy = Double.NaN;
 		public int xpx = -1;
 		public int ypx = -1;
+		String maskOutName;
+		String rastOut;
+		boolean outline;
 		
-		public void setBoundsFromShapefile(ShapefileBundle shp, boolean override) {
+		public String toString() {
+			return "RasterizationOptions(" + minx + "<x<" + maxx + ", " + miny + "<y<" + maxy + ", px=(" + xpx + "," + ypx + "))";
+		}
+		/**
+		 * Bound will become the greater of this and shp.
+		 * @param shp
+		 * @throws IOException
+		 */
+		public void increaseBoundsFromShapefile(Shapefile shp) throws IOException {
+			Shapefile.Header header = shp.getHeader();
+			if (Double.isNaN(minx) || (minx > header.xmin)) {
+				minx = header.xmin;
+			}
+			if (Double.isNaN(miny) || (miny > header.ymin)) {
+				miny = header.ymin;
+			}
+			if (Double.isNaN(maxx) || (maxx < header.xmax)) {
+				maxx = header.xmax;
+			}
+			if (Double.isNaN(maxy) || (maxy < header.ymax)) {
+				maxy = header.ymax;
+			}
+		}
+		
+		public void setBoundsFromShapefile(Shapefile shp, boolean override) throws IOException {
+			Shapefile.Header header = shp.getHeader();
 			if (override || Double.isNaN(minx)) {
-				minx = shp.shp.header.xmin;
+				minx = header.xmin;
 			}
 			if (override || Double.isNaN(miny)) {
-				miny = shp.shp.header.ymin;
+				miny = header.ymin;
 			}
 			if (override || Double.isNaN(maxx)) {
-				maxx = shp.shp.header.xmax;
+				maxx = header.xmax;
 			}
 			if (override || Double.isNaN(maxy)) {
-				maxy = shp.shp.header.ymax;
+				maxy = header.ymax;
 			}
 		}
 		
@@ -485,453 +291,115 @@ public class ShapefileBundle {
 		}
 	}
 
-	/**
-	 * An ESRI Shapefile Polygon (type 5) object.
-	 * Knows how to rasterize itself.
-	 * @author Brian Olson
-	 *
-	 */
-	static class Polygon {
-		public double xmin, xmax, ymin, ymax;
-		public int[] parts;
-		public double[] points;
-		public byte[] blockid;
-		boolean isWater = false;
-		
-		/**
-		 * Calls init.
-		 * @param data
-		 * @param offset
-		 * @param length
-		 * @see #init(byte[],int,int)
-		 */
-		public Polygon(byte[] data, int offset, int length) {
-			init(data, offset, length);
-		}
-		/**
-		 * Parse binary data into structure in memory.
-		 * @param data The bytes after the (numer,length) record header.
-		 * @param offset offset into data[]
-		 * @param length number of bytes in record
-		 */
-		public void init(byte[] data, int offset, int length) {
-			int pos = 0;
-			int type = bytesToIntLE(data, pos); pos += 4;
-			assert(type == 5);
-			xmin = bytesToDoubleLE(data, pos); pos += 8;
-			ymin = bytesToDoubleLE(data, pos); pos += 8;
-			xmax = bytesToDoubleLE(data, pos); pos += 8;
-			ymax = bytesToDoubleLE(data, pos); pos += 8;
-			int numParts = bytesToIntLE(data, pos); pos += 4;
-			int numPoints = bytesToIntLE(data, pos); pos += 4;
-			parts = new int[numParts];
-			points = new double[numPoints*2];
-			for (int i = 0; i < numParts; ++i) {
-				parts[i] = bytesToIntLE(data, pos);
-				pos += 4;
-			}
-			for (int i = 0; i < numPoints * 2; ++i) {
-				points[i] = bytesToDoubleLE(data, pos);
-				pos += 8;
-			}
-			assert(pos == length);
-			assert(isConsistent());
-		}
-		/**
-		 * Check that all point are within min-max and that loops are closed.
-		 * @return true if all is well
-		 */
-		public boolean isConsistent() {
-			for (int i = 0; i < parts.length; ++i) {
-				int start = parts[i];
-				int end;
-				if ((i + 1) < parts.length) {
-					end = parts[i+1] - 1;
-				} else {
-					end = (points.length / 2) - 1;
-				}
-				start *= 2;
-				end *= 2;
-				if (points[start] != points[end]) {
-					return false;
-				}
-				if (points[start + 1] != points[end + 1]) {
-					return false;
-				}
-			}
-			for (int i = 0; i < points.length; i += 2) {
-				if (points[i] > xmax) {
-					return false;
-				}
-				if (points[i] < xmin) {
-					return false;
-				}
-				if (points[i+1] > ymax) {
-					return false;
-				}
-				if (points[i+1] < ymin) {
-					return false;
-				}
-			}
-			return true;
-		}
-		
-		/**
-		 * Compare points lists, return true if two are shared.
-		 * TODO: this would be better if it were two <em>consecutive</em> points. OR, use per-county edge+face data for block adjacency.
-		 * @param b the other Polygon
-		 * @return true if both polygons have two points in common.
-		 */
-		public boolean hasTwoPointsInCommon(Polygon b) {
-			boolean haveOne = false;
-			for (int i = 0; i < points.length; i += 2) {
-				for (int j = 0; j < b.points.length; j += 2) {
-					if ((points[i] == b.points[j]) && (points[i+1] == b.points[j+1])) {
-						if (haveOne) {
-							return true;
-						}
-						haveOne = true;
-					}
-				}
-			}
-			return false;
-		}
-		
-		/*
-		 _____________ maxlat
-		 |   |   |   |
-		 -------------
-		 |   |   |   |
-		 ------------- minlat
-	  minlon       maxlon
-	 
-	 every pixel should be in exactly one triangle, based on the center of the pixel.
-	 The outer edges of the pixel image will be at the min/max points.
-	 */
-		
-		/** for some y, what is the next pixel center below that? */
-		static final int pcenterBelow(double somey, double maxy, double pixelHeight) {
-			return (int)Math.floor( ((maxy - somey) / pixelHeight) + 0.5 );
-		}
-		/** for some x, what is the next pixel center to the right? */
-		static final int pcenterRight(double somex, double minx, double pixelWidth) {
-			return (int)Math.floor( ((somex - minx) / pixelWidth) + 0.5 );
-		}
-		/** for some y, what is the nearest pixel center? */
-		static final int posToPixelY(double somey, double maxy, double pixelHeight) {
-			return (int)Math.round( ((maxy - somey) / pixelHeight) + 0.5 );
-		}
-		/** for some x, what is the nearest pixel center? */
-		static final int posToPixelX(double somex, double minx, double pixelWidth) {
-			return (int)Math.round( ((somex - minx) / pixelWidth) + 0.5 );
-		}
-		/** The y coordinate of the center of a pixel */
-		static final double pcenterY( int py, double maxy, double pixelHeight ) {
-			return maxy - ((py + 0.5) * pixelHeight);
-		}
-		/** The x coordinate of the center of a pixel */
-		static final double pcenterX( int px, double minx, double pixelWidth ) {
-			return minx + ((px + 0.5) * pixelWidth);
-		}
-		
-		/**
-		 * Scanning row at y, set x intercept for line segment (x1,y1)(x2,y2) in ctx. 
-		 * @param x1
-		 * @param y1
-		 * @param x2
-		 * @param y2
-		 * @param y
-		 * @param ctx
-		 */
-		static final void intersect( double x1, double y1, double x2, double y2, double y, RasterizationContext ctx) {
-			if ( y1 < y2 ) {
-				if ( (y < y1) || (y > y2) ) {
-					return;
-				}
-		    } else if ( y1 > y2 ) {
-		    	if ( (y > y1) || (y < y2) ) {
-		    		return;
-		    	}
-		    } else {
-		    	if ( y != y1 ) {
-		    		return;
-		    	}
-		    }
-		    double x = (x1-x2) * ((y-y2) / (y1-y2)) + x2;
-		    if ( x1 < x2 ) {
-		    	if ( (x < x1) || (x > x2) ) {
-		    		return;
-		    	}
-		    } else if ( x1 > x2 ) {
-		    	if ( (x > x1) || (x < x2) ) {
-		    		return;
-		    	}
-		    } else {
-		    	if ( x != x1 ) {
-		    		return;
-		    	}
-		    }
-		    int i = ctx.xIntersects;
-			// insert sort
-		    while (i > 0) {
-		    	if (x < ctx.xIntersectScratch[i-1]) {
-		    		ctx.xIntersectScratch[i] = ctx.xIntersectScratch[i-1];
-		    		--i;
-				} else if (x == ctx.xIntersectScratch[i-1]) {
-					// don't double-add a duplicate
-					// TODO: epsilon of 1/2 or 1/4 pixel size?
-					// TODO: if this is a point /\ or \/, drop it.
-					return;
-		    	} else {
-		    		break;
-		    	}
-		    }
-		    ctx.xIntersectScratch[i] = x;
-		    ctx.xIntersects++;
-		}
-		
-		/**
-		 * Calculate which pixels (pixel centers) this polygon covers.
-		 * RasterizationContext.pxPos should probably be 0 before entering this function,
-		 * unless you want to run pixels from multiple polygons together.
-		 * 
-		 * Top left pixel is (0,0), but geometry coordinates have bottom left (0,0), so
-		 * Y is inverted throughout.
-		 * 
-		 * @param ctx geometry comes in here, scratch space for x intercepts, pixels out
-		 * @return list of x,y pairs of pixels that this polygon rasterizes to (left in ctx)
-		 */
-		public void rasterize(RasterizationContext ctx) {
-			// double imMinx, double imMaxy, double pixelHeight, double pixelWidth, int ypx, int xpx
-			// Pixel 0,0 is top left at minx,maxy
-			double rymax = ymax;
-			if (rymax > ctx.maxy){
-				rymax = ctx.maxy;
-			}
-			int py = pcenterBelow(ymax, ctx.maxy, ctx.pixelHeight);
-			if (py < 0) {
-				py = 0;
-			}
-			double y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
-
-			if (ctx.xIntersectScratch.length < (points.length / 2)) {
-				// on the crazy outside limit, we intersect with all of the line segments, or something.
-				ctx.xIntersectScratch = new double[points.length / 2];
-			}
-
-			// for each scan row that fits within this polygon and the greater context...
-			while ((y >= ymin) && (py < ctx.ypx)) {
-				ctx.xIntersects = 0;
-				// Intersect each loop of lines at current scan line.
-				for (int parti = 0; parti < parts.length; ++parti) {
-					int partend;
-					if (parti + 1 < parts.length) {
-						partend = parts[parti+1] - 1;
-					} else {
-						partend = (points.length / 2) - 1;
-					}
-					for (int pointi = parts[parti]; pointi < partend; ++pointi) {
-						intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
-					}
-				}
-				//assert(ctx.xIntersects > 0);
-				if (ctx.xIntersects % 2 != 0) {
-					System.err.println("mismatch in line segments intersecting y=" + y);
-					System.err.println(this.toString());
-					// Re-run and emit debug messages
-					ctx.xIntersects = 0;
-					int oldIntersects = ctx.xIntersects;
-					for (int parti = 0; parti < parts.length; ++parti) {
-						int partend;
-						if (parti + 1 < parts.length) {
-							partend = parts[parti+1] - 1;
-						} else {
-							partend = (points.length / 2) - 1;
-						}
-						for (int pointi = parts[parti]; pointi < partend; ++pointi) {
-							intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
-							if (ctx.xIntersects != oldIntersects) {
-								System.err.print("hit: (" + points[pointi*2] + ", " + points[pointi*2 + 1] + "),(" + points[pointi*2 + 2] + ", " + points[pointi*2 + 3] + ") x = [" + ctx.xIntersectScratch[0]);
-								for (int xi = 1; xi < ctx.xIntersects; ++xi) {
-									System.err.print(", " + ctx.xIntersectScratch[xi]);
-								}
-								System.err.println("]");
-								oldIntersects = ctx.xIntersects;
-							}
-						}
-					}
-					assert(ctx.xIntersects % 2 == 0);
-					// if asserts are off, try to continue somewhat reasonably
-					py++;
-					y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
-					continue;
-				}
-				
-				// For all start-stop pairs, draw pixels from start edge to end edge
-				for (int xi = 0; xi < ctx.xIntersects; xi += 2) {
-					int px = pcenterRight(ctx.xIntersectScratch[xi], ctx.minx, ctx.pixelWidth);
-					if (px < 0) {
-						px = 0;
-					}
-					double x = pcenterX(px, ctx.minx, ctx.pixelWidth);
-					// Draw pixels from start edge to end edge
-					while ((x < ctx.xIntersectScratch[xi+1]) && (px < ctx.xpx)) {
-						ctx.addPixel(px, py);
-						px++;
-						x = pcenterX(px, ctx.minx, ctx.pixelWidth);
-					}
-				}
-				
-				py++;
-				y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
-			}
-		}
-		
-		/**
-		 * TODO: draw just the outline of the Polygon. Bresenham!
-		 * @param ctx Destination for pixels of the outline of the Polygon.
-		 */
-		public void drawEdges(RasterizationContext ctx) {
-			for (int parti = 0; parti < parts.length; ++parti) {
-				// for each loop of lines...
-				int partend;
-				if (parti + 1 < parts.length) {
-					partend = parts[parti+1] - 1;
-				} else {
-					partend = (points.length / 2) - 1;
-				}
-				for (int pointi = parts[parti]; pointi < partend; ++pointi) {
-					// for each line in each loop, draw it
-					bresenham(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], ctx);
-				}
-			}
-		}
-		
-		public static void bresenham(double x0, double y0, double x1, double y1, RasterizationContext ctx) {
-			bresenham(
-					/*
-					posToPixelX(x0, ctx.minx, ctx.pixelWidth),
-					posToPixelY(y0, ctx.maxy, ctx.pixelHeight),
-					posToPixelX(x1, ctx.minx, ctx.pixelWidth),
-					posToPixelY(y1, ctx.maxy, ctx.pixelHeight),
-					*/
-					pcenterRight(x0, ctx.minx, ctx.pixelWidth),
-					pcenterBelow(y0, ctx.maxy, ctx.pixelHeight),
-					pcenterRight(x1, ctx.minx, ctx.pixelWidth),
-					pcenterBelow(y1, ctx.maxy, ctx.pixelHeight),
-
-					ctx
-					);
-		}
-		public static void bresenham(int x0, int y0, int x1, int y1, RasterizationContext ctx) {
-			/* http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
-			 function line(x0, x1, y0, y1)
-			     boolean steep := abs(y1 - y0) > abs(x1 - x0)
-			     if steep then
-			         swap(x0, y0)
-			         swap(x1, y1)
-			     if x0 > x1 then
-			         swap(x0, x1)
-			         swap(y0, y1)
-			     int deltax := x1 - x0
-			     int deltay := abs(y1 - y0)
-			     int error := deltax / 2
-			     int ystep
-			     int y := y0
-			     if y0 < y1 then ystep := 1 else ystep := -1
-			     for x from x0 to x1
-			         if steep then plot(y,x) else plot(x,y)
-			         error := error - deltay
-			         if error < 0 then
-			             y := y + ystep
-			             error := error + deltax
-						 */
-			boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
-			if (steep) {
-				// "x" is the steep axis that always increments, "y" sometimes increments.
-				int t = x0;
-				x0 = y0;
-				y0 = t;
-				t = x1;
-				x1 = y1;
-				y1 = t;
-			}
-			if (x0 > x1) {
-				int t = x0;
-				x0 = x1;
-				x1 = t;
-				t = y0;
-				y0 = y1;
-				y1 = t;
-			}
-			int deltax = x1 - x0;
-			int deltay = Math.abs(y1 - y0);
-			int error = deltax / 2;
-			int y = y0;
-			int ystep = (y0 < y1) ? 1 : -1;
-			for (int x = x0; x <= x1; x++) {
-				if (steep) {
-					ctx.addPixel(y, x);
-				} else {
-					ctx.addPixel(x, y);
-				}
-				error -= deltay;
-				if (error < 0) {
-					y += ystep;
-					error += deltax;
-				}
-			}
-		}
-		
-		public String toString() {
-			StringBuffer out = new StringBuffer("(Polygon ");
-			out.append(xmin);
-			out.append("<=x<=");
-			out.append(xmax);
-			out.append(' ');
-			out.append(ymin);
-			out.append("<=y<=");
-			out.append(ymax);
-			int part = 0;
-			int pos = parts[part];
-			part++;
-			while (part < parts.length) {
-				out.append(" (");
-				out.append(points[pos*2]);
-				out.append(',');
-				out.append(points[pos*2 + 1]);
-				pos++;
-				while (pos != parts[part]) {
-					out.append(' ');
-					out.append(points[pos*2]);
-					out.append(',');
-					out.append(points[pos*2 + 1]);
-					pos++;
-				}
-				out.append(')');
-				part++;
-			}
-			// last/only part
-			out.append(" (");
-			out.append(points[pos*2]);
-			out.append(',');
-			out.append(points[pos*2 + 1]);
-			pos++;
-			while (pos*2 < points.length) {
-				out.append(' ');
-				out.append(points[pos*2]);
-				out.append(',');
-				out.append(points[pos*2 + 1]);
-				pos++;
-			}
-			out.append("))");
-			return out.toString();
-		}
-	}
+	ZipFile bundle = null;
 	Shapefile shp = null;
 	DBase dbf = null;
-	ArrayList<Polygon> polys = new ArrayList<Polygon>();
-	PolygonBucketArray pba = null;
+	//ArrayList<Polygon> polys = new ArrayList<Polygon>();
+	//PolygonBucketArray pba = null;
+	
+	public static class PolygonLinker implements PolygonProcessor {
+		PolygonBucketArray pba = null;
+		String linksOut = null;
+		boolean tree;
+		int threads;
+
+		PolygonLinker(Shapefile shp, String linksOut, boolean tree, int threads) throws IOException {
+			pba = new PolygonBucketArray(shp, 20, 20);
+			this.linksOut = linksOut;
+			this.tree = tree;
+			this.threads = threads;
+		}
+		
+		void growForShapefile(Shapefile shp) throws IOException {
+			pba.growBoundsForShapefile(shp);
+		}
+		
+		@Override
+		public void process(Polygon p) {
+			pba.add(p);
+		}
+		
+		public void finish() throws IOException {
+			pba.doLinks(linksOut, tree, threads);
+		}
+
+		@Override
+		public String name() {
+			return "linking";
+		}
+	}
+	
+	public static class PolygonRasterizer implements PolygonProcessor {
+		RasterizationOptions rastOpts;
+		BufferedImageRasterizer.Options birOpts;
+		RasterizationContext ctx = null;
+		PolygonDrawMode drawMode = null;
+		ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
+		BufferedImage maskImage = null;
+		OutputStream maskOutput = null;
+		FileOutputStream fos = null;
+		GZIPOutputStream gos = null;
+		MapRasterizationReceiver mrr = null;
+		
+		@Override
+		public void process(Polygon p) {
+			ctx.pxPos = 0;
+			drawMode.draw(p, ctx);
+			for (RasterizationReciever rr : outputs) {
+				rr.setRasterizedPolygon(ctx, p);
+			}
+		}
+		
+		public PolygonRasterizer(RasterizationOptions rastOpts) throws IOException {
+			this.rastOpts = rastOpts;
+			ctx = new RasterizationContext(rastOpts);
+			assert rastOpts.xpx > 0;
+			assert rastOpts.ypx > 0;
+			
+			if (rastOpts.maskOutName != null) {
+				log.info("will make mask \"" + rastOpts.maskOutName + "\"");
+				log.info("x=" + rastOpts.xpx + " y=" + rastOpts.ypx);
+				maskImage = new BufferedImage(rastOpts.xpx, rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
+				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage, birOpts);
+				outputs.add(bir);
+				maskOutput = new FileOutputStream(rastOpts.maskOutName);
+			}
+			
+			if (rastOpts.rastOut != null) {
+				log.info("will make rast data \"" + rastOpts.rastOut + "\"");
+				fos = new FileOutputStream(rastOpts.rastOut);
+				gos = new GZIPOutputStream(fos);
+				mrr = new MapRasterizationReceiver();
+				outputs.add(mrr);
+			}
+			
+			drawMode = PolygonFillRasterize.singleton;
+			if (rastOpts.outline) {
+				drawMode = PolygonDrawEdges.singleton;
+			}
+			for (RasterizationReciever rr : outputs) {
+				rr.setSize(rastOpts.xpx, rastOpts.ypx);
+			}
+		}
+		public void finish() throws IOException {
+			if (mrr != null && gos != null && fos != null) {
+				Redata.MapRasterization mr = mrr.rastb.build();
+				mr.writeTo(gos);
+				gos.flush();
+				fos.flush();
+				gos.close();
+				fos.close();
+			}
+			if (maskOutput != null && maskImage != null) {
+				MapCanvas.writeBufferedImageAsPNG(maskOutput, maskImage);
+			}
+		}
+
+		@Override
+		public String name() {
+			return "rasterization";
+		}
+	}
 	
 	public static final long blockidToUbid(byte[] blockid) {
 		if (blockid.length <= 19) {
@@ -962,11 +430,7 @@ public class ShapefileBundle {
 		}
 		return new String(blockid, start, end);
 	}
-	
-	int blocklimit = 0x7fffffff;
-	public boolean outline = false;
-	private RasterizationOptions rastOpts;
-	
+
 	public interface RasterizationReciever {
 		/**
 		 * Set the size of the total rasterization we are about to make.
@@ -1177,59 +641,29 @@ public class ShapefileBundle {
 		/** Only use the singleton */
 		private PolygonFillRasterize() {}
 	}
-	
-	public void makeRasterization(Iterable<RasterizationReciever> they, PolygonDrawMode drawMode) {
-		RasterizationContext ctx = new RasterizationContext(rastOpts);
-		assert rastOpts.xpx > 0;
-		assert rastOpts.ypx > 0;
-		for (RasterizationReciever rr : they) {
-			rr.setSize(rastOpts.xpx, rastOpts.ypx);
-		}
-		int percent = -1;
-		int psize = polys.size();
-		for (int i = 0; i < psize; ++i) {
-			Polygon p = polys.get(i);
-			{
-				int newPercent = (i * 100) / psize;
-				if (newPercent != percent) {
-					percent = newPercent;
-					log.fine(Integer.toString(percent) + "%");
-				}
-			}
-			ctx.pxPos = 0;
-			drawMode.draw(p, ctx);
-			for (RasterizationReciever rr : they) {
-				rr.setRasterizedPolygon(ctx, p);
-			}
-			if (--blocklimit < 0) {
-				break;
-			}
-		}
-	}
-	
+
 	/**
-	 * Read shapefile bundle from foo.zip
+	 * Open shapefile bundle from foo.zip
+	 * Leaves things ready to read headers, but body not processed.
 	 * @param filename
 	 * @throws IOException
 	 */
-	public void read(String filename) throws IOException {
+	public void open(String filename) throws IOException {
 		int lastSlash = filename.lastIndexOf('/');
 		assert(filename.endsWith(".zip"));
 		String nameroot = filename.substring(lastSlash+1, filename.length() - 4);
 		
-		ZipFile f = new ZipFile(filename);
-		ZipEntry shpEntry = f.getEntry(nameroot + ".shp");
+		bundle = new ZipFile(filename);
+		ZipEntry shpEntry = bundle.getEntry(nameroot + ".shp");
 		assert(shpEntry != null);
-		InputStream shpIs = f.getInputStream(shpEntry);
-		InputStream dbfIs = f.getInputStream(f.getEntry(nameroot + ".dbf"));
+		InputStream shpIs = bundle.getInputStream(shpEntry);
+		InputStream dbfIs = bundle.getInputStream(bundle.getEntry(nameroot + ".dbf"));
 		
 		shp = new Shapefile();
 		shp.setInputStream(shpIs);
 		
 		dbf = new DBase();
 		dbf.setInputStream(new DataInputStream(dbfIs));
-		read(shp, dbf);
-		f.close();
 	}
 	
 	public static class CompositeDBaseField extends DBaseFieldDescriptor {
@@ -1259,16 +693,17 @@ public class ShapefileBundle {
 			return outOffset;
 		}
 	}
-		
+	
 	/**
 	 * Read a Shapefile and DBase pair.
 	 * Loads all the polygons from the Shapefile and identifiers from the 
 	 * corresponding records in the DBase file.
 	 * @param shp
 	 * @param dbf
+	 * @return 
 	 * @throws IOException
 	 */
-	public void read(Shapefile shp, DBase dbf) throws IOException {
+	public int read(Iterable<PolygonProcessor> pps) throws IOException {
 		// BLKIDFP part of tabblock
 		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
 		if (blockIdField == null) {
@@ -1318,11 +753,11 @@ public class ShapefileBundle {
 			log.fine("landArea=" + landArea);
 		}
 		
+		int count = 0;
 		Polygon p = shp.next();
-		
-		pba = new PolygonBucketArray(shp, 20, 20);
 
 		while (p != null) {
+			count++;
 			byte[] rowbytes = dbf.next();
 			if (blockIdField != null) {
 				assert(rowbytes != null);
@@ -1343,30 +778,17 @@ public class ShapefileBundle {
 					p.isWater = true;
 				}
 			}
-			polys.add(p);
-			pba.add(p);
-			//System.out.println(p);
+			for (PolygonProcessor pp : pps) {
+				pp.process(p);
+			}
 			p = shp.next();
 		}
 		// TODO: assert that polys and dbf are both empty at the end.
+		return count;
 	}
 	public int records() {
 		assert(shp.recordCount == dbf.readCount);
 		return shp.recordCount;
-	}
-	public int printLinks(Writer out) throws IOException {
-		int count = 0;
-		for (Polygon p : polys) {
-			count += pba.writeLinks(out, p);
-		}
-		return count;
-	}
-	public int printLinks(OutputStream out) throws IOException {
-		int count = 0;
-		for (Polygon p : polys) {
-			count += pba.writeLinks(out, p);
-		}
-		return count;
 	}
 	
 	public static class SynchronizingSetLink implements SetLink {
@@ -1383,63 +805,7 @@ public class ShapefileBundle {
 			return x;
 		}
 	}
-	public static class MapLinkThread implements Runnable {
-		Iterator<Polygon> polys;
-		SetLink out;
-		PolygonBucketArray pba;
-		public int count = 0;
-		
-		public MapLinkThread(Iterator<Polygon> source, SetLink dest, PolygonBucketArray data) {
-			polys = source;
-			out = dest;
-			pba = data;
-		}
-		
-		//@Override // javac 1.5 doesn't like this
-		public void run() {
-			while (true) {
-				Polygon p = null;
-				synchronized (polys) {
-					if (!polys.hasNext()) {
-						return;
-					}
-					p = polys.next();
-				}
-				count += pba.mapLinks(out, p);
-			}
-		}
-	}
-	public int mapLinks(SetLink out, int threads) {
-		int count = 0;
-		MapLinkThread[] linkers = new MapLinkThread[threads];
-		Thread[] runners = new Thread[threads];
-		SetLink sout = new SynchronizingSetLink(out);
-		Iterator<Polygon> pi = polys.iterator();
-		for (int i = 0; i < threads; ++i) {
-			linkers[i] = new MapLinkThread(pi, sout, pba);
-			runners[i] = new Thread(linkers[i]);
-			runners[i].start();
-		}
-		for (int i = 0; i < threads; ++i) {
-			try {
-				runners[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			count += linkers[i].count;
-		}
-		return count;
-	}
 
-	// TODO: check for whole-map contiguity, add fix-up links.
-	// Or I could just leave that to be done in the existing C++ tool.
-	public int mapLinks(SetLink out) {
-		int count = 0;
-		for (Polygon p : polys) {
-			count += pba.mapLinks(out, p);
-		}
-		return count;
-	}
 	public static void writeLink(Writer out, Polygon a, Polygon b) throws IOException {
 		int c = cmp(a.blockid, b.blockid);
 		if (c < 0) {
@@ -1488,38 +854,6 @@ public class ShapefileBundle {
 		}
 	}
 
-	public void doLinks(String linksOut, boolean tree, int threads) throws IOException {
-		long start = System.currentTimeMillis();
-		Map<byte[], Set<byte[]> > links;
-		if (tree) {
-			links = new TreeMap<byte[], Set<byte[]> >(new BlockIdComparator());
-		} else {
-			links = new HashMap<byte[], Set<byte[]> >();
-		}
-		int linksMapped;
-		if (threads > 1) {
-			linksMapped = mapLinks(new MapSetLinkWrapper(links), threads);
-		} else {
-			linksMapped = mapLinks(new MapSetLinkWrapper(links));
-		}
-		long end = System.currentTimeMillis();
-		log.info("calculated " + linksMapped + " links in " + ((end - start) / 1000.0) + " seconds, links.size()=" + links.size());
-		start = end;
-		OutputStream out = new FileOutputStream(linksOut);
-		int linkCount = 0;
-		for (byte[] key : links.keySet()) {
-			for (byte[] value : links.get(key)) {
-				linkCount++;
-				out.write(key);
-				out.write(',');
-				out.write(value);
-				out.write('\n');
-			}
-		}
-		out.close();
-		end = System.currentTimeMillis();
-		log.info("wrote " + linkCount + " links in " + ((end - start) / 1000.0) + " seconds");
-	}
 public static final String usage =
 "--links outname.links\n" +
 "--rast outname.mppb\n" +
@@ -1533,40 +867,48 @@ public static final String usage =
 "tl_2009_09_tabblock00.zip\n";
 	
 	public static void main(String[] argv) throws IOException {
+		// java.util.logging seems to require some stupid setup.
+		java.util.logging.Logger plog = log;
+		boolean noHandlerSetAll = true;
+		while (plog != null) {
+			//System.out.println(plog.toString());
+			for (java.util.logging.Handler h : plog.getHandlers()) {
+				//System.out.println(h);
+				h.setLevel(Level.ALL);
+				noHandlerSetAll = false;
+			}
+			plog = plog.getParent();
+		}
+		if (noHandlerSetAll) {
+			java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
+			ch.setLevel(Level.ALL);
+			log.addHandler(ch);
+		}
+		
 		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
 		boolean tree = true;
-		//int px = -1;int py = -1;
 		int boundx = 1920;
 		int boundy = 1080;
-		String inname = null;
+		ArrayList<String> inputPaths = new ArrayList<String>();
 		String linksOut = null;
-		String rastOut = null;
-		String maskOutName = null;
 		int threads = 3;
-		//boolean colorMask = false;
-		boolean outline = false;
 		RasterizationOptions rastOpts = new RasterizationOptions();
 		BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
 		
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
-				if (inname != null) {
-					System.err.println("only one input allowed, already had: " + inname);
-					System.exit(1);
-					return;
-				}
-				inname = argv[i];
+				inputPaths.add(argv[i]);
 			} else if (argv[i].equals("--links")) {
 				i++;
 				linksOut = argv[i];
 			} else if (argv[i].equals("--rast")) {
 				i++;
-				rastOut = argv[i];
+				rastOpts.rastOut = argv[i];
 			} else if (argv[i].equals("--color-mask")) {
 				birOpts.colorMask = true;
 			} else if (argv[i].equals("--mask")) {
 				i++;
-				maskOutName = argv[i];
+				rastOpts.maskOutName = argv[i];
 			} else if (argv[i].equals("--threads")) {
 				i++;
 				threads = Integer.parseInt(argv[i]);
@@ -1591,7 +933,7 @@ public static final String usage =
 				i++;
 				rastOpts.maxy = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--outline")) {
-				outline = true;
+				rastOpts.outline = true;
 			} else if (argv[i].equals("--verbose")) {
 				log.setLevel(Level.FINEST);
 				//log.info(log.getLevel().toString());
@@ -1603,76 +945,65 @@ public static final String usage =
 			}
 		}
 
-		if (inname == null) {
+		if (inputPaths.size() == 0) {
 			System.err.println("no input shapefile zip bundle specified");
 			System.err.print(usage);
 			System.exit(1);
 		}
 		
-		ShapefileBundle x = new ShapefileBundle();
-		x.outline  = outline;
 		long start = System.currentTimeMillis();
-		x.read(inname);
-		long end = System.currentTimeMillis();
-		log.info("read " + x.records() + " in " + ((end - start) / 1000.0) + " seconds");
-		start = end;
+		ArrayList<ShapefileBundle> bundles = new ArrayList<ShapefileBundle>();
+		for (String path : inputPaths) {
+			ShapefileBundle x = new ShapefileBundle();
+			x.open(path);
+			bundles.add(x);
+		}
+		ArrayList<PolygonProcessor> pps = new ArrayList<PolygonProcessor>();
 		if (linksOut != null) {
 			log.info("calculating links");
-			x.doLinks(linksOut, tree, threads);
-			end = System.currentTimeMillis();
-			log.info("done in " + ((end - start) / 1000.0) + " seconds");
-			start = end;
+			PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads);
+			for (int i = 1; i < bundles.size(); ++i) {
+				linker.growForShapefile(bundles.get(i).shp);
+			}
+			pps.add(linker);
 		}
-		if ((rastOut != null) || (maskOutName != null)) {
+		if ((rastOpts.rastOut != null) || (rastOpts.maskOutName != null)) {
 			log.info("rasterizing");
-			x.rastOpts = rastOpts;
-			x.rastOpts.setBoundsFromShapefile(x, false);
-			x.rastOpts.updatePixelSize(boundx, boundy);
-			
-			ArrayList<RasterizationReciever> outputs = new ArrayList<RasterizationReciever>();
-			
-			BufferedImage maskImage = null;
-			OutputStream maskOutput = null;
-			if (maskOutName != null) {
-				log.info("will make mask \"" + maskOutName + "\"");
-				log.info("x=" + x.rastOpts.xpx + " y=" + x.rastOpts.ypx);
-				maskImage = new BufferedImage(x.rastOpts.xpx, x.rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
-				BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage, birOpts);
-				outputs.add(bir);
-				maskOutput = new FileOutputStream(maskOutName);
+			rastOpts.increaseBoundsFromShapefile(bundles.get(0).shp);
+			for (int i = 1; i < bundles.size(); ++i) {
+				log.log(Level.FINE, "pre : {0}", rastOpts);
+				rastOpts.increaseBoundsFromShapefile(bundles.get(i).shp);
+				log.log(Level.FINE, "post: {0}", rastOpts);
 			}
-			
-			FileOutputStream fos = null;
-			GZIPOutputStream gos = null;
-			MapRasterizationReceiver mrr = null;
-			if (rastOut != null) {
-				log.info("will make rast data \"" + rastOut + "\"");
-				fos = new FileOutputStream(rastOut);
-				gos = new GZIPOutputStream(fos);
-				mrr = new MapRasterizationReceiver();
-				outputs.add(mrr);
-			}
-			
-			PolygonDrawMode mode = PolygonFillRasterize.singleton;
-			if (outline) {
-				mode = PolygonDrawEdges.singleton;
-			}
-			x.makeRasterization(outputs, mode);
-			
-			if (mrr != null && gos != null && fos != null) {
-				Redata.MapRasterization mr = mrr.rastb.build();
-				mr.writeTo(gos);
-				gos.flush();
-				fos.flush();
-				gos.close();
-				fos.close();
-			}
-			if (maskOutput != null && maskImage != null) {
-				MapCanvas.writeBufferedImageAsPNG(maskOutput, maskImage);
-			}
-			end = System.currentTimeMillis();
-			log.info("rasterized and written in " + ((end - start) / 1000.0) + " seconds");
-			start = end;
+			rastOpts.updatePixelSize(boundx, boundy);
+			log.info(rastOpts.toString());
+			pps.add(new PolygonRasterizer(rastOpts));
 		}
+		long end = System.currentTimeMillis();
+		log.info("setup done in " + ((end - start) / 1000.0) + " seconds");
+		start = end;
+		int count = 0;
+		for (ShapefileBundle x : bundles) {
+			log.info("processing " + x.toString());
+			count += x.read(pps);
+		}
+		end = System.currentTimeMillis();
+		log.info("read " + count + " in " + ((end - start) / 1000.0) + " seconds");
+		start = end;
+		for (PolygonProcessor pp : pps) {
+			try {
+				log.log(Level.INFO, "finishing {0}...", pp.name());
+				pp.finish();
+				end = System.currentTimeMillis();
+				log.info(pp.name() + " finished in " + ((end - start) / 1000.0) + " seconds");
+				start = end;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public String toString() {
+		return bundle.getName();
 	}
 }

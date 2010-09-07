@@ -8,7 +8,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.bolson.redistricter.ShapefileBundle.Polygon;
 
 class Shapefile {
 	static class Header {
@@ -68,6 +67,14 @@ class Shapefile {
 		} else {
 			this.in = new DataInputStream(in);
 		}
+	}
+	public Header getHeader() throws IOException {
+		if (header != null) {
+			return header;
+		}
+		header = new Header();
+		header.read(in);
+		return header;
 	}
 	public Polygon next() throws IOException {
 		if (header == null) {
