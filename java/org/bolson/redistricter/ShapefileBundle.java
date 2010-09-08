@@ -12,9 +12,11 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -149,7 +151,8 @@ public class ShapefileBundle {
 		public int ypx = -1;
 		String maskOutName;
 		String rastOut;
-		boolean outline;
+		boolean outline = false;
+		boolean optimizePb = true;
 		
 		public String toString() {
 			return "RasterizationOptions(" + minx + "<x<" + maxx + ", " + miny + "<y<" + maxy + ", px=(" + xpx + "," + ypx + "))";
@@ -369,7 +372,7 @@ public class ShapefileBundle {
 				log.info("will make rast data \"" + rastOpts.rastOut + "\"");
 				fos = new FileOutputStream(rastOpts.rastOut);
 				gos = new GZIPOutputStream(fos);
-				mrr = new MapRasterizationReceiver();
+				mrr = new MapRasterizationReceiver(rastOpts.optimizePb);
 				outputs.add(mrr);
 			}
 			
@@ -383,7 +386,7 @@ public class ShapefileBundle {
 		}
 		public void finish() throws IOException {
 			if (mrr != null && gos != null && fos != null) {
-				Redata.MapRasterization mr = mrr.rastb.build();
+				Redata.MapRasterization mr = mrr.getMapRasterization();
 				mr.writeTo(gos);
 				gos.flush();
 				fos.flush();
@@ -581,17 +584,173 @@ public class ShapefileBundle {
 	}
 	
 	/**
+	 * Efficient in-memory storage of MapRasterization.Block
+	 * @author bolson
+	 *
+	 */
+	public static class TemporaryBlockHolder implements Comparable<TemporaryBlockHolder> {
+		long ubid;
+		byte[] blockid;
+		int[] xy;
+		int[] water;
+
+		/** Header only, for hashCode lookup */
+		TemporaryBlockHolder(Polygon p) {
+			ubid = blockidToUbid(p.blockid);
+			if (ubid < 0) {
+				blockid = p.blockid.clone();
+			}
+		}
+		TemporaryBlockHolder(RasterizationContext ctx, Polygon p) {
+			ubid = blockidToUbid(p.blockid);
+			if (ubid < 0) {
+				blockid = p.blockid.clone();
+			}
+			setRast(ctx, p);
+		}
+		public void setRast(RasterizationContext ctx, Polygon p) {
+			if (p.isWater) {
+				water = new int[ctx.pxPos];
+				System.arraycopy(ctx.pixels, 0, water, 0, ctx.pxPos);
+			} else {
+				xy = new int[ctx.pxPos];
+				System.arraycopy(ctx.pixels, 0, xy, 0, ctx.pxPos);
+			}
+		}
+		
+		public static int[] growIntArray(int[] orig, int[] src, int morelen) {
+			if (orig == null) {
+				int[] out = new int[morelen];
+				System.arraycopy(out, 0, src, 0, morelen);
+				return out;
+			}
+			int[] nxy = new int[orig.length + morelen];
+			System.arraycopy(orig, 0, nxy, 0, orig.length);
+			System.arraycopy(src, 0, nxy, orig.length, morelen);
+			return nxy;
+		}
+		
+		public void add(RasterizationContext ctx, Polygon p) {
+			long tubid = blockidToUbid(p.blockid);
+			assert tubid == ubid;
+			if (ubid < 0) {
+				assert java.util.Arrays.equals(blockid, p.blockid);
+			}
+			if (p.isWater) {
+				water = growIntArray(water, ctx.pixels, ctx.pxPos);
+			} else {
+				xy = growIntArray(xy, ctx.pixels, ctx.pxPos);
+			}
+		}
+		
+		public int hashCode() {
+			if (ubid >= 0) {
+				return (int)ubid;
+			}
+			return blockid.hashCode();
+		}
+		
+		public boolean equals(Object o) {
+			if (ubid >= 0) {
+				return ubid == ((TemporaryBlockHolder)o).ubid;
+			}
+			return java.util.Arrays.equals(blockid, ((TemporaryBlockHolder)o).blockid);
+		}
+		
+		public Redata.MapRasterization.Block.Builder build() {
+			Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
+			if (ubid >= 0) {
+				bb.setUbid(ubid);
+			} else {
+				bb.setBlockid(ByteString.copyFrom(blockid));
+			}
+			if (water != null) {
+				for (int i = 0; i < water.length; ++i) {
+					bb.addWaterxy(water[i]);
+				}
+			}
+			if (xy != null) {
+				for (int i = 0; i < xy.length; ++i) {
+					bb.addXy(xy[i]);
+				}
+			}
+			return bb;
+		}
+		@Override
+		public int compareTo(TemporaryBlockHolder o) {
+			if (ubid >= 0) {
+				if (o.ubid >= 0) {
+					if (ubid < o.ubid) {
+						return -1;
+					}
+					if (ubid > o.ubid) {
+						return 1;
+					}
+					return 0;
+				} else {
+					throw new ClassCastException();
+				}
+			}
+			if (o.ubid >= 0) {
+				throw new ClassCastException();
+			}
+			for (int i = 0; i < blockid.length && i < o.blockid.length; ++i) {
+				if (blockid[i] < o.blockid[i]) {
+					return -1;
+				}
+				if (blockid[i] > o.blockid[i]) {
+					return 1;
+				}
+			}
+			if (blockid.length < o.blockid.length) {
+				return -1;
+			}
+			if (blockid.length > o.blockid.length) {
+				return 1;
+			}
+			return 0;
+		}
+	}
+	/**
 	 * Write pixels to a MapRasterization protobuf.
 	 * @author bolson
 	 * @see Redata.MapRasterization
 	 */
 	public static class MapRasterizationReceiver implements RasterizationReciever {
-		public Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
+		protected Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
+		TreeMap<TemporaryBlockHolder, TemporaryBlockHolder> blocks = null;
 		
+		MapRasterizationReceiver() {
+		}
+		/**
+		 * 
+		 * @param optimize Combine faces for the same block into one MapRasterization.Block structure,
+		 * producing a slightly smaller output. Increases memory usage proportional to the number of pixels rendered.
+		 * Only makes sense to set this when processing 'faces' data set, 'tabblock' doesn't need it.
+		 */
+		MapRasterizationReceiver(boolean optimize) {
+			if (optimize) {
+				blocks = new TreeMap<TemporaryBlockHolder, TemporaryBlockHolder>();
+			}
+		}
 		// @Override // one of my Java 1.5 doesn't like this
 		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
+			// TODO: (optionally) hold polygons in memory, hashed by ubid, aggregate by ubid
+			// It's currrently probably emitting many MapRasterization.Block objects per actual ubid block.
 			if (p.blockid != null) {
 				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
+				if (blocks != null) {
+					// Save for later.
+					TemporaryBlockHolder key = new TemporaryBlockHolder(p);
+					TemporaryBlockHolder tbh = blocks.get(key);
+					if (tbh == null) {
+						key.setRast(ctx, p);
+						blocks.put(key, key);
+					} else {
+						tbh.add(ctx, p);
+					}
+					return;
+				}
 				Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
 				long ubid = blockidToUbid(p.blockid);
 				if (ubid >= 0) {
@@ -620,6 +779,18 @@ public class ShapefileBundle {
 			rastb.setSizey(y);
 		}
 		
+		public Redata.MapRasterization getMapRasterization() {
+			if (blocks != null) {
+				while (!blocks.isEmpty()) {
+					TemporaryBlockHolder tb = blocks.firstKey();
+					assert tb != null;
+					rastb.addBlock(tb.build());
+					// To make a temporary free-able, remove it from the map.
+					blocks.remove(tb);
+				}
+			}
+			return rastb.build();
+		}
 	}
 	
 	public interface PolygonDrawMode {
@@ -934,6 +1105,8 @@ public static final String usage =
 				rastOpts.maxy = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--outline")) {
 				rastOpts.outline = true;
+			} else if (argv[i].equals("--simple-rast")) {
+				rastOpts.optimizePb = false;
 			} else if (argv[i].equals("--verbose")) {
 				log.setLevel(Level.FINEST);
 				//log.info(log.getLevel().toString());
