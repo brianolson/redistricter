@@ -446,6 +446,12 @@ class runallstates(object):
 		self.options = {}
 		# What is currently running
 		self.currentOps = {}
+		# number of errors that is allowed per ...
+		self.errorRate = 0
+		# number of last runs to count errors over
+		self.errorSample = 1
+		# array of int of length errorSample. 1=success. sum must be >= (errorSample - errorRate)
+		self.runSuccessHistory = []
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -524,6 +530,7 @@ class runallstates(object):
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
 		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
+		argp.add_option('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default=None, help='f/s checks the last (f+s) events and exits if >f are failures')
 		(options, args) = argp.parse_args()
 		self.options = options
 		if options.verbose:
@@ -563,7 +570,18 @@ class runallstates(object):
 			self.config_include.append(re.compile(pattern))
 		for pattern in options.config_exclude:
 			self.config_exclude.append(re.compile(pattern))
+		if options.failureRate:
+			(f,s) = options.failureRate.split('/')
+			self.errorRate = int(f)
+			self.errorSample = self.errorRate + int(s)
+			self.runSuccessHistory = [1 for x in xrange(self.errorSample)]
 
+	def logCompletion(self, succeede):
+		"""Log a result, return if we should quit."""
+		self.runSuccessHistory.append(succeede)
+		while len(self.runSuccessHistory) > self.errorSample:
+			self.runSuccessHistory.pop(0)
+		return sum(self.runSuccessHistory) < (self.errorSample - self.errorRate)
 
 	def checkSetup(self):
 		if self.exe is None:
@@ -763,12 +781,17 @@ class runallstates(object):
 			except:
 				pass
 			if p.returncode != 0:
+				# logCompletion mechanism allows for deferred script quit, 
+				# possibly after many intermittent failures which will all
+				# be logged here. I guess that's ok.
+				# TODO: present failures to web result server.
 				self.addStopReason("solver exited with status %d" % p.returncode)
 				if errorlines:
 					self.addStopReason('\n' + '\n'.join(errorlines))
 				sys.stderr.write(self.stopreason + '\n')
-				self.softfail = True
+				self.softfail = self.logCompletion(0)
 				return False
+			self.logCompletion(1)
 			fin = open(statlog, "r")
 			fout = open(statsum, "w")
 			for line in fin:
