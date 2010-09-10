@@ -3,6 +3,9 @@
 
 #include <pthread.h>
 
+// standalone function for passing to pthread_create
+void* PreThread_func( void* arg );
+
 class PreThread {
 protected:
 	pthread_t thread;

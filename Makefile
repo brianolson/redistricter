@@ -9,6 +9,15 @@ jall:	tools.jar
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze tools.jar
 
 
+# Enable clang
+#CC=/Users/bolson/psrc/llvm/llvm/Debug+Asserts/bin/clang -emit-llvm
+#CXX=/Users/bolson/psrc/llvm/llvm/Debug+Asserts/bin/clang -emit-llvm
+#LDFLAGS+=-L/usr/lib/gcc/i686-apple-darwin10/4.2.1 -lstdc++
+#CXXLD=/Users/bolson/psrc/llvm/llvm/Debug+Asserts/bin/llvm-ld
+
+# Not clang
+CXXLD=${CXX} ${CXXFLAGS}
+
 #OG:=-O2 -DNDEBUG=1
 OG?=-g
 #OG:=-g -pg
@@ -49,7 +58,8 @@ D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cp
 
 THINGSTOCLEAN+=${D2OBJS}
 districter2:	$(D2OBJS)
-	$(CXX) $(D2OBJS) $(LDFLAGS) ${CXXFLAGS} -o districter2
+	$(CXXLD) $(D2OBJS) $(LDFLAGS) -o districter2
+
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
 #districter2:	 District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp
 #	${CXX} -o districter2 ${CXXFLAGS} District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp ${LDFLAGS}
