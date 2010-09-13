@@ -310,7 +310,7 @@ class StateData(object):
 		logging.info('fetch "%s" -> "%s"', url, localpath)
 		urllib.urlretrieve(url, localpath)
 		return localpath
-
+	
 	def makeUf101(self, geozip, uf101, dpath=None):
 		"""From xxgeo_uf1.zip, distill the 101 (block level) geopgraphic
 		summary file xx101.uf1 ."""
@@ -512,7 +512,7 @@ class StateData(object):
 		if not os.path.exists(linksname):
 			print 'need %s' % linksname
 			if edgesPaths and facesPaths:
-				lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname])
+				lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
 				commands.append(lecmd)
 			else:
 				linksargs = ['--links', linksname]
@@ -546,25 +546,25 @@ class StateData(object):
 				command = shapefile.makeCommand(
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
+		if not os.path.exists(mppbsm_name):
+			print 'need %s' % mppbsm_name
+			smargs = ['--rast', mppbsm_name, '--mask', masksm_name,
+				'--boundx', '640', '--boundy', '480']
+			if facesPaths:
+				smargs = smargs + facesPaths
+			else:
+				smargs.append(bestzip)
+			command = shapefile.makeCommand(smargs,
+				self.options.bindir, self.options.strict)
+			commands.append(command)
 		for command in commands:
 			print ' '.join(command)
 			if not self.options.dryrun:
 				status = subprocess.call(command, shell=False, stdin=None)
 				if status != 0:
 					raise Exception('error (%d) executing: "%s"' % (status, ' '.join(command)))
-		if not os.path.exists(mppbsm_name):
-			print 'need %s' % mppbsm_name
-			command = shapefile.makeCommand([
-				'--rast', mppbsm_name, '--mask', masksm_name,
-				'--boundx', '640', '--boundy', '480', bestzip],
-				self.options.bindir, self.options.strict)
-			print ' '.join(command)
-			if not self.options.dryrun:
-				status = subprocess.call(command, shell=False, stdin=None)
-				if status != 0:
-					raise Exception('error (%d) executing: "%s"' % (status, ' '.join(command)))
 		return linksname
-
+	
 	def makelinks(self, dpath):
 		"""Deprecated. Use shapefile bundle."""
 		if self.options.shapefile:
@@ -640,9 +640,6 @@ class StateData(object):
 		print 'data compile took %f seconds' % (time.time() - start)
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
-	
-	def processShapefileBundle(self, dpath):
-		zipspath = self.zipspath(dpath)
 	
 	def measureGeometryParasite(self, dpath, fname, zf, name, raw):
 		# TODO: deprecated. delete this.
