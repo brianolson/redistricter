@@ -76,7 +76,7 @@ class Shapefile {
 		header.read(in);
 		return header;
 	}
-	public Polygon next() throws IOException {
+	public ESRIShape next() throws IOException {
 		if (header == null) {
 			header = new Header();
 			header.read(in);
@@ -93,9 +93,13 @@ class Shapefile {
 			recordBuffer = new byte[recordContentLength];
 		}
 		in.readFully(recordBuffer, 0, recordContentLength);
-		int type = ShapefileBundle.bytesToIntLE(recordBuffer, 0);
-		assert(type == 5);
 		recordCount++;
-		return new Polygon(recordBuffer, 0, recordContentLength);
+		int type = ShapefileBundle.bytesToIntLE(recordBuffer, 0);
+		if (type == 5) {
+			return new Polygon(recordBuffer, 0, recordContentLength);
+		} if (type == 3) {
+			return new PolyLine(recordBuffer, 0, recordContentLength);
+		}
+		return null;
 	}
 }

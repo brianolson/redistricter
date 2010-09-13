@@ -12,7 +12,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -128,7 +127,6 @@ public class ShapefileBundle {
 				lower = b;
 				upper = a;
 			} else {
-				assert(false);
 				return false;
 			}
 			Set<byte[]> rhset;
@@ -875,6 +873,7 @@ public class ShapefileBundle {
 	 * @throws IOException
 	 */
 	public int read(Iterable<PolygonProcessor> pps) throws IOException {
+		boolean y2kmode = true;
 		// BLKIDFP part of tabblock
 		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
 		if (blockIdField == null) {
@@ -891,15 +890,16 @@ public class ShapefileBundle {
 			DBaseFieldDescriptor county = dbf.getField("COUNTYFP00");
 			DBaseFieldDescriptor tract = dbf.getField("TRACTCE00");
 			DBaseFieldDescriptor block = dbf.getField("BLOCKCE00");
-			//DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
-			// TODO: reintroduce suffix for 2010 data?
-			if ((state != null) && (county != null) && (tract != null) && (block != null) /*&& (suffix != null)*/) {
+			DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
+			if ((state != null) && (county != null) && (tract != null) && (block != null) && (y2kmode || (suffix != null))) {
 				CompositeDBaseField cfield = new CompositeDBaseField();
 				cfield.add(state);
 				cfield.add(county);
 				cfield.add(tract);
 				cfield.add(block);
-				//cfield.add(suffix);
+				if (!y2kmode) {
+					cfield.add(suffix);
+				}
 				blockIdField = cfield;
 			}
 		}
@@ -925,7 +925,7 @@ public class ShapefileBundle {
 		}
 		
 		int count = 0;
-		Polygon p = shp.next();
+		Polygon p = (Polygon)shp.next();
 
 		while (p != null) {
 			count++;
@@ -952,7 +952,7 @@ public class ShapefileBundle {
 			for (PolygonProcessor pp : pps) {
 				pp.process(p);
 			}
-			p = shp.next();
+			p = (Polygon)shp.next();
 		}
 		// TODO: assert that polys and dbf are both empty at the end.
 		return count;
@@ -1036,8 +1036,8 @@ public static final String usage =
 "--outline\n" +
 "--verbose\n" +
 "tl_2009_09_tabblock00.zip\n";
-	
-	public static void main(String[] argv) throws IOException {
+
+	public static void loggingInit() {
 		// java.util.logging seems to require some stupid setup.
 		java.util.logging.Logger plog = log;
 		boolean noHandlerSetAll = true;
@@ -1055,7 +1055,10 @@ public static final String usage =
 			ch.setLevel(Level.ALL);
 			log.addHandler(ch);
 		}
-		
+	}
+	
+	public static void main(String[] argv) throws IOException {
+		loggingInit();
 		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
 		boolean tree = true;
 		int boundx = 1920;

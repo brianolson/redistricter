@@ -135,10 +135,26 @@ public class DBaseFieldDescriptor {
 		assert(type == NUMERIC);
 		return byteArrayToInt(data, offset + this.startpos, this.length);
 	}
+	/**
+	 * Simpler version for dbf row
+	 * @param data
+	 * @return
+	 */
+	public int getInt(byte[] data) {
+		return getInt(data, 0, data.length);
+	}
 	public long getLong(byte[] data, int offset, int length) {
 		assert(length >= (this.startpos + this.length));
 		assert(type == NUMERIC);
 		return byteArrayToLong(data, offset + this.startpos, this.length);
+	}
+	/**
+	 * simpler version assumes data is a dbf row
+	 * @param data
+	 * @return
+	 */
+	public long getLong(byte[] data) {
+		return getLong(data, 0, data.length);
 	}
 	
 	public String getString(byte[] data, int offset, int length) {

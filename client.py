@@ -1,6 +1,13 @@
 #!/usr/bin/python
 
-"""Get data from a server, send results back."""
+"""Get data from a server, send results back.
+
+The server config page should have a ConfigParser compatible configuartion
+block wrapped matching:
+'<pre class="config">(.*)</pre>'
+Data files should be linked to with links matching
+'<a class="data" href="([^"]+)">([^<]+)</a>'
+"""
 
 import ConfigParser
 import httplib
@@ -20,12 +27,43 @@ import urlparse
 
 from newerthan import newerthan
 
-HREF_SCRAPER_ = re.compile(r'href="([^"]+)"', re.IGNORECASE)
+HREF_SCRAPER_ = re.compile(r'<a class="data" href="([^"]+)">([^<]+)</a>', re.IGNORECASE)
 CONFIG_BLOCK_ = re.compile(r'<pre class="config">(.*)</pre>', re.IGNORECASE|re.DOTALL|re.MULTILINE)
 
 def yeildHrefFromData(raw):
+	"""Yield (href, name) pairs."""
 	for m in HREF_SCRAPER_.finditer(raw):
-		yield m.group(1)
+		yield (m.group(1), m.group(2))
+
+
+def makeUrlAbsolute(url, base):
+	"""Return absolute version of url, which may be relative to base."""
+	# (scheme, machine, path, query, tag)
+	pu = list(urlparse.urlsplit(url))
+	puUpdated = False
+	pb = urlparse.urlsplit(base)
+	# scheme: http/https
+	if not pu[0]:
+		pu[0] = pb[0]
+		puUpdated = True
+	# host:port
+	if not pu[1]:
+		pu[1] = pb[1]
+		puUpdated = True
+	assert pu[2]
+	if not pu[2].startswith('/'):
+		# make relative path absolute
+		if pb[2].endswith('/'):
+			basepath = pb[2]
+		else:
+			basepath = pb[2].rsplit('/', 1)[0] + '/'
+		pu[2] = basepath + pu[2]
+		puUpdated = True
+	if puUpdated:
+		return urlparse.urlunsplit(pu)
+	# no change, return as was
+	return url
+
 
 class InvalidArgument(Exception):
 	pass
@@ -34,7 +72,7 @@ class InvalidArgument(Exception):
 # TODO-way-long-term: crypto-signed auto updating of scripts and binaries
 CLIENT_DEFAULTS_ = {
 	'configurl': 'http://127.0.0.1:8111/config',
-	'dataurl': 'http://127.0.0.1:8111/data/',
+#	'dataurl': 'http://127.0.0.1:8111/data/',
 	'submiturl': 'http://127.0.0.1:8111/submit',
 	'configCacheSeconds': (3600 * 24),
 }
@@ -46,7 +84,8 @@ def fileOlderThan(filename, seconds):
 class Client(object):
 	def __init__(self, options):
 		self.options = options
-		self.knownDatasets = []
+		# map from name of dataset to its download URL
+		self.knownDatasets = {}
 		self.config = ConfigParser.SafeConfigParser(CLIENT_DEFAULTS_)
 		self.config.add_section('config')
 		self.loadConfiguration()
@@ -73,9 +112,8 @@ class Client(object):
 		if not needsConfigFetch:
 			logging.info('config cache is new enough, not fetching')
 			f = open(self.datasetListPath(), 'r')
-			for line in f:
-				line = line.strip()
-				self.knownDatasets.append(line)
+			self.knownDatasets = cgi.parse_qs(f.read())
+			f.close()
 			return
 		# Fetch config from server
 		if self.options.server:
@@ -91,10 +129,9 @@ class Client(object):
 			logging.debug('error page contents="%s"', repr(raw))
 			return
 		f.close()
-		for href in yeildHrefFromData(raw):
-			if href.endswith('.tar.gz'):
-				self.knownDatasets.append(href)
-				print href
+		for href, name in yeildHrefFromData(raw):
+			self.knownDatasets[name] = makeUrlAbsolute(href, configurl)
+			print name
 		m = CONFIG_BLOCK_.search(raw)
 		if m:
 			sf = StringIO.StringIO(m.group(1))
@@ -106,9 +143,7 @@ class Client(object):
 		self.config.write(configCache)
 		configCache.close()
 		datasetList = open(self.datasetListPath(), 'w')
-		for ds in self.knownDatasets:
-			datasetList.write(ds)
-			datasetList.write('\n')
+		datasetList.write(urllib.urlencode(self.knownDatasets))
 		datasetList.close()
 
 	def headLastModified(self, url):
@@ -128,11 +163,11 @@ class Client(object):
 			traceback.print_exc()
 		return None
 
-	def fetchIfServerCopyNewer(self, dataset):
+	def fetchIfServerCopyNewer(self, dataset, remoteurl):
 		# TODO: use httplib to do HEAD requests for last-modified:
 		# for now, never re-fetch
 		localpath = os.path.join(self.options.datadir, dataset)
-		remoteurl = self.config.get('config', 'dataurl') + dataset
+		#remoteurl = self.config.get('config', 'dataurl') + dataset
 		if os.path.exists(localpath):
 			st = os.stat(localpath)
 			srvlastmod = self.headLastModified(remoteurl)
@@ -151,7 +186,7 @@ class Client(object):
 			return archivename[:-len(suffix)]
 		raise InvalidArgument('cannot parse archive name "%s"' % archivename)
 
-	def unpackArchive(self, archivename):
+	def unpackArchive(self, archivename, dataurl):
 		dirname = self.archiveToDirName(archivename)
 		dirpath = os.path.join(self.options.datadir, dirname)
 		archpath = self.fetchIfServerCopyNewer(archivename)
@@ -170,11 +205,11 @@ class Client(object):
 	def getDataForStu(self, stu):
 		archivename = stu + '_runfiles.tar.gz'
 		if archivename in self.knownDatasets:
-			return self.unpackArchive(archivename)
+			return self.unpackArchive(archivename, self.knownDatasets[archivename])
 		return None
 	
 	def randomDatasetName(self):
-		return random.choice(self.knownDatasets)
+		return random.choice(self.knownDatasets.keys())
 
 
 if __name__ == '__main__':
@@ -189,5 +224,5 @@ if __name__ == '__main__':
 		logging.getLogger().setLevel(logging.DEBUG)
 	c = Client(options)
 	c.loadConfiguration()
-	for arch in c.knownDatasets:
-		c.unpackArchive(arch)
+	for arch, url in c.knownDatasets.iteritems():
+		c.unpackArchive(arch, url)

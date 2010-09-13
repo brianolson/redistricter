@@ -157,7 +157,8 @@ class ProcessGlobals(object):
 		self.options = options
 		self.geourls = None
 		self.tigerlatest = None
-		self.tigerStateDirUrls = None
+		self.bestYear = None
+		self.bestYearEdition = None
 
 	def getSF1Index(self):
 		"""Returns whole sf1 index html file in one buffer."""
@@ -219,6 +220,7 @@ class ProcessGlobals(object):
 			return geo_urls
 	
 	def getGeoUrl(self, stl):
+		"""Return the url to xxgeo_uf1.zip for state xx."""
 		geourls = self.getGeoUrls()
 		uf1zip = stl + 'geo_uf1.zip'
 		for x in geourls:
@@ -227,6 +229,9 @@ class ProcessGlobals(object):
 		return None
 	
 	def getTigerLatestShapefileEdition(self, raw):
+		"""New shapefile data lives in directories of this pattern.
+		ex: http://www2.census.gov/geo/tiger/TIGER2009/
+		"""
 		bestyear = None
 		editions = re.compile(r'href="TIGER(\d\d\d\d)/')
 		for m in editions.finditer(raw):
@@ -235,9 +240,11 @@ class ProcessGlobals(object):
 				bestyear = year
 		if bestyear is None:
 			raise Error('found no tiger editions at "%s"' % tigerbase)
+		self.bestYear = bestyear
 		return '%sTIGER%04d/' % (tigerbase, bestyear)
 
 	def getTigerLatestLineEdition(self, raw):
+		"""Older census-special ascii line-file releases have this pattern."""
 		editions = re.compile(r'href="tiger(\d\d\d\d)(.)e/')
 		bestyear = None
 		bested = None
@@ -252,10 +259,13 @@ class ProcessGlobals(object):
 				bested = ed
 		if bestyear is None:
 			raise Error('found no tiger editions at "%s"' % tigerbase)
+		self.bestYear = bestyear
+		self.bestYearEdition = bested
 		# reconstruct absolute url to edition
 		return '%stiger%s%se/' % (tigerbase, bestyear, bested)
 	
 	def getTigerLatest(self):
+		"""For either shapefile or old line-file, return latest base URL."""
 		if self.tigerlatest is not None:
 			return self.tigerlatest
 		if self.options.dryrun:
@@ -270,47 +280,9 @@ class ProcessGlobals(object):
 		else:
 			self.tigerlatest = self.getTigerLatestLineEdition(raw)
 		return self.tigerlatest
-	
-	def getTigerShapefileDirUrls(self, fileOb=None, path=None, raw=None):
-		if raw is None:
-			if fileOb is not None:
-				raw = fileOb.read()
-			elif path is not None:
-				fileOb = open(path, 'rb')
-				raw = fileOb.read()
-				fileOb.close()
-		# dirUrl = 'http://www2.census.gov/geo/tiger/TIGER2009/'
-		dirUrl = self.getTigerLatest()
-		tigerRelease = re.search('TIGER\d\d\d\d', dirUrl).group()
-		rawCachePath = os.path.join(self.options.datadir, tigerRelease)
-		if raw is None:
-			if self.tigerStateDirUrls is not None:
-				return self.tigerStateDirUrls
-			if os.path.isfile(rawCachePath):
-				fileOb = open(rawCachePath, 'rb')
-				raw = fileOb.read()
-				fileOb.close()
-		if raw is None:
-			if self.options.dryrun:
-				print 'would fetch "%s" -> %s' % (self.getTigerLatest(), rawCachePath)
-				raw = ''
-			else:
-				uf = urllib.urlopen(self.getTigerLatest())
-				raw = uf.read()
-				uf.close()
-				of = open(rawCachePath, 'wb')
-				of.write(raw)
-				of.close()
-		assert raw is not None
-		stateHrefRe = re.compile(r'href=\"(\d\d_[A-Z_/]+)\"', re.MULTILINE)
-		ms = stateHrefRe.findall(raw)
-		self.tigerStateDirUrls = {}
-		for state in self.states:
-			ucstate = state[0].upper().replace(' ','_')
-			for path in ms:
-				if ucstate in path:
-					self.tigerStateDirUrls[state[1]] = dirUrl + path
-		return self.tigerStateDirUrls
+
+
+COUNTY_RE = re.compile(r'([0-9]{5})_(.*)')
 
 
 class StateData(object):
@@ -318,13 +290,21 @@ class StateData(object):
 		self.pg = globals
 		self.stl = st.lower()
 		self.stu = st.upper()
+		self.fips = fipsForPostalCode(self.stu)
+		self.bestYear = None
 		self.turl = None
 		self.turl_time = None
 		self.ziplist = None
 		self.geom = None
 		self.options = options
+		self.dpath = os.path.join(self.options.datadir, self.stu)
+		self._zipspath = os.path.join(self.dpath, 'zips')
 	
-	def makeUf101(self, geozip, uf101, dpath):
+	def makeUf101(self, geozip, uf101, dpath=None):
+		"""From xxgeo_uf1.zip, distill the 101 (block level) geopgraphic
+		summary file xx101.uf1 ."""
+		if dpath is None:
+			dpath = self.dpath
 		if not os.path.isfile(geozip):
 			gurl = self.pg.getGeoUrl(self.stl)
 			print 'fetching %s -> %s' % (gurl, geozip)
@@ -382,15 +362,23 @@ class StateData(object):
 				self.stu, len(cdvals)))
 			makedefaults.close()
 	
-	def getTigerBase(self, dpath):
+	def getTigerBase(self, dpath=None):
+		"""Determine the base URL for shapefile data for this state.
+		Cached in 'data/XX/tigerurl'.
+		example url:
+		http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/
+		"""
 		if self.turl is not None:
 			return self.turl
+		if dpath is None:
+			dpath = self.dpath
 		turlpath = os.path.join(dpath, 'tigerurl')
 		if not os.path.isfile(turlpath):
 			tigerlatest = self.pg.getTigerLatest()
+			self.bestYear = self.pg.bestYear
 			if self.options.shapefile:
 				turl = '%s%02d_%s/' % (
-					tigerlatest, fipsForPostalCode(self.stu),
+					tigerlatest, self.fips,
 					nameForPostalCode(self.stu).upper().replace(' ', '_'))
 			else:
 				turl = tigerlatest + self.stu + '/'
@@ -408,12 +396,13 @@ class StateData(object):
 			fi = open(turlpath, 'r')
 			turl = fi.read()
 			fi.close()
+			m = re.search(r'tiger(\d\d\d\d)', turl, re.IGNORECASE)
+			self.bestYear = int(m.group(1))
 			self.turl = turl.strip()
 			return self.turl
 	
-	def getTigerZipIndex(self, dpath):
-		if self.ziplist is not None:
-			return self.ziplist
+	def getTigerZipIndexHtml(self, dpath):
+		"""Return raw html of zip index listing. (maybe cached)"""
 		zipspath = self.zipspath(dpath)
 		indexpath = os.path.join(zipspath, 'index.html')
 		if not os.path.isfile(indexpath):
@@ -432,6 +421,13 @@ class StateData(object):
 			f = open(indexpath, 'r')
 			raw = f.read()
 			f.close()
+		return raw
+	
+	def getTigerZipIndex(self, dpath):
+		"""Return list of basic zip files to download."""
+		if self.ziplist is not None:
+			return self.ziplist
+		raw = self.getTigerZipIndexHtml(dpath)
 		self.ziplist = []
 		if self.options.shapefile:
 			# TODO: in the future, get tabblock only but not tabblock00
@@ -442,10 +438,38 @@ class StateData(object):
 				self.ziplist.append(m.group(1))
 		return self.ziplist
 	
-	def zipspath(self, dpath):
+	def getCountyPaths(self):
+		"""Return list of relative href values for county dirs."""
+		raw = self.getTigerZipIndexHtml(self.dpath)
+		re_string = 'href="(%02d\\d\\d\\d_[^"]+County/?)"' % (fipsForPostalCode(self.stu))
+		return re.findall(re_string, raw, re.IGNORECASE)
+	
+	def getCountyEdges(self):
+		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_edges.zip
+		counties = self.getCountyPaths()
+		base = self.getTigerBase()
+		for co in counties:
+			m = COUNTY_RE.match(co)
+			filename = 'tl_%4d_%s_edges.zip' % (self.bestYear, m.group(1))
+			localpath = os.path.join(self.zipspath(), filename)
+			if os.path.exists(localpath):
+				logging.info('already have: %s', localpath)
+			else:
+				url = base + co + filename
+				logging.info('fetching "%s" to "%s"', url, localpath)
+				urllib.urlretrieve(url, localpath)
+	
+	def getCountyFaces(self):
+		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_faces.zip
+		pass
+	
+	def zipspath(self, dpath=None):
+		if dpath is None:
+			return self._zipspath
 		return os.path.join(dpath, 'zips')
 	
 	def downloadTigerZips(self, dpath):
+		"""Download basic data as needed to XX/zips/"""
 		turl = self.getTigerBase(dpath)
 		ziplist = self.getTigerZipIndex(dpath)
 		zipspath = self.zipspath(dpath)
@@ -458,6 +482,7 @@ class StateData(object):
 		return ziplist
 	
 	def processShapefile(self, dpath):
+		"""Build .links and .mppb rasterization from shapefile."""
 		bestzip = None
 		ziplist = self.downloadTigerZips(dpath)
 		for zname in ziplist:
@@ -581,6 +606,7 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 	
 	def measureGeometryParasite(self, dpath, fname, zf, name, raw):
+		# TODO: deprecated. delete this.
 		ln = name.lower()
 		if (ln.endswith('.rt1') or
 				ln.endswith('.rt2') or
@@ -599,6 +625,7 @@ class StateData(object):
 			out.close()
 	
 	def measureGeometry(self, dpath):
+		# TODO: deprecated. delete this.
 		if self.geom is not None:
 			return self.geom
 		zipspath = self.zipspath(dpath)
@@ -644,7 +671,9 @@ class StateData(object):
 		self.geom = g
 		return self.geom
 	
-	def writeMakeFragment(self, dpath):
+	def writeMakeFragment(self, dpath=None):
+		if dpath is None:
+			dpath = self.dpath
 		mfpath = os.path.join(dpath, '.make')
 		if not newerthan(__file__, mfpath):
 			return mfpath
@@ -666,9 +695,12 @@ class StateData(object):
 		out.close()
 		return mfpath
 
-	def getextras(self, dpath, extras):
+	def getextras(self, extras=None):
+		"""Get extra data like 00001 series data."""
+		if extras is None:
+			extras = self.options.extras
 		geourl = self.pg.getGeoUrl(self.stl)
-		zipspath = self.zipspath(dpath)
+		zipspath = self.zipspath(self.dpath)
 		mkdir(zipspath, self.options)
 		for x in extras:
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
@@ -688,6 +720,7 @@ class StateData(object):
 		return False
 	
 	def archiveRunfiles(self):
+		"""Bundle key data as XX_runfiles.tar.gz"""
 		if ((not os.path.isdir(self.options.archive_runfiles)) or 
 			(not os.access(self.options.archive_runfiles, os.X_OK|os.W_OK))):
 			sys.stderr.write('error: "%s" is not a writable directory\n' % self.options.archive_runfiles)
@@ -722,8 +755,7 @@ class StateData(object):
 		
 
 	def clean(self):
-		dpath = os.path.join(self.options.datadir, self.stu)
-		for (dirpath, dirnames, filenames) in os.walk(dpath):
+		for (dirpath, dirnames, filenames) in os.walk(self.dpath):
 			for fname in filenames:
 				fpath = os.path.join(dirpath, fname)
 				if fname.lower().endswith('.zip'):
@@ -738,19 +770,18 @@ class StateData(object):
 		if self.options.clean:
 			self.clean()
 			return
-		dpath = os.path.join(self.options.datadir, self.stu)
-		mkdir(dpath, self.options)
+		mkdir(self.dpath, self.options)
 		if self.options.extras:
-			self.getextras(dpath, self.options.extras)
+			self.getextras()
 			if self.options.extras_only:
 				return
-		geozip = os.path.join(dpath, self.stl + 'geo_uf1.zip')
-		uf101 = os.path.join(dpath, self.stl + '101.uf1')
-		self.makeUf101(geozip, uf101, dpath)
-		self.makelinks(dpath)
-		self.compileBinaryData(dpath)
-		#geom = self.measureGeometry(dpath)
-		handargspath = os.path.join(dpath, 'handargs')
+		geozip = os.path.join(self.dpath, self.stl + 'geo_uf1.zip')
+		uf101 = os.path.join(self.dpath, self.stl + '101.uf1')
+		self.makeUf101(geozip, uf101)
+		self.makelinks(self.dpath)
+		self.compileBinaryData(self.dpath)
+		#geom = self.measureGeometry(self.dpath)
+		handargspath = os.path.join(self.dpath, 'handargs')
 		if not os.path.isfile(handargspath):
 			if self.options.dryrun:
 				print 'would write "%s"' % (handargspath)
@@ -758,7 +789,7 @@ class StateData(object):
 				ha = open(handargspath, 'w')
 				ha.write('-g 10000\n')
 				ha.close
-		makefile = self.writeMakeFragment(dpath)
+		makefile = self.writeMakeFragment()
 		generaterunconfigs.run(
 			datadir=self.options.datadir,
 			stulist=[self.stu],
@@ -778,7 +809,8 @@ class StateData(object):
 			outname = self.archiveRunfiles()
 			print 'wrote "%s" in %f seconds' % (outname, (time.time() - start))
 
-def main(argv):
+
+def getOptions():
 	default_bindir = os.environ.get('REDISTRICTER_BIN')
 	if default_bindir is None:
 		default_bindir = os.path.dirname(os.path.abspath(__file__))
@@ -802,8 +834,11 @@ def main(argv):
 	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
 	argp.add_option('--strict', dest='strict', action='store_true', default=False)
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
-	(options, args) = argp.parse_args()
+	return argp.parse_args()
 
+
+def main(argv):
+	(options, args) = getOptions()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
 	if not os.path.isdir(options.datadir):

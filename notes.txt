@@ -51,6 +51,8 @@ http://www.census.gov/geo/www/tiger/tgrshp2009/tgrshp2009.html
 http://www.census.gov/geo/www/tiger/tgrshp2009/TGRSHP09.pdf
 started in 2008 but the old format was still working with the census 2000 data, but I'll need to upgrade!
 
+http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf
+
 new format, for new data:
 http://www2.census.gov/geo/tiger/TIGER2009/09_CONNECTICUT/tl_2009_09_tabblock.zip
 

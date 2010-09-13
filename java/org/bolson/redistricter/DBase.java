@@ -1,5 +1,7 @@
 /**
  * Just enough implementation of the DBase3 format to read Census shapefile bundles.
+ * http://www.dbase.com/knowledgebase/int/db7_file_fmt.htm
+ * http://www.clicketyclick.dk/databases/xbase/format/dbf.html#DBF_STRUCT
  * @author Brian Olson
  */
 package org.bolson.redistricter;
