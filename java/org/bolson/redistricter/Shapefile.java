@@ -100,6 +100,7 @@ class Shapefile {
 		} if (type == 3) {
 			return new PolyLine(recordBuffer, 0, recordContentLength);
 		}
+		assert false;
 		return null;
 	}
 }

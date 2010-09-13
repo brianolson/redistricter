@@ -31,6 +31,7 @@ import zipfile
 
 # local
 import generaterunconfigs
+import linksfromedges
 import measureGeometry
 import makelinks
 from newerthan import newerthan
@@ -300,16 +301,22 @@ class StateData(object):
 		self.dpath = os.path.join(self.options.datadir, self.stu)
 		self._zipspath = os.path.join(self.dpath, 'zips')
 	
+	def maybeUrlRetrieve(self, url, localpath):
+		if os.path.exists(localpath):
+			return localpath
+		if self.options.dryrun:
+			print 'would fetch "%s" -> "%s"' % (url, localpath)
+			return localpath
+		logging.info('fetch "%s" -> "%s"', url, localpath)
+		urllib.urlretrieve(url, localpath)
+		return localpath
+
 	def makeUf101(self, geozip, uf101, dpath=None):
 		"""From xxgeo_uf1.zip, distill the 101 (block level) geopgraphic
 		summary file xx101.uf1 ."""
 		if dpath is None:
 			dpath = self.dpath
-		if not os.path.isfile(geozip):
-			gurl = self.pg.getGeoUrl(self.stl)
-			print 'fetching %s -> %s' % (gurl, geozip)
-			if not self.options.dryrun:
-				urllib.urlretrieve(gurl, geozip)
+		self.maybeUrlRetrieve(self.pg.getGeoUrl(self.stl), geozip)
 		fo = None
 		cds = None
 		if newerthan(geozip, uf101):
@@ -444,7 +451,7 @@ class StateData(object):
 		re_string = 'href="(%02d\\d\\d\\d_[^"]+County/?)"' % (fipsForPostalCode(self.stu))
 		return re.findall(re_string, raw, re.IGNORECASE)
 	
-	def getCountyEdges(self):
+	def getEdges(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_edges.zip
 		counties = self.getCountyPaths()
 		base = self.getTigerBase()
@@ -452,16 +459,19 @@ class StateData(object):
 			m = COUNTY_RE.match(co)
 			filename = 'tl_%4d_%s_edges.zip' % (self.bestYear, m.group(1))
 			localpath = os.path.join(self.zipspath(), filename)
-			if os.path.exists(localpath):
-				logging.info('already have: %s', localpath)
-			else:
-				url = base + co + filename
-				logging.info('fetching "%s" to "%s"', url, localpath)
-				urllib.urlretrieve(url, localpath)
+			url = base + co + filename
+			self.maybeUrlRetrieve(url, localpath)
 	
-	def getCountyFaces(self):
+	def getFaces(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_faces.zip
-		pass
+		counties = self.getCountyPaths()
+		base = self.getTigerBase()
+		for co in counties:
+			m = COUNTY_RE.match(co)
+			filename = 'tl_%4d_%s_faces.zip' % (self.bestYear, m.group(1))
+			localpath = os.path.join(self.zipspath(), filename)
+			url = base + co + filename
+			self.maybeUrlRetrieve(url, localpath)
 	
 	def zipspath(self, dpath=None):
 		if dpath is None:
@@ -475,10 +485,7 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 		for z in ziplist:
 			zp = os.path.join(zipspath, z)
-			if not os.path.isfile(zp):
-				print 'fetching: ' + turl + z
-				if not self.options.dryrun:
-					urllib.urlretrieve(turl + z, zp)
+			self.maybeUrlRetrieve(turl + z, zp)
 		return ziplist
 	
 	def processShapefile(self, dpath):
@@ -492,22 +499,54 @@ class StateData(object):
 		assert zipspath is not None
 		assert bestzip is not None
 		bestzip = os.path.join(zipspath, bestzip)
+		facesPaths = glob.glob(os.path.join(zipspath, '*faces*zip'))
+		edgesPaths = glob.glob(os.path.join(zipspath, '*edges*zip'))
 		linksname = os.path.join(dpath, self.stl + '101.uf1.links')
 		mppb_name = os.path.join(dpath, self.stu + '.mppb')
 		mask_name = os.path.join(dpath, self.stu + 'mask.png')
 		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
 		masksm_name = os.path.join(dpath, self.stu + 'mask_sm.png')
-		args1 = []
+		linksargs = None
+		renderArgs = None
+		commands = []
 		if not os.path.exists(linksname):
 			print 'need %s' % linksname
-			args1 += ['--links', linksname]
+			if edgesPaths and facesPaths:
+				lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname])
+				commands.append(lecmd)
+			else:
+				linksargs = ['--links', linksname]
 		if not os.path.exists(mppb_name):
 			print 'need %s' % mppb_name
-			args1 += ['--rast', mppb_name, '--mask', mask_name,
+			renderArgs = ['--rast', mppb_name, '--mask', mask_name,
 				'--boundx', '1920', '--boundy', '1080']
-		if args1:
-			args1.append(bestzip)
-			command = shapefile.makeCommand(args1, self.options.bindir, self.options.strict)
+		if renderArgs:
+			if linksargs:
+				if not facesPaths:
+					command = shapefile.makeCommand(
+						linksargs + renderArgs + [bestzip], self.options.bindir, self.options.strict)
+					commands.append(command)
+				else:
+					command = shapefile.makeCommand(
+						linksargs + [bestzip], self.options.bindir, self.options.strict)
+					commands.append(command)
+					command = shapefile.makeCommand(
+						renderArgs + facesPaths, self.options.bindir, self.options.strict)
+					commands.append(command)
+			else:
+				if facesPaths:
+					command = shapefile.makeCommand(
+						renderArgs + facesPaths, self.options.bindir, self.options.strict)
+					commands.append(command)
+				else:
+					command = shapefile.makeCommand(
+						renderArgs + [bestzip], self.options.bindir, self.options.strict)
+					commands.append(command)
+		elif linksargs:
+				command = shapefile.makeCommand(
+					linksargs + [bestzip], self.options.bindir, self.options.strict)
+				commands.append(command)
+		for command in commands:
 			print ' '.join(command)
 			if not self.options.dryrun:
 				status = subprocess.call(command, shell=False, stdin=None)
@@ -705,10 +744,7 @@ class StateData(object):
 		for x in extras:
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
 			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
-			if not os.path.isfile(xpath):
-				print '%s -> %s' % (xurl, xpath)
-				if not self.options.dryrun:
-					urllib.urlretrieve(xurl, xpath)
+			self.maybeUrlRetrieve(xurl, xpath)
 	
 	def acceptArchivePart(self, dirpath, fname):
 		flower = fname.lower()
@@ -778,6 +814,10 @@ class StateData(object):
 		geozip = os.path.join(self.dpath, self.stl + 'geo_uf1.zip')
 		uf101 = os.path.join(self.dpath, self.stl + '101.uf1')
 		self.makeUf101(geozip, uf101)
+		if self.options.getFaces:
+			self.getFaces()
+		if self.options.getEdges:
+			self.getEdges()
 		self.makelinks(self.dpath)
 		self.compileBinaryData(self.dpath)
 		#geom = self.measureGeometry(self.dpath)
@@ -828,6 +868,8 @@ def getOptions():
 	argp.add_option('--bindir', dest='bindir', default=default_bindir)
 	argp.add_option('--getextra', dest='extras', action='append', default=[])
 	argp.add_option('--extras_only', dest='extras_only', action='store_true', default=False)
+	argp.add_option('--faces', dest='getFaces', action='store_true', default=False, help='fetch and process detailed faces shapefile data.')
+	argp.add_option('--edges', dest='getEdges', action='store_true', default=False, help='fetch and process detailed edges shapefile data.')
 	argp.add_option('--shapefile', dest='shapefile', action='store_true', default=True)
 	argp.add_option('--noshapefile', dest='shapefile', action='store_false')
 	argp.add_option('--clean', dest='clean', action='store_true', default=False)

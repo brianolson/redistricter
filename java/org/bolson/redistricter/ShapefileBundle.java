@@ -295,8 +295,6 @@ public class ShapefileBundle {
 	ZipFile bundle = null;
 	Shapefile shp = null;
 	DBase dbf = null;
-	//ArrayList<Polygon> polys = new ArrayList<Polygon>();
-	//PolygonBucketArray pba = null;
 	
 	public static class PolygonLinker implements PolygonProcessor {
 		PolygonBucketArray pba = null;
@@ -733,8 +731,6 @@ public class ShapefileBundle {
 		}
 		// @Override // one of my Java 1.5 doesn't like this
 		public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
-			// TODO: (optionally) hold polygons in memory, hashed by ubid, aggregate by ubid
-			// It's currrently probably emitting many MapRasterization.Block objects per actual ubid block.
 			if (p.blockid != null) {
 				log.log(Level.FINE, "blockid {0}", new String(p.blockid));
 				if (blocks != null) {

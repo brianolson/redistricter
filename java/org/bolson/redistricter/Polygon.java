@@ -96,7 +96,7 @@ class Polygon extends ESRIShape {
 	
 	/**
 	 * Compare points lists, return true if two are shared.
-	 * TODO: this would be better if it were two <em>consecutive</em> points. OR, use per-county edge+face data for block adjacency.
+	 * TODO: this would be better if it were two <em>consecutive</em> points.
 	 * @param b the other Polygon
 	 * @return true if both polygons have two points in common.
 	 */
