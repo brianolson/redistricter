@@ -161,6 +161,7 @@ class Polygon extends ESRIShape {
 				}
 			}
 			//assert(ctx.xIntersects > 0);
+			// TODO: fix subtle geometry bugs that cause this, probably involving points hitting scan lines as V or in passing /
 			if (ctx.xIntersects % 2 != 0) {
 				System.err.println("mismatch in line segments intersecting y=" + y);
 				System.err.println(this.toString());

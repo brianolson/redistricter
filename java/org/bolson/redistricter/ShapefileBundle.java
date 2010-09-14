@@ -1063,6 +1063,10 @@ public static final String usage =
 		String linksOut = null;
 		int threads = 3;
 		RasterizationOptions rastOpts = new RasterizationOptions();
+		double minx = Double.NaN;
+		double miny = Double.NaN;
+		double maxx = Double.NaN;
+		double maxy = Double.NaN;
 		BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
 		
 		for (int i = 0; i < argv.length; ++i) {
@@ -1092,16 +1096,16 @@ public static final String usage =
 				boundy = Integer.parseInt(argv[i]);
 			} else if (argv[i].equals("--minx")) {
 				i++;
-				rastOpts.minx = Double.parseDouble(argv[i]);
+				minx = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--maxx")) {
 				i++;
-				rastOpts.maxx = Double.parseDouble(argv[i]);
+				maxx = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--miny")) {
 				i++;
-				rastOpts.miny = Double.parseDouble(argv[i]);
+				miny = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--maxy")) {
 				i++;
-				rastOpts.maxy = Double.parseDouble(argv[i]);
+				maxy = Double.parseDouble(argv[i]);
 			} else if (argv[i].equals("--outline")) {
 				rastOpts.outline = true;
 			} else if (argv[i].equals("--simple-rast")) {
@@ -1146,6 +1150,18 @@ public static final String usage =
 				log.log(Level.FINE, "pre : {0}", rastOpts);
 				rastOpts.increaseBoundsFromShapefile(bundles.get(i).shp);
 				log.log(Level.FINE, "post: {0}", rastOpts);
+			}
+			if (!Double.isNaN(minx)) {
+				rastOpts.minx = minx;
+			}
+			if (!Double.isNaN(miny)) {
+				rastOpts.miny = miny;
+			}
+			if (!Double.isNaN(maxx)) {
+				rastOpts.maxx = maxx;
+			}
+			if (!Double.isNaN(maxy)) {
+				rastOpts.maxy = maxy;
 			}
 			rastOpts.updatePixelSize(boundx, boundy);
 			log.info(rastOpts.toString());
