@@ -50,7 +50,10 @@ int main( int argc, char** argv ) {
 	const char* foname = NULL;
 #if HAVE_PROTOBUF
 	const char* poname = NULL;
+#else
+#define poname NULL
 #endif
+	int maxNewEdgeCount = 100;
 	
 	nargc=1;
 	
@@ -181,6 +184,11 @@ int main( int argc, char** argv ) {
 		printf("add link: %d,%d\n%013llu%013llu\n", mini, minj, gd->ubidOfIndex(mini), gd->ubidOfIndex(minj) );
 		neroot = new newedge( mini, minj, neroot );
 		necount++;
+		if (necount > maxNewEdgeCount) {
+			fprintf(stderr, "too many new edges, %d > limit %d\n", necount, maxNewEdgeCount);
+			exit(1);
+			return 1;
+		}
 		
 		bfsearchq[0] = mini;
 		bfin = 1;
@@ -189,7 +197,7 @@ int main( int argc, char** argv ) {
 	} while ( 1 );
 	
 	if ( necount > 0 ) {
-		printf("writing %d new links to \"%s\"\n", necount, foname );
+		printf("writing %d new links to \"%s\" and/or \"%s\"\n", necount, foname, poname );
 		int32_t* newe = new int32_t[(sov.numEdges + necount) * 2];
 		memcpy( newe, sov.edgeData, sizeof(int32_t)*(sov.numEdges * 2) );
 		delete [] sov.edgeData;
