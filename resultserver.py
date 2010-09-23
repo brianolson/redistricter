@@ -86,12 +86,16 @@ def htmlDirListing(rooturl, dirpath, entries):
 
 
 def tail(linesource, lines=10):
+	special = []
 	out = []
 	for line in linesource:
+		if line[0] == '#':
+			special.append(line)
+			continue
 		out.append(line)
 		while len(out) > lines:
 			out.pop(0)
-	return out
+	return special + out
 
 
 # base64.b64encode(zlib.compress(open('favicon.ico','rb').read(), 9))

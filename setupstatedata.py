@@ -240,7 +240,7 @@ class ProcessGlobals(object):
 			if (bestyear is None) or (year > bestyear):
 				bestyear = year
 		if bestyear is None:
-			raise Error('found no tiger editions at "%s"' % tigerbase)
+			raise Exception('found no tiger editions at "%s"' % tigerbase)
 		self.bestYear = bestyear
 		return '%sTIGER%04d/' % (tigerbase, bestyear)
 
@@ -259,7 +259,7 @@ class ProcessGlobals(object):
 			elif (year == bestyear) and (edmap[ed] > edmap[bested]):
 				bested = ed
 		if bestyear is None:
-			raise Error('found no tiger editions at "%s"' % tigerbase)
+			raise Exception('found no tiger editions at "%s"' % tigerbase)
 		self.bestYear = bestyear
 		self.bestYearEdition = bested
 		# reconstruct absolute url to edition
@@ -286,6 +286,14 @@ class ProcessGlobals(object):
 COUNTY_RE = re.compile(r'([0-9]{5})_(.*)')
 
 
+def filterMinSize(seq, minSize=100):
+	out = []
+	for x in seq:
+		if os.path.getsize(x) > minSize:
+			out.append(x)
+	return out
+
+
 class StateData(object):
 	def __init__(self, globals, st, options):
 		self.pg = globals
@@ -301,14 +309,22 @@ class StateData(object):
 		self.dpath = os.path.join(self.options.datadir, self.stu)
 		self._zipspath = os.path.join(self.dpath, 'zips')
 	
-	def maybeUrlRetrieve(self, url, localpath):
+	def maybeUrlRetrieve(self, url, localpath, contenttype=None):
 		if os.path.exists(localpath):
 			return localpath
 		if self.options.dryrun:
 			print 'would fetch "%s" -> "%s"' % (url, localpath)
 			return localpath
 		logging.info('fetch "%s" -> "%s"', url, localpath)
-		urllib.urlretrieve(url, localpath)
+		(filename, info) = urllib.urlretrieve(url, localpath)
+		logging.debug('%s info: %s', url, info)
+		if (contenttype is not None) and (info['content-type'] != contenttype):
+			logging.error('%s came back with wrong content-type %s, wanted %s. if this is OK touch %s',
+				url, contenttype, info['content-type'], localpath)
+			os.unlink(filename)
+			if self.options.strict:
+				raise Exception('download failed: ' + url + ' if this is OK, touch ' + localpath)
+			return None
 		return localpath
 	
 	def makeUf101(self, geozip, uf101, dpath=None):
@@ -448,7 +464,8 @@ class StateData(object):
 	def getCountyPaths(self):
 		"""Return list of relative href values for county dirs."""
 		raw = self.getTigerZipIndexHtml(self.dpath)
-		re_string = 'href="(%02d\\d\\d\\d_[^"]+County/?)"' % (fipsForPostalCode(self.stu))
+		# NV, VA has some city regions not part of county datasets
+		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city)/?)"' % (fipsForPostalCode(self.stu))
 		return re.findall(re_string, raw, re.IGNORECASE)
 	
 	def getEdges(self):
@@ -460,7 +477,7 @@ class StateData(object):
 			filename = 'tl_%4d_%s_edges.zip' % (self.bestYear, m.group(1))
 			localpath = os.path.join(self.zipspath(), filename)
 			url = base + co + filename
-			self.maybeUrlRetrieve(url, localpath)
+			self.maybeUrlRetrieve(url, localpath, 'application/zip')
 	
 	def getFaces(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_faces.zip
@@ -471,7 +488,7 @@ class StateData(object):
 			filename = 'tl_%4d_%s_faces.zip' % (self.bestYear, m.group(1))
 			localpath = os.path.join(self.zipspath(), filename)
 			url = base + co + filename
-			self.maybeUrlRetrieve(url, localpath)
+			self.maybeUrlRetrieve(url, localpath, 'application/zip')
 	
 	def zipspath(self, dpath=None):
 		if dpath is None:
@@ -501,6 +518,8 @@ class StateData(object):
 		bestzip = os.path.join(zipspath, bestzip)
 		facesPaths = glob.glob(os.path.join(zipspath, '*faces*zip'))
 		edgesPaths = glob.glob(os.path.join(zipspath, '*edges*zip'))
+		facesPaths = filterMinSize(facesPaths, 100)
+		edgesPaths = filterMinSize(edgesPaths, 100)
 		linksname = os.path.join(dpath, self.stl + '101.uf1.links')
 		mppb_name = os.path.join(dpath, self.stu + '.mppb')
 		mask_name = os.path.join(dpath, self.stu + 'mask.png')
@@ -873,6 +892,7 @@ def getOptions():
 	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
 	argp.add_option('--strict', dest='strict', action='store_true', default=False)
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
+	argp.add_option('--datasets', dest='archive_runfiles', help='directory path to store tar archives of run file sets into')
 	return argp.parse_args()
 
 
@@ -881,7 +901,7 @@ def main(argv):
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
 	if not os.path.isdir(options.datadir):
-		raise Error('data dir "%s" does not exist' % options.datadir)
+		raise Exception('data dir "%s" does not exist' % options.datadir)
 
 	if not options.shapefile:
 		makefile_fragment_template = string.Template(
