@@ -4,8 +4,11 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -140,17 +143,138 @@ public class ShapefileBundle {
 		}
 	}
 	
+	public static ArrayList<String> readLines(String path) throws IOException {
+		FileReader fr = new FileReader(path);
+		BufferedReader br = new BufferedReader(fr);
+		String line = br.readLine();
+		ArrayList<String> out = new ArrayList<String>();
+		while (line != null) {
+			out.add(line);
+			line = br.readLine();
+		}
+		return out;
+	}
+	
 	public static class RasterizationOptions {
 		public double minx = Double.NaN;
 		public double miny = Double.NaN;
 		public double maxx = Double.NaN;
 		public double maxy = Double.NaN;
+		public boolean minxSet = false;
+		public boolean minySet = false;
+		public boolean maxxSet = false;
+		public boolean maxySet = false;
 		public int xpx = -1;
 		public int ypx = -1;
-		String maskOutName;
-		String rastOut;
+		String maskOutName = null;
+		String rastOut = null;
 		boolean outline = false;
 		boolean optimizePb = true;
+		
+		public String[] parseOpts(String[] argv) {
+			ArrayList<String> out = new ArrayList<String>();
+			for (int i = 0; i < argv.length; ++i) {
+				if (argv[i].equals("--xpx")) {
+					i++;
+					xpx = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--ypx")) {
+					i++;
+					ypx = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--minx")) {
+					i++;
+					minx = Double.parseDouble(argv[i]);
+					minxSet = true;
+				} else if (argv[i].equals("--maxx")) {
+					i++;
+					maxx = Double.parseDouble(argv[i]);
+					maxxSet = true;
+				} else if (argv[i].equals("--miny")) {
+					i++;
+					miny = Double.parseDouble(argv[i]);
+					minySet = true;
+				} else if (argv[i].equals("--maxy")) {
+					i++;
+					maxy = Double.parseDouble(argv[i]);
+					maxySet = true;
+				} else if (argv[i].equals("--rast")) {
+					i++;
+					rastOut = argv[i];
+				} else if (argv[i].equals("--mask")) {
+					i++;
+					maskOutName = argv[i];
+				} else if (argv[i].equals("--outline")) {
+					outline = true;
+				} else if (argv[i].equals("--simple-rast")) {
+					optimizePb = false;
+				} else {
+					out.add(argv[i]);
+				}
+			}
+			return out.toArray(new String[out.size()]);
+		}
+		public String[] getOpts() {
+			ArrayList<String> out = new ArrayList<String>();
+			if (xpx != -1) {
+				out.add("--xpx");
+				out.add(Integer.toString(xpx));
+			}
+			if (ypx != -1) {
+				out.add("--ypx");
+				out.add(Integer.toString(ypx));
+			}
+			if (!Double.isNaN(minx)) {
+				out.add("--minx");
+				out.add(Double.toString(minx));
+			}
+			if (!Double.isNaN(miny)) {
+				out.add("--miny");
+				out.add(Double.toString(miny));
+			}
+			if (!Double.isNaN(maxx)) {
+				out.add("--maxx");
+				out.add(Double.toString(maxx));
+			}
+			if (!Double.isNaN(maxy)) {
+				out.add("--maxy");
+				out.add(Double.toString(maxy));
+			}
+			/*
+			 *  TODO: this is somewhat irregular.
+			 *  Right now I actually only care about the geometry parameters applied, but the design doesn't signify that.
+			if (rastOut != null) {
+				out.add("--rast");
+				out.add(rastOut);
+			}
+			if (maskOutName != null) {
+				out.add("--mask");
+				out.add(maskOutName);
+			}
+			if (outline) {
+				out.add("--outline");
+			}
+			if (!optimizePb) {
+				out.add("--simple-rast");
+			}
+			 */
+			return out.toArray(new String[out.size()]);
+		}
+		/**
+		 * Doesn't do anything smart about shell escaping.
+		 * Paths with spaces will break it.
+		 * @return
+		 */
+		public String getOptString(String sep) {
+			String[] argv = getOpts();
+			if (argv == null || argv.length == 0) {
+				return "";
+			}
+			StringBuilder sb = new StringBuilder(argv[0]);
+			for (int i = 1; i < argv.length; ++i) {
+				sb.append(sep);
+				sb.append(argv[i]);
+			}
+			return sb.toString();
+		}
 		
 		public String toString() {
 			return "RasterizationOptions(" + minx + "<x<" + maxx + ", " + miny + "<y<" + maxy + ", px=(" + xpx + "," + ypx + "))";
@@ -162,20 +286,21 @@ public class ShapefileBundle {
 		 */
 		public void increaseBoundsFromShapefile(Shapefile shp) throws IOException {
 			Shapefile.Header header = shp.getHeader();
-			if (Double.isNaN(minx) || (minx > header.xmin)) {
+			if (Double.isNaN(minx) || ((minx > header.xmin) && !minxSet)) {
 				minx = header.xmin;
 			}
-			if (Double.isNaN(miny) || (miny > header.ymin)) {
+			if (Double.isNaN(miny) || ((miny > header.ymin) && !minySet)) {
 				miny = header.ymin;
 			}
-			if (Double.isNaN(maxx) || (maxx < header.xmax)) {
+			if (Double.isNaN(maxx) || ((maxx < header.xmax) && !maxxSet)) {
 				maxx = header.xmax;
 			}
-			if (Double.isNaN(maxy) || (maxy < header.ymax)) {
+			if (Double.isNaN(maxy) || ((maxy < header.ymax) && !maxySet)) {
 				maxy = header.ymax;
 			}
 		}
 		
+		@Deprecated
 		public void setBoundsFromShapefile(Shapefile shp, boolean override) throws IOException {
 			Shapefile.Header header = shp.getHeader();
 			if (override || Double.isNaN(minx)) {
@@ -198,6 +323,9 @@ public class ShapefileBundle {
 		 * @param boundy
 		 */
 		public void updatePixelSize(int boundx, int boundy) {
+			if ((xpx != -1) && (ypx != -1)) {
+				return;
+			}
 			double width = maxx - minx;
 			assert(width > 0.0);
 			double height = maxy - miny;
@@ -1053,9 +1181,12 @@ public static final String usage =
 		}
 	}
 	
-	public static void main(String[] argv) throws IOException {
-		loggingInit();
-		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
+	/**
+	 * It's like public static void main, only an object.
+	 * @author bolson
+	 *
+	 */
+	public static class RunContext {
 		boolean tree = true;
 		int boundx = 1920;
 		int boundy = 1080;
@@ -1063,132 +1194,128 @@ public static final String usage =
 		String linksOut = null;
 		int threads = 3;
 		RasterizationOptions rastOpts = new RasterizationOptions();
-		double minx = Double.NaN;
-		double miny = Double.NaN;
-		double maxx = Double.NaN;
-		double maxy = Double.NaN;
+		String rastOptOut = null;
 		BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
 		
-		for (int i = 0; i < argv.length; ++i) {
-			if (argv[i].endsWith(".zip")) {
-				inputPaths.add(argv[i]);
-			} else if (argv[i].equals("--links")) {
-				i++;
-				linksOut = argv[i];
-			} else if (argv[i].equals("--rast")) {
-				i++;
-				rastOpts.rastOut = argv[i];
-			} else if (argv[i].equals("--color-mask")) {
-				birOpts.colorMask = true;
-			} else if (argv[i].equals("--mask")) {
-				i++;
-				rastOpts.maskOutName = argv[i];
-			} else if (argv[i].equals("--threads")) {
-				i++;
-				threads = Integer.parseInt(argv[i]);
-			} else if (argv[i].equals("--boundx")) {
-				// upper bound on pixel size
-				i++;
-				boundx = Integer.parseInt(argv[i]);
-			} else if (argv[i].equals("--boundy")) {
-				// upper bound on pixel size
-				i++;
-				boundy = Integer.parseInt(argv[i]);
-			} else if (argv[i].equals("--minx")) {
-				i++;
-				minx = Double.parseDouble(argv[i]);
-			} else if (argv[i].equals("--maxx")) {
-				i++;
-				maxx = Double.parseDouble(argv[i]);
-			} else if (argv[i].equals("--miny")) {
-				i++;
-				miny = Double.parseDouble(argv[i]);
-			} else if (argv[i].equals("--maxy")) {
-				i++;
-				maxy = Double.parseDouble(argv[i]);
-			} else if (argv[i].equals("--outline")) {
-				rastOpts.outline = true;
-			} else if (argv[i].equals("--simple-rast")) {
-				rastOpts.optimizePb = false;
-			} else if (argv[i].equals("--verbose")) {
-				log.setLevel(Level.FINEST);
-				//log.info(log.getLevel().toString());
-			} else {
-				System.err.println("bogus arg: " + argv[i]);
+		public void main(String[] argv) throws IOException {
+			parseArgv(argv);
+			run();
+		}
+		public void parseArgv(String[] argv) throws IOException {
+			argv = rastOpts.parseOpts(argv);
+			for (int i = 0; i < argv.length; ++i) {
+				if (argv[i].endsWith(".zip")) {
+					inputPaths.add(argv[i]);
+				} else if (argv[i].equals("--flagfile")) {
+					i++;
+					ArrayList<String> targva = readLines(argv[i]);
+					parseArgv(targva.toArray(new String[targva.size()]));
+				} else if (argv[i].equals("--links")) {
+					i++;
+					linksOut = argv[i];
+				} else if (argv[i].equals("--rastgeom")) {
+					i++;
+					rastOptOut = argv[i];
+				} else if (argv[i].equals("--color-mask")) {
+					birOpts.colorMask = true;
+				} else if (argv[i].equals("--threads")) {
+					i++;
+					threads = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--boundx")) {
+					// upper bound on pixel size
+					i++;
+					boundx = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--boundy")) {
+					// upper bound on pixel size
+					i++;
+					boundy = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--verbose")) {
+					log.setLevel(Level.FINEST);
+					//log.info(log.getLevel().toString());
+				} else {
+					System.err.println("bogus arg: " + argv[i]);
+					System.err.print(usage);
+					System.exit(1);
+					return;
+				}
+			}
+		}
+		public void run() throws IOException {
+			if (inputPaths.size() == 0) {
+				System.err.println("no input shapefile zip bundle specified");
 				System.err.print(usage);
 				System.exit(1);
-				return;
+			}
+			
+			long start = System.currentTimeMillis();
+			ArrayList<ShapefileBundle> bundles = new ArrayList<ShapefileBundle>();
+			for (String path : inputPaths) {
+				ShapefileBundle x = new ShapefileBundle();
+				x.open(path);
+				bundles.add(x);
+			}
+			ArrayList<PolygonProcessor> pps = new ArrayList<PolygonProcessor>();
+			if (linksOut != null) {
+				log.info("calculating links");
+				PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads);
+				for (int i = 1; i < bundles.size(); ++i) {
+					linker.growForShapefile(bundles.get(i).shp);
+				}
+				pps.add(linker);
+			}
+			if ((rastOpts.rastOut != null) || (rastOpts.maskOutName != null)) {
+				log.info("rasterizing");
+				rastOpts.increaseBoundsFromShapefile(bundles.get(0).shp);
+				for (int i = 1; i < bundles.size(); ++i) {
+					log.log(Level.FINE, "pre : {0}", rastOpts);
+					rastOpts.increaseBoundsFromShapefile(bundles.get(i).shp);
+					log.log(Level.FINE, "post: {0}", rastOpts);
+				}
+				rastOpts.updatePixelSize(boundx, boundy);
+				log.info(rastOpts.toString());
+				log.info(rastOpts.getOptString(" "));
+				if (rastOptOut != null) {
+					FileWriter fw = new FileWriter(rastOptOut);
+					fw.write(rastOpts.getOptString("\n"));
+					fw.close();
+				}
+				pps.add(new PolygonRasterizer(rastOpts));
+			}
+			long end = System.currentTimeMillis();
+			log.info("setup done in " + ((end - start) / 1000.0) + " seconds");
+			start = end;
+			int count = 0;
+			for (ShapefileBundle x : bundles) {
+				log.info("processing " + x.toString());
+				count += x.read(pps);
+			}
+			end = System.currentTimeMillis();
+			log.info("read " + count + " in " + ((end - start) / 1000.0) + " seconds");
+			start = end;
+			for (PolygonProcessor pp : pps) {
+				try {
+					log.log(Level.INFO, "finishing {0}...", pp.name());
+					pp.finish();
+					end = System.currentTimeMillis();
+					log.info(pp.name() + " finished in " + ((end - start) / 1000.0) + " seconds");
+					start = end;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
-
-		if (inputPaths.size() == 0) {
-			System.err.println("no input shapefile zip bundle specified");
-			System.err.print(usage);
-			System.exit(1);
-		}
+	}
+	
+	public static void main(String[] argv) throws IOException {
+		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
+		long totalStart = System.currentTimeMillis();
+		loggingInit();
 		
-		long start = System.currentTimeMillis();
-		ArrayList<ShapefileBundle> bundles = new ArrayList<ShapefileBundle>();
-		for (String path : inputPaths) {
-			ShapefileBundle x = new ShapefileBundle();
-			x.open(path);
-			bundles.add(x);
-		}
-		ArrayList<PolygonProcessor> pps = new ArrayList<PolygonProcessor>();
-		if (linksOut != null) {
-			log.info("calculating links");
-			PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads);
-			for (int i = 1; i < bundles.size(); ++i) {
-				linker.growForShapefile(bundles.get(i).shp);
-			}
-			pps.add(linker);
-		}
-		if ((rastOpts.rastOut != null) || (rastOpts.maskOutName != null)) {
-			log.info("rasterizing");
-			rastOpts.increaseBoundsFromShapefile(bundles.get(0).shp);
-			for (int i = 1; i < bundles.size(); ++i) {
-				log.log(Level.FINE, "pre : {0}", rastOpts);
-				rastOpts.increaseBoundsFromShapefile(bundles.get(i).shp);
-				log.log(Level.FINE, "post: {0}", rastOpts);
-			}
-			if (!Double.isNaN(minx)) {
-				rastOpts.minx = minx;
-			}
-			if (!Double.isNaN(miny)) {
-				rastOpts.miny = miny;
-			}
-			if (!Double.isNaN(maxx)) {
-				rastOpts.maxx = maxx;
-			}
-			if (!Double.isNaN(maxy)) {
-				rastOpts.maxy = maxy;
-			}
-			rastOpts.updatePixelSize(boundx, boundy);
-			log.info(rastOpts.toString());
-			pps.add(new PolygonRasterizer(rastOpts));
-		}
-		long end = System.currentTimeMillis();
-		log.info("setup done in " + ((end - start) / 1000.0) + " seconds");
-		start = end;
-		int count = 0;
-		for (ShapefileBundle x : bundles) {
-			log.info("processing " + x.toString());
-			count += x.read(pps);
-		}
-		end = System.currentTimeMillis();
-		log.info("read " + count + " in " + ((end - start) / 1000.0) + " seconds");
-		start = end;
-		for (PolygonProcessor pp : pps) {
-			try {
-				log.log(Level.INFO, "finishing {0}...", pp.name());
-				pp.finish();
-				end = System.currentTimeMillis();
-				log.info(pp.name() + " finished in " + ((end - start) / 1000.0) + " seconds");
-				start = end;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		RunContext x = new RunContext();
+		x.main(argv);
+
+		long totalEnd = System.currentTimeMillis();
+		log.info("total time: " + ((totalEnd - totalStart) / 1000.0) + " seconds");
 	}
 	
 	public String toString() {
