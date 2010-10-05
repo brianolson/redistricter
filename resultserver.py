@@ -14,6 +14,7 @@ import threading
 import time
 import zlib
 
+import kmppspreadplot
 import plotstatlog
 
 
@@ -238,9 +239,18 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				writeStatlogDisplay(fpath, x, self.wfile)
 		if self.dirExtra:
 			self.wfile.write(self.dirExtra)
+		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
 		self.wfile.write(htmlDirListing('', fpath, they))
 		self.wfile.write("""</body></html>\n""")
 	
+	def GET_kmppspreadplot(self, path, fpath):
+		self.send_response(200)
+		self.send_header('Content-Type', 'image/svg+xml')
+		self.end_headers()
+		svgout = kmppspreadplot.svgplotter('kmppspreadplot.svg', self.wfile)
+		kmppspreadplot.walk_statsums(svgout, fpath, True)
+		svgout.close()
+		
 	def runExtensions(self):
 		if self.extensions is None:
 			return False
@@ -266,6 +276,9 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		fpath = os.path.abspath(os.path.join(cwd, path))
 		if not fpath.startswith(cwd):
 			self.log_error('bad path %s', self.path)
+			return
+		if path.endswith('/kmpp_spread.svg'):
+			self.GET_kmppspreadplot(path, os.path.dirname(fpath))
 			return
 		if os.path.isdir(fpath):
 			self.GET_dir(path, fpath)

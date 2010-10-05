@@ -5,6 +5,7 @@
 __author__ = "Brian Olson"
 
 import getopt
+import gzip
 import os
 import re
 import string
@@ -15,6 +16,14 @@ kmppspread = re.compile(
     r".*Best Km/p: Km/p=([0-9.]+) spread=([0-9.]+).*",
     re.MULTILINE|re.DOTALL)
 
+
+statlog_re = re.compile(
+"""generation \\d+: ([.0-9]+) Km/person
+population avg=[0-9]+ std=[.0-9]+
+max=([0-9]+) \\(dist# [0-9]+\\)  min=([0-9]+) \\(dist# [0-9]+\\)  median=[0-9]+ \\(dist# [0-9]+\\)""",
+    re.MULTILINE|re.DOTALL)
+
+
 gnuplot_command = string.Template(
 """set xlabel 'spread'
 set ylabel 'Km/p'
@@ -24,21 +33,36 @@ set output '${outname}'
 plot '-'
 """)
 
-def walk_statsums(out, startpath):
+def walk_statsums(out, startpath, useStatlogGz=True):
   for root, dirs, files in os.walk(startpath):
+    gotData = False
     if 'statsum' in files:
       f = open(os.path.join(root, 'statsum'), 'r')
-      m = kmppspread.match(f.read(999999))
+      m = kmppspread.match(f.read())
       f.close()
-      if not m:
-        sys.stderr.write(
-            "failed to parse %s\n" % os.path.join(root, 'statsum'))
-        continue
-      kmpp = float(m.group(1))
-      spread = float(m.group(2))
-      #out.write("%f\t%f\n" % (spread, kmpp))
-      out.xy(spread, kmpp)
-  #out.flush()
+      if m:
+        kmpp = float(m.group(1))
+        spread = float(m.group(2))
+        out.xy(spread, kmpp)
+        gotData = True
+    if (not gotData) and useStatlogGz and ('statlog.gz' in files):
+      #print os.path.join(root, 'statlog.gz')
+      f = gzip.open(os.path.join(root, 'statlog.gz'), 'rb')
+      raw = f.read()
+      f.close()
+      outlist = []
+      for m in statlog_re.finditer(raw):
+        kmpp = float(m.group(1))
+        pmax = float(m.group(2))
+        pmin = float(m.group(3))
+        spread = pmax - pmin
+        outlist.append( (spread, kmpp) )
+      if outlist:
+        if len(outlist) > 10:
+          outlist = outlist[-10:]
+        for sk in outlist:
+          out.xy(sk[0], sk[1])
+
 
 def gnuplot_out(png_name):
   sys.stderr.write("opening output \"%s\"\n" % png_name)
@@ -58,15 +82,14 @@ class gnuplotter(object):
     self.fout.close()
 
 class svgplotter(object):
-  """TODO: make this actually emit valid SVG"""
-  def __init__(self, fname):
+  def __init__(self, fname, fout=None):
     self.fname = fname
     self.points = []
     self.minx = None
     self.miny = None
     self.maxx = None
     self.maxy = None
-    self.fout = None
+    self.fout = fout
     self.width = 1024
     self.height = 768
     self.xoffset = 80
@@ -92,7 +115,8 @@ class svgplotter(object):
     return ((self.maxy - y) * self.scaley) + self.yoffset
 
   def close(self):
-    self.fout = open(self.fname, 'w')
+    if not self.fout:
+      self.fout = open(self.fname, 'w')
     self.scalex = self.width / ((self.maxx - self.minx) * 1.10)
     self.scaley = self.height / ((self.maxy - self.miny) * 1.10)
     self.fout.write(
@@ -146,7 +170,7 @@ class svgplotter(object):
         ((minxp + maxxp) / 2.0, minyp + 5))
 
     self.fout.write(
-        '<text x="%f" y="%f" text-anchor="middle" dominant-baseline="text-before-edge" stroke-color="#666666">(%d runs)</text>\n' %
+        '<text x="%f" y="%f" text-anchor="middle" dominant-baseline="text-before-edge" stroke-color="#666666">(%d points)</text>\n' %
         (minxp + ((maxxp - minxp) * 0.75), minyp + 5, len(self.points)))
 
     self.fout.write('</g>\n')
