@@ -27,7 +27,6 @@ Inside each XX_Foo/YYYYMMDD_HHMMSS/ run directory should be:
 __author__ = "Brian Olson"
 
 # TODO: shiny GUI?
-# TODO: http server with runlog, bestlog, and links to $stu/best/index.html
 # At the most basic, curses or Tk progress bars.
 # Or, render a recent map and display it.
 # Maybe rewrite this run script in C++ and build it into the districter binary?
@@ -53,7 +52,6 @@ import traceback
 # local imports
 import client
 import manybest
-import measureGeometry
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
@@ -430,6 +428,8 @@ class runallstates(object):
 		# list of regex to check against config file path
 		self.config_include = []
 		self.config_exclude = []
+		self.config_override_path = None
+		self.config_override_lastload = None
 		# list of STU uppercase state abbreviations
 		self.states = []
 		self.softfail = False
@@ -468,13 +468,6 @@ class runallstates(object):
 		if self.lock:
 			self.lock.release()
 		return stu
-
-	def runthread(self, label='x'):
-		while not self.shouldstop():
-			# sleep 1 is a small price to pay to prevent stupid runaway loops
-			time.sleep(1)
-			stu = self.getNextState()
-			self.runstate(stu, label)
 
 	def readBestLog(self, path):
 		"""Read in a bestlog, loading latest state into memory."""
@@ -518,6 +511,7 @@ class runallstates(object):
 		argp.add_option('--config-include', dest='config_include', action='append', default=[])
 		argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[])
 		argp.add_option('--configdir', dest='configdir', default=None)
+		argp.add_option('--config-override', dest='config_override_path', default='configoverride')
 		argp.add_option('--threads', dest='threads', type='int', default=1)
 		argp.add_option('--port', dest='port', type='int', default=-1, help='port to serve stats on via HTTP')
 		argp.add_option('--dry-run', '-n', dest='dry_run', action='store_true', default=False)
@@ -556,6 +550,7 @@ class runallstates(object):
 			self.end = self.start + options.runsecs
 		self.configArgList = options.configList
 		self.configdir = options.configdir
+		self.config_override_path = options.config_override_path
 		self.numthreads = options.threads
 		self.dry_run = options.dry_run
 		if options.mode == 'd2':
@@ -575,14 +570,14 @@ class runallstates(object):
 			self.errorRate = int(f)
 			self.errorSample = self.errorRate + int(s)
 			self.runSuccessHistory = [1 for x in xrange(self.errorSample)]
-
+	
 	def logCompletion(self, succeede):
 		"""Log a result, return if we should quit."""
 		self.runSuccessHistory.append(succeede)
 		while len(self.runSuccessHistory) > self.errorSample:
 			self.runSuccessHistory.pop(0)
 		return sum(self.runSuccessHistory) < (self.errorSample - self.errorRate)
-
+	
 	def checkSetup(self):
 		if self.exe is None:
 			assert self.bindir is not None
@@ -597,7 +592,7 @@ class runallstates(object):
 			else:
 				sys.stderr.write("bogus data dir \"%s\"\n" % self.datadir)
 				sys.exit(1)
-
+	
 	def allowConfigPath(self, path):
 		if self.config_include:
 			# must match all
@@ -608,7 +603,7 @@ class runallstates(object):
 			if pattern.search(path):
 				return False
 		return True
-
+	
 	def loadConfigdir(self, configdir):
 		"""Load a directory filled with config files."""
 		for cname in os.listdir(configdir):
@@ -628,7 +623,7 @@ class runallstates(object):
 		if not self.config:
 			sys.stderr.write('error: --configdir="%s" but loaded no configs\n' % (configdir))
 			sys.exit(1)
-
+	
 	def loadConfigurations(self):
 		"""1. Things explicitly listed by --config; else
 		2. Things in --configdir; else
@@ -685,7 +680,31 @@ class runallstates(object):
 			for stdir in glob.glob(self.datadir + "/??"):
 				c = configuration(datadir=stdir, dataroot=self.datadir)
 				self.config[c.name] = c
-
+	
+	def loadConfigOverride(self):
+		if not self.config_override_path:
+			return
+		try:
+			st = os.stat(self.config_override_path)
+		except OSError, e:
+			# doesn't exist, whatever.
+			return
+		if self.config_override_lastload:
+			if st.st_mtime > self.config_override_lastload:
+				return
+		if self.lock:
+			self.lock.acquire()
+		f = open(self.config_override_path, 'r')
+		for line in f:
+			(cname, cline) = line.split(':', 1)
+			cname = cname.strip()
+			if cname in self.config:
+				self.config[cname].applyConfigLine(cline)
+		self.config_override_lastload = st.st_mtime
+		f.close()
+		if self.lock:
+			self.lock.release()
+	
 	def shouldstop(self):
 		if self.softfail:
 			return True
@@ -701,13 +720,21 @@ class runallstates(object):
 					now, self.end))
 				return True
 		return False
-
+	
 	def maybe_mkdir(self, path):
 		if self.dry_run or self.verbose:
 			print "mkdir %s" % path
 		if not self.dry_run:
 			os.mkdir(path)
-
+	
+	def runthread(self, label='x'):
+		while not self.shouldstop():
+			# sleep 1 is a small price to pay to prevent stupid runaway loops
+			time.sleep(1)
+			stu = self.getNextState()
+			self.loadConfigOverride()
+			self.runstate(stu, label)
+	
 	def runstate(self, stu, label=None):
 		"""Wrapper around runstate_inner to aid in runlog."""
 		start_timestamp = timestamp()

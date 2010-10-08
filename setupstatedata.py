@@ -32,7 +32,6 @@ import zipfile
 # local
 import generaterunconfigs
 import linksfromedges
-import measureGeometry
 import makelinks
 from newerthan import newerthan
 import shapefile
@@ -102,7 +101,7 @@ def linkBestCurrentSolution(dpath):
 basic_make_rules_ = """
 -include ${dpath}/makedefaults
 -include ${dpath}/makeoptions
-	
+
 ${stu}_all:	${dpath}/${stu}_start_sm.jpg ${dpath}/${stu}_sm.mppb ${dpath}/${stu}_start_sm.png
 
 ${dpath}/${stu}_start_sm.jpg:	${dpath}/${stu}_start.png
@@ -660,72 +659,6 @@ class StateData(object):
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 	
-	def measureGeometryParasite(self, dpath, fname, zf, name, raw):
-		# TODO: deprecated. delete this.
-		ln = name.lower()
-		if (ln.endswith('.rt1') or
-				ln.endswith('.rt2') or
-				ln.endswith('.rta') or
-				ln.endswith('.rti')):
-			rawpath = os.path.join(dpath, 'raw', name)
-			if not newerthan(fname, rawpath):
-				return
-			if raw is None:
-				raw = zf.read(name)
-			if self.options.dryrun:
-				print 'would extract "%s"' % (rawpath)
-				return
-			out = file(rawpath, 'wb')
-			out.write(raw)
-			out.close()
-	
-	def measureGeometry(self, dpath):
-		# TODO: deprecated. delete this.
-		if self.geom is not None:
-			return self.geom
-		zipspath = self.zipspath(dpath)
-		ziplist = self.downloadTigerZips(dpath)
-		pgeompath = os.path.join(dpath, 'geometry.pickle')
-		needsmeasure = False
-		rawdir = os.path.join(dpath, 'raw')
-		needsmeasure = False
-		if not os.path.isfile(pgeompath):
-			needsmeasure = True
-		if (not needsmeasure) and newerthan(measureGeometry.__file__, pgeompath):
-			needsmeasure = True
-		if not needsmeasure:
-			for z in ziplist:
-				if newerthan(os.path.join(zipspath, z), pgeompath):
-					needsmeasure = True
-					break
-		if needsmeasure:
-			print '%s/{%s} -> %s/{geometry.pickle,meausure,makedefaults}' % (zipspath, ','.join(ziplist), dpath)
-		if needsmeasure and not self.options.dryrun:
-			start = time.time()
-			g = measureGeometry.geom()
-			mkdir(rawdir, self.options)
-			for z in ziplist:
-				zpath = os.path.join(zipspath, z)
-				g.checkZip(zpath,
-					lambda z,n,r: self.measureGeometryParasite(dpath,zpath,z,n,r))
-			g.calculate()
-			pout = open(pgeompath, 'wb')
-			pickle.dump(g, pout, protocol=2)
-			pout.close()
-			mout = open(os.path.join(dpath, 'measure'), 'w')
-			g.writeMeasure(mout)
-			mout.close()
-			dout = open(os.path.join(dpath, 'makedefaults'), 'w')
-			g.makedefaults(dout, self.stu)
-			dout.close()
-			print 'measureGeometry took %f seconds' % (time.time() - start)
-		else:
-			fin = open(pgeompath, 'rb')
-			g = pickle.load(fin)
-			fin.close()
-		self.geom = g
-		return self.geom
-	
 	def writeMakeFragment(self, dpath=None):
 		if dpath is None:
 			dpath = self.dpath
@@ -836,7 +769,6 @@ class StateData(object):
 			self.getEdges()
 		self.makelinks(self.dpath)
 		self.compileBinaryData(self.dpath)
-		#geom = self.measureGeometry(self.dpath)
 		handargspath = os.path.join(self.dpath, 'handargs')
 		if not os.path.isfile(handargspath):
 			if self.options.dryrun:

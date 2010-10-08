@@ -63,28 +63,44 @@ def sizeStr(bytes):
 	return '%d' % (bytes)
 
 
-def htmlDirEntry(rooturl, dirpath, entry):
-	fpath = os.path.join(dirpath, entry)
-	if os.path.isdir(fpath):
-		return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a></td></tr>""" % (
-			entry, entry)
-	fst = os.stat(fpath)
-	size = sizeStr(fst.st_size)
-	when = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(fst.st_mtime))
-	return """<tr class="lf"><td class="fn"><a href="%s">%s</a></td>
+class htmlDirListing(object):
+	def __init__(self, rooturl, dirpath, entries):
+	  self.rooturl = rooturl
+	  self.dirpath = dirpath
+	  self.entries = entries
+
+	def htmlDirEntryForDir(self, entry, fpath):
+	  return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a></td></tr>""" % (
+	      entry, entry)
+
+	def htmlDirEntry(self, entry):
+		fpath = os.path.join(self.dirpath, entry)
+		if os.path.isdir(fpath):
+		  return self.htmlDirEntryForDir(entry, fpath)
+		fst = os.stat(fpath)
+		size = sizeStr(fst.st_size)
+		when = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(fst.st_mtime))
+		return """<tr class="lf"><td class="fn"><a href="%s">%s</a></td>
 <td class="fs">%s</td><td class="ft">%s</td></tr>""" % (
-		entry, entry, size, when)
+			entry, entry, size, when)
 
+	def __str__(self):
+		out = ['<table class="dl">']
+		for ent in self.entries:
+			if ent.startswith('.'):
+				continue
+			out.append(self.htmlDirEntry(ent))
+		out.append('</table>')
+		return ''.join(out)
 
-def htmlDirListing(rooturl, dirpath, entries):
-	out = ['<table class="dl">']
-	for ent in entries:
-		if ent.startswith('.'):
-			continue
-		out.append(htmlDirEntry(rooturl, dirpath, ent))
-	out.append('</table>')
-	return ''.join(out)
-
+class htmlRootDirListing(htmlDirListing):
+#  def __init__(self, rooturl, dirpath, entries):
+  def htmlDirEntryForDir(self, entry, fpath):
+    nobest = ''
+    if not os.path.exists(os.path.join(fpath, 'best')):
+      nobest = ' no best'
+    return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a>%s</td></tr>""" % (
+	entry, entry, nobest)
 
 def tail(linesource, lines=10):
 	special = []
@@ -211,6 +227,16 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.extensions = extensions
 		self.dirExtra = None
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+		self.extensions_map.update({
+			'.png': 'image/png',
+			'.jpg': 'image/jpeg',
+			'.svg': 'image/svg+xml',
+			'statsum': 'text/plain',
+			'statlog': 'text/plain',
+			'.gz': 'application/gzip',
+			'.bz2': 'application/bzip2',
+#			'': '',
+})
 	
 	def GET_dir(self, path, fpath):
 		they = os.listdir(fpath)
@@ -240,7 +266,10 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		if self.dirExtra:
 			self.wfile.write(self.dirExtra)
 		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
-		self.wfile.write(htmlDirListing('', fpath, they))
+		if path == '':
+			self.wfile.write(htmlRootDirListing('', fpath, they))
+		else:
+			self.wfile.write(htmlDirListing('', fpath, they))
 		self.wfile.write("""</body></html>\n""")
 	
 	def GET_kmppspreadplot(self, path, fpath):
@@ -304,7 +333,7 @@ def startServer(port=8080, exitIfLastThread=True, extensions=None):
 	SimpleHTTPServer.SimpleHTTPRequestHandler"""
 	reh = RuntimeExtensibleHandler(extensions)
 	httpd = BaseHTTPServer.HTTPServer( ('',port),  reh )
-	t = threading.Thread(target=httpd.serve_forever, args=(port,))
+	t = threading.Thread(target=httpd.serve_forever, args=())
 	t.setDaemon(exitIfLastThread)
 	t.start()
 	return (t, httpd)

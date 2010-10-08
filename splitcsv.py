@@ -70,7 +70,7 @@ def main(argv):
 			processOneCsv(fin, outfiles, options.prefix)
 	for fx in outfiles:
 		fx.close()
-
+		subprocess.call(['gzip', fx.name])
 
 if __name__ == '__main__':
 	main(sys.argv)

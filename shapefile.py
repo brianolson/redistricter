@@ -17,7 +17,14 @@ def makeCommand(extra_args, bindir=None, enableassertions=False):
 	if bindir is None:
 		bindir = os.path.dirname(os.path.abspath(__file__))
 	classpath = os.path.join(bindir, 'tools.jar') + ':' + globJarsToClasspath(os.path.join(bindir, 'jars'))
-	cmd = ['java']
+	java_home = os.environ.get('JAVA_HOME')
+	cmd = None
+	if java_home:
+		java = os.path.join(java_home, 'bin', 'java')
+		if os.path.isfile(java) and os.access(java, os.X_OK):
+			cmd = [java]
+	if not cmd:
+		cmd = ['java']
 	if enableassertions:
 		cmd.append('-enableassertions')
 	return cmd + ['-Xmx1000M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
