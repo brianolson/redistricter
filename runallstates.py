@@ -162,6 +162,7 @@ HAS_PARAM_ = {
 	'--coordout': True,
 	'--pngW': True,
 	'--pngH': True,
+	'--binLog': True,
 	'--statLog': True,
 	'--sLog': True,
 	'--pLog': True,
@@ -410,7 +411,7 @@ class runallstates(object):
 		self.exe = None
 		self.solverMode = []
 		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
-		self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--maxSpreadFraction', '0.01']
+		self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--binLog', 'binlog', '--maxSpreadFraction', '0.01']
 		self.start = time.time();
 		self.end = None
 		# built from argv, things we'll run

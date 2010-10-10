@@ -26,19 +26,6 @@ message RedistricterData {
 	}
 }
 
-// There's probably a more portable format than this. What do GIS packages actually use?
-// A plain text format in the style of census data might be reasonable.
-// Two fixed width decimal integer fields:
-//  7 space padded digits of LOGRECNO
-//  2 space padded digits of district number
-//  \r\n (0x0d 0x0a)
-message DistrictMap {
-	// Record Number from census data.
-	repeated int32 recno = 1;
-	// District Number, 1..N. Must be the same length as recno.
-	repeated int32 district = 2;
-}
-
 // For each block, a list of pixels (x,y coords) to draw.
 message MapRasterization {
 	repeated group Block = 1 {
@@ -75,4 +62,18 @@ message TableFileDescription {
 			repeated string path = 7;
 		}
 	}
+}
+
+message StatLogEntry {
+	required int32 generation = 1;
+	required double kmpp = 2;
+	required double averagePopulation = 3;
+	required double popStdDev = 4;
+	required int32 maxPop = 5;
+	required int32 minPop = 6;
+	required int32 medianPop = 7;
+	optional int32 noDistrictBlocks = 8;
+	optional int32 noDistrictPop = 9;
+	optional double kmppVariability = 10;
+	optional double spreadVariability = 11;
 }

@@ -6,6 +6,8 @@ using google::protobuf::int32;
 using google::protobuf::int64;
 using google::protobuf::uint64;
 
+#include "BinaryStatLogger.h"
+#include "LastNMinMax_inl.h"
 #include "redata.pb.h"
 #include "Solver.h"
 #include "GeoData.h"
@@ -212,4 +214,113 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	return 0;
 }
 
+class PBStatLogger : public BinaryStatLogger {
+public:
+	// return true if ok.
+	virtual bool log(const SolverStats* it,
+		LastNMinMax<double>* recentKmpp, LastNMinMax<double>* recentSpread);
+
+	virtual ~PBStatLogger();
+
+protected:
+	PBStatLogger();
+	virtual bool init(const char* name);
+	
+	// result of strdup. free on ~
+	char* filename;
+	int fd;
+	google::protobuf::io::FileOutputStream* pbfos;
+	google::protobuf::io::GzipOutputStream* zos;
+	google::protobuf::io::CodedOutputStream* out;
+	
+	friend class BinaryStatLogger;
+};
+
+PBStatLogger::PBStatLogger()
+	: filename(NULL), fd(-1), pbfos(NULL), zos(NULL) {}
+
+PBStatLogger::~PBStatLogger() {
+	if (out != NULL) {
+		delete out;
+	}
+	if (zos != NULL) {
+		delete zos;
+	}
+	if (pbfos != NULL) {
+		delete pbfos;
+	}
+	if (fd >= 0) {
+		close(fd);
+	}
+	if (filename != NULL) {
+		free(filename);
+	}
+}
+
+bool PBStatLogger::init(const char* name) {
+	filename = strdup(name);
+	google::protobuf::io::GzipOutputStream::Options zos_opts;
+	zos_opts.format = google::protobuf::io::GzipOutputStream::ZLIB;
+	
+	fd = ::open(filename, O_CREAT|O_WRONLY);
+	if (fd < 0) {
+		perror(filename);
+		return false;
+	}
+	pbfos = new google::protobuf::io::FileOutputStream(fd);
+	if (pbfos == NULL) {
+		return false;
+	}
+	zos = new google::protobuf::io::GzipOutputStream(pbfos, zos_opts);
+	if (zos == NULL) {
+		return false;
+	}
+	out = new google::protobuf::io::CodedOutputStream(zos);
+	return out != NULL;
+}
+
+// static
+BinaryStatLogger* BinaryStatLogger::open(const char* name) {
+	BinaryStatLogger* it = new PBStatLogger();
+	bool ok = it->init(name);
+	if (!ok) {
+		delete it;
+		return NULL;
+	}
+	return it;
+}
+
+bool PBStatLogger::log(
+		const SolverStats* it,
+		LastNMinMax<double>* recentKmpp, LastNMinMax<double>* recentSpread) {
+	StatLogEntry le;
+	le.set_generation(it->generation);
+	le.set_kmpp(it->avgPopDistToCenterOfDistKm);
+	le.set_averagepopulation(it->popavg);
+	le.set_popstddev(it->popstd);
+	le.set_maxpop(it->popmax);
+	le.set_minpop(it->popmin);
+	le.set_medianpop(it->popmed);
+	if (it->nod > 0) {
+		le.set_nodistrictblocks(it->nod);
+		le.set_nodistrictpop(it->nodpop);
+	}
+	if (recentKmpp != NULL) {
+		le.set_kmppvariability(
+			(1.0 * recentKmpp->max() - recentKmpp->min()) / recentKmpp->last());
+	}
+	if (recentSpread != NULL) {
+		le.set_spreadvariability(
+			(1.0 * recentSpread->max() - recentSpread->min()) / it->popavg);
+	}
+	int lesize = le.ByteSize();
+	out->WriteVarint32(lesize);
+	return le.SerializeToCodedStream(out);
+}
+
+#else
+// static
+BinaryStatLogger* BinaryStatLogger::open(const char* name) {
+	return NULL;
+}
 #endif

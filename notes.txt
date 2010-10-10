@@ -162,5 +162,7 @@ http://www.rethinkingredistricting.com/
 clean, run inside data/??/:
 rm -f *.jpg *.png *.mppb *.pb *.links *.dsz drendcmd basicargs handargs makedefaults .make *.uf1 mrun?? measure geometry.pickle ??_start_stats .uf1
 
+TODO: fix Alaska, the map data has longitudes crossing -180 to +180. and if I get really crazy, do polar projections or something.
+
 TODO: overlay the "urban area" data onto my maps.
 http://www2.census.gov/geo/tiger/TIGER2009/tl_2009_us_uac00.zip

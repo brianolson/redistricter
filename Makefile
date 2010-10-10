@@ -37,21 +37,20 @@ JAVAC?=javac
 
 
 #TODO: this is getting rediculous, might be time for autoconf. ew. autoconf.
-LDPNG=-lpng12
-#LDPNG=-lpng14
+LDPNG?=-lpng12
 LDFLAGS+=${LDPNG} -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
 COREOBJS+=GrabIntermediateStorage.o AbstractDistrict.o DistrictSet.o
 COREOBJS+=NearestNeighborDistrictSet.o protoio.o StatThing.o
-COREOBJS+=uf1.o logging.o redata.pb.o
+COREOBJS+=uf1.o logging.o redata.pb.o BinaryStatLogger.o
 
 CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
 CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
 CORESRCS+=GrabIntermediateStorage.cpp AbstractDistrict.cpp DistrictSet.cpp
 CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp StatThing.cpp
-CORESRCS+=uf1.cpp
+CORESRCS+=uf1.cpp BinaryStatLogger.cpp
 
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp
@@ -123,6 +122,9 @@ run:	districter2
 
 pw:	pw.cpp
 	g++ -Wall ${LDPNG} pw.cpp -lz -o pw -g
+
+dumpBinLog:	dumpBinLog.cpp redata.pb.cc
+	g++ -lz -lprotobuf dumpBinLog.cpp redata.pb.cc -o dumpBinLog
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj

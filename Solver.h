@@ -12,6 +12,7 @@ class GeoData;
 class GrabIntermediateStorage;
 class Node;
 template<class T> class LastNMinMax;
+class BinaryStatLogger;
 
 // TODO separate application state and solution state!
 class Solver {
@@ -49,6 +50,7 @@ public:
 	FILE* statLog;
 	int statLogInterval;
 	int statLogCountdown;
+	BinaryStatLogger* pbStatLog;
 	
 	char* distfname;
 	char* coordfname;

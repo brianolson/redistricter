@@ -20,6 +20,7 @@
 #include <zlib.h>
 
 #include "arghandler.h"
+#include "BinaryStatLogger.h"
 #include "Solver.h"
 #include "LinearInterpolate.h"
 #include "GrabIntermediateStorage.h"
@@ -152,6 +153,9 @@ Solver::~Solver() {
 		delete loadname;
 	}
 #endif
+	if (pbStatLog != NULL) {
+		delete pbStatLog;
+	}
 }
 
 // doesn't do anything, just a tag to switch on in Solver::load()
@@ -836,6 +840,7 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
 "-pngW n             width of image to make\n"
 "-pngH n             height of image to make\n"
 "-statLog statlog    file to write per-step stats to\n"
+"-binLog statlog     file to write binary per-step stats to\n"
 "-sLog prefix        write out a solution file every few genrations to prefix%d.dsz\n"
 "-pLog prefix        write out a solution png every few genrations to prefix%d.png\n"
 "-oldCDs             use old districts as starting point\n"
@@ -853,6 +858,7 @@ int Solver::handleArgs( int argc, char** argv ) {
 	int argi = 1;
 	char* uf1InputName = NULL;
 	char* pbInputName = NULL;
+	const char* binLogName = NULL;
 	const char* statLogName = NULL;
 	bool oldCDs = false;
 	bool blankDists = false;
@@ -877,6 +883,7 @@ int Solver::handleArgs( int argc, char** argv ) {
 		StringArgWithCopy("pngout", &pngname);
 		IntArg("pngW", &pngWidth);
 		IntArg("pngH", &pngHeight);
+		StringArg("binLog", &binLogName);
 		StringArg("statLog", &statLogName);
 		StringArgWithCopy("sLog", &solutionLogPrefix);
 		StringArgWithCopy("pLog", &pngLogPrefix);
@@ -917,6 +924,9 @@ int Solver::handleArgs( int argc, char** argv ) {
 			perror(statLogName);
 			exit(1);
 		}
+	}
+	if (binLogName != NULL) {
+		pbStatLog = BinaryStatLogger::open(binLogName);
 	}
 	if (oldCDs) {
 		initMode = initWithOldDistricts;
@@ -1118,20 +1128,25 @@ int Solver::main( int argc, char** argv ) {
 				memcpy( bestKmppMap, winner, sizeof(POPTYPE) * gd->numPoints );
 			}
 		}
-		if ( statLog != NULL ) {
+		if ( (statLog != NULL) || (pbStatLog != NULL) ) {
 			if ( statLogCountdown == 0 ) {
-				char ds[256];
-				//getDistrictStats( ds, sizeof(ds) );
-				curst->toString( ds, sizeof(ds) );
-				fprintf( statLog, "generation: %d\n%s", gencount, ds );
-				if ((recentKmpp != NULL) && (recentSpread != NULL)) {
-					fprintf( statLog, "kmpp var per %d=%f, spread var per %d=%f\n",
-						recentKmpp->count(), (1.0 * recentKmpp->max() - recentKmpp->min()) / recentKmpp->last(),
-						recentSpread->count(), (1.0 * recentSpread->max() - recentSpread->min()) / districtPopTarget);
+				if (statLog != NULL) {
+					char ds[256];
+					//getDistrictStats( ds, sizeof(ds) );
+					curst->toString( ds, sizeof(ds) );
+					fprintf( statLog, "generation: %d\n%s", gencount, ds );
+					if ((recentKmpp != NULL) && (recentSpread != NULL)) {
+						fprintf( statLog, "kmpp var per %d=%f, spread var per %d=%f\n",
+								recentKmpp->count(), (1.0 * recentKmpp->max() - recentKmpp->min()) / recentKmpp->last(),
+								recentSpread->count(), (1.0 * recentSpread->max() - recentSpread->min()) / districtPopTarget);
+					}
+					fprintf( statLog, "\n");
+					statLogCountdown = statLogInterval;
+					fflush( statLog );
 				}
-				fprintf( statLog, "\n");
-				statLogCountdown = statLogInterval;
-				fflush( statLog );
+				if (pbStatLog != NULL) {
+					pbStatLog->log(curst, recentKmpp, recentSpread);
+				}
 			}
 			statLogCountdown--;
 		}

@@ -2,6 +2,7 @@ DEPENDENCIES:
 	C++ compiler
 	Java 2.5+
 	Python 2.4+
+	png library
 	zlib compression library
 	google protocol buffers
 	http://code.google.com/p/protobuf/ *
@@ -29,9 +30,11 @@ Make a directory, which I traditionally call "data", to hold the Census data.
 ./setupstatedata.py ga
 
 The 'runallstates.py' script can be used to repeatedly run one or more states.
-./runallstates.py ga
+./runallstates.py --port=8080 ga
 
+The --port argument is optional, but runs a handy HTTP server on that port (e.g. http://localhost:8080/ ) which nicely displays status and results.
 
+Lots of other options are available on both ./setupstatedata.py and ./runallstates.py and there is --help available for them.
 
 ---
 * Setting up protobuf

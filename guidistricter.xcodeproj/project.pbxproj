@@ -19,6 +19,10 @@
 		1F2807B60A61A54400959DA5 /* record2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B50A61A54400959DA5 /* record2.cpp */; };
 		1F2807B80A61A55400959DA5 /* recordI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807B70A61A55400959DA5 /* recordI.cpp */; };
 		1F2807BC0A61A58800959DA5 /* makepolys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2807BB0A61A58800959DA5 /* makepolys.cpp */; };
+		1F28A4C81260DCC900842329 /* protoio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA240E3B6D8D00870895 /* protoio.cpp */; };
+		1F28A4D91260DD9000842329 /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
+		1F28A5281260E47300842329 /* BinaryStatLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28A5271260E47300842329 /* BinaryStatLogger.cpp */; };
+		1F28A5291260E47300842329 /* BinaryStatLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28A5271260E47300842329 /* BinaryStatLogger.cpp */; };
 		1F28F51A0FE1EBB600AECBB8 /* PBPointOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28F5190FE1EBB600AECBB8 /* PBPointOutput.cpp */; };
 		1F28F51D0FE1EC4300AECBB8 /* redata.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1F5ECA270E3B6DB600870895 /* redata.pb.cc */; };
 		1F2DFD1A0F3DDA34008FF766 /* logging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DFD190F3DDA34008FF766 /* logging.cpp */; };
@@ -189,6 +193,8 @@
 		1F2807B50A61A54400959DA5 /* record2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = record2.cpp; path = tiger/record2.cpp; sourceTree = "<group>"; };
 		1F2807B70A61A55400959DA5 /* recordI.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = recordI.cpp; path = tiger/recordI.cpp; sourceTree = "<group>"; };
 		1F2807BB0A61A58800959DA5 /* makepolys.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makepolys.cpp; path = tiger/makepolys.cpp; sourceTree = "<group>"; };
+		1F28A5271260E47300842329 /* BinaryStatLogger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BinaryStatLogger.cpp; sourceTree = "<group>"; };
+		1F28A52A1260E47F00842329 /* BinaryStatLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinaryStatLogger.h; sourceTree = "<group>"; };
 		1F28F4A60FE0B11400AECBB8 /* renderDistricts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderDistricts.h; sourceTree = "<group>"; };
 		1F28F4F50FE0BCD800AECBB8 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
 		1F28F4F90FE16EC200AECBB8 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
@@ -445,6 +451,8 @@
 				1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */,
 				1FF95AD20ED0D015009A375C /* AbstractDistrict.h */,
 				3259352C0FD9DE9F008A40FB /* analyze.cpp */,
+				1F28A5271260E47300842329 /* BinaryStatLogger.cpp */,
+				1F28A52A1260E47F00842329 /* BinaryStatLogger.h */,
 				1F1862C90926B03A0025E521 /* Bitmap.cpp */,
 				1FF95AD90ED0D083009A375C /* Bitmap.h */,
 				1F28F4F90FE16EC200AECBB8 /* config.h */,
@@ -794,6 +802,9 @@
 				1FEAA3E60DC5651D00A08E78 /* Bitmap.cpp in Sources */,
 				325B86DB0F27A79B004734B7 /* StatThing.cpp in Sources */,
 				1F2DFD1B0F3DDA34008FF766 /* logging.cpp in Sources */,
+				1F28A4C81260DCC900842329 /* protoio.cpp in Sources */,
+				1F28A4D91260DD9000842329 /* redata.pb.cc in Sources */,
+				1F28A5291260E47300842329 /* BinaryStatLogger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -929,6 +940,7 @@
 				1F2E3DCB0F1994C800A1A037 /* uf1.cpp in Sources */,
 				1F2DFD1A0F3DDA34008FF766 /* logging.cpp in Sources */,
 				325934FF0FD8B3FA008A40FB /* redata.pb.cc in Sources */,
+				1F28A5281260E47300842329 /* BinaryStatLogger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1442,7 +1454,10 @@
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 2;
-				GCC_PREPROCESSOR_DEFINITIONS = GOOGLE_PROTOBUF_NO_RTTI;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 				WARNING_CFLAGS = "-Wall";
 				ZERO_LINK = NO;
 			};
@@ -1456,7 +1471,10 @@
 				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = GOOGLE_PROTOBUF_NO_RTTI;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 			};
 			name = Deployment;
 		};
@@ -1468,7 +1486,10 @@
 				ARCHS_STANDARD_64_BIT_PRE_XCODE_3_1 = x86_64;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = GOOGLE_PROTOBUF_NO_RTTI;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_PROTOBUF,
+					GOOGLE_PROTOBUF_NO_RTTI,
+				);
 			};
 			name = Default;
 		};
