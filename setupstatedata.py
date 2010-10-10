@@ -537,7 +537,8 @@ class StateData(object):
 		if not os.path.exists(mppb_name):
 			print 'need %s' % mppb_name
 			renderArgs = ['--rast', mppb_name, '--mask', mask_name,
-				'--boundx', '1920', '--boundy', '1080']
+				'--boundx', '1920', '--boundy', '1080',
+				'--rastgeom', os.path.join(dpath, 'rastgeom')]
 		if renderArgs:
 			if linksargs:
 				if not facesPaths:

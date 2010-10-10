@@ -18,5 +18,5 @@ fi
 ${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog --d2 --port=8080 "$@"
 if [ -f reload ]; then
 	rm -f reload
-	exec ./runloop
+	exec ./runloop "$@"
 fi

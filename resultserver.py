@@ -98,7 +98,7 @@ class htmlRootDirListing(htmlDirListing):
   def htmlDirEntryForDir(self, entry, fpath):
     nobest = ''
     if not os.path.exists(os.path.join(fpath, 'best')):
-      nobest = ' no best'
+      nobest = ' no best <a href="%s/kmpp_spread.svg">kmpp_spread.svg</a>' % entry
     return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a>%s</td></tr>""" % (
 	entry, entry, nobest)
 
