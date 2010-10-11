@@ -91,7 +91,7 @@ Solver::Solver() :
 #if WITH_PNG
 	pngLogPrefix( NULL ), pngLogInterval( 100 ), pngLogCountdown( 0 ),
 #endif
-	statLog( NULL ), statLogInterval( 100 ), statLogCountdown( 0 ),
+	statLog( NULL ), statLogInterval( 100 ), statLogCountdown( 0 ), pbStatLog( NULL ),
 	distfname( NULL ), coordfname( NULL ),
 #if WITH_PNG
 	pngname( NULL ), pngWidth( 1000 ), pngHeight( 1000 ),

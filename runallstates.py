@@ -45,6 +45,7 @@ import select
 import stat
 import subprocess
 import sys
+import tarfile
 import threading
 import time
 import traceback
@@ -838,17 +839,13 @@ class runallstates(object):
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
-		# TODO: use python standard tarfile library
 		cmd = ["tar", "jcf", "g.tar.bz2", "g"]
 		if self.dry_run or self.verbose:
 			print "(cd %s && %s)" % (ctd, " ".join(cmd))
 		if not self.dry_run:
-			ret = subprocess.Popen(cmd, cwd=ctd).wait()
-			if ret != 0:
-				self.addStopReason("tar g failed %d" % ret)
-				sys.stderr.write(self.stopreason + '\n')
-				self.softfail = True
-				return False
+			g_tar = tarfile.open(os.path.join(ctd, 'g.tar.bz2'), 'w|bz2')
+			g_tar.add(os.path.join(ctd, 'g'), arcname='g')
+			g_tar.close()
 		# TODO: use python standard library recursive remove
 		cmd = ["rm", "-rf", "g"]
 		if self.dry_run or self.verbose:
@@ -883,11 +880,12 @@ class runallstates(object):
 		    (not mb.they) or os.path.exists(os.path.join(stu, final2_png))):
 			return
 		cmd = [os.path.join(self.bindir, "drend")] + drendargs
-		print "(cd %s && %s)" % (stu, ' '.join(cmd))
+		cmdstr = "(cd %s && %s)" % (stu, ' '.join(cmd))
+		print cmdstr
 		if not self.dry_run:
 			ret = subprocess.Popen(cmd, shell=False, cwd=stu).wait()
 			if ret != 0:
-				self.addStopReason("drend failed %d\n" % ret)
+				self.addStopReason("drend failed (%d): %s\n" % (ret, cmdstr))
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False

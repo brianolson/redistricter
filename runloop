@@ -15,7 +15,7 @@ if [ -z ${REDISTRICTER_DATA} ]; then
 	exit 1
 fi
 
-${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog --d2 --port=8080 "$@"
+${REDISTRICTER_BIN}/runallstates.py --bestlog=bestlog --runlog=runlog --d2 --port=8080 --fr=3/7 "$@"
 if [ -f reload ]; then
 	rm -f reload
 	exec ./runloop "$@"
