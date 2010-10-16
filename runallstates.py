@@ -301,9 +301,9 @@ class configuration(object):
 			if old_datadir != self.datadir:
 				if not self.readDatadirConfig():
 					raise ParseError('problem with datadir "%s"' % self.datadir)
-		elif line == 'enabled':
+		elif line == 'enable' or line == 'enabled':
 			self.enabled = True
-		elif line == 'disabled':
+		elif line == 'disable' or line == 'disabled':
 			self.enabled = False
 		else:
 			raise ParseError('bogus config line: "%s"\n' % line)
@@ -465,8 +465,17 @@ class runallstates(object):
 	def getNextState(self):
 		if self.lock:
 			self.lock.acquire()
+		origQpos = self.qpos
 		stu = self.states[self.qpos]
 		self.qpos = (self.qpos + 1) % len(self.states)
+		# check isEnabled at this time instead of setup so that it can be gotten dynamically from configoverrides
+		while not self.config[stu].isEnabled():
+			stu = self.states[self.qpos]
+			self.qpos = (self.qpos + 1) % len(self.states)
+			if self.qpos == origQpos:
+				if self.lock:
+					self.lock.release()
+				raise Exception('there are no enabled states')
 		if self.lock:
 			self.lock.release()
 		return stu
@@ -817,6 +826,11 @@ class runallstates(object):
 				self.addStopReason("solver exited with status %d" % p.returncode)
 				if errorlines:
 					self.addStopReason('\n' + '\n'.join(errorlines))
+					statlog = open(os.path.join(ctd, 'statlog'), 'a')
+					statlog.write('# last lines of stderr:\n')
+					for eline in errorlines:
+						statlog.write('#' + eline + '\n')
+					statlog.close()
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = self.logCompletion(0)
 				return False
@@ -931,7 +945,8 @@ class runallstates(object):
 	
 	def setCurrentRunningHtml(self, handler):
 		if handler.path == '/':
-			handler.dirExtra = ('<div><div>Currently Active:</div>' + 
+			handler.dirExtra = ('<div><div>Started at: ' + time.ctime(self.start) +
+				'</div><div>Currently Active:</div>' + 
 				''.join(['<div><a href="%s/">%s/</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
 
 	def main(self, argv):
