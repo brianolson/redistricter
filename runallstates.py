@@ -454,6 +454,8 @@ class runallstates(object):
 		self.errorSample = 1
 		# array of int of length errorSample. 1=success. sum must be >= (errorSample - errorRate)
 		self.runSuccessHistory = []
+		# Client object for referring to getting data from server.
+		self.client = None
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -692,6 +694,12 @@ class runallstates(object):
 				c = configuration(datadir=stdir, dataroot=self.datadir)
 				self.config[c.name] = c
 	
+	def applyConfigOverrideLine(self, line):
+		(cname, cline) = line.split(':', 1)
+		cname = cname.strip()
+		if cname in self.config:
+			self.config[cname].applyConfigLine(cline)
+	
 	def loadConfigOverride(self):
 		if not self.config_override_path:
 			return
@@ -705,12 +713,12 @@ class runallstates(object):
 				return
 		if self.lock:
 			self.lock.acquire()
+		if self.client:
+			for line in self.client.runOptionLines():
+				self.applyConfigOverrideLine(line)
 		f = open(self.config_override_path, 'r')
 		for line in f:
-			(cname, cline) = line.split(':', 1)
-			cname = cname.strip()
-			if cname in self.config:
-				self.config[cname].applyConfigLine(cline)
+			self.applyConfigOverrideLine(line)
 		self.config_override_lastload = st.st_mtime
 		f.close()
 		if self.lock:
@@ -942,6 +950,8 @@ class runallstates(object):
 				datetime.datetime.now().isoformat(" "),
 				oldmsg))
 			outf.flush()
+			if self.client:
+				self.client.sendResultDir(os.path.join(stu, best.root))
 	
 	def setCurrentRunningHtml(self, handler):
 		if handler.path == '/':
@@ -954,13 +964,13 @@ class runallstates(object):
 		self.checkSetup()
 		if self.options.server:
 			logging.info('configuring client of server "%s"', self.options.server)
-			cl = client.Client(self.options)
+			self.client = client.Client(self.options)
 			if self.statearglist:
 				for stu in self.statearglist:
-					cl.getDataForStu(stu)
+					self.client.getDataForStu(stu)
 			else:
 				# Pick one randomly, fetch it
-				cl.unpackArchive(cl.randomDatasetName())
+				self.client.unpackArchive(self.client.randomDatasetName())
 		self.loadConfigurations()
 		if not self.config:
 			sys.stderr.write('error: no configurations\n')
