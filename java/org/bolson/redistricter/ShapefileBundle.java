@@ -1201,6 +1201,7 @@ public static final String usage =
 			parseArgv(argv);
 			run();
 		}
+
 		public void parseArgv(String[] argv) throws IOException {
 			argv = rastOpts.parseOpts(argv);
 			for (int i = 0; i < argv.length; ++i) {
@@ -1251,7 +1252,13 @@ public static final String usage =
 			ArrayList<ShapefileBundle> bundles = new ArrayList<ShapefileBundle>();
 			for (String path : inputPaths) {
 				ShapefileBundle x = new ShapefileBundle();
-				x.open(path);
+				try {
+					x.open(path);
+				} catch (IOException e) {
+					System.err.println(path + ": error: " + e.toString());
+					e.printStackTrace();
+					System.exit(1);
+				}
 				bundles.add(x);
 			}
 			ArrayList<PolygonProcessor> pps = new ArrayList<PolygonProcessor>();
