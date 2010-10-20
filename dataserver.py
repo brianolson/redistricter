@@ -3,9 +3,26 @@
 # Run this in datasets dir:
 # ${REDISTRICTER_BIN}/dataserver.py
 
+import optparse
 import os
 import string
 import sys
+
+try:
+	from boto.s3.connection import S3Connection
+	have_boto = True
+	# host='commondatastorage.googleapis.com'
+	# host='s3.amazonaws.com'
+	def yieldS3Datasets(awsid, awskey, host, bucket, prefix):
+		s3 = S3Connection(awsid, awskey, host=host)
+		buck = s3.get_bucket(bucket)
+		for k in buck.list(prefix=prefix):
+			if k.name.endswith('_runfiles.tar.gz'):
+				yield k.generate_url(expires_in=-1, query_auth=False, force_http=True)
+except:
+	have_boto = False
+	def yieldS3Datasets(awsid, awskey, host, bucket, prefix):
+		raise Exception('no boto')
 
 from newerthan import newerthan
 
@@ -53,7 +70,26 @@ def wrapConfigFile(configData):
 	return '<pre class="config">' + configData + '</pre>\n'
 
 
-def makeHTMLBodyForDirectory(dirpath='.'):
+def datasetListForDirectory(dirpath):
+	"""Return HTML string."""
+	datasets = []
+	for name in os.listdir(dirpath):
+		if name.endswith('_runfiles.tar.gz'):
+			datasets.append(datafileLine(name))
+	return ''.join(datasets)
+
+
+def datasetListForS3(options):
+	"""Return HTML string."""
+	datasets = []
+	for url in yieldS3Datasets(options.awsid, options.awssecret, options.s3host, options.s3bucket, options.s3prefix):
+		name = url.rsplit('/', 1)[1]
+		line = '<div><a class="data" href="%s">%s</a></div>\n' % (url, name)
+		datasets.append(line)
+	return ''.join(datasets)
+
+
+def makeHTMLBodyForDirectory(dirpath='.', datasets=''):
 	"""Return HTML body listing config and data in directory."""
 	ccpath = os.path.join(dirpath, 'client_config')
 	if not os.path.exists(ccpath):
@@ -79,13 +115,9 @@ def makeHTMLBodyForDirectory(dirpath='.'):
 				'tried to write basic run options to "%s" but failed: %s' % (ropath, e))
 	else:
 		runopts = open(ropath, 'r').read()
-	datasets = []
-	for name in os.listdir(dirpath):
-		if name.endswith('_runfiles.tar.gz'):
-			datasets.append(datafileLine(name))
 	return page_template.substitute({
 		'title': 'redistricter data and config',
-		'datasets': ''.join(datasets),
+		'datasets': datasets,
 		'config': config,
 		'runopts': runopts})
 
@@ -102,11 +134,25 @@ def needsUpdate(dirpath, outpath):
 	return False
 
 if __name__ == '__main__':
-	outpath = os.path.abspath('index.html')
-	if needsUpdate('.', outpath):
+	argp = optparse.OptionParser()
+	argp.add_option('--dir', dest='dir', default='.', help='where to find datasets and config files')
+	argp.add_option('--out', dest='out', default='index.html', help='file name to write config to, default=index.html')
+	argp.add_option('--awsid', dest='awsid', default=os.environ.get('AWS_ID'))
+	argp.add_option('--awssecret', dest='awssecret', default=os.environ.get('AWS_SECRET'))
+	argp.add_option('--s3host', dest='s3host', default='s3.amazonaws.com')
+	argp.add_option('--s3bucket', dest='s3bucket', default=None, help='bucket/prefix*_runfiles.tar.gz')
+	argp.add_option('--s3prefix', dest='s3prefix', default='datasets', help='bucket/prefix*_runfiles.tar.gz')
+	argp.add_option('--force', dest='force', default=False, action='store_true')
+	(options, args) = argp.parse_args()
+	outpath = os.path.abspath(options.out)
+	if options.force or needsUpdate(options.dir, outpath):
 		out = open(outpath, 'w')
-		out.write(makeHTMLBodyForDirectory())
+		if options.s3bucket:
+			datasets = datasetListForS3(options)
+		else:
+			datasets = datasetListForDirectory(options.dir)
+		out.write(makeHTMLBodyForDirectory(options.dir, datasets))
 		out.close()
-		print 'wrote index.html'
+		print 'wrote: %s' % outpath
 	else:
 		print 'no update needed'

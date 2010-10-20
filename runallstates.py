@@ -711,6 +711,7 @@ class runallstates(object):
 		if self.config_override_lastload:
 			if st.st_mtime > self.config_override_lastload:
 				return
+		print 'reloading configoverride'
 		if self.lock:
 			self.lock.acquire()
 		if self.client:
