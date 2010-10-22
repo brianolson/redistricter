@@ -63,20 +63,28 @@ def sizeStr(bytes):
 	return '%d' % (bytes)
 
 
+def countStatsumInDir(dir):
+	count = 0
+	for (path, dirs, files) in os.walk(dir):
+		if 'statsum' in files:
+			count += 1
+	return count
+
+
 class htmlDirListing(object):
 	def __init__(self, rooturl, dirpath, entries):
-	  self.rooturl = rooturl
-	  self.dirpath = dirpath
-	  self.entries = entries
+		self.rooturl = rooturl
+		self.dirpath = dirpath
+		self.entries = entries
 
 	def htmlDirEntryForDir(self, entry, fpath):
-	  return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a></td></tr>""" % (
-	      entry, entry)
+		return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a></td></tr>""" % (
+			entry, entry)
 
 	def htmlDirEntry(self, entry):
 		fpath = os.path.join(self.dirpath, entry)
 		if os.path.isdir(fpath):
-		  return self.htmlDirEntryForDir(entry, fpath)
+			return self.htmlDirEntryForDir(entry, fpath)
 		fst = os.stat(fpath)
 		size = sizeStr(fst.st_size)
 		when = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(fst.st_mtime))
@@ -93,14 +101,25 @@ class htmlDirListing(object):
 		out.append('</table>')
 		return ''.join(out)
 
+
+# Cauntion, filesystem intensive, lots of recursive os.walk()ing.
+doCountStatsums = False
+
+
 class htmlRootDirListing(htmlDirListing):
-#  def __init__(self, rooturl, dirpath, entries):
-  def htmlDirEntryForDir(self, entry, fpath):
-    nobest = ''
-    if not os.path.exists(os.path.join(fpath, 'best')):
-      nobest = ' no best <a href="%s/kmpp_spread.svg">kmpp_spread.svg</a>' % entry
-    return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a>%s</td></tr>""" % (
-	entry, entry, nobest)
+	# def __init__(self, rooturl, dirpath, entries):
+	def htmlDirEntryForDir(self, entry, fpath):
+		nobest = ''
+		countstr = ''
+		if doCountStatsums:
+			count = countStatsumInDir(fpath)
+			if count:
+				countstr = ' - %d runs' % count
+		if not os.path.exists(os.path.join(fpath, 'best')):
+			nobest = ' - <b>no best</b> - <a href="%s/kmpp_spread.svg">kmpp_spread.svg</a>' % entry
+		return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a>%s%s</td></tr>""" % (
+			entry, entry, countstr, nobest)
+
 
 def tail(linesource, lines=10):
 	special = []
@@ -324,7 +343,7 @@ class RuntimeExtensibleHandler(object):
 
 def runServer(port=8080):
 	reh = RuntimeExtensibleHandler(None)
-	httpd = BaseHTTPServer.HTTPServer( ('',port),  reh )
+	httpd = BaseHTTPServer.HTTPServer( ('',port), reh )
 	httpd.serve_forever()
 
 
@@ -332,7 +351,7 @@ def startServer(port=8080, exitIfLastThread=True, extensions=None):
 	"""extensions should be callable and take an argument of
 	SimpleHTTPServer.SimpleHTTPRequestHandler"""
 	reh = RuntimeExtensibleHandler(extensions)
-	httpd = BaseHTTPServer.HTTPServer( ('',port),  reh )
+	httpd = BaseHTTPServer.HTTPServer( ('',port), reh )
 	t = threading.Thread(target=httpd.serve_forever, args=())
 	t.setDaemon(exitIfLastThread)
 	t.start()
@@ -343,5 +362,7 @@ if __name__ == '__main__':
 	import optparse
 	argp = optparse.OptionParser()
 	argp.add_option('--port', dest='port', type='int', default=8080, help='port to serve stats on via HTTP')
+	argp.add_option('--count-runs', '--count', dest='countRuns', action='store_true', default=False, help='count statsum results under result dirs and display them in root result display. can be slow.')
 	(options, args) = argp.parse_args()
+	doCountStatsums = options.countRuns
 	runServer(options.port)

@@ -357,7 +357,6 @@ class Client(object):
 			'Content-Type': 'multipart/form-data; charset="utf-8"; boundary=' + boundary,
 			'Content-Length': str(len(sbody))}
 		print 'sending to ' + submiturl
-		print sbody
 		req = urllib2.Request(submiturl, data=sbody, headers=GET_headers)
 		uf = urllib2.urlopen(req)
 		retval = uf.read()

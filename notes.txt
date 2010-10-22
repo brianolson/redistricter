@@ -166,3 +166,5 @@ TODO: fix Alaska, the map data has longitudes crossing -180 to +180. and if I ge
 
 TODO: overlay the "urban area" data onto my maps.
 http://www2.census.gov/geo/tiger/TIGER2009/tl_2009_us_uac00.zip
+
+TODO: project states into something like azimuthal equal distance projection centered over the state  http://trac.osgeo.org/proj/
