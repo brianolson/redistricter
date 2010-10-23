@@ -57,6 +57,20 @@ import manybest
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
 
+
+def readUname():
+	p = subprocess.Popen(['uname'], stdout=subprocess.PIPE)
+	p.wait()
+	return p.stdout.read()
+
+# TODO: maybe a .dll case for cygwin?
+# This is only needed for running llvm bitcode through lli.
+uname = readUname().strip()
+if uname == 'Darwin':
+	library_suffix = '.dylib'
+else:
+	library_suffix = '.so'
+
 if (not has_poll) and (not has_select):
 	sys.stderr.write(
 """Lacking both select.poll() and select.select().
@@ -558,7 +572,7 @@ class runallstates(object):
 		self.bindir = os.path.realpath(options.bindir)
 		options.bindir = self.bindir
 		if options.exepath:
-			self.exe = os.path.realpath(options.exepath)
+			self.exe = [os.path.realpath(options.exepath)]
 		if options.runsecs is not None:
 			self.end = self.start + options.runsecs
 		self.configArgList = options.configList
@@ -593,11 +607,20 @@ class runallstates(object):
 	
 	def checkSetup(self):
 		if self.exe is None:
-			assert self.bindir is not None
-			self.exe = os.path.join(self.bindir, "districter2")
-			self.options.exepath = self.exe
-		if not IsExecutableFile(self.exe):
-			sys.stderr.write("bogus exe \"%s\" is not executable\n" % self.exe)
+			bitcodepath = os.path.join(self.bindir, "districter2.bc")
+			if os.path.exists(bitcodepath):
+				# use clang
+				self.exe = [
+					'lli',
+					'--load=libpng12' + library_suffix,
+					'--load=libprotobuf' + library_suffix,
+					bitcodepath]
+		if self.exe is None:
+			exepath = os.path.join(self.bindir, "districter2")
+			if IsExecutableFile(exepath):
+				self.exe = [exepath]
+		if self.exe is None:
+			sys.stderr.write("failed to find district2 executable\n")
 			sys.exit(1)
 		if not IsExecutableDir(self.datadir):
 			if self.options.server:
@@ -799,7 +822,7 @@ class runallstates(object):
 				self.softfail = True
 				return False
 			fout.close()
-		cmd = niceArgs + [self.exe] + self.stdargs + self.solverMode + self.config[stu].args + self.extrargs
+		cmd = niceArgs + self.exe + self.stdargs + self.solverMode + self.config[stu].args + self.extrargs
 		print "(cd %s && \\\n%s )" % (ctd, ' '.join(cmd))
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,

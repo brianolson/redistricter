@@ -16,7 +16,7 @@ THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze tools.jar
 #CXXLD=/Users/bolson/psrc/llvm/llvm/Debug+Asserts/bin/llvm-ld
 
 # Not clang
-CXXLD=${CXX} ${CXXFLAGS}
+CXXLD?=${CXX} ${CXXFLAGS}
 
 #OG:=-O2 -DNDEBUG=1
 OG?=-g

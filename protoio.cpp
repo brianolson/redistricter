@@ -262,7 +262,7 @@ bool PBStatLogger::init(const char* name) {
 	google::protobuf::io::GzipOutputStream::Options zos_opts;
 	zos_opts.format = google::protobuf::io::GzipOutputStream::ZLIB;
 	
-	fd = ::open(filename, O_CREAT|O_WRONLY);
+	fd = ::open(filename, O_CREAT|O_WRONLY, 0666);
 	if (fd < 0) {
 		perror(filename);
 		return false;
