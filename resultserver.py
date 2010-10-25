@@ -7,6 +7,7 @@ __author__ = "Brian Olson"
 
 import BaseHTTPServer
 import base64
+import cgi
 import os
 import re
 import SimpleHTTPServer
@@ -102,16 +103,17 @@ class htmlDirListing(object):
 		return ''.join(out)
 
 
-# Cauntion, filesystem intensive, lots of recursive os.walk()ing.
-doCountStatsums = False
-
 
 class htmlRootDirListing(htmlDirListing):
-	# def __init__(self, rooturl, dirpath, entries):
+	def __init__(self, rooturl, dirpath, entries, doCountStatsums=False):
+		htmlDirListing.__init__(self, rooturl, dirpath, entries)
+		# Cauntion, filesystem intensive, lots of recursive os.walk()ing.
+		self.doCountStatsums = doCountStatsums
+	
 	def htmlDirEntryForDir(self, entry, fpath):
 		nobest = ''
 		countstr = ''
-		if doCountStatsums:
+		if self.doCountStatsums:
 			count = countStatsumInDir(fpath)
 			if count:
 				countstr = ' - %d runs' % count
@@ -119,6 +121,13 @@ class htmlRootDirListing(htmlDirListing):
 			nobest = ' - <b>no best</b> - <a href="%s/kmpp_spread.svg">kmpp_spread.svg</a>' % entry
 		return """<tr class="ld"><td class="dn"><a href="%s/">%s/</a>%s%s</td></tr>""" % (
 			entry, entry, countstr, nobest)
+	
+	def __str__(self):
+		if self.doCountStatsums:
+			prefix = '<div><a href="/">no counts</a></div>'
+		else:
+			prefix = '<div><a href="/?count=1">count statsums</a></div>'
+		return prefix + super(htmlRootDirListing, self).__str__()
 
 
 def tail(linesource, lines=10):
@@ -202,9 +211,7 @@ def linkifyBestlog(bestlogText):
 
 def linkifyRunlogReplacer(m):
 	x = m.group(0)
-	print x
 	x = x.replace(' ', '/')
-	print x
 	return linkifyPath(x)
 
 
@@ -245,7 +252,10 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def __init__(self, request, client_address, server, extensions=None):
 		self.extensions = extensions
 		self.dirExtra = None
+		self.query = {}
+		#print 'request=' + repr(request)
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+		#print 'dir(self)=' + repr(dir(self))
 		self.extensions_map.update({
 			'.png': 'image/png',
 			'.jpg': 'image/jpeg',
@@ -286,7 +296,7 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(self.dirExtra)
 		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
 		if path == '':
-			self.wfile.write(htmlRootDirListing('', fpath, they))
+			self.wfile.write(htmlRootDirListing('', fpath, they, self.query.get('count') != None))
 		else:
 			self.wfile.write(htmlDirListing('', fpath, they))
 		self.wfile.write("""</body></html>\n""")
@@ -312,6 +322,11 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		return False
 	
 	def do_GET(self):
+		pathQuery = self.path.split('?', 1)
+		self.path = pathQuery[0]
+		query = {}
+		if len(pathQuery) > 1:
+			self.query = cgi.parse_qs(pathQuery[1])
 		if self.runExtensions():
 			return
 		if self.path == '/favicon.ico':
@@ -364,5 +379,4 @@ if __name__ == '__main__':
 	argp.add_option('--port', dest='port', type='int', default=8080, help='port to serve stats on via HTTP')
 	argp.add_option('--count-runs', '--count', dest='countRuns', action='store_true', default=False, help='count statsum results under result dirs and display them in root result display. can be slow.')
 	(options, args) = argp.parse_args()
-	doCountStatsums = options.countRuns
 	runServer(options.port)

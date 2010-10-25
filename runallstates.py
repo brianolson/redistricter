@@ -201,6 +201,7 @@ EXCLUSIVE_CLASSES_ = [
 
 def mergeArgs(oldargs, newargs):
 	"""new args replace, or append to oldargs."""
+	# TODO: handle --foo=bar values
 	ni = 0
 	while ni < len(newargs):
 		oi = 0
@@ -252,6 +253,8 @@ class configuration(object):
 		self.geom = None
 		self.path = config
 		self.dataroot = dataroot
+		# weight into chance of running randomly selected
+		self.weight = 1.0
 		# readtime can be used to re-read changed config files
 		self.readtime = None
 		if name is None:
@@ -315,6 +318,8 @@ class configuration(object):
 			if old_datadir != self.datadir:
 				if not self.readDatadirConfig():
 					raise ParseError('problem with datadir "%s"' % self.datadir)
+		elif line.startswith('weight:'):
+			self.weight = float(line[7:].strip())
 		elif line == 'enable' or line == 'enabled':
 			self.enabled = True
 		elif line == 'disable' or line == 'disabled':
@@ -478,7 +483,24 @@ class runallstates(object):
 		if self.lock:
 			self.lock.release()
 
+	def getNextWeightedRandomState(self):
+		weightedStu = []
+		totalweight = 0.0
+		for stu, conf in self.states.iteritems():
+			if conf.isEnabled:
+				weight = conf.weight
+				weightedStu.append( (weight, stu) )
+				totalweight += weight
+		pick = random.random() * totalweight
+		for weight, stu in weightedStu:
+			pick -= weight
+			if pick <= 0:
+				return stu
+		raise Excption('internal error, weights shifted.')
+
 	def getNextState(self):
+		if self.options.weighted:
+			return self.getNextWeightedRandomState()
 		if self.lock:
 			self.lock.acquire()
 		origQpos = self.qpos
@@ -551,6 +573,7 @@ class runallstates(object):
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
 		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
+		argp.add_option('--weighted', dest='weighted', action='store_true', default=False)
 		argp.add_option('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default=None, help='f/s checks the last (f+s) events and exits if >f are failures')
 		(options, args) = argp.parse_args()
 		self.options = options
@@ -774,8 +797,8 @@ class runallstates(object):
 		while not self.shouldstop():
 			# sleep 1 is a small price to pay to prevent stupid runaway loops
 			time.sleep(1)
-			stu = self.getNextState()
 			self.loadConfigOverride()
+			stu = self.getNextState()
 			self.runstate(stu, label)
 	
 	def runstate(self, stu, label=None):
