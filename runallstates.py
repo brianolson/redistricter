@@ -486,7 +486,8 @@ class runallstates(object):
 	def getNextWeightedRandomState(self):
 		weightedStu = []
 		totalweight = 0.0
-		for stu, conf in self.states.iteritems():
+		for stu in self.states:
+			conf = self.config[stu]
 			if conf.isEnabled:
 				weight = conf.weight
 				weightedStu.append( (weight, stu) )
