@@ -880,13 +880,15 @@ int Solver::handleArgs( int argc, char** argv ) {
 		StringArgWithCopy("loadSolution", &loadname);
 		StringArgWithCopy("distout", &distfname);  // deprecated?
 		StringArgWithCopy("coordout", &coordfname);  // deprecated?
+#if WITH_PNG
 		StringArgWithCopy("pngout", &pngname);
 		IntArg("pngW", &pngWidth);
 		IntArg("pngH", &pngHeight);
+		StringArgWithCopy("pLog", &pngLogPrefix);
+#endif
 		StringArg("binLog", &binLogName);
 		StringArg("statLog", &statLogName);
 		StringArgWithCopy("sLog", &solutionLogPrefix);
-		StringArgWithCopy("pLog", &pngLogPrefix);
 		BoolArg("oldCDs", &oldCDs);
 		BoolArg("blankDists", &blankDists);
 		BoolArg("q", &quiet);

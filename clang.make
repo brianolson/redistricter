@@ -1,9 +1,10 @@
-CLANGPREFIX?=/Users/bolson/psrc/llvm/llvm/Debug+Asserts/bin/
-CC=${CLANGPREFIX}clang -emit-llvm
-CXX=${CLANGPREFIX}clang -emit-llvm
-LDFLAGS+=-L/usr/lib/gcc/i686-apple-darwin10/4.2.1
+-include localvars.make
+
+CC=${CLANGPREFIX}clang -emit-llvm -DWITH_PNG=0
+CXX=${CLANGPREFIX}clang -emit-llvm -DWITH_PNG=0
 LDFLAGS+=-lstdc++
 CXXLD=${CLANGPREFIX}llvm-ld
+LDPNG:=
 
 
 clang_all:	districter2
