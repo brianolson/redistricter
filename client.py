@@ -314,12 +314,16 @@ class Client(object):
 		# TODO: find out what the server would prefer us to work on.
 		return random.choice(self.knownDatasets.keys())
 	
-	def sendResultDir(self, resultdir, user=None):
+	def sendResultDir(self, resultdir, vars=None):
 		# It kinda sucks that I have to reimplement MIME composition here
 		# but the standard library is really designed for email and not http.
 		submiturl = self.config.get('config', 'submiturl')
 		if not submiturl:
 			sys.stderr.write('cannot send to server because no submiturl is configured\n')
+			return
+		sentmarker = os.path.join(resultdir, 'sent')
+		if os.path.exists(sentmarker):
+			sys.stderr.write('found "%s", already sent dir %s, not sending again\n' % (sentmarker, resultdir))
 			return
 		bkpath = os.path.join(resultdir, 'bestKmpp.dsz')
 		if not os.path.exists(bkpath):
@@ -340,8 +344,8 @@ class Client(object):
 		partMsg(outer, os.path.join(resultdir, 'statlog.gz'), 'application/gzip', 'statlog')
 		partMsg(outer, os.path.join(resultdir, 'binlog'), 'application/octet-stream', 'binlog')
 		partMsg(outer, os.path.join(resultdir, 'statsum'), 'text/plain', 'statsum')
-		if user:
-			outer.append(MyMimePart(name='user', mtype='text/plain', value=user))
+		if vars:
+			outer.append(MyMimePart(name='vars', mtype='text/plain', value=urllib.urlencode(vars)))
 		boundary = '===============%d%d==' % (
 			rand.randint(1000000000,2000000000), rand.randint(1000000000,2000000000))
 		body = StringIO.StringIO()
@@ -358,9 +362,17 @@ class Client(object):
 			'Content-Length': str(len(sbody))}
 		print 'sending to ' + submiturl
 		req = urllib2.Request(submiturl, data=sbody, headers=GET_headers)
-		uf = urllib2.urlopen(req)
-		retval = uf.read()
-		print retval
+		try:
+			uf = urllib2.urlopen(req)
+			retval = uf.read()
+			print retval
+			# mark dir as sent so we don't re-send it
+			if retval.startswith('ok'):
+				tf = open(sentmarker, 'w')
+				tf.write(time.ctime() + '\n')
+				tf.close()
+		except Exception, e:
+			print 'send result failed for %s due to %r' % (resultdir, e)
 		print 'Done'
 
 
@@ -404,7 +416,7 @@ def main():
 		logging.getLogger().setLevel(logging.DEBUG)
 	c = Client(options)
 	if options.send:
-		c.sendResultDir(options.send)
+		c.sendResultDir(options.send, {'localpath':options.send})
 		return
 	for arch, url in c.knownDatasets.iteritems():
 		c.unpackArchive(arch, url)

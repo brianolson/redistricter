@@ -50,7 +50,7 @@ CORESRCS:=fileio.cpp Bitmap.cpp tiger/mmaped.cpp Solver.cpp District2.cpp
 CORESRCS+=PreThread.cpp renderDistricts.cpp LinearInterpolate.cpp
 CORESRCS+=GrabIntermediateStorage.cpp AbstractDistrict.cpp DistrictSet.cpp
 CORESRCS+=NearestNeighborDistrictSet.cpp protoio.cpp StatThing.cpp
-CORESRCS+=uf1.cpp BinaryStatLogger.cpp
+CORESRCS+=uf1.cpp logging.cpp redata.pb.cc BinaryStatLogger.cpp
 
 D2OBJS:=${COREOBJS} nonguimain.o
 D2SOURCES:=District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp PreThread.cpp LinearInterpolate.cpp GrabIntermediateStorage.cpp

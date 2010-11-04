@@ -1,46 +1,37 @@
 #!/usr/bin/python
 #
 # CGI script to receive solutions from distributed solution runners.
+#
+# TODO: store all received data per submission in one tar file.
 
 #import base64
 import cgi
 import cgitb
 import os
 import random
-#import struct
+import sys
 import time
-
-dest_dir = '/tmp/solutions'
-debug = True
-html = False
-
-if debug:
-	cgitb.enable()
-else:
-	# for production, log errors rather than displaying them.
-	# TODO: better log dir?
-	cgitb.enable(display=0, logdir="/tmp")
 
 
 # random selection from these makes event id
 SUFFIX_LETTERS_ = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0213456789'
 
 
-now = time.time()
-lt = time.localtime(now)
-nowstr = time.strftime('%Y%m%d/%H%M%S', lt)
-remote_addr = os.environ['REMOTE_ADDR']
 rand = random.Random()
-eventid = nowstr + '_' + remote_addr + '_' + rand.choice(SUFFIX_LETTERS_) + rand.choice(SUFFIX_LETTERS_) + rand.choice(SUFFIX_LETTERS_)
 
-form = cgi.FieldStorage()
 
-html = 'html' in form
-solution = form.getfirst('solution')
-user = form.getfirst('user')
-statlog_gz = form.getfirst('statlog')
-binlog = form.getfirst('binlog')
-statsum = form.getfirst('statsum')
+def makeEventId(remote_addr=None, now=None):
+	now = time.time()
+	lt = time.localtime(now)
+	nowstr = time.strftime('%Y%m%d/%H%M%S', lt)
+	outparts = [nowstr, '_']
+	if remote_addr:
+		outparts.append(str(remote_addr))
+		outparts.append('_')
+	outparts.append(rand.choice(SUFFIX_LETTERS_))
+	outparts.append(rand.choice(SUFFIX_LETTERS_))
+	outparts.append(rand.choice(SUFFIX_LETTERS_))
+	return ''.join(outparts)
 
 
 def copyout(source, dest):
@@ -48,6 +39,7 @@ def copyout(source, dest):
 	d = source.read(1000000)
 	while len(d) > 0:
 		dest.write(d)
+		d = source.read(1000000)
 
 
 def paramToFile(name, var, outdir):
@@ -63,56 +55,93 @@ def paramToFile(name, var, outdir):
 	fout.close()
 
 
-if solution:
-	# Just a solution is enough. Store it.
-	outdir = os.path.join(dest_dir, eventid)
-	os.makedirs(outdir)
-	paramToFile('solution', solution, outdir)
-	paramToFile('user', user, outdir)
-	paramToFile('binlog', binlog, outdir)
-	paramToFile('statlog.gz', statlog_gz, outdir)
-	paramToFile('statsum', statsum, outdir)
-	status = 'ok'
-else:
-	status = 'no solution'
-
-
 def falseOrLen(x):
 	if x is None:
 		return 'None'
 	return str(len(x))
 
 
-if not html:
-	print """Content-Type: text/plain
+def printOut(x):
+	sys.stdout.write(x)
 
-"""
-	print status
-else:
-	print """Content-Type: text/html
 
-<!DOCTYPE html>
-<html><head><title>solution submission</title></head><body bgcolor="#ffffff" text="#000000">
-"""
-	print '<p>' + status + '</p>'
+def main(input, environ, out=printOut):
+	dest_dir = environ.get('REDISTRICTER_SOLUTIONS')
+	if not dest_dir:
+		dest_dir = '/tmp/solutions'
+	# TODO: take ?debug=true&html=false
+	form = cgi.FieldStorage(fp=input, environ=environ)
+	#debug = 'debug' in form
+	debug = True
+	html = 'html' in form
+	
+	if debug:
+		cgitb.enable()
+	else:
+		# for production, log errors rather than displaying them.
+		# TODO: better log dir?
+		cgitb.enable(display=0, logdir="/tmp")
+	
+	solution = form.getfirst('solution')
+	user = form.getfirst('user')
+	statlog_gz = form.getfirst('statlog')
+	binlog = form.getfirst('binlog')
+	statsum = form.getfirst('statsum')
+	
+	remote_addr = environ.get('REMOTE_ADDR')
+	eventid = makeEventId(remote_addr)
+	
+	if solution:
+		# TODO: write to tar file
+		# Just a solution is enough. Store it.
+		outdir = os.path.join(dest_dir, eventid)
+		os.makedirs(outdir)
+		paramToFile('solution', solution, outdir)
+		paramToFile('user', user, outdir)
+		paramToFile('binlog', binlog, outdir)
+		paramToFile('statlog.gz', statlog_gz, outdir)
+		paramToFile('statsum', statsum, outdir)
+		status = 'ok'
+	else:
+		status = 'no solution'
 
-if debug:
+	if not html:
+		out("""Content-Type: text/plain
+
+	""")
+		out(status)
+	else:
+		out("""Content-Type: text/html
+
+	<!DOCTYPE html>
+	<html><head><title>solution submission</title></head><body bgcolor="#ffffff" text="#000000">
+	""")
+		out('<p>' + status + '</p>\n')
+
+	if debug:
+		if html:
+			out('<pre>\n')
+		out('keys: ' + repr(form.keys()) + '\n')
+		out('eventid: ' + eventid + '\n')
+		out('solution: ' + falseOrLen(solution) + '\n')
+		out('user: ' + falseOrLen(user) + '\n')
+		out('statlog_gz: ' + falseOrLen(statlog_gz) + '\n')
+		out('binlog: ' + falseOrLen(binlog) + '\n')
+		out('statsum: ' + falseOrLen(statsum) + '\n')
+		keys = form.keys()
+		keys.sort()
+		for k in keys:
+			out('form[\'%s\'] = %s\n' % (k, form[k]))
+		keys = environ.keys()
+		keys.sort()
+		for k in keys:
+			out('environ[\'%s\'] = %s\n' % (k, environ[k]))
+		#out('os.environ: ' + repr(environ))
+		if html:
+			out('</pre>\n')
+
 	if html:
-		print '<pre>'
-	print 'keys: ' + repr(form.keys())
-	print 'eventid: ' + eventid;
-	print 'solution: ' + falseOrLen(solution)
-	print 'user: ' + falseOrLen(user)
-	print 'statlog_gz: ' + falseOrLen(statlog_gz)
-	print 'binlog: ' + falseOrLen(binlog)
-	print 'statsum: ' + falseOrLen(statsum)
-	keys = os.environ.keys()
-	keys.sort()
-	for k in keys:
-		print 'os.environ[\'%s\'] = %s' % (k, os.environ[k])
-	#print 'os.environ: ' + repr(os.environ)
-	if html:
-		print '</pre>'
+		out('</body></html>\n')
 
-if html:
-	print '</body></html>'
+if __name__ == '__main__':
+	main(sys.stdin, os.environ)

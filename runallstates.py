@@ -126,6 +126,7 @@ def poll_run(p, stu):
 	poller = select.poll()
 	poller.register(p.stdout, select.POLLIN | select.POLLPRI )
 	poller.register(p.stderr, select.POLLIN | select.POLLPRI )
+	lastolines = []
 	lastelines = []
 	while p.poll() is None:
 		for (fd, event) in poller.poll(500):
@@ -133,6 +134,7 @@ def poll_run(p, stu):
 				line = p.stdout.readline()
 				if line:
 					sys.stdout.write("O " + stu + ": " + line)
+					lastlines(lastolines, 10, line)
 			elif p.stderr.fileno() == fd:
 				line = p.stderr.readline()
 				if line:
@@ -140,11 +142,12 @@ def poll_run(p, stu):
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
-	return lastelines
+	return (lastolines, lastelines)
 
 def select_run(p, stu):
 	"""Read err and out from a process, copying to sys.stdout.
 	Return last 10 lines of error in list."""
+	lastolines = []
 	lastelines = []
 	while p.poll() is None:
 		(il, ol, el) = select.select([p.stdout, p.stderr], [], [], 0.5)
@@ -153,6 +156,7 @@ def select_run(p, stu):
 				line = p.stdout.readline()
 				if line:
 					sys.stdout.write("O " + stu + ": " + line)
+					lastlines(lastolines, 10, line)
 			elif (p.stderr.fileno() == fd) or (fd == p.stderr):
 				line = p.stderr.readline()
 				if line:
@@ -160,7 +164,7 @@ def select_run(p, stu):
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
-	return lastelines
+	return (lastolines, lastelines)
 
 HAS_PARAM_ = {
 	'-P': True,
@@ -231,6 +235,13 @@ def parseArgs(x):
 class ParseError(Exception):
 	pass
 
+
+def AfterStartswith(line, prefix):
+	if line.startswith(prefix):
+		return line[len(prefix):]
+	return None
+
+
 class configuration(object):
 	"""
 	Get basic args from:
@@ -253,6 +264,9 @@ class configuration(object):
 		self.geom = None
 		self.path = config
 		self.dataroot = dataroot
+		# TODO: add send threshold for kmpp and spread, only send to server solutions better than that. threshold=None means send everything
+		self.kmppSendTheshold = None
+		self.spreadSendThreshold = None
 		# weight into chance of running randomly selected
 		self.weight = 1.0
 		# readtime can be used to re-read changed config files
@@ -320,6 +334,10 @@ class configuration(object):
 					raise ParseError('problem with datadir "%s"' % self.datadir)
 		elif line.startswith('weight:'):
 			self.weight = float(line[7:].strip())
+		elif line.startswith('kmppSendTheshold:'):
+			self.kmppSendTheshold = float(line[18:].strip())
+		elif line.startswith('spreadSendTheshold:'):
+			self.kmppSendTheshold = float(line[20:].strip())
 		elif line == 'enable' or line == 'enabled':
 			self.enabled = True
 		elif line == 'disable' or line == 'disabled':
@@ -420,14 +438,24 @@ def ignoreFile(cname):
 	return cname.startswith('.') or cname.startswith('#') or cname.endswith('~') or cname.endswith(',v')
 
 
+def getDefaultBindir():
+	bindir = os.environ.get('REDISTRICTER_BIN')
+	if bindir is None:
+		bindir = os.path.dirname(os.path.abspath(__file__))
+	return bindir
+
+
+def getDefaultDatadir():
+	datadir = os.environ.get("REDISTRICTER_DATA")
+	if datadir is None:
+		datadir = os.path.join(self.bindir, "data")
+	return datadir
+
+
 class runallstates(object):
 	def __init__(self):
-		self.bindir = os.environ.get('REDISTRICTER_BIN')
-		if self.bindir is None:
-			self.bindir = os.path.dirname(os.path.abspath(__file__))
-		self.datadir = os.environ.get("REDISTRICTER_DATA")
-		if self.datadir is None:
-			self.datadir = os.path.join(self.bindir, "data")
+		self.bindir = getDefaultBindir()
+		self.datadir = getDefaultDatadir()
 		self.exe = None
 		self.solverMode = []
 		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
@@ -436,6 +464,8 @@ class runallstates(object):
 		self.end = None
 		# built from argv, things we'll run
 		self.statearglist = []
+		# TODO: detect number of cores and set threads automatically
+		# TODO: duty-cycle one thread down to fractional load
 		self.numthreads = 1
 		self.extrargs = []
 		self.dry_run = False
@@ -488,7 +518,7 @@ class runallstates(object):
 		totalweight = 0.0
 		for stu in self.states:
 			conf = self.config[stu]
-			if conf.isEnabled:
+			if conf.isEnabled():
 				weight = conf.weight
 				weightedStu.append( (weight, stu) )
 				totalweight += weight
@@ -553,6 +583,7 @@ class runallstates(object):
 	def readArgs(self, argv):
 		default_server = os.environ.get('REDISTRICTER_SERVER')
 		argp = optparse.OptionParser()
+		# TODO: add options to not make PNG after run or to not store g/ intermediates.
 		argp.add_option('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
 		argp.add_option('--bindir', '--bin', dest='bindir', default=self.bindir)
 		argp.add_option('--exe', dest='exepath', default=None)
@@ -852,10 +883,11 @@ class runallstates(object):
 			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,
 				stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			errorlines = []
+			outlines = []
 			if has_poll:
-				errorlines = poll_run(p, stu)
+				(outlines, errorlines) = poll_run(p, stu)
 			elif has_select:
-				errorlines = select_run(p, stu)
+				(outlines, errorlines) = select_run(p, stu)
 			else:
 				self.addStopReason('has neither poll nor select\n')
 				sys.stderr.write(self.stopreason + "\n")
@@ -865,6 +897,7 @@ class runallstates(object):
 				for line in p.stdin:
 					if line:
 						sys.stdout.write("O " + stu + ": " + line)
+						lastlines(outlines, 10, line)
 			except:
 				pass
 			try:
@@ -879,14 +912,21 @@ class runallstates(object):
 				# possibly after many intermittent failures which will all
 				# be logged here. I guess that's ok.
 				# TODO: present failures to web result server.
-				self.addStopReason("solver exited with status %d" % p.returncode)
+				statusString = "solver exited with status %d" % p.returncode
+				self.addStopReason(statusString)
+				statlog = open(os.path.join(ctd, 'statlog'), 'a')
+				statlog.write(statusString)
+				statlog.write('\n')
 				if errorlines:
 					self.addStopReason('\n' + '\n'.join(errorlines))
-					statlog = open(os.path.join(ctd, 'statlog'), 'a')
 					statlog.write('# last lines of stderr:\n')
 					for eline in errorlines:
 						statlog.write('#' + eline + '\n')
-					statlog.close()
+				if outlines:
+					statlog.write('# last lines of stdout:\n')
+					for eline in outlines:
+						statlog.write('#' + eline + '\n')
+				statlog.close()
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = self.logCompletion(0)
 				return False
@@ -999,7 +1039,7 @@ class runallstates(object):
 				oldmsg))
 			outf.flush()
 			if self.client:
-				self.client.sendResultDir(os.path.join(stu, best.root))
+				self.client.sendResultDir(os.path.join(stu, best.root), {'config': stu})
 	
 	def setCurrentRunningHtml(self, handler):
 		if handler.path == '/':
@@ -1018,6 +1058,7 @@ class runallstates(object):
 					self.client.getDataForStu(stu)
 			else:
 				# Pick one randomly, fetch it
+				# TODO: download new datasets in background up to some local cache limit.
 				self.client.unpackArchive(self.client.randomDatasetName())
 		self.loadConfigurations()
 		if not self.config:

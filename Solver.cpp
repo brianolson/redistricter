@@ -565,7 +565,11 @@ int Solver::loadZSolution( const char* filename ) {
 	int readfd;
 	int endianness = 0;
 	
-	readfd = open( filename, O_RDONLY, 0 );
+	if (0 == strcmp(filename, "-")) {
+		readfd = STDIN_FILENO;
+	} else {
+		readfd = open( filename, O_RDONLY, 0 );
+	}
 	if ( readfd < 0 ) {
 		perror( filename );
 		return -1;
