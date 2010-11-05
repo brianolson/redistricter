@@ -49,10 +49,18 @@ CXXFLAGS='-arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
 make
 make check
 sudo make install
+cd java/src/main
+mkdir classes
 cd java
-mvn test
-mvn install
-mvn package
+protoc --proto_path=../../../../src ../../../../src/google/protobuf/descriptor.proto --java_out=.
+find . -name \*.java | xargs javac -d ../classes
+cd ../../..
+jar cvf protobuf.jar -C src/main/classes com
+## or you can use maven
+#cd java
+#mvn test
+#mvn install
+#mvn package
 cd ../python
 python setup.py test
 python setup.py install

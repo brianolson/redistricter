@@ -98,7 +98,7 @@ void UST_ecpy( GeoData::UST* dst, GeoData::UST* src ) {
 
 int GeoData::writeBin( const char* fname ) {
 	int fd, err;
-	fd = ::open( fname, O_WRONLY|O_CREAT );
+	fd = ::open( fname, O_WRONLY|O_CREAT, 0666 );
 	if ( fd < 0 ) {
 		perror(fname);
 		return -1;
@@ -181,7 +181,7 @@ int GeoData::writeBin( int fd, const char* fname ) {
 }
 int GeoData::readBin( const char* fname ) {
 	int fd, err;
-	fd = ::open( fname, O_RDONLY|O_CREAT );
+	fd = ::open( fname, O_RDONLY );
 	if ( fd < 0 ) {
 		perror(fname);
 		return -1;

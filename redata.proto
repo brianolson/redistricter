@@ -1,6 +1,7 @@
 syntax = "proto2";
 
 option java_package = "org.bolson.redistricter";
+option optimize_for = LITE_RUNTIME;
 
 // intpoints/fpoints, population, area, ubids and recnos should all have the same length.
 message RedistricterData {

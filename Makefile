@@ -59,6 +59,10 @@ THINGSTOCLEAN+=${D2OBJS}
 districter2:	$(D2OBJS)
 	$(CXXLD) $(D2OBJS) $(LDFLAGS) -o districter2
 
+# TODO: switch to libprotobuf-lite.a
+districter2_staticproto:	${D2OBJS}
+	${CXXLD} ${D2OBJS} -lpthread ${LDPNG} -lz /usr/local/lib/libprotobuf.a -o districter2_staticproto
+
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
 #districter2:	 District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp
 #	${CXX} -o districter2 ${CXXFLAGS} District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp ${LDFLAGS}

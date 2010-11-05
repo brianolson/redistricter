@@ -445,17 +445,19 @@ def getDefaultBindir():
 	return bindir
 
 
-def getDefaultDatadir():
+def getDefaultDatadir(bindir=None):
 	datadir = os.environ.get("REDISTRICTER_DATA")
 	if datadir is None:
-		datadir = os.path.join(self.bindir, "data")
+		if bindir is None:
+			bindir = getDefaultBindir()
+		datadir = os.path.join(bindir, "data")
 	return datadir
 
 
 class runallstates(object):
 	def __init__(self):
 		self.bindir = getDefaultBindir()
-		self.datadir = getDefaultDatadir()
+		self.datadir = getDefaultDatadir(self.bindir)
 		self.exe = None
 		self.solverMode = []
 		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
@@ -1108,6 +1110,7 @@ class runallstates(object):
 				threads.append(threading.Thread(target=runallstates.runthread, args=(self,threadLabel), name=threadLabel))
 			for x in threads:
 				x.start()
+				time.sleep(1.5)
 			for x in threads:
 				x.join()
 

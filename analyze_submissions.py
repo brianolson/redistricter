@@ -2,12 +2,14 @@
 
 
 import cgi
+import logging
 import os
 import re
 import sys
 import sqlite3
 import subprocess
 import tarfile
+import traceback
 
 import runallstates
 
@@ -18,11 +20,16 @@ def scandir(path):
 	for root, dirnames, filenames in os.walk(path):
 		for fname in filenames:
 			if fname.endswith('.tar.gz'):
-				out.append(os.path.join(root, fname))
+				fpath = os.path.join(root, fname)
+				assert fpath.startswith(path)
+				innerpath = fpath[len(path):]
+				logging.debug('found %s', innerpath)
+				out.append((fpath, innerpath))
 	return out
 
 
 def elementAfter(haystack, needle):
+	"""For some sequence haystack [a, needle, b], return b."""
 	isNext = False
 	for x in haystack:
 		if isNext:
@@ -56,7 +63,7 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 			logging.debug('no %s/config', xx)
 			continue
 		for variant in os.listdir(configdir):
-			if ignoreFile(variant):
+			if runallstates.ignoreFile(variant):
 				logging.debug('ignore file %s/config/"%s"', xx, variant)
 				continue
 			cpath = os.path.join(datadir, xx, 'config', variant)
@@ -64,7 +71,7 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 				logging.debug('filter out "%s"', cpath)
 				continue
 			cname = stu + '_' + variant
-			configs[cname] = configuration(
+			configs[cname] = runallstates.configuration(
 				name=cname,
 				datadir=os.path.join(datadir, xx),
 				config=cpath,
@@ -86,6 +93,11 @@ class SubmissionAnalyzer(object):
 		if self.dbpath:
 			self.opendb(self.dbpath)
 	
+	def loadDatadir(self, path=None):
+		if path is None:
+			path = self.datadir
+		loadDatadirConfigurations(self.config, path)
+	
 	def opendb(self, path):
 		self.db = sqlite3.connect(path)
 		c = self.db.cursor()
@@ -100,7 +112,7 @@ class SubmissionAnalyzer(object):
 	def lookupByPath(self, path):
 		"""Return db value for path."""
 		c = self.db.cursor()
-		c.execute('SELECT * FROM submissions WHERE path == ?', path)
+		c.execute('SELECT * FROM submissions WHERE path == ?', (path,))
 		out = c.fetchone()
 		c.close()
 		return out
@@ -108,13 +120,17 @@ class SubmissionAnalyzer(object):
 	def measureSolution(self, solf, configname):
 		"""For file-like object of solution and config name, return (kmpp, spread)."""
 		#./analyze -B data/MA/ma.pb -d 10 --loadSolution - < rundir/MA_Congress/link1/bestKmpp.dsz
-		config = self.config[configname]
+		config = self.config.get(configname)
+		if not config:
+			logging.warn('config %s not loaded. cannot analyze %s', configname, getattr(solf, 'name'))
+			return None
 		datapb = elementAfter(config.args, '-P')
 		districtNum = elementAfter(config.args, '-d')
 		cmd = [os.path.join(self.bindir, 'analyze'),
 			'-P', datapb,
 			'-d', districtNum,
 			'--loadSolution', '-']
+		logging.debug('run %r', cmd)
 		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
 		p.stdin.write(solf.read())
 		p.stdin.close()
@@ -137,54 +153,81 @@ class SubmissionAnalyzer(object):
 		spread = max - min
 		return (kmpp, spread)
 	
-	def setFromPath(self, fpath):
+	def setFromPath(self, fpath, innerpath):
+		"""Return True if db was written."""
 		tf_mtime = int(os.path.getmtime(fpath))
 		tf = tarfile.open(fpath, 'r:gz')
 		varfile = tf.extractfile('vars')
 		varraw = varfile.read()
 		vars = cgi.parse_qs(varraw)
 		if 'config' in vars:
-			config = vars['config']
+			config = vars['config'][0]
 		if 'localpath' in vars:
-			remotepath = vars['path']
+			remotepath = vars['path'][0]
+			logging.debug('remotepath=%s', remotepath)
 			for stu in self.config.iterkeys():
 				if stu in remotepath:
 					config = stu
 					break
 		if not config:
-			self.stderr.write('no config for "%s"' % fpath)
-			return
+			logging.warn('no config for "%s"', fpath)
+			return False
 		solfile = tf.extractfile('solution')
 		kmppSpread = self.measureSolution(solfile, config)
 		if kmppSpread is None:
-			self.stderr.write('failed to analyze solution in "%s"' % fpath)
-			return
-		c = self.db.cusor()
+			logging.warn('failed to analyze solution in "%s"', fpath)
+			return False
+		logging.debug(
+			'%s %d kmpp=%f spread=%f from %s',
+			config, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath)
+		c = self.db.cursor()
 		c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
-			(varraw, tf_mtime, kmppSpread[0], kmppSpread[1], fpath, config))
+			(varraw, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
+		return True
 	
 	def updatedb(self, path):
 		"""Update db for solutions under path."""
 		if not self.db:
 			raise Exception('no db opened')
-		for fpath in scandir(path):
-			x = self.lookupByPath(fpath)
+		setAny = False
+		for (fpath, innerpath) in scandir(path):
+			x = self.lookupByPath(innerpath)
 			if x:
-				# already have it
+				logging.debug('already have %s', innerpath)
 				continue
 			try:
-				self.setFromPath(fpath)
+				ok = self.setFromPath(fpath, innerpath)
+				setAny = setAny or ok
 			except Exception, e:
-				self.stderr.write('failed to process "%s": %r' % (fpath, e))
+				traceback.print_exc()
+				logging.warn('failed to process "%s": %r', fpath, e)
+		if setAny:
+			self.db.commit()
 	
-	def run(self):
-		pass
+	def writeHtml(self, outpath):
+		out = open(outpath, 'w')
+		out.close()
 
 
 def main():
 	import optparse
+	argp = optparse.OptionParser()
+	argp.add_option('-d', '--data', '--datadir', dest='datadir', default=runallstates.getDefaultDatadir())
+	argp.add_option('--bindir', '--bin', dest='bindir', default=runallstates.getDefaultBindir())
+	argp.add_option('--soldir', '--solutions', dest='soldir', default='.', help='directory to scan for solutions')
+	argp.add_option('--report', dest='report', default='report.html', help='filename to write html report to.')
+	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
+	(options, args) = argp.parse_args()
+	if options.verbose:
+		logging.getLogger().setLevel(logging.DEBUG)
 	x = SubmissionAnalyzer(dbpath='.status.sqlite3')
-	x.run()
+	x.datadir = options.datadir
+	x.loadDatadir(options.datadir)
+	x.bindir = options.bindir
+	if options.soldir:
+		x.updatedb(options.soldir)
+	if options.report:
+		x.writeHtml(options.report)
 
 
 if __name__ == '__main__':

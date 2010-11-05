@@ -12,6 +12,7 @@ import tarfile
 import time
 
 
+# variables read from the environment
 kSoldirEnvName = 'REDISTRICTER_SOLUTIONS'
 
 
@@ -112,7 +113,7 @@ class outTarfileSet(object):
 		self.out.close()
 
 
-def receiver(environ, start_response):
+def application(environ, start_response):
 	form = cgi.FieldStorage(fp=environ.get('wsgi.input'), environ=environ)
 	debug = stringTruth(form.getfirst('debug')) or stringTruth(environ.get('DEBUG'))
 	if debug:
@@ -218,7 +219,7 @@ if __name__ == '__main__':
 	httpd = wsgiref.simple_server.make_server(
 		options.host,
 		options.port,
-		receiver)
+		application)
 #		wsgiref.simple_server.demo_app)
 	httpd.base_environ[kSoldirEnvName] = os.environ[kSoldirEnvName]
 	httpd.serve_forever()

@@ -1,7 +1,10 @@
 #if HAVE_PROTOBUF
 
-#include <google/protobuf/io/zero_copy_stream_impl.h>
+// TODO: change to use only 'lite' version of APIs so that static linking
+// makes smaller binaries to distribute.
+#include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/gzip_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 using google::protobuf::int32;
 using google::protobuf::int64;
 using google::protobuf::uint64;
@@ -104,9 +107,11 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 	}
 	google::protobuf::io::FileInputStream pbfis(fd);
 	google::protobuf::io::GzipInputStream zis(&pbfis);
+	google::protobuf::io::CodedInputStream cis(&zis);
+	cis.SetTotalBytesLimit(100000000, 90000000);
 	pbfis.SetCloseOnDelete(true);
 	RedistricterData rd;
-	bool ok = rd.ParseFromZeroCopyStream(&zis);
+	bool ok = rd.ParseFromCodedStream(&cis);
 	if (!ok) {
 		return -1;
 	}
