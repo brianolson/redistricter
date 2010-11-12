@@ -164,6 +164,7 @@ listing_css = (
 """div.log{width:80ex;font-family:monospace;"""
 """border:1px solid black;padding:2px;display:inline-block;}"""
 """canvas.graph{border:1px solid #333;}"""
+"""div.gst{margin:3px;padding-left:15px;}"""
 """div.logline{}""")
 #width:400px;height:300px;
 
@@ -276,7 +277,7 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.send_response(200)
 		self.send_header('Content-Type', 'text/html')
 		self.end_headers()
-		self.wfile.write("""<html><head><title>%s</title><style>%s</style></head><body><h1>%s</h1>""" % (self.path, listing_css, self.path))
+		self.wfile.write("""<!doctype html>\n<html><head><title>%s</title><style>%s</style></head><body><h1>%s</h1>""" % (self.path, listing_css, self.path))
 		for sf in ['runlog', 'bestlog', 'statlog', 'statsum']:
 			if not sf in they:
 				continue

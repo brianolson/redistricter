@@ -15,8 +15,7 @@ import runallstates
 
 
 def scandir(path):
-	"""Return a list of paths of .tar.gz submissions."""
-	out = []
+	"""Yield (fpath, innerpath) of .tar.gz submissions."""
 	for root, dirnames, filenames in os.walk(path):
 		for fname in filenames:
 			if fname.endswith('.tar.gz'):
@@ -24,8 +23,7 @@ def scandir(path):
 				assert fpath.startswith(path)
 				innerpath = fpath[len(path):]
 				logging.debug('found %s', innerpath)
-				out.append((fpath, innerpath))
-	return out
+				yield (fpath, innerpath)
 
 
 def elementAfter(haystack, needle):
@@ -37,6 +35,17 @@ def elementAfter(haystack, needle):
 		if x == needle:
 			isNext = True
 	return None
+
+
+def extractSome(fpath, names):
+	"""From .tar.gz at fpath, get members in list names.
+	Return {name; value}."""
+	out = {}
+	tf = tarfile.open(fpath, 'r:gz')
+	for info in tf:
+		if info.name in names:
+			out[info.name] = tf.extractfile(info).read()
+	return out
 
 
 # Example analyze output:
@@ -80,9 +89,8 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 
 
 class SubmissionAnalyzer(object):
-	def __init__(self, dbpath=None):
-		self.bindir = runallstates.getDefaultBindir()
-		self.datadir = runallstates.getDefaultDatadir()
+	def __init__(self, options, dbpath=None):
+		self.options = options
 		# map from STU/config-name to configuration objects
 		self.config = {}
 		self.dbpath = dbpath
@@ -95,7 +103,7 @@ class SubmissionAnalyzer(object):
 	
 	def loadDatadir(self, path=None):
 		if path is None:
-			path = self.datadir
+			path = self.options.datadir
 		loadDatadirConfigurations(self.config, path)
 	
 	def opendb(self, path):
@@ -124,9 +132,9 @@ class SubmissionAnalyzer(object):
 		if not config:
 			logging.warn('config %s not loaded. cannot analyze %s', configname, getattr(solf, 'name'))
 			return None
-		datapb = elementAfter(config.args, '-P')
-		districtNum = elementAfter(config.args, '-d')
-		cmd = [os.path.join(self.bindir, 'analyze'),
+		datapb = config.args['-P']
+		districtNum = config.args['-d']
+		cmd = [os.path.join(self.options.bindir, 'analyze'),
 			'-P', datapb,
 			'-d', districtNum,
 			'--loadSolution', '-']
@@ -156,6 +164,10 @@ class SubmissionAnalyzer(object):
 	def setFromPath(self, fpath, innerpath):
 		"""Return True if db was written."""
 		tf_mtime = int(os.path.getmtime(fpath))
+		tfparts = extractSome(fpath, ('vars', 'solution'))
+		if not 'vars' in tfparts:
+			logging.warn('no "vars" in "%s"', fpath)
+			return False
 		tf = tarfile.open(fpath, 'r:gz')
 		varfile = tf.extractfile('vars')
 		varraw = varfile.read()
@@ -201,29 +213,43 @@ class SubmissionAnalyzer(object):
 			except Exception, e:
 				traceback.print_exc()
 				logging.warn('failed to process "%s": %r', fpath, e)
+				if not self.options.keepgoing:
+					break
 		if setAny:
 			self.db.commit()
 	
 	def writeHtml(self, outpath):
 		out = open(outpath, 'w')
+		out.write("""<!doctype html>
+<html><head><title>solution report</title></head><body><h1>solution report</h1>
+""")
+		c = self.db.cursor()
+		rows = c.execute('SELECT config, count(*) FROM submissions GROUP BY config')
+		out.write('<table>\n')
+		for config, count in rows:
+			out.write('<tr><td>%s</td><td>%d</td></tr>\n' % (config, count))
+		out.write('</table>\n')
+		out.write('</html></body>\n')
 		out.close()
 
 
 def main():
 	import optparse
 	argp = optparse.OptionParser()
-	argp.add_option('-d', '--data', '--datadir', dest='datadir', default=runallstates.getDefaultDatadir())
-	argp.add_option('--bindir', '--bin', dest='bindir', default=runallstates.getDefaultBindir())
+	default_bindir = runallstates.getDefaultBindir()
+	argp.add_option('-d', '--data', '--datadir', dest='datadir', default=runallstates.getDefaultDatadir(default_bindir))
+	argp.add_option('--bindir', '--bin', dest='bindir', default=default_bindir)
+	argp.add_option('--keep-going', '-k', dest='keepgoing', default=False, action='store_true', help='like make, keep going after failures')
 	argp.add_option('--soldir', '--solutions', dest='soldir', default='.', help='directory to scan for solutions')
 	argp.add_option('--report', dest='report', default='report.html', help='filename to write html report to.')
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
-	x = SubmissionAnalyzer(dbpath='.status.sqlite3')
-	x.datadir = options.datadir
+	x = SubmissionAnalyzer(options, dbpath='.status.sqlite3')
+	logging.debug('loading datadir')
 	x.loadDatadir(options.datadir)
-	x.bindir = options.bindir
+	logging.debug('done loading datadir')
 	if options.soldir:
 		x.updatedb(options.soldir)
 	if options.report:

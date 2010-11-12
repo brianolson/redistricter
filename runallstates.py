@@ -57,6 +57,8 @@ import manybest
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
 
+# won't download more data if this doesn't fit in quota.
+QUOTA_HEADROOM_ = 20000000
 
 def readUname():
 	p = subprocess.Popen(['uname'], stdout=subprocess.PIPE)
@@ -94,6 +96,26 @@ def timestamp():
 	now = datetime.datetime.now()
 	return "%04d%02d%02d_%02d%02d%02d" % (now.year, now.month, now.day,
 		now.hour, now.minute, now.second)
+
+SIZE_STRING_RE_ = re.compile(r'([0-9]+)([kmg]?b?)', re.IGNORECASE)
+
+def sizeStringToInt(x, default=None):
+	m = SIZE_STRING_RE_.match(x)
+	if not m:
+		logging.warn('could not parse size string "%s"', x)
+		return default
+	base = int(m.group(1))
+	scalestr = m.group(2).lower()
+	if (not scalestr) or (scalestr == 'b'):
+		return base
+	if scalestr[0] == 'k':
+		return base * 1000
+	if scalestr[0] == 'm':
+		return base * 1000000
+	if scalestr[0] == 'g':
+		return base * 1000000000
+	logging.warn('did not undestand suffix to size string "%s"', x)
+	return default
 
 def getNiceCommandFragment():
 	if IsExecutableFile("/bin/nice"):
@@ -203,6 +225,7 @@ EXCLUSIVE_CLASSES_ = [
 	['--nearest-neighbor', '--d2'],
 ]
 
+# TODO: delete this, unused.
 def mergeArgs(oldargs, newargs):
 	"""new args replace, or append to oldargs."""
 	# TODO: handle --foo=bar values
@@ -228,8 +251,36 @@ def mergeArgs(oldargs, newargs):
 	return oldargs
 
 def parseArgs(x):
-	"""TODO, handle shell escaping rules."""
-	return x.split()
+	"""Parse a string into {arg, value}.
+	TODO, handle shell escaping rules."""
+	arg = None
+	out = {}
+	for part in x.split():
+		if '=' in part:
+			(a, v) = part.split('=', 1)
+			out[a] = v
+			continue
+		elif arg is not None:
+			out[arg] = part
+			arg = None
+			continue
+		elif part not in HAS_PARAM_:
+			logging.warn('parseArgs part "%s" not a known param, assuming it is argument-less', part)
+			out[part] = None
+		elif HAS_PARAM_[part]:
+			arg = part
+		else:
+			out[part] = None
+	return out
+
+
+def dictToArgList(x):
+	out = []
+	for arg, value in x.iteritems():
+		out.append(arg)
+		if value is not None:
+			out.append(value)
+	return out
 
 
 class ParseError(Exception):
@@ -258,8 +309,8 @@ class configuration(object):
 		# name often upper case 2 char code
 		self.name = name
 		self.datadir = datadir
-		self.drendargs = []
-		self.args = []
+		self.drendargs = {}
+		self.args = {}
 		self.enabled = None
 		self.geom = None
 		self.path = config
@@ -279,9 +330,9 @@ class configuration(object):
 				raise Exception('failed to get state name from datadir path "%s"' % datadir)
 			self.name = m.group(1)
 		# set some basic args now that name is set.
-		self.args = ['-o', self.name + '_final.dsz']
-		self.drendargs = ['--loadSolution', 'link1/bestKmpp.dsz',
-			'--pngout', 'link1/%s_final2.png' % self.name]
+		self.args = {'-o': self.name + '_final.dsz'}
+		self.drendargs = {'--loadSolution': 'link1/bestKmpp.dsz',
+			'--pngout': 'link1/%s_final2.png' % self.name}
 		if self.datadir is not None:
 			ok = self.readDatadirConfig()
 			assert ok
@@ -289,16 +340,19 @@ class configuration(object):
 			self.readConfigFile(config, dataroot)
 	
 	def __str__(self):
-		return '(%s %s %s %s)' % (self.name, self.datadir, self.args, self.drendargs)
+		enstr = 'disabled'
+		if self.isEnabled():
+			enstr = 'enabled w=' + str(self.weight)
+		return '(%s %s %s %s)' % (self.name, enstr, self.datadir, self.args)
 	
 	def setRootDatadir(self, root):
 		"""Replace $DATA with root in all args."""
-		for i in xrange(len(self.args)):
-			if isinstance(self.args[i], basestring):
-				self.args[i] = self.args[i].replace('$DATA', root)
-		for i in xrange(len(self.args)):
-			if isinstance(self.drendargs[i], basestring):
-				self.drendargs[i] = self.drendargs[i].replace('$DATA', root)
+		for arg, value in self.args.iteritems():
+			if value:
+				self.args[arg] = value.replace('$DATA', root)
+		for arg, value in self.drendargs.iteritems():
+			if value:
+				self.drendargs[arg] = value.replace('$DATA', root)
 		if self.datadir:
 			self.datadir = self.datadir.replace('$DATA', root)
 
@@ -316,13 +370,13 @@ class configuration(object):
 		if dataroot is not None:
 			line = line.replace('$DATA', dataroot)
 		if line.startswith('solve:'):
-			mergeArgs(self.args, parseArgs(line[6:].strip()))
+			self.args.update(parseArgs(line[6:].strip()))
 		elif line.startswith('drend:'):
-			mergeArgs(self.drendargs, parseArgs(line[6:].strip()))
+			self.drendargs.update(parseArgs(line[6:].strip()))
 		elif line.startswith('common:'):
 			newargs = parseArgs(line[7:].strip())
-			mergeArgs(self.args, newargs)
-			mergeArgs(self.drendargs, newargs)
+			self.args.update(newargs)
+			self.drendargs.update(newargs)
 		elif line.startswith('datadir!:'):
 			self.datadir = line[9:].strip()
 		elif line.startswith('datadir:'):
@@ -400,14 +454,16 @@ class configuration(object):
 		# set some basic args based on any datadir
 		datapath = os.path.join(self.datadir, stl + '.pb')
 		pxpath = os.path.join(self.datadir, statecode + '.mppb')
-		datadir_args = ['-P', datapath]
-		logging.debug('datadir args %s', datadir_args)
-		self.args = mergeArgs(datadir_args, self.args)
-		logging.debug('merged args %s', self.args)
-		datadir_drend_args = ['-P', datapath, '--mppb', pxpath]
-		logging.debug('geom drend args %s', datadir_drend_args)
-		self.drendargs = mergeArgs(datadir_drend_args, self.drendargs)
-		logging.debug('merged drend args %s', self.drendargs)
+		datadir_args = {'-P': datapath}
+		logging.debug('datadir args %r', datadir_args)
+		datadir_args.update(self.args)
+		self.args = datadir_args
+		logging.debug('merged args %r', self.args)
+		datadir_drend_args = {'-P': datapath, '--mppb': pxpath}
+		logging.debug('geom drend args %r', datadir_drend_args)
+		datadir_drend_args.update(self.drendargs)
+		self.drendargs = datadir_drend_args
+		logging.debug('merged drend args %r', self.drendargs)
 		
 		# TODO: delete this, setupstatedata.py isn't generating it anymore
 		# set args from geometry.pickle if available
@@ -416,21 +472,23 @@ class configuration(object):
 			f = open(pgeompath, 'rb')
 			self.geom = pickle.load(f)
 			f.close()
-			geom_args = ['-d', self.geom.numCDs()]
+			geom_args = {'-d': self.geom.numCDs()}
 #			'--pngout', self.name + '_final.png',
 #			'--pngW', geom.basewidth, '--pngH', geom.baseheight,
-			logging.debug('geom args %s', geom_args)
-			self.args = mergeArgs(geom_args, self.args)
-			logging.debug('merged args %s', self.args)
-			geom_drendargs = [
-				'-d', str(self.geom.numCDs()),
-#				'--pngW', str(self.geom.basewidth * 4),
-#				'--pngH', str(self.geom.baseheight * 4),
-				]
-			logging.debug('geom drend args %s', geom_drendargs)
-			self.drendargs = mergeArgs(geom_drendargs, self.drendargs)
-			logging.debug('merged drend args %s', self.drendargs)
-		print self
+			logging.debug('geom args %r', geom_args)
+			geom_args.update(self.args)
+			self.args = geom_args
+			logging.debug('merged args %r', self.args)
+			geom_drendargs = {
+				'-d': str(self.geom.numCDs()),
+#				'--pngW': str(self.geom.basewidth * 4),
+#				'--pngH': str(self.geom.baseheight * 4),
+				}
+			logging.debug('geom drend args %r', geom_drendargs)
+			geom_drendargs.update(self.drendargs)
+			self.drendargs = geom_drendargs
+			logging.debug('merged drend args %r', self.drendargs)
+		logging.debug('readDatadirConfig: %s', self)
 		return True
 
 
@@ -454,14 +512,39 @@ def getDefaultDatadir(bindir=None):
 	return datadir
 
 
+def duFile(path):
+	st = os.stat(path)
+	if hasattr(st, 'st_blocks'):
+		return st.st_blocks * 512
+	else:
+		return st.st_size
+
+
+def du(dir):
+	sum = 0
+	for path, dirnames, filenames in os.walk(dir):
+		for d in dirnames:
+			sum += duFile(os.path.join(path, d))
+		for f in filenames:
+			sum += duFile(os.path.join(path, f))
+	return sum
+
+
+def htmlEscape(x):
+	return x.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
 class runallstates(object):
 	def __init__(self):
 		self.bindir = getDefaultBindir()
 		self.datadir = getDefaultDatadir(self.bindir)
 		self.exe = None
-		self.solverMode = []
-		self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
-		self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--binLog', 'binlog', '--maxSpreadFraction', '0.01']
+		#self.solverMode = []
+		#self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
+		#self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--binLog', 'binlog', '--maxSpreadFraction', '0.01']
+		self.solverMode = {}
+		self.d2args = {'--d2': None, '--popRatioFactorPoints': '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g': '150000'}
+		self.stdargs = {'--blankDists': None, '--sLog': 'g/', '--statLog': 'statlog', '--binLog': 'binlog', '--maxSpreadFraction': '0.01'}
 		self.start = time.time();
 		self.end = None
 		# built from argv, things we'll run
@@ -469,7 +552,6 @@ class runallstates(object):
 		# TODO: detect number of cores and set threads automatically
 		# TODO: duty-cycle one thread down to fractional load
 		self.numthreads = 1
-		self.extrargs = []
 		self.dry_run = False
 		self.verbose = 1
 		# added with --config
@@ -507,6 +589,9 @@ class runallstates(object):
 		self.runSuccessHistory = []
 		# Client object for referring to getting data from server.
 		self.client = None
+		# For local cache when running as a client
+		self.diskQuota = 100000000
+		self.diskUsage = None
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -601,18 +686,23 @@ class runallstates(object):
 		argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
 		argp.add_option('--d2', dest='mode', action='store_const', const='d2')
 		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
-		argp.add_option('--solver-arg', dest='solver_arg', action='append', default=[], help='argument passed to solver. may be repeated')
-		argp.add_option('--runlog', dest='runlog', default=None, help='append a record of all solver runs here')
-		argp.add_option('--bestlog', dest='bestlog', default=None, help='append a record of each solver run that is best-so-far')
+		argp.add_option('--runlog', dest='runlog', default='runlog', help='append a record of all solver runs here')
+		argp.add_option('--bestlog', dest='bestlog', default='bestlog', help='append a record of each solver run that is best-so-far')
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
 		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
-		argp.add_option('--weighted', dest='weighted', action='store_true', default=False)
-		argp.add_option('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default=None, help='f/s checks the last (f+s) events and exits if >f are failures')
+		argp.add_option('--weighted', dest='weighted', action='store_true', default=True, help='Pick weighted-random configurations to run next. (default)')
+		argp.add_option('--round-robin', dest='weighted', action='store_false', help='Run each configuration in turn.')
+		argp.add_option('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default='3/7', help='f/s checks the last (f+s) events and exits if >f are failures')
+		argp.add_option('--diskQuota', dest='diskQuota', default='100M', help='how much disk to use storing data and results. Default 100M.')
+		#argp.add_option('', dest='', default=None, help='')
 		(options, args) = argp.parse_args()
 		self.options = options
 		if options.verbose:
 			logging.getLogger().setLevel(logging.DEBUG)
+		if options.diskQuota:
+			self.diskQuota = sizeStringToInt(
+				options.diskQuota, self.diskQuota)
 		for arg in args:
 			astu = arg.upper()
 			#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
@@ -639,8 +729,6 @@ class runallstates(object):
 		self.dry_run = options.dry_run
 		if options.mode == 'd2':
 			self.solverMode = self.d2args
-		else:
-			self.solverMode = options.solver_arg
 		if options.runlog is not None:
 			self.openRunLog(options.runlog)
 		if options.bestlog is not None:
@@ -717,6 +805,33 @@ class runallstates(object):
 			sys.stderr.write('error: --configdir="%s" but loaded no configs\n' % (configdir))
 			sys.exit(1)
 	
+	def loadStateConfigurations(self, dirpath):
+		"""For data/XX, load data/XX/config/* and return (name, config) list."""
+		stu = os.path.basename(dirpath)
+		assert len(stu) == 2
+		configdir = os.path.join(dirpath, 'config')
+		if not os.path.isdir(configdir):
+			logging.debug('no %s/config', dirpath)
+			return None
+		found = []
+		for variant in os.listdir(configdir):
+			if ignoreFile(variant):
+				logging.debug('ignore file %s/config/"%s"', dirpath, variant)
+				continue
+			cpath = os.path.join(dirpath, 'config', variant)
+			if not self.allowConfigPath(cpath):
+				logging.debug('filter out "%s"', cpath)
+				continue
+			cname = stu + '_' + variant
+			self.config[cname] = configuration(
+				name=cname,
+				datadir=dirpath,
+				config=cpath,
+				dataroot=self.datadir)
+			found.append( (cname, self.config[cname]) )
+			logging.debug('set config "%s"', cname)
+		return found
+	
 	def loadConfigurations(self):
 		"""1. Things explicitly listed by --config; else
 		2. Things in --configdir; else
@@ -724,12 +839,12 @@ class runallstates(object):
 		
 		2 and 3 are filtered by --config-include --config-exclude"""
 		# 1. --config
-		for cname in self.configArgList:
-			c = configuration(
-				name=os.path.split(cname)[-1], config=cname, dataroot=self.datadir)
-			assert c.name not in self.config
-			self.config[c.name] = c
-		if self.config:
+		if self.configArgList:
+			for cname in self.configArgList:
+				c = configuration(
+					name=os.path.split(cname)[-1], config=cname, dataroot=self.datadir)
+				assert c.name not in self.config
+				self.config[c.name] = c
 			return
 		# 2. --configdir
 		if self.configdir is not None:
@@ -737,36 +852,25 @@ class runallstates(object):
 			return
 		# 3. data/??/config/*
 		for xx in os.listdir(self.datadir):
-			if not os.path.isdir(os.path.join(self.datadir, xx)):
+			dirpath = os.path.join(self.datadir, xx)
+			if not os.path.isdir(dirpath):
 				logging.debug('data/"%s" not a dir', xx)
 				continue
 			stu = xx.upper()
+			if stu != xx:
+				logging.debug('data/"%s" is not upper case', xx)
+				continue
 			if self.statearglist and stu not in self.statearglist:
 				logging.debug('"%s" not in state arg list', stu)
 				continue
-			configdir = os.path.join(self.datadir, stu, 'config')
-			if not os.path.isdir(configdir):
-				logging.debug('no %s/config', xx)
-				continue
-			for variant in os.listdir(configdir):
-				if ignoreFile(variant):
-					logging.debug('ignore file %s/config/"%s"', xx, variant)
-					continue
-				cpath = os.path.join(self.datadir, xx, 'config', variant)
-				if not self.allowConfigPath(cpath):
-					logging.debug('filter out "%s"', cpath)
-					continue
-				cname = stu + '_' + variant
-				self.config[cname] = configuration(
-					name=cname,
-					datadir=os.path.join(self.datadir, xx),
-					config=cpath,
-					dataroot=self.datadir)
-				logging.debug('set config "%s"', cname)
+			self.loadStateConfigurations(dirpath)
 		if (self.statearglist or self.config_include) and not self.config:
 			sys.stderr.write('error: failed to load any configs\n')
 			sys.exit(1)
+		if self.config:
+			return
 		# 4. fall back to old no-config state data dirs
+		# TODO: delete this, it'll never happen again.
 		logging.warning('no configs, trying old setup')
 		if not self.config:
 			# get all the old defaults
@@ -879,7 +983,11 @@ class runallstates(object):
 				self.softfail = True
 				return False
 			fout.close()
-		cmd = niceArgs + self.exe + self.stdargs + self.solverMode + self.config[stu].args + self.extrargs
+		args = dict()
+		args.update(self.stdargs)
+		args.update(self.solverMode)
+		args.update(self.config[stu].args)
+		cmd = niceArgs + self.exe + dictToArgList(args)
 		print "(cd %s && \\\n%s )" % (ctd, ' '.join(cmd))
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,
@@ -984,14 +1092,13 @@ class runallstates(object):
 		return True
 
 	def doDrend(self, stu, mb):
-		drendargs = self.config[stu].drendargs
-		if not drendargs:
+		if not self.config[stu].drendargs:
 			return
 		final2_png = os.path.join("link1", stu + "_final2.png")
 		if (not self.dry_run) and (
 		    (not mb.they) or os.path.exists(os.path.join(stu, final2_png))):
 			return
-		cmd = [os.path.join(self.bindir, "drend")] + drendargs
+		cmd = [os.path.join(self.bindir, "drend")] + dictToArgList(self.config[stu].drendargs)
 		cmdstr = "(cd %s && %s)" % (stu, ' '.join(cmd))
 		print cmdstr
 		if not self.dry_run:
@@ -1024,6 +1131,7 @@ class runallstates(object):
 			return
 		best = mb.they[0]
 		oldbest = self.bests.get(stu)
+		# TODO: if old best is still current and hasn't been sent, re-try send
 		if (oldbest is None) or (best.kmpp < oldbest.kmpp):
 			self.bests[stu] = best
 			if oldbest is None:
@@ -1043,41 +1151,84 @@ class runallstates(object):
 			if self.client:
 				self.client.sendResultDir(os.path.join(stu, best.root), {'config': stu})
 	
+	# TDOO: also create a /config handler to print even more internal state
 	def setCurrentRunningHtml(self, handler):
+		"""Return False if main handler should continue, True if this extension has done the whole output."""
 		if handler.path == '/':
-			handler.dirExtra = ('<div><div>Started at: ' + time.ctime(self.start) +
-				'</div><div>Currently Active:</div>' + 
-				''.join(['<div><a href="%s/">%s/</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
-
+			handler.dirExtra = ('<div class="gst"><div class="stt">Started at: ' + time.ctime(self.start) +
+				' (now: ' + time.ctime() + ')</div><div class="cact">Currently Active:</div>' + 
+				''.join(['<div class="acti"><a href="%s/">%s/</a></div>' % (x, x) for x in self.currentOps.values()]) + '</div>')
+			return False
+		if handler.path == '/config':
+			handler.send_response(200)
+			handler.end_headers()
+			handler.wfile.write("""<!doctype html>
+<html><head><title>redistricting run configuration</title></head>
+<body><h1>redistricting run configuration</h1>
+""")
+			handler.wfile.write(
+				'<h2>options</h2><p style="font-family:monospace;">%s</p>' %
+				(htmlEscape(repr(self.options)),))
+			handler.wfile.write('<h2>configurations</h2><table>')
+			configkeys = self.config.keys()
+			configkeys.sort()
+			for cname in configkeys:
+				c = self.config[cname]
+				handler.wfile.write('<tr><td>%s</td><td>%s</td></tr>\n' % (cname, c))
+			handler.wfile.write('</table>')
+			handler.wfile.write('<h2>runallstatesobject</h2><table>')
+			for elem in dir(self):
+				handler.wfile.write('<tr><td>%s</td><td>%s</td></tr>\n' % (elem, htmlEscape(repr(getattr(self, elem)))))
+			handler.wfile.write('</table>')
+			handler.wfile.write('</body></html>\n')
+			return True
+	
+	def loadDataFromServer(self):
+		loadedDirPaths = []
+		if self.statearglist:
+			for stu in self.statearglist:
+				loadedDirPath = self.client.getDataForStu(stu)
+				if loadedDirPath:
+					loadedDirPaths.append(loadedDirPath)
+		else:
+			# Pick one randomly, fetch it
+			# TODO: download new datasets in background up to some local cache limit.
+			self.diskUsage = du(self.datadir)
+			if self.diskQuota - self.diskUsage < QUOTA_HEADROOM_:
+				logging.warn('using %d bytes of %d quota, want at least %d free before fetching more data', self.diskUsage, self.diskQuota, QUOTA_HEADROOM_)
+				return
+			loadedDirPath = self.client.unpackArchive(
+				self.client.randomDatasetName())
+			if loadedDirPath:
+				loadedDirPaths.append(loadedDirPath)
+		for path in loadedDirPaths:
+			newConfigs = self.loadStateConfigurations(path)
+			for name, cf in newConfigs:
+				logging.info('got new config "%s" under path "%s"', name, path)
+	
 	def main(self, argv):
 		self.readArgs(argv)
 		self.checkSetup()
 		if self.options.server:
 			logging.info('configuring client of server "%s"', self.options.server)
 			self.client = client.Client(self.options)
-			if self.statearglist:
-				for stu in self.statearglist:
-					self.client.getDataForStu(stu)
-			else:
-				# Pick one randomly, fetch it
-				# TODO: download new datasets in background up to some local cache limit.
-				self.client.unpackArchive(self.client.randomDatasetName())
+			self.loadDataFromServer()
 		self.loadConfigurations()
 		if not self.config:
 			sys.stderr.write('error: no configurations\n')
 			sys.exit(1)
-		for c in self.config.itervalues():
-			print c
+		if self.verbose:
+			for c in self.config.itervalues():
+				print c
 		
 		self.states = self.config.keys()
+		self.states.sort()
+		print " ".join(self.states)
 		
 		# run in a different order each time in case we do partial runs, spread the work
 		random.shuffle(self.states)
-
-		print " ".join(self.states)
-
+		
 		rootdir = os.getcwd()
-
 		self.stoppath = os.path.join(rootdir, "stop")
 		
 		if self.dry_run:
@@ -1090,8 +1241,7 @@ class runallstates(object):
 		if self.options.port > 0:
 			import resultserver
 			def extensionFu(handler):
-				self.setCurrentRunningHtml(handler)
-				return False
+				return self.setCurrentRunningHtml(handler)
 			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu)
 			if serverthread is not None:
 				print "serving status at\nhttp://localhost:%d/" % self.options.port

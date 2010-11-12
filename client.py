@@ -102,6 +102,7 @@ CLIENT_DEFAULTS_ = {
 
 EXAMPLE_CONFIG_ = """[config]
 configurl: http://127.0.0.1:8111/config
+submiturl: http://127.0.0.1:8111/submit
 """
 
 def fileOlderThan(filename, seconds):
@@ -152,6 +153,9 @@ class Client(object):
 			except Exception, e:
 				logging.info('stat("%s") failed: %s', cpath, e)
 				needsConfigFetch = True
+		if needsConfigFetch and self.options.dry_run and os.path.exists(cpath):
+			logging.info('using cached config for dry-run')
+			needsConfigFetch = False
 		if not needsConfigFetch:
 			logging.info('config cache is new enough, not fetching')
 			f = open(cpath, 'rb')
@@ -165,6 +169,9 @@ class Client(object):
 		# Fetch config from server
 		configurl = self.configUrl()
 		logging.info('fetching config from "%s"', configurl)
+		if self.options.dry_run:
+			logging.info('skipping fetch for dry-run')
+			return
 		didFetch = False
 		lastModified = None
 		raw = None
@@ -200,7 +207,7 @@ class Client(object):
 	def parseHtmlConfigPage(self, raw):
 		for href, name in yeildHrefFromData(raw):
 			self.knownDatasets[name] = makeUrlAbsolute(href, self.configUrl())
-			print name
+			logging.debug('client config dataset "%s"', name)
 		m = CONFIG_BLOCK_.search(raw)
 		if m:
 			sf = StringIO.StringIO(m.group(1))
@@ -247,6 +254,9 @@ class Client(object):
 	
 	def fetchIfServerCopyNewer(self, dataset, remoteurl):
 		localpath = os.path.join(self.options.datadir, dataset)
+		if self.options.dry_run:
+			logging.info('fetchIfServerCopyNewer "%s" -> "%s"', remoteurl, localpath)
+			return localpath
 		lastmod = self.lastmods.get(dataset)
 		GET_headers = {}
 		if lastmod:
@@ -291,6 +301,9 @@ class Client(object):
 		markerPath = os.path.join(dirpath, '.unpackmarker')
 		needsUnpack = newerthan(archpath, markerPath)
 		if not needsUnpack:
+			return
+		if self.options.dry_run:
+			logging.info('would unpack "%s" to "%s"', archpath, self.options.datadir)
 			return
 		tf = tarfile.open(archpath, 'r|gz')
 		tf.extractall(self.options.datadir)
