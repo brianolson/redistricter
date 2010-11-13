@@ -32,6 +32,8 @@ __author__ = "Brian Olson"
 # Maybe rewrite this run script in C++ and build it into the districter binary?
 # (But I get free leak-resistance by not having a long-lived program,
 # and pickle is kinda handy.)
+# For now, there's the web interface, and it may stay that way.
+# There should probably be a doubleclickable Mac runner.
 
 import cPickle as pickle
 import datetime
@@ -219,36 +221,7 @@ HAS_PARAM_ = {
 	'--maxSpreadAbsolute': True,
 	'--mppb': True,
 }
-# TODO: check mutually exclusive arguments in mergeArgs
-EXCLUSIVE_CLASSES_ = [
-	['--oldCDs', '--blankDists'],
-	['--nearest-neighbor', '--d2'],
-]
 
-# TODO: delete this, unused.
-def mergeArgs(oldargs, newargs):
-	"""new args replace, or append to oldargs."""
-	# TODO: handle --foo=bar values
-	ni = 0
-	while ni < len(newargs):
-		oi = 0
-		nidone = False
-		while oi < len(oldargs):
-			if oldargs[oi] == newargs[ni]:
-				if HAS_PARAM_[oldargs[oi]]:
-					oi += 1
-					ni += 1
-					oldargs[oi] = newargs[ni]
-				nidone = True
-				break
-			oi += 1
-		if not nidone:
-			oldargs.append(newargs[ni])
-			if HAS_PARAM_[newargs[ni]]:
-				ni += 1
-				oldargs.append(newargs[ni])
-		ni += 1
-	return oldargs
 
 def parseArgs(x):
 	"""Parse a string into {arg, value}.
@@ -464,30 +437,6 @@ class configuration(object):
 		datadir_drend_args.update(self.drendargs)
 		self.drendargs = datadir_drend_args
 		logging.debug('merged drend args %r', self.drendargs)
-		
-		# TODO: delete this, setupstatedata.py isn't generating it anymore
-		# set args from geometry.pickle if available
-		pgeompath = os.path.join(self.datadir, 'geometry.pickle')
-		if os.path.exists(pgeompath):
-			f = open(pgeompath, 'rb')
-			self.geom = pickle.load(f)
-			f.close()
-			geom_args = {'-d': self.geom.numCDs()}
-#			'--pngout', self.name + '_final.png',
-#			'--pngW', geom.basewidth, '--pngH', geom.baseheight,
-			logging.debug('geom args %r', geom_args)
-			geom_args.update(self.args)
-			self.args = geom_args
-			logging.debug('merged args %r', self.args)
-			geom_drendargs = {
-				'-d': str(self.geom.numCDs()),
-#				'--pngW': str(self.geom.basewidth * 4),
-#				'--pngH': str(self.geom.baseheight * 4),
-				}
-			logging.debug('geom drend args %r', geom_drendargs)
-			geom_drendargs.update(self.drendargs)
-			self.drendargs = geom_drendargs
-			logging.debug('merged drend args %r', self.drendargs)
 		logging.debug('readDatadirConfig: %s', self)
 		return True
 
@@ -688,6 +637,7 @@ class runallstates(object):
 		argp.add_option('--nn', dest='mode', action='store_const', const='nn')
 		argp.add_option('--runlog', dest='runlog', default='runlog', help='append a record of all solver runs here')
 		argp.add_option('--bestlog', dest='bestlog', default='bestlog', help='append a record of each solver run that is best-so-far')
+		argp.add_option('--keepbest', dest='keepbest', default=2, type='int', help='number of best solutions to keep')
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
 		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
@@ -1074,11 +1024,11 @@ class runallstates(object):
 			subprocess.Popen(cmd, cwd=ctd).wait()
 			# don't care if rm-rf failed? it wouldn't report anyway?
 		mb = manybest.manybest()
-		mb.ngood = 15
+		mb.ngood = self.options.keepbest
 		mb.mvbad = True
 		mb.rmbad = True
 		mb.rmempty = True
-		mb.nlim = 10
+		mb.nlim = self.options.keepbest
 		mb.verbose = sys.stderr
 		mb.dry_run = self.dry_run
 		mb.setRoot(stu)

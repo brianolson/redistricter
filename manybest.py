@@ -49,7 +49,9 @@ class manybest(object):
 		self.odir = "best"
 		self.root = None
 		self.log_paths = []
+		# nlim, size of best table to write
 		self.nlim = None
+		# ngood, keep only this many before moving them to old/
 		self.ngood = None
 		self.badkmpp = None
 		self.badlist = []
