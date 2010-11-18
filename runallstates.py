@@ -488,12 +488,9 @@ class runallstates(object):
 		self.bindir = getDefaultBindir()
 		self.datadir = getDefaultDatadir(self.bindir)
 		self.exe = None
-		#self.solverMode = []
-		#self.d2args = ['--d2', '--popRatioFactorPoints', '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g', '150000']
-		#self.stdargs = ['--blankDists', '--sLog', 'g/', '--statLog', 'statlog', '--binLog', 'binlog', '--maxSpreadFraction', '0.01']
 		self.solverMode = {}
 		self.d2args = {'--d2': None, '--popRatioFactorPoints': '0,1.4,30000,1.4,80000,500,100000,50,120000,500', '-g': '150000'}
-		self.stdargs = {'--blankDists': None, '--sLog': 'g/', '--statLog': 'statlog', '--binLog': 'binlog', '--maxSpreadFraction': '0.01'}
+		self.stdargs = {'--blankDists': None, '--statLog': 'statlog', '--binLog': 'binlog', '--maxSpreadFraction': '0.01'}
 		self.start = time.time();
 		self.end = None
 		# built from argv, things we'll run
@@ -638,6 +635,8 @@ class runallstates(object):
 		argp.add_option('--runlog', dest='runlog', default='runlog', help='append a record of all solver runs here')
 		argp.add_option('--bestlog', dest='bestlog', default='bestlog', help='append a record of each solver run that is best-so-far')
 		argp.add_option('--keepbest', dest='keepbest', default=2, type='int', help='number of best solutions to keep')
+		argp.add_option('--solutionlog', dest='solutionlog', default=False, action='store_true', help='store intermediate solutions under g/*')
+		argp.add_option('--nosolutionlog', dest='solutionlog', action='store_false')
 		argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
 		argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
 		argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
@@ -921,7 +920,8 @@ class runallstates(object):
 		if label:
 			self.currentOps[label] = ctd
 		self.maybe_mkdir(ctd)
-		self.maybe_mkdir(os.path.join(ctd,"g"))
+		if self.options.solutionlog:
+			self.maybe_mkdir(os.path.join(ctd,"g"))
 		statlog = os.path.join(ctd, "statlog")
 		statsum = os.path.join(ctd, "statsum")
 		if not self.dry_run:
@@ -937,6 +937,8 @@ class runallstates(object):
 		args.update(self.stdargs)
 		args.update(self.solverMode)
 		args.update(self.config[stu].args)
+		if self.options.solutionlog:
+			args['--sLog'] = 'g/'
 		cmd = niceArgs + self.exe + dictToArgList(args)
 		print "(cd %s && \\\n%s )" % (ctd, ' '.join(cmd))
 		if not self.dry_run:
@@ -1009,20 +1011,21 @@ class runallstates(object):
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False
-		cmd = ["tar", "jcf", "g.tar.bz2", "g"]
-		if self.dry_run or self.verbose:
-			print "(cd %s && %s)" % (ctd, " ".join(cmd))
-		if not self.dry_run:
-			g_tar = tarfile.open(os.path.join(ctd, 'g.tar.bz2'), 'w|bz2')
-			g_tar.add(os.path.join(ctd, 'g'), arcname='g')
-			g_tar.close()
-		# TODO: use python standard library recursive remove
-		cmd = ["rm", "-rf", "g"]
-		if self.dry_run or self.verbose:
-			print "(cd %s && %s)" % (ctd, " ".join(cmd))
-		if not self.dry_run:
-			subprocess.Popen(cmd, cwd=ctd).wait()
-			# don't care if rm-rf failed? it wouldn't report anyway?
+		if self.options.solutionlog:
+			cmd = ["tar", "jcf", "g.tar.bz2", "g"]
+			if self.dry_run or self.verbose:
+				print "(cd %s && %s)" % (ctd, " ".join(cmd))
+			if not self.dry_run:
+				g_tar = tarfile.open(os.path.join(ctd, 'g.tar.bz2'), 'w|bz2')
+				g_tar.add(os.path.join(ctd, 'g'), arcname='g')
+				g_tar.close()
+			# TODO: use python standard library recursive remove
+			cmd = ["rm", "-rf", "g"]
+			if self.dry_run or self.verbose:
+				print "(cd %s && %s)" % (ctd, " ".join(cmd))
+			if not self.dry_run:
+				subprocess.Popen(cmd, cwd=ctd).wait()
+				# don't care if rm-rf failed? it wouldn't report anyway?
 		mb = manybest.manybest()
 		mb.ngood = self.options.keepbest
 		mb.mvbad = True
