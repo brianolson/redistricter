@@ -217,41 +217,6 @@ class Client(object):
 			self.runoptsraw = m.group(1)
 		return True
 	
-	# TODO: DELETE
-	def headLastModified(self, url):
-		try:
-			urlparts = urlparse.urlparse(url)
-			conn = httplib.HTTPConnection(urlparts[1])
-			conn.request('HEAD', urlparts[2], headers={
-				'Host':urlparts[1].split(':')[0]})
-			response = conn.getresponse()
-			lastmodsrv = time.mktime(response.msg.getdate('last-modified'))
-			nowsrv = time.mktime(response.msg.getdate('date'))
-			nowhere = time.time()
-			lastmod = lastmodsrv - nowsrv + nowhere
-			return lastmod
-		except Exception, e:
-			logging.warning('failed to HEAD lastmod from "%s": %s', url, e)
-			traceback.print_exc()
-		return None
-	
-	def fetchIfServerCopyNewer_OLDDELETE(self, dataset, remoteurl):
-		# TODO: use httplib to do HEAD requests for last-modified:
-		# for now, never re-fetch
-		localpath = os.path.join(self.options.datadir, dataset)
-		#remoteurl = self.config.get('config', 'dataurl') + dataset
-		if os.path.exists(localpath):
-			st = os.stat(localpath)
-			srvlastmod = self.headLastModified(remoteurl)
-			if (srvlastmod is not None) and (srvlastmod < st.st_mtime):
-				logging.info('local copy "%s" newer than server, not fetching "%s"', localpath, remoteurl)
-				return localpath
-		logging.info('fetch "%s" to "%s"', remoteurl, localpath)
-		(filename, headers) = urllib.urlretrieve(remoteurl, localpath)
-		# TODO: urlretrieve doesn't return code! Make something better
-		# that reports code and doesn't clobber data on non-200.
-		return localpath
-	
 	def fetchIfServerCopyNewer(self, dataset, remoteurl):
 		localpath = os.path.join(self.options.datadir, dataset)
 		if self.options.dry_run:
@@ -354,7 +319,7 @@ class Client(object):
 			parent.append(x)
 		outer = []
 		partMsg(outer, bkpath, 'application/octet-stream', 'solution')
-		partMsg(outer, os.path.join(resultdir, 'statlog.gz'), 'application/gzip', 'statlog')
+		#partMsg(outer, os.path.join(resultdir, 'statlog.gz'), 'application/gzip', 'statlog')
 		partMsg(outer, os.path.join(resultdir, 'binlog'), 'application/octet-stream', 'binlog')
 		partMsg(outer, os.path.join(resultdir, 'statsum'), 'text/plain', 'statsum')
 		if vars:
