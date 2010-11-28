@@ -25,7 +25,9 @@ import string
 import subprocess
 import sys
 import tarfile
+import threading
 import time
+import traceback
 import urllib
 import zipfile
 
@@ -42,13 +44,6 @@ from states import *
 sf1IndexName = 'SF1index.html'
 sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
 tigerbase = 'http://www2.census.gov/geo/tiger/'
-
-def mkdir(path, options):
-	if not os.path.isdir(path):
-		if options.dryrun:
-			print 'mkdir ' + path
-		else:
-			os.mkdir(path)
 
 def cdFromUf1Line(line):
 	"""Return (cd, congress number) or (-1, None)."""
@@ -95,7 +90,13 @@ def linkBestCurrentSolution(dpath):
 			bestDsz = fname
 	if bestDsz is None:
 		return None
-	os.symlink(bestDsz, os.path.join(dpath, stu + 'current.dsz'))
+	currentDsz = os.path.join(dpath, stu + 'current.dsz')
+	if os.path.islink(currentDsz):
+		odsz = os.readlink(currentDsz)
+		if odsz == bestDsz:
+			return bestDsz
+		os.unlink(currentDsz)
+	os.symlink(bestDsz, currentDsz)
 	return bestDsz
 
 basic_make_rules_ = """
@@ -165,7 +166,7 @@ class ProcessGlobals(object):
 		sf1ipath = os.path.join(self.options.datadir, sf1IndexName)
 		if not os.path.isfile(sf1ipath):
 			if self.options.dryrun:
-				print 'should fetch "%s"' % (sf1url)
+				logging.info('should fetch "%s"', sf1url)
 				return ''
 			uf = urllib.urlopen(sf1url)
 			sf1data = uf.read()
@@ -200,17 +201,17 @@ class ProcessGlobals(object):
 				if m:
 					subdir = m.group(1)
 					surl = sf1url + subdir
-					print surl
+					logging.info('surl=%s', surl)
 					uf = urllib.urlopen(surl)
 					ud = uf.read()
 					uf.close()
 					gum = geouf1pat.search(ud)
 					if gum:
 						gu = surl + gum.group(1)
-						print gu
+						logging.info('gu=%s', gu)
 						geo_urls.append(gu)
 			if self.options.dryrun:
-				print 'would write "%s"' % (geopath)
+				logging.info('would write "%s"', geopath)
 			else:
 				fo = open(geopath, 'w')
 				for gu in geo_urls:
@@ -269,7 +270,7 @@ class ProcessGlobals(object):
 		if self.tigerlatest is not None:
 			return self.tigerlatest
 		if self.options.dryrun:
-			print 'would fetch "%s"' % (tigerbase)
+			logging.info('would fetch "%s"', tigerbase)
 			raw = ''
 		else:
 			uf = urllib.urlopen(tigerbase)
@@ -293,6 +294,16 @@ def filterMinSize(seq, minSize=100):
 	return out
 
 
+def checkZipFile(path):
+	try:
+		zf = zipfile.ZipFile(path, 'r')
+		nl = zf.namelist()
+		zf.close()
+		return bool(nl)
+	except zipfile.BadZipfile, e:
+		return False
+
+
 class StateData(object):
 	def __init__(self, globals, st, options):
 		self.pg = globals
@@ -306,21 +317,38 @@ class StateData(object):
 		self.geom = None
 		self.options = options
 		self.dpath = os.path.join(self.options.datadir, self.stu)
+		self.setuplog = open(os.path.join(self.dpath, 'setuplog'), 'a')
 		self._zipspath = os.path.join(self.dpath, 'zips')
+	
+	def logf(self, fmt, *args):
+		if args:
+			msg = (fmt % args) + '\n'
+		else:
+			msg = fmt + '\n'
+		sys.stdout.write(self.stu + ' ' + msg)
+		self.setuplog.write(msg)
+	
+	def mkdir(self, path, options):
+		if not os.path.isdir(path):
+			if options.dryrun:
+				self.logf('mkdir %s', path)
+			else:
+				os.mkdir(path)
 	
 	def maybeUrlRetrieve(self, url, localpath, contenttype=None):
 		if os.path.exists(localpath):
 			return localpath
 		if self.options.dryrun:
-			print 'would fetch "%s" -> "%s"' % (url, localpath)
+			self.logf('would fetch "%s" -> "%s"', url, localpath)
 			return localpath
 		logging.info('fetch "%s" -> "%s"', url, localpath)
 		(filename, info) = urllib.urlretrieve(url, localpath)
 		logging.debug('%s info: %s', url, info)
 		if (contenttype is not None) and (info['content-type'] != contenttype):
-			logging.error('%s came back with wrong content-type %s, wanted %s. if this is OK touch %s',
-				url, contenttype, info['content-type'], localpath)
-			os.unlink(filename)
+			logging.error('%s came back with wrong content-type %s, wanted %s. if content is OK:\nmv %s_bad %s\nOR skip with:touch %s\n',
+				url, info['content-type'], contenttype, localpath, localpath, localpath)
+			os.rename(localpath, localpath + '_bad')
+			#os.unlink(filename)
 			if self.options.strict:
 				raise Exception('download failed: ' + url + ' if this is OK, touch ' + localpath)
 			return None
@@ -335,12 +363,12 @@ class StateData(object):
 		fo = None
 		cds = None
 		if newerthan(geozip, uf101):
-			print geozip + ' -> ' + uf101
+			self.logf('%s -> %s', geozip, uf101)
 			if not self.options.dryrun:
 				fo = open(uf101, 'w')
 		currentDsz = os.path.join(dpath, self.stu + 'current.dsz')
 		if newerthan(geozip, currentDsz):
-			print geozip + ' -> ' + currentDsz
+			self.logf('%s -> %s', geozip, currentDsz)
 			if not self.options.dryrun:
 				cds = []
 		if (fo is None) and (cds is None):
@@ -372,7 +400,8 @@ class StateData(object):
 			for x in cds:
 				if x != -1:
 					cdvals[x] = 1
-			print 'found congressional districts from %dth congress: %s' % (
+			self.logf(
+				'found congressional districts from %dth congress: %s',
 				congress_number, repr(cdvals.keys()))
 			cnDsz = os.path.join(dpath, '%s%d.dsz' % (self.stu, congress_number))
 			currentSolution = open(cnDsz, 'wb')
@@ -404,7 +433,7 @@ class StateData(object):
 					nameForPostalCode(self.stu).upper().replace(' ', '_'))
 			else:
 				turl = tigerlatest + self.stu + '/'
-			print 'guessing tiger data source "%s", if this is wrong, edit "%s"' % (turl, turlpath)
+			self.logf('guessing tiger data source "%s", if this is wrong, edit "%s"', turl, turlpath)
 			if self.options.dryrun:
 				return turl
 			self.turl_time = time.time()
@@ -428,13 +457,13 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 		indexpath = os.path.join(zipspath, 'index.html')
 		if not os.path.isfile(indexpath):
-			mkdir(zipspath, self.options)
+			self.mkdir(zipspath, self.options)
 			turl = self.getTigerBase(dpath)
 			uf = urllib.urlopen(turl)
 			raw = uf.read()
 			uf.close()
 			if self.options.dryrun:
-				print 'would write "%s"' % (indexpath)
+				self.logf('would write "%s"', indexpath)
 			else:
 				of = open(indexpath, 'w')
 				of.write(raw)
@@ -464,8 +493,24 @@ class StateData(object):
 		"""Return list of relative href values for county dirs."""
 		raw = self.getTigerZipIndexHtml(self.dpath)
 		# NV, VA has some city regions not part of county datasets
-		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city)/?)"' % (fipsForPostalCode(self.stu))
+		# AK has "Borough", "Census_Area", "Municipality"
+		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city|Municipality|Census_Area|Borough)/?)"' % (fipsForPostalCode(self.stu))
 		return re.findall(re_string, raw, re.IGNORECASE)
+	
+	def goodZip(self, localpath, url):
+		if not os.path.exists(localpath):
+			return False
+		if os.path.getsize(localpath) == 0:
+			# empty files are for skipping
+			return True
+		ok = checkZipFile(localpath)
+		if not ok:
+			badpath = localpath + '_bad'
+			if os.path.exists(badpath):
+				os.unlink(badpath)
+			os.rename(localpath, badpath)
+			self.logf('bad zip file "%s" moved aside to "%s". (from url %s) to skip: ` rm "%s" && touch "%s" `', localpath, badpath, url, badpath, localpath)
+		return ok
 	
 	def getEdges(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_edges.zip
@@ -477,6 +522,10 @@ class StateData(object):
 			localpath = os.path.join(self.zipspath(), filename)
 			url = base + co + filename
 			self.maybeUrlRetrieve(url, localpath, 'application/zip')
+			ok = self.goodZip(localpath, url)
+			if not ok:
+				return False
+		return True
 	
 	def getFaces(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_faces.zip
@@ -488,6 +537,10 @@ class StateData(object):
 			localpath = os.path.join(self.zipspath(), filename)
 			url = base + co + filename
 			self.maybeUrlRetrieve(url, localpath, 'application/zip')
+			ok = self.goodZip(localpath, url)
+			if not ok:
+				return False
+		return True
 	
 	def zipspath(self, dpath=None):
 		if dpath is None:
@@ -511,9 +564,11 @@ class StateData(object):
 		for zname in ziplist:
 			if shapefile.betterShapefileZip(zname, bestzip):
 				bestzip = zname
+		if bestzip is None:
+			self.logf('found no best zipfile to use')
+			return None
 		zipspath = self.zipspath(dpath)
 		assert zipspath is not None
-		assert bestzip is not None
 		bestzip = os.path.join(zipspath, bestzip)
 		facesPaths = glob.glob(os.path.join(zipspath, '*faces*zip'))
 		edgesPaths = glob.glob(os.path.join(zipspath, '*edges*zip'))
@@ -528,14 +583,14 @@ class StateData(object):
 		renderArgs = None
 		commands = []
 		if not os.path.exists(linksname):
-			print 'need %s' % linksname
+			self.logf('need %s', linksname)
 			if edgesPaths and facesPaths:
 				lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
 				commands.append(lecmd)
 			else:
 				linksargs = ['--links', linksname]
 		if not os.path.exists(mppb_name):
-			print 'need %s' % mppb_name
+			self.logf('need %s', mppb_name)
 			renderArgs = ['--rast', mppb_name, '--mask', mask_name,
 				'--boundx', '1920', '--boundy', '1080',
 				'--rastgeom', os.path.join(dpath, 'rastgeom')]
@@ -566,7 +621,7 @@ class StateData(object):
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
 		if not os.path.exists(mppbsm_name):
-			print 'need %s' % mppbsm_name
+			self.logf('need %s', mppbsm_name)
 			smargs = ['--rast', mppbsm_name, '--mask', masksm_name,
 				'--boundx', '640', '--boundy', '480']
 			if facesPaths:
@@ -577,7 +632,7 @@ class StateData(object):
 				self.options.bindir, self.options.strict)
 			commands.append(command)
 		for command in commands:
-			print ' '.join(command)
+			self.logf('command: %s', ' '.join(command))
 			if not self.options.dryrun:
 				status = subprocess.call(command, shell=False, stdin=None)
 				if status != 0:
@@ -595,20 +650,20 @@ class StateData(object):
 		ziplist = self.downloadTigerZips(dpath)
 		needlinks = False
 		if not os.path.isfile(linkspath):
-			print 'no ' + linkspath
+			self.logf('no %s', linkspath)
 			needlinks = True
 		if (not needlinks) and newerthan(makelinks.__file__, linkspath):
-			print makelinks.__file__ + ' > ' + linkspath
+			self.logf('%s > %s', makelinks.__file__, linkspath)
 			needlinks = True
 		if not needlinks:
 			for z in ziplist:
 				zp = os.path.join(zipspath, z)
 				if newerthan(zp, linkspath):
-					print zp + ' > ' + linkspath
+					self.logf('%s > %s', zp, linkspath)
 					needlinks = True
 					break
 		if needlinks:
-			print '%s/{%s} -> %s' % (zipspath, ','.join(ziplist), linkspath)
+			self.logf('%s/{%s} -> %s', zipspath, ','.join(ziplist), linkspath)
 			if self.options.dryrun:
 				return linkspath
 			start = time.time()
@@ -619,7 +674,7 @@ class StateData(object):
 			f = open(linkspath, 'wb')
 			linker.writeText(f)
 			f.close()
-			print 'makelinks took %f seconds' % (time.time() - start)
+			self.logf('makelinks took %f seconds', time.time() - start)
 		return linkspath
 	
 	def compileBinaryData(self, dpath):
@@ -639,24 +694,24 @@ class StateData(object):
 		outpath = os.path.join(dpath, outpath)
 		needsbuild = not os.path.isfile(outpath)
 		if (not needsbuild) and newerthan(uf1path, outpath):
-			print uf1path, '>', outpath
+			self.logf('%s > %s', uf1path, outpath)
 			needsbuild = True
 		if (not needsbuild) and newerthan(linkspath, outpath):
-			print linkspath, '>', outpath
+			self.logf('%s > %s', linkspath, outpath)
 			needsbuild = True
 		if (not needsbuild) and newerthan(binpath, outpath):
-			print binpath, '>', outpath
+			self.logf('%s > %s', binpath, outpath)
 			needsbuild = True
 		if not needsbuild:
 			return
 #		if not (newerthan(uf1path, outpath) or newerthan(linkspath, outpath)):
 #			return
-		print 'cd %s && "%s"' % (dpath, '" "'.join(cmd))
+		self.logf('cd %s && "%s"', dpath, '" "'.join(cmd))
 		if self.options.dryrun:
 			return
 		start = time.time()
 		status = subprocess.call(cmd, cwd=dpath)
-		print 'data compile took %f seconds' % (time.time() - start)
+		self.logf('data compile took %f seconds', time.time() - start)
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 	
@@ -666,13 +721,13 @@ class StateData(object):
 		mfpath = os.path.join(dpath, '.make')
 		if not newerthan(__file__, mfpath):
 			return mfpath
-		print '->', mfpath
+		self.logf('-> %s', mfpath)
 		if self.options.protobuf:
 			stl_bin = self.stl + '.pb'
 		else:
 			stl_bin = self.stl + '.gbin'
 		if self.options.dryrun:
-			print 'would write "%s"' % (mfpath)
+			self.logf('would write "%s"', mfpath)
 			return mfpath
 		out = open(mfpath, 'w')
 		out.write(makefile_fragment_template.substitute({
@@ -683,14 +738,14 @@ class StateData(object):
 			'bindir': self.options.bindir}))
 		out.close()
 		return mfpath
-
+	
 	def getextras(self, extras=None):
 		"""Get extra data like 00001 series data."""
 		if extras is None:
 			extras = self.options.extras
 		geourl = self.pg.getGeoUrl(self.stl)
 		zipspath = self.zipspath(self.dpath)
-		mkdir(zipspath, self.options)
+		self.mkdir(zipspath, self.options)
 		for x in extras:
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
 			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
@@ -738,8 +793,7 @@ class StateData(object):
 			out.add(part, arcname, False)
 		out.close()
 		return destpath
-		
-
+	
 	def clean(self):
 		for (dirpath, dirnames, filenames) in os.walk(self.dpath):
 			for fname in filenames:
@@ -748,32 +802,52 @@ class StateData(object):
 					logging.debug('not cleaning "%s"', fpath)
 					continue
 				if self.options.dryrun or self.options.verbose:
-					print 'rm ' + fpath
+					self.logf('rm %s', fpath)
 				if not self.options.dryrun:
 					os.remove(fpath)
-
+	
 	def dostate(self):
+		start = time.time()
+		self.logf('start at %s\n', time.ctime(start))
+		ok = False
+		try:
+			ok = self.dostate_inner()
+		except:
+			errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (self.stu, self.stu))
+			self.logf(errmsg)
+		self.logf('ok=%s after %f seconds\n', ok, time.time() - start)
+		self.setuplog.flush()
+		sys.stdout.flush()
+	
+	def dostate_inner(self):
 		if self.options.clean:
 			self.clean()
-			return
-		mkdir(self.dpath, self.options)
+			return True
+		self.mkdir(self.dpath, self.options)
 		if self.options.extras:
 			self.getextras()
 			if self.options.extras_only:
-				return
+				return True
 		geozip = os.path.join(self.dpath, self.stl + 'geo_uf1.zip')
 		uf101 = os.path.join(self.dpath, self.stl + '101.uf1')
 		self.makeUf101(geozip, uf101)
 		if self.options.getFaces:
-			self.getFaces()
+			ok = self.getFaces()
+			if not ok:
+				return False
 		if self.options.getEdges:
-			self.getEdges()
-		self.makelinks(self.dpath)
+			ok = self.getEdges()
+			if not ok:
+				return False
+		linkspath = self.makelinks(self.dpath)
+		if not linkspath:
+			self.logf('makelinks failed')
+			return False
 		self.compileBinaryData(self.dpath)
 		handargspath = os.path.join(self.dpath, 'handargs')
 		if not os.path.isfile(handargspath):
 			if self.options.dryrun:
-				print 'would write "%s"' % (handargspath)
+				self.logf('would write "%s"', handargspath)
 			else:
 				ha = open(handargspath, 'w')
 				ha.write('-g 10000\n')
@@ -785,18 +859,19 @@ class StateData(object):
 			dryrun=self.options.dryrun)
 		makecmd = ['make', '-k', self.stu + '_all', '-f', makefile]
 		if self.options.dryrun:
-			print 'would run "%s"' % (' '.join(makecmd))
+			self.logf('would run "%s"', ' '.join(makecmd))
 		else:
 			start = time.time()
 			status = subprocess.call(makecmd)
 			if status != 0:
 				sys.stderr.write(
 					'command "%s" failed with %d\n' % (' '.join(makecmd), status))
-			print 'final make took %f seconds' % (time.time() - start)
+			self.logf('final make took %f seconds', time.time() - start)
 		if self.options.archive_runfiles:
 			start = time.time()
 			outname = self.archiveRunfiles()
-			print 'wrote "%s" in %f seconds' % (outname, (time.time() - start))
+			self.logf('wrote "%s" in %f seconds', outname, (time.time() - start))
+		return True
 
 
 def getOptions():
@@ -826,7 +901,42 @@ def getOptions():
 	argp.add_option('--strict', dest='strict', action='store_true', default=False)
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
 	argp.add_option('--datasets', dest='archive_runfiles', help='directory path to store tar archives of run file sets into')
+	argp.add_option('--threads', dest='threads', type='int', default=1, help='number of threads to run')
 	return argp.parse_args()
+
+
+class SyncrhonizedIteratorWrapper(object):
+	def __init__(self, it):
+		self.it = it.__iter__()
+		self.lock = threading.Lock()
+	
+	def __iter__(self):
+		return self
+	
+	def next(self):
+		self.lock.acquire()
+		try:
+			out = self.it.next()
+		except:
+			self.lock.release()
+			raise
+		self.lock.release()
+		return out
+
+
+def runloop(states, globals, options):
+	for a in states:
+		start = time.time()
+		try:
+			sd = StateData(globals, a, options)
+			sd.dostate()
+		except:
+			traceback.print_exc()
+			errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (a, a))
+			sys.stdout.write(errmsg)
+			sd.logf(errmsg)
+		sys.stdout.write('%s took %f seconds\n' % (a, time.time() - start))
+		sys.stdout.flush()
 
 
 def main(argv):
@@ -835,18 +945,24 @@ def main(argv):
 		logging.getLogger().setLevel(logging.DEBUG)
 	if not os.path.isdir(options.datadir):
 		raise Exception('data dir "%s" does not exist' % options.datadir)
-
+	
 	if not options.shapefile:
 		makefile_fragment_template = string.Template(
 			basic_make_rules_ + old_makepolys_rules_)
 	pg = ProcessGlobals(options)
-
-	for a in args:
-		print a
-		start = time.time()
-		sd = StateData(pg, a, options)
-		sd.dostate()
-		print '%s took %f seconds' % (a, time.time() - start)
+	
+	if options.threads == 1:
+		runloop(args, pg, options)
+	else:
+		tlist = []
+		statelist = SyncrhonizedIteratorWrapper(args)
+		for x in xrange(0, options.threads):
+			threadLabel = 't%d' % x
+			tlist.append(threading.Thread(target=runloop, args=(statelist, pg, options), name=threadLabel))
+		for x in tlist:
+			x.start()
+		for x in tlist:
+			x.join()
 
 if __name__ == '__main__':
 	main(sys.argv)
