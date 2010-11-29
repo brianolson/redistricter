@@ -1,16 +1,25 @@
 #!/usr/bin/python
-
+# TODO: move results into directories per config?
+# solutions/YYYYMMDD/HHMMSS_IP_XXX.tar.gz
+# ->
+# processed/XX_Config/YYYYMMDD/HHMMSS_IP_XXX.tar.gz
+# TODO: emit config information for cliens for threshold of kmpp to send to server.
+# TODO: emit web directory of best-so-far results.
+# TODO: extract kmpp_spread.svg from these.
 
 import cgi
 import logging
 import os
+import random
 import re
 import sys
 import sqlite3
 import subprocess
 import tarfile
+import time
 import traceback
 
+import resultspage
 import runallstates
 
 
@@ -46,6 +55,13 @@ def extractSome(fpath, names):
 		if info.name in names:
 			out[info.name] = tf.extractfile(info).read()
 	return out
+
+
+def atomicLink(src, dest):
+	assert dest[-1] != os.sep
+	tdest = dest + str(random.randint(100000,999999))
+	os.link(src, tdest)
+	os.rename(tdest, dest)
 
 
 # Example analyze output:
@@ -100,6 +116,12 @@ class SubmissionAnalyzer(object):
 		self.stdout = sys.stdout
 		if self.dbpath:
 			self.opendb(self.dbpath)
+		self.pageTemplate = None
+	
+	def getPageTemplate(self):
+		if self.pageTemplate is None:
+			self.pageTemplate = resultspage.get_template()
+		return self.pageTemplate
 	
 	def loadDatadir(self, path=None):
 		if path is None:
@@ -125,12 +147,12 @@ class SubmissionAnalyzer(object):
 		c.close()
 		return out
 	
-	def measureSolution(self, solf, configname):
+	def measureSolution(self, solraw, configname):
 		"""For file-like object of solution and config name, return (kmpp, spread)."""
 		#./analyze -B data/MA/ma.pb -d 10 --loadSolution - < rundir/MA_Congress/link1/bestKmpp.dsz
 		config = self.config.get(configname)
 		if not config:
-			logging.warn('config %s not loaded. cannot analyze %s', configname, getattr(solf, 'name'))
+			logging.warn('config %s not loaded. cannot analyze', configname)
 			return None
 		datapb = config.args['-P']
 		districtNum = config.args['-d']
@@ -140,7 +162,7 @@ class SubmissionAnalyzer(object):
 			'--loadSolution', '-']
 		logging.debug('run %r', cmd)
 		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-		p.stdin.write(solf.read())
+		p.stdin.write(solraw)
 		p.stdin.close()
 		retcode = p.wait()
 		if retcode != 0:
@@ -168,13 +190,11 @@ class SubmissionAnalyzer(object):
 		if not 'vars' in tfparts:
 			logging.warn('no "vars" in "%s"', fpath)
 			return False
-		tf = tarfile.open(fpath, 'r:gz')
-		varfile = tf.extractfile('vars')
-		varraw = varfile.read()
-		vars = cgi.parse_qs(varraw)
+		vars = cgi.parse_qs(tfparts['vars'])
+		config = None
 		if 'config' in vars:
 			config = vars['config'][0]
-		if 'localpath' in vars:
+		if (not config) and ('localpath' in vars):
 			remotepath = vars['path'][0]
 			logging.debug('remotepath=%s', remotepath)
 			for stu in self.config.iterkeys():
@@ -184,8 +204,7 @@ class SubmissionAnalyzer(object):
 		if not config:
 			logging.warn('no config for "%s"', fpath)
 			return False
-		solfile = tf.extractfile('solution')
-		kmppSpread = self.measureSolution(solfile, config)
+		kmppSpread = self.measureSolution(tfparts['solution'], config)
 		if kmppSpread is None:
 			logging.warn('failed to analyze solution in "%s"', fpath)
 			return False
@@ -194,7 +213,7 @@ class SubmissionAnalyzer(object):
 			config, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath)
 		c = self.db.cursor()
 		c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
-			(varraw, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
+			(tfparts['vars'], tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
 		return True
 	
 	def updatedb(self, path):
@@ -218,19 +237,95 @@ class SubmissionAnalyzer(object):
 		if setAny:
 			self.db.commit()
 	
-	def writeHtml(self, outpath):
-		out = open(outpath, 'w')
-		out.write("""<!doctype html>
-<html><head><title>solution report</title></head><body><h1>solution report</h1>
-""")
+	def getConfigCounts(self):
+		"""For all configurations, return dict mapping config name to a dict {'count': number of solutions reported} for it.
+		It's probably handy to extend that dict with getBestSolutionInfo below.
+		"""
 		c = self.db.cursor()
 		rows = c.execute('SELECT config, count(*) FROM submissions GROUP BY config')
-		out.write('<table>\n')
+		configs = {}
 		for config, count in rows:
-			out.write('<tr><td>%s</td><td>%d</td></tr>\n' % (config, count))
+			configs[config] = {'count': count}
+		return configs
+	
+	def getBestSolutionInfo(self, cname, data):
+		"""Set fields in dict 'data' for the best solution to configuration 'cname'."""
+		c = self.db.cursor()
+		rows = c.execute('SELECT kmpp, spread, id, path FROM submissions WHERE config = ? ORDER BY kmpp DESC LIMIT 1', (cname,))
+		rowlist = list(rows)
+		assert len(rowlist) == 1
+		row = rowlist[0]
+		data['kmpp'] = row[0]
+		data['spread'] = row[1]
+		data['id'] = row[2]
+		data['path'] = row[3]
+	
+	def getBestConfigs(self):
+		configs = self.getConfigCounts()
+		for cname, data in configs.iteritems():
+			self.getBestSolutionInfo(cname, data)
+		return configs
+	
+	def writeHtml(self, outpath, configs=None):
+		if configs is None:
+			configs = self.getBestConfigs()
+		clist = configs.keys()
+		clist.sort()
+		out = open(outpath, 'w')
+		out.write("""<!doctype html>
+<html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
+""" % (time.ctime(),))
+		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
+		for cname in clist:
+			data = configs[cname]
+			out.write('<tr><td>%s</td><td>%d</td><td>%f</td><td>%d</td><td>%d</td><td>%s</td></tr>\n' % (cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
 		out.write('</table>\n')
 		out.write('</html></body>\n')
 		out.close()
+	
+	def doDrend(self, cname, data, solutionDszRaw, pngpath):
+		args = dict(self.config[cname].drendargs)
+		args.update({'--loadSolution': '-', '--pngout': pngpath})
+		cmd = [os.path.join(self.options.bindir, 'drend')] + runallstates.dictToArgList(args)
+		logging.debug('run %r', cmd)
+		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+		p.stdin.write(solutionDszRaw)
+		p.stdin.close()
+		retcode = p.wait()
+		if retcode != 0:
+			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
+			return None
+	
+	def buildBestSoFarDirs(self, configs=None):
+		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
+		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best."""
+		outdir = self.options.outdir
+		if not os.path.isdir(outdir):
+			os.makedirs(outdir)
+		if configs is None:
+			configs = self.getBestConfigs()
+		for cname, data in configs.iteritems():
+			sdir = os.path.join(outdir, cname, str(data['id']))
+			if not os.path.isdir(sdir):
+				os.makedirs(sdir)
+			ihpath = os.path.join(sdir, 'index.html')
+			if os.path.exists(ihpath):
+				# already made, no need to re-write it
+				continue
+			tpath = data['path']
+			if tpath[0] == os.sep:
+				tpath = tpath[len(os.sep):]
+			tpath = os.path.join(self.options.soldir, tpath)
+			tfparts = extractSome(tpath, ('solution', 'statsum'))
+			mappath = os.path.join(sdir, 'map.png')
+			if not os.path.exists(mappath):
+				self.doDrend(cname, data, tfparts['solution'], mappath)
+			# TODO: run `measurerace` to get demographic analysis
+			# 500x500 smallish size version
+			map500path = os.path.join(sdir, 'map500.png')
+			if not os.path.exists(map500path):
+				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
+			(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
 
 
 def main():
@@ -241,8 +336,12 @@ def main():
 	argp.add_option('--bindir', '--bin', dest='bindir', default=default_bindir)
 	argp.add_option('--keep-going', '-k', dest='keepgoing', default=False, action='store_true', help='like make, keep going after failures')
 	argp.add_option('--soldir', '--solutions', dest='soldir', default='.', help='directory to scan for solutions')
+	argp.add_option('--do-update', dest='doupdate', default=True)
+	argp.add_option('--no-update', dest='doupdate', action='store_false')
 	argp.add_option('--report', dest='report', default='report.html', help='filename to write html report to.')
+	argp.add_option('--outdir', dest='outdir', default='report', help='directory to write html best-so-far displays to.')
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
+	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'))
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
@@ -250,10 +349,15 @@ def main():
 	logging.debug('loading datadir')
 	x.loadDatadir(options.datadir)
 	logging.debug('done loading datadir')
-	if options.soldir:
+	if options.soldir and options.doupdate:
 		x.updatedb(options.soldir)
+	configs = None
+	if options.report or options.outdir:
+		configs = x.getBestConfigs()
 	if options.report:
-		x.writeHtml(options.report)
+		x.writeHtml(options.report, configs)
+	if options.outdir:
+		x.buildBestSoFarDirs(configs)
 
 
 if __name__ == '__main__':
