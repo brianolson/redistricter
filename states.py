@@ -55,23 +55,28 @@ states = [
 ]
 
 def nameForPostalCode(code):
+	"""Return proper name for two letter postal code."""
+	code = code.upper()
 	for x in states:
 		if x[1] == code:
 			return x[0]
 	return None
 
 def codeForState(stateName):
+	"""Return two letter postal code for proper Name (case sensitive)."""
 	for x in states:
 		if x[0] == stateName:
 			return x[1]
 	return None
 
 def stateAbbreviations():
-	"""Iterate over two letter codes."""
+	"""Generator over two letter codes."""
 	for x in states:
 		yield x[1]
 
 def fipsForPostalCode(code):
+	"""Get numeric FIPS code for two letter postal code."""
+	code = code.upper()
 	for x in states:
 		if x[1] == code:
 			return x[2]
