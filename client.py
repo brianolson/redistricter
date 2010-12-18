@@ -211,10 +211,12 @@ class Client(object):
 		m = CONFIG_BLOCK_.search(raw)
 		if m:
 			sf = StringIO.StringIO(m.group(1))
+			logging.debug('got config block')
 			self.config.readfp(sf)
 		m = RUNOPTS_BLOCK_.search(raw)
 		if m:
 			self.runoptsraw = m.group(1)
+			logging.debug('got runopts block len=%d', len(self.runoptsraw))
 		return True
 	
 	def fetchIfServerCopyNewer(self, dataset, remoteurl):
@@ -292,7 +294,7 @@ class Client(object):
 		# TODO: find out what the server would prefer us to work on.
 		return random.choice(self.knownDatasets.keys())
 	
-	def sendResultDir(self, resultdir, vars=None):
+	def sendResultDir(self, resultdir, vars=None, sendAnything=False):
 		# It kinda sucks that I have to reimplement MIME composition here
 		# but the standard library is really designed for email and not http.
 		submiturl = self.config.get('config', 'submiturl')
@@ -304,7 +306,7 @@ class Client(object):
 			sys.stderr.write('found "%s", already sent dir %s, not sending again\n' % (sentmarker, resultdir))
 			return
 		bkpath = os.path.join(resultdir, 'bestKmpp.dsz')
-		if not os.path.exists(bkpath):
+		if (not os.path.exists(bkpath)) and (not sendAnything):
 			sys.stderr.write('trying to send result dir "%s" but there is no bestKmpp.dsz\n' % resultdir)
 			return
 		def partMsg(parent, path, mtype, name):

@@ -14,6 +14,7 @@ import random
 import re
 import sys
 import sqlite3
+import string
 import subprocess
 import tarfile
 import time
@@ -21,6 +22,9 @@ import traceback
 
 import resultspage
 import runallstates
+import states
+
+legpath_ = os.path.join(os.path.dirname(__file__), 'legislatures.csv')
 
 
 def scandir(path):
@@ -31,7 +35,7 @@ def scandir(path):
 				fpath = os.path.join(root, fname)
 				assert fpath.startswith(path)
 				innerpath = fpath[len(path):]
-				logging.debug('found %s', innerpath)
+				#logging.debug('found %s', innerpath)
 				yield (fpath, innerpath)
 
 
@@ -81,7 +85,7 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 			continue
 		stu = xx.upper()
 		if statearglist and stu not in statearglist:
-			logging.debug('"%s" not in state arg list', stu)
+			#logging.debug('"%s" not in state arg list', stu)
 			continue
 		configdir = os.path.join(datadir, stu, 'config')
 		if not os.path.isdir(configdir):
@@ -118,9 +122,13 @@ class SubmissionAnalyzer(object):
 			self.opendb(self.dbpath)
 		self.pageTemplate = None
 	
-	def getPageTemplate(self):
+	def getPageTemplate(self, rootdir=None):
 		if self.pageTemplate is None:
-			self.pageTemplate = resultspage.get_template()
+			if rootdir is None:
+				rootdir = os.path.dirname(os.path.abspath(__file__))
+			f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
+			self.pageTemplate = string.Template(f.read())
+			f.close()
 		return self.pageTemplate
 	
 	def loadDatadir(self, path=None):
@@ -224,11 +232,12 @@ class SubmissionAnalyzer(object):
 		for (fpath, innerpath) in scandir(path):
 			x = self.lookupByPath(innerpath)
 			if x:
-				logging.debug('already have %s', innerpath)
+				#logging.debug('already have %s', innerpath)
 				continue
 			try:
 				ok = self.setFromPath(fpath, innerpath)
 				setAny = setAny or ok
+				logging.info('added %s', innerpath)
 			except Exception, e:
 				traceback.print_exc()
 				logging.warn('failed to process "%s": %r', fpath, e)
@@ -266,6 +275,23 @@ class SubmissionAnalyzer(object):
 			self.getBestSolutionInfo(cname, data)
 		return configs
 	
+	def writeConfigOverride(self, outpath):
+		out = open(outpath, 'w')
+		bestconfigs = self.getBestConfigs()
+		for cname, config in self.config.iteritems():
+			if cname not in bestconfigs:
+				out.write('%s:sendAnything\n' % (cname,))
+			else:
+				out.write('%s:sendAnything: False\n' % (cname,))
+			# TODO: tweak weight/kmppSendTheshold/spreadSendTheshold automatically
+			#out.write('%s:disabled\n')
+		mpath = outpath + '_manual'
+		if os.path.exists(mpath):
+			mf = open(mpath, 'r')
+			for line in mf:
+				out.write(line)
+		out.close()
+	
 	def writeHtml(self, outpath, configs=None):
 		if configs is None:
 			configs = self.getBestConfigs()
@@ -295,6 +321,44 @@ class SubmissionAnalyzer(object):
 		if retcode != 0:
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
 			return None
+	
+	def statenav(self, current, configs=None):
+		statevars = {}
+		if configs:
+			citer = configs.iterkeys()
+		else:
+			citer = self.config.iterkeys()
+		for cname in citer:
+			(st, variation) = cname.split('_')
+			if st not in statevars:
+				statevars[st] = [variation]
+			else:
+				statevars[st].append(variation)
+		outl = []
+		for name, stu, house in states.states:
+			if stu not in statevars:
+				#logging.warn('%s not in current results', stu)
+				continue
+			variations = statevars[stu]
+			if 'Congress' in variations:
+				variations.remove('Congress')
+				variations.sort()
+				variations.insert(0, 'Congress')
+			vlist = []
+			isCurrent = False
+			for v in variations:
+				stu_v = stu + '_' + v
+				if stu_v == current:
+					isCurrent = True
+					vlist.append('<b>%s</b>' % (v,))
+				else:
+					vlist.append('<a href="%s">%s</a>' % (self.options.rooturl + '/' + stu_v + '/', v))
+			if isCurrent:
+				dclazz = 'slgC'
+			else:
+				dclazz = 'slg'
+			outl.append('<div class="%s">%s %s</div>' % (dclazz, name, ' '.join(vlist)))
+		return '<div class="snl">' + ''.join(outl) + '</div>'
 	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
@@ -326,6 +390,39 @@ class SubmissionAnalyzer(object):
 			if not os.path.exists(map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 			(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
+			st_template = self.getPageTemplate()
+			out = open(ihpath, 'w')
+			# TODO: permalink
+			permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
+			out.write(st_template.substitute(
+				statename=cname,
+				statenav=self.statenav(cname, configs),
+				ba_large='map.png',
+				ba_small='map500.png',
+				avgpop='',
+				current_kmpp='',
+				current_spread='',
+				current_std='',
+				my_kmpp=str(kmpp),
+				my_spread=str(spread),
+				my_std=str(std),
+				extra='',
+				racedata='',
+				rooturl=self.options.rooturl,
+			))
+			out.close()
+			for x in ('map.png', 'map500.png', 'index.html'):
+				atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
+		result_index_html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'result_index_pyt.html')
+		f = open(result_index_html_path, 'r')
+		result_index_html_template = string.Template(f.read())
+		f.close()
+		index_html = open(os.path.join(outdir, 'index.html'), 'w')
+		index_html.write(result_index_html_template.substitute(
+			statenav=self.statenav(None, configs),
+			rooturl=self.options.rooturl,
+		))
+		index_html.close()
 
 
 def main():
@@ -340,6 +437,7 @@ def main():
 	argp.add_option('--no-update', dest='doupdate', action='store_false')
 	argp.add_option('--report', dest='report', default='report.html', help='filename to write html report to.')
 	argp.add_option('--outdir', dest='outdir', default='report', help='directory to write html best-so-far displays to.')
+	argp.add_option('--configoverride', dest='configoverride', default=None, help='where to write configoverride file')
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'))
 	(options, args) = argp.parse_args()
@@ -354,6 +452,8 @@ def main():
 	configs = None
 	if options.report or options.outdir:
 		configs = x.getBestConfigs()
+	if options.configoverride:
+		x.writeConfigOverride(options.configoverride)
 	if options.report:
 		x.writeHtml(options.report, configs)
 	if options.outdir:

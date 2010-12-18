@@ -87,6 +87,7 @@ def processDatadir(datadir, stu, bindir=None, dryrun=True):
 
 def main(argv):
 	command = makeCommand(argv[1:], enableassertions=True)
+	#command = makeCommand(argv[1:], enableassertions=False)
 	print ' '.join(command)
 	p = subprocess.Popen(command, shell=False, stdin=None)
 	p.wait()

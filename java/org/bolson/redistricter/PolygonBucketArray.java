@@ -131,6 +131,10 @@ class PolygonBucketArray {
 			ix = width - 1;
 		} else {
 			ix = (int)Math.floor((x - minx) / dx);
+			if (ix == width) {
+				// floating point error fixup. allow one fence step.
+				ix = width - 1;
+			}
 		}
 		assert(ix >= 0);
 		assert(ix < width);

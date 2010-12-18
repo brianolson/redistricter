@@ -233,11 +233,17 @@ class ProcessGlobals(object):
 		"""New shapefile data lives in directories of this pattern.
 		ex: http://www2.census.gov/geo/tiger/TIGER2009/
 		"""
+#TODO: 2010 data has a new layout. Write new code to crawl it.
+#http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_34_tabblock10.zip
+#http://www2.census.gov/geo/tiger/TIGER2010/FACES/tl_2010_22001_faces.zip
+#http://www2.census.gov/geo/tiger/TIGER2010/EDGES/tl_2010_22001_edges.zip
+#http://www2.census.gov/geo/tiger/TIGER2010/COUNTY/2010/tl_2010_22_county10.zip
+
 		bestyear = None
 		editions = re.compile(r'href="TIGER(\d\d\d\d)/')
 		for m in editions.finditer(raw):
 			year = int(m.group(1))
-			if (bestyear is None) or (year > bestyear):
+			if ((bestyear is None) or (year > bestyear)) and (year <= 2009):
 				bestyear = year
 		if bestyear is None:
 			raise Exception('found no tiger editions at "%s"' % tigerbase)
@@ -494,7 +500,8 @@ class StateData(object):
 		raw = self.getTigerZipIndexHtml(self.dpath)
 		# NV, VA has some city regions not part of county datasets
 		# AK has "Borough", "Census_Area", "Municipality"
-		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city|Municipality|Census_Area|Borough)/?)"' % (fipsForPostalCode(self.stu))
+		# LA has "Parish"
+		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city|Municipality|Census_Area|Borough|Parish)/?)"' % (fipsForPostalCode(self.stu))
 		return re.findall(re_string, raw, re.IGNORECASE)
 	
 	def goodZip(self, localpath, url):

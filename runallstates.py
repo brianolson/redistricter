@@ -291,6 +291,7 @@ class configuration(object):
 		# TODO: add send threshold for kmpp and spread, only send to server solutions better than that. threshold=None means send everything
 		self.kmppSendTheshold = None
 		self.spreadSendThreshold = None
+		self.sendAnything = False
 		# weight into chance of running randomly selected
 		self.weight = 1.0
 		# readtime can be used to re-read changed config files
@@ -335,6 +336,22 @@ class configuration(object):
 		return (self.enabled is None) or self.enabled
 	
 	def applyConfigLine(self, line, dataroot=None):
+		"""Alter the config:
+		solve: arguments for solver
+		drend: arguments for drend
+		common: arguments for any tool
+		datadir: path to datadir. Immediately reads config in datadir.
+		datadir!: path to datadir. does nothing.
+		weight: How often this config should run relative to others.
+		kmppSendTheshold: only send solutions at least this good.
+		spreadSendTheshold: only send solutions at least this good.
+		sendAnything   -- Send even invalid results.
+		enabled
+		disabled
+
+		$DATA is substituted with the global root datadir
+		empty lines and lines starting with '#' are ignored.
+		"""
 		line = line.strip()
 		if (len(line) == 0) or line.startswith('#'):
 			return True
@@ -365,6 +382,8 @@ class configuration(object):
 			self.kmppSendTheshold = float(line[18:].strip())
 		elif line.startswith('spreadSendTheshold:'):
 			self.kmppSendTheshold = float(line[20:].strip())
+		elif line.startswith('sendAnything'):
+			self.sendAnything = line.lower() != 'sendanything: false'
 		elif line == 'enable' or line == 'enabled':
 			self.enabled = True
 		elif line == 'disable' or line == 'disabled':
@@ -375,17 +394,9 @@ class configuration(object):
 	
 	def readConfigFile(self, x, dataroot=None):
 		"""x is a path or a file like object iterable over lines.
-		
-		solve: arguments for solver
-		drend: arguments for drend
-		common: arguments for any tool
-		datadir: path to datadir. Immediately reads config in datadir.
-		datadir!: path to datadir. does nothing.
-		enabled
-		disabled
+		See applyConfigLine(line,dataroot=None) for details on
+		config line formats.
 		empty lines and lines starting with '#' are ignored.
-		
-		$DATA is substituted with the global root datadir
 		"""
 		if isinstance(x, basestring):
 			self.path = x
@@ -833,28 +844,37 @@ class runallstates(object):
 		if cname in self.config:
 			self.config[cname].applyConfigLine(cline)
 	
-	def loadConfigOverride(self):
+	def _loadConfigOverrideFile(self):
+		"""Return lines to apply."""
 		if not self.config_override_path:
-			return
+			return []
 		try:
 			st = os.stat(self.config_override_path)
 		except OSError, e:
 			# doesn't exist, whatever.
-			return
+			return []
 		if self.config_override_lastload:
 			if st.st_mtime > self.config_override_lastload:
-				return
+				return []
 		print 'reloading configoverride'
+		self.config_override_lastload = st.st_mtime
+		f = open(self.config_override_path, 'r')
+		out = f.readlines()
+		f.close()
+		return out
+
+	def loadConfigOverride(self):
+		lines = self._loadConfigOverrideFile()
+		if self.client:
+			self.client.loadConfiguration()
+			for line in self.client.runOptionLines():
+				lines.append(line)
+		if not lines:
+			return
 		if self.lock:
 			self.lock.acquire()
-		if self.client:
-			for line in self.client.runOptionLines():
-				self.applyConfigOverrideLine(line)
-		f = open(self.config_override_path, 'r')
-		for line in f:
+		for line in lines:
 			self.applyConfigOverrideLine(line)
-		self.config_override_lastload = st.st_mtime
-		f.close()
 		if self.lock:
 			self.lock.release()
 	
@@ -1026,6 +1046,13 @@ class runallstates(object):
 			if not self.dry_run:
 				subprocess.Popen(cmd, cwd=ctd).wait()
 				# don't care if rm-rf failed? it wouldn't report anyway?
+		didSend = None
+		if self.client and self.config[stu].sendAnything:
+			if self.dry_run:
+				print 'would send dir "%s" to server' % (ctd, )
+			else:
+				self.client.sendResultDir(ctd, {'config': stu}, sendAnything=True)
+			didSend = ctd
 		mb = manybest.manybest()
 		mb.ngood = self.options.keepbest
 		mb.mvbad = True
@@ -1042,6 +1069,14 @@ class runallstates(object):
 			pass
 		self.doDrend(stu, mb)
 		self.doBestlog(stu, mb)
+		bestPath = None
+		if len(mb.they) > 0:
+			bestPath = os.path.join(stu, mb.they[0].root)
+		if bestPath and self.client and (bestPath != didSend):
+			if self.dry_run:
+				print 'would send best dir "%s" if it has not already been sent' % (mb.they[0], )
+			else:
+				self.client.sendResultDir(bestPath, {'config': stu})
 		return True
 
 	def doDrend(self, stu, mb):
@@ -1101,10 +1136,7 @@ class runallstates(object):
 				datetime.datetime.now().isoformat(" "),
 				oldmsg))
 			outf.flush()
-			if self.client:
-				self.client.sendResultDir(os.path.join(stu, best.root), {'config': stu})
 	
-	# TDOO: also create a /config handler to print even more internal state
 	def setCurrentRunningHtml(self, handler):
 		"""Return False if main handler should continue, True if this extension has done the whole output."""
 		if handler.path == '/':
@@ -1130,7 +1162,8 @@ class runallstates(object):
 				handler.wfile.write('<tr><td>%s</td><td>%s</td></tr>\n' % (cname, c))
 			handler.wfile.write('</table>')
 			handler.wfile.write('<h2>runallstatesobject</h2><table>')
-			for elem in dir(self):
+#			for elem in dir(self):
+			for elem in ('bests', 'bindir', 'configArgList', 'config_exclude', 'config_include', 'config_override_lastload', 'config_override_path', 'configdir', 'currentOps', 'd2args', 'datadir', 'diskQuota', 'diskUsage', 'dry_run', 'end', 'errorRate', 'errorSample', 'exe', 'lock', 'numthreads', 'qpos', 'runSuccessHistory', 'runlog', 'softfail', 'solverMode', 'start', 'statearglist', 'states', 'stdargs', 'stoppath', 'stopreason', 'verbose'):
 				handler.wfile.write('<tr><td>%s</td><td>%s</td></tr>\n' % (elem, htmlEscape(repr(getattr(self, elem)))))
 			handler.wfile.write('</table>')
 			handler.wfile.write('</body></html>\n')

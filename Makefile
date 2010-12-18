@@ -113,8 +113,8 @@ rta2dsz:	${RTADSZOBJS}
 
 rtaToDsz.o:	tiger/recordA.h
 
-tabledesc/redata_pb2.py:	redata.proto
-	protoc redata.proto --python_out=tabledesc
+redata_pb2.py:	redata.proto
+	protoc redata.proto --python_out=.
 
 #UFONEDATAOBJS:=uf1.o uf1data.o tiger/mmaped.o
 #THINGSTOCLEAN+=${UFONEDATAOBJS}
