@@ -57,7 +57,10 @@ def getCensusTigerSetList(datadir, url, cachename, regex):
 	cache_path = os.path.join(datadir, cachename)
 	needs_fetch = cachedIndexNeedsFetch(cache_path)
 	if needs_fetch:
+		logging.debug('%s -> %s', url, cache_path)
 		urllib.urlretrieve(url, cache_path)
+	else:
+		logging.debug('%s is new enough', cache_path)
 	tigerSet = set()
 	f = open(cache_path, 'r')
 	for line in f:
@@ -166,6 +169,29 @@ class Crawler(object):
 		self._fetchSetForState(fips, self.edges, EDGES_URL, destdir)
 		self._fetchSetForState(fips, self.county, COUNTY_URL, destdir)
 		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
+	
+	def _fetchAllSet(self, tset, url):
+		for it in tset:
+			stu = states.codeForFips(it.state_fips)
+			destdir = os.path.join(self.options.datadir, stu, 'zips')
+			if not os.path.isdir(destdir):
+				logging.debug('making destdir "%s"', destdir)
+				os.makedirs(destdir)
+			dpath = os.path.join(destdir, it.path)
+			if not os.path.exists(dpath):
+				logging.info('%s -> %s', url + it.path, dpath)
+				urllib.urlretrieve(url + it.path, dpath)
+				self.fetchCount += 1
+			else:
+				self.alreadyCount += 1
+	def getAllStates(self):
+		self.fetchCount = 0
+		self.alreadyCount = 0
+		self._fetchAllSet(self.tabblock, TABBLOCK_URL)
+		self._fetchAllSet(self.faces, FACES_URL)
+		self._fetchAllSet(self.edges, EDGES_URL)
+		self._fetchAllSet(self.county, COUNTY_URL)
+		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
 
 
 def main():
@@ -189,6 +215,9 @@ def main():
 	crawley = Crawler(options)
 	for arg in args:
 		arg = arg.upper()
+		if arg == 'ALL':
+			crawley.getAllStates()
+			continue
 		logging.debug('starting %s', arg)
 		crawley.getState(arg)
 		
