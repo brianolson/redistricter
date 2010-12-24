@@ -8,7 +8,7 @@ import csv
 import os
 import sys
 
-legpath_ = os.path.join(os.path.dirname(__file__), 'legislatures.csv')
+legpath_ = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
 
 from states import codeForState
 
@@ -42,5 +42,5 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None):
 	return congress_total
 
 if __name__ == '__main__':
-	congress_total = run()
+	congress_total = run(dryrun=True)
 	print 'congress_total == %s, should be 435' % congress_total
