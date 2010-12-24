@@ -110,6 +110,7 @@ class PolygonBucketArray {
 	
 	protected void init() {
 		they = new PolygonBucket[width * height];
+		// TODO: rework this math to be more roundoff resistant like bucketX
 		dx = (maxx - minx) / width;
 		dy = (maxy - miny) / height;
 		for (int x = 0; x < width; x++) {
@@ -127,14 +128,10 @@ class PolygonBucketArray {
 		assert(x >= minx);
 		assert(x <= maxx);
 		int ix;
-		if (x == maxx) {
+		ix = (int)Math.floor((width * (x-minx)) / (maxx - minx));
+		if (ix == width) {
+			// floating point error fixup. allow one fence step.
 			ix = width - 1;
-		} else {
-			ix = (int)Math.floor((x - minx) / dx);
-			if (ix == width) {
-				// floating point error fixup. allow one fence step.
-				ix = width - 1;
-			}
 		}
 		assert(ix >= 0);
 		assert(ix < width);
@@ -145,10 +142,10 @@ class PolygonBucketArray {
 		assert(y >= miny);
 		assert(y <= maxy);
 		int iy;
-		if (y == maxy) {
+		iy = (int)Math.floor((height * (y - miny)) / (maxy - miny)); 
+		if (iy == height) {
+			// Fixup. Allow one pixel of fence reigning in.
 			iy = height - 1;
-		} else {
-			iy = (int)Math.floor((y - miny) / dy);
 		}
 		assert(iy >= 0);
 		assert(iy < height);
