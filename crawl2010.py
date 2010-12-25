@@ -1,12 +1,21 @@
 #!/usr/bin/python
 
+# standard
 import logging
+import optparse
 import os
 import re
 import states
 import sys
 import time
 import urllib
+
+# local
+import generaterunconfigs
+import linksfromedges
+from newerthan import newerthan
+import setupstatedata
+import shapefile
 
 TABBLOCK_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/'
 FACES_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/FACES/'
@@ -184,6 +193,7 @@ class Crawler(object):
 				self.fetchCount += 1
 			else:
 				self.alreadyCount += 1
+	
 	def getAllStates(self):
 		self.fetchCount = 0
 		self.alreadyCount = 0
@@ -194,33 +204,54 @@ class Crawler(object):
 		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
 
 
+class ProcessGlobals(setupstatedata.ProcessGlobals):
+	def __init__(self, options):
+		super(setupstatedata.ProcessGlobals,self).__init__(options)
+		self.tigerlatest = 'http://www2.census.gov/geo/tiger/TIGER2010/'
+	
+	def getState(self, name):
+		return StateData(self, name, self.options)
+
+
+class StateData(setupstatedata.StateData):
+	def __init__(self, globals, st, options):
+		super(setupstatedata.StateData, self).__init__(globals, st, options)
+	
+	def dostate(self):
+		pass
+
+
+def strbool(x):
+	if (not x) or (x.lower() == 'false'):
+		return False
+	return True
+
+
 def main():
-	# TODO: extract multiply copied code for bindir and datadir to one common source?
-	default_bindir = os.environ.get('REDISTRICTER_BIN')
-	if default_bindir is None:
-		default_bindir = os.path.dirname(os.path.abspath(__file__))
-	default_datadir = os.environ.get('REDISTRICTER_DATA')
-	if default_datadir is None:
-		default_datadir = os.path.join(default_bindir, 'data')
-	import optparse
-	argp = optparse.OptionParser()
-	argp.add_option('-n', '--dry-run', action='store_true', dest='dryrun', default=False)
-	argp.add_option('-d', '--data', dest='datadir', default=default_datadir)
-	argp.add_option('--verbose', dest='verbose', action='store_true', default=False)
-	(options, args) = argp.parse_args()
+	(options, args) = setupstatedata.getOptions()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
+		logging.debug('options=%r', options)
+	assert options.shapefile
 	if not os.path.isdir(options.datadir):
 		raise Exception('data dir "%s" does not exist' % options.datadir)
+	stulist = []
+	all = False
 	crawley = Crawler(options)
 	for arg in args:
 		arg = arg.upper()
 		if arg == 'ALL':
+			all = True
+			stulist = []
+			break
+		stulist.append(arg)
+	if options.download:
+		if all:
 			crawley.getAllStates()
-			continue
-		logging.debug('starting %s', arg)
-		crawley.getState(arg)
-		
+		else:
+			for arg in stulist:
+				logging.debug('starting %s', arg)
+				crawley.getState(arg)
 
 if __name__ == '__main__':
 	main()

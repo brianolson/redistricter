@@ -12,6 +12,7 @@ import string
 import subprocess
 import sys
 
+# same as manybest.py
 kmppspread = re.compile(
     r".*Best Km/p: Km/p=([0-9.]+) spread=([0-9.]+).*",
     re.MULTILINE|re.DOTALL)

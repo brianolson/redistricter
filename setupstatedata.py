@@ -287,6 +287,9 @@ class ProcessGlobals(object):
 		else:
 			self.tigerlatest = self.getTigerLatestLineEdition(raw)
 		return self.tigerlatest
+	
+	def getState(self, name):
+		return StateData(self, name, self.options)
 
 
 COUNTY_RE = re.compile(r'([0-9]{5})_(.*)')
@@ -935,7 +938,7 @@ def runloop(states, globals, options):
 	for a in states:
 		start = time.time()
 		try:
-			sd = StateData(globals, a, options)
+			sd = globals.getState(a)
 			sd.dostate()
 		except:
 			traceback.print_exc()

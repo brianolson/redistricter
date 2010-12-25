@@ -288,8 +288,7 @@ class configuration(object):
 		self.geom = None
 		self.path = config
 		self.dataroot = dataroot
-		# TODO: add send threshold for kmpp and spread, only send to server solutions better than that. threshold=None means send everything
-		self.kmppSendTheshold = None
+		self.kmppSendThreshold = None
 		self.spreadSendThreshold = None
 		self.sendAnything = False
 		# weight into chance of running randomly selected
@@ -343,8 +342,8 @@ class configuration(object):
 		datadir: path to datadir. Immediately reads config in datadir.
 		datadir!: path to datadir. does nothing.
 		weight: How often this config should run relative to others.
-		kmppSendTheshold: only send solutions at least this good.
-		spreadSendTheshold: only send solutions at least this good.
+		kmppSendThreshold: only send solutions at least this good.
+		spreadSendThreshold: only send solutions at least this good.
 		sendAnything   -- Send even invalid results.
 		enabled
 		disabled
@@ -378,10 +377,10 @@ class configuration(object):
 					raise ParseError('problem with datadir "%s"' % self.datadir)
 		elif line.startswith('weight:'):
 			self.weight = float(line[7:].strip())
-		elif line.startswith('kmppSendTheshold:'):
-			self.kmppSendTheshold = float(line[18:].strip())
-		elif line.startswith('spreadSendTheshold:'):
-			self.kmppSendTheshold = float(line[20:].strip())
+		elif line.startswith('kmppSendThreshold:'):
+			self.kmppSendThreshold = float(line[18:].strip())
+		elif line.startswith('spreadSendThreshold:'):
+			self.spreadSendThreshold = float(line[20:].strip())
 		elif line.startswith('sendAnything'):
 			self.sendAnything = line.lower() != 'sendanything: false'
 		elif line == 'enable' or line == 'enabled':
@@ -592,7 +591,37 @@ class runallstates(object):
 		if self.lock:
 			self.lock.release()
 		return stu
-
+	
+	def doBestlog(self, stu, mb):
+		if self.bestlog is None:
+			return
+		if not mb.they:
+			return
+		best = mb.they[0]
+		oldbest = self.bests.get(stu)
+		# TODO: if old best is still current and hasn't been sent, re-try send
+		if (oldbest is None) or (best.kmpp < oldbest.kmpp):
+			self.bests[stu] = best
+			if oldbest is None:
+				oldmsg = "was none"
+			else:
+				oldmsg = "old=%f" % oldbest.kmpp
+			outf = self.bestlog
+			if self.dry_run:
+				outf = sys.stderr
+			if best.spread is not None:
+				spreadstr = str(best.spread)
+			else:
+				spreadstr = ''
+			outf.write("%s\t%f\t%s\t%s\t%s\t%s\n" % (
+				stu,
+				best.kmpp,
+				os.path.join(stu, best.root),
+				datetime.datetime.now().isoformat(" "),
+				oldmsg,
+				spreadstr))
+			outf.flush()
+	
 	def readBestLog(self, path):
 		"""Read in a bestlog, loading latest state into memory."""
 		if not os.path.exists(path):
@@ -603,7 +632,11 @@ class runallstates(object):
 			try:
 				a = line.split("\t")
 				stu = a[0]
-				x = manybest.slog("", float(a[1]), "", "")
+				if len(a) >= 6:
+					spread = int(a[5])
+				else:
+					srpead = None
+				x = manybest.slog("", float(a[1]), spread, "", "")
 				bests[stu] = x
 			except Exception, e:
 				sys.stderr.write("readBestLog error: %s\n" % e)
@@ -1072,7 +1105,7 @@ class runallstates(object):
 		bestPath = None
 		if len(mb.they) > 0:
 			bestPath = os.path.join(stu, mb.they[0].root)
-		if bestPath and self.client and (bestPath != didSend):
+		if bestPath and self.client and (bestPath != didSend) and ((not self.kmppSendThreshold) or (mb.they[0].kmpp >= self.kmppSendThreshold)) and ((not self.spreadSendThreshold) or (mb.they[0].spread is None) or (mb.they[0].spread >= self.spreadSendThreshold)):
 			if self.dry_run:
 				print 'would send best dir "%s" if it has not already been sent' % (mb.they[0], )
 			else:
@@ -1109,33 +1142,6 @@ class runallstates(object):
 		print "(cd %s && %s)" % (stu, " ".join(cmd))
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=stu).wait()
-		
-		
-
-	def doBestlog(self, stu, mb):
-		if self.bestlog is None:
-			return
-		if not mb.they:
-			return
-		best = mb.they[0]
-		oldbest = self.bests.get(stu)
-		# TODO: if old best is still current and hasn't been sent, re-try send
-		if (oldbest is None) or (best.kmpp < oldbest.kmpp):
-			self.bests[stu] = best
-			if oldbest is None:
-				oldmsg = "was none"
-			else:
-				oldmsg = "old=%f" % oldbest.kmpp
-			outf = self.bestlog
-			if self.dry_run:
-				outf = sys.stderr
-			outf.write("%s\t%f\t%s\t%s\t%s\n" % (
-				stu,
-				best.kmpp,
-				os.path.join(stu, best.root),
-				datetime.datetime.now().isoformat(" "),
-				oldmsg))
-			outf.flush()
 	
 	def setCurrentRunningHtml(self, handler):
 		"""Return False if main handler should continue, True if this extension has done the whole output."""

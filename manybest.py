@@ -24,8 +24,13 @@ This is a reasonable default if mrun2.pl or runallstates.pl was used.
   -mvbad       Move bad solutions (ngood or badthresh) into old/
 """)
 
+# same as kmppspreadplot.py
+kmppspread = re.compile(
+    r".*Best Km/p: Km/p=([0-9.]+) spread=([0-9.]+).*")
 kmpp_re_a = re.compile(r".*Best Km\/p:.*Km\/p=([0-9.]+)")
 kmpp_re_b = re.compile(r".*Best Km\/p: ([0-9.]+)")
+
+_re_list = [kmppspread, kmpp_re_a, kmpp_re_b]
 
 
 class NoRunsException(Exception):
@@ -34,14 +39,15 @@ class NoRunsException(Exception):
 class slog(object):
 	"""A log summary object"""
 	
-	def __init__(self, root, kmpp, png, text):
+	def __init__(self, root, kmpp, spread, png, text):
 		self.root = root
 		self.kmpp = kmpp
+		self.spread = spread
 		self.png = png
 		self.text = text
 	
 	def __repr__(self):
-		return """slog("%s", "%s", "%s", %d chars of text)""" % (self.root, self.kmpp, self.png, len(self.text))
+		return """slog("%s", "%s", %d, "%s", %d chars of text)""" % (self.root, self.kmpp, self.spread, self.png, len(self.text))
 
 
 class manybest(object):
@@ -141,16 +147,21 @@ class manybest(object):
 		return (float kmpp, str[] lines)"""
 		lines = []
 		kmpp = None
+		spread = None
 		for line in fin:
-			m = kmpp_re_a.match(line)
-			if not m:
-				m = kmpp_re_b.match(line)
+			m = None
+			for tre in _re_list:
+				m = tre.match(line)
+				if m:
+					break
 			if m:
 				kmpp = float(m.group(1))
+				if m.lastindex >= 2:
+					spread = int(m.group(2))
 				lines.append(line[1:])
 			elif line[0] == "#":
 				lines.append(line[1:])
-		return (kmpp, lines)
+		return (kmpp, spread, lines)
 
 	def skimLogs(self, loglist=None):
 		"""return (slog[] they, string[] empties)"""
@@ -174,7 +185,7 @@ class manybest(object):
 			if self.verbose:
 				self.verbose.write("scanning %s\n" % fn)
 			fin = open(fn, "r")
-			kmpp, lines = self.parseLog(fin)
+			kmpp, spread, lines = self.parseLog(fin)
 			fin.close()
 			if kmpp is None:
 				empties.append(root)
@@ -194,7 +205,7 @@ class manybest(object):
 				continue
 			if (self.badkmpp is not None) and (kmpp > self.badkmpp):
 				badlist.append(root)
-			they.append(slog(root, kmpp, png, "<br/>".join(lines)))
+			they.append(slog(root, kmpp, spread, png, "<br/>".join(lines)))
 		self.they = they
 		self.empties = empties
 		return (they, empties)
