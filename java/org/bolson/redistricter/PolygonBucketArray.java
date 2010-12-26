@@ -36,7 +36,7 @@ class PolygonBucketArray {
 	 * Polygon-space per bucket.
 	 */
 	double dx, dy;
-	
+		
 	/**
 	 * 2d array in 1d array.
 	 * PolygonBucket[width * height]

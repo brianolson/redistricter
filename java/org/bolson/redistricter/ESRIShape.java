@@ -54,32 +54,32 @@ The outer edges of the pixel image will be at the min/max points.
 	 * @param y
 	 * @param ctx
 	 */
-	static final void intersect( double x1, double y1, double x2, double y2, double y, RasterizationContext ctx) {
+	static final boolean intersect( double x1, double y1, double x2, double y2, double y, RasterizationContext ctx) {
 		if ( y1 < y2 ) {
 			if ( (y < y1) || (y > y2) ) {
-				return;
+				return false;
 			}
 	    } else if ( y1 > y2 ) {
 	    	if ( (y > y1) || (y < y2) ) {
-	    		return;
+	    		return false;
 	    	}
 	    } else {
 	    	if ( y != y1 ) {
-	    		return;
+	    		return false;
 	    	}
 	    }
 	    double x = (x1-x2) * ((y-y2) / (y1-y2)) + x2;
 	    if ( x1 < x2 ) {
 	    	if ( (x < x1) || (x > x2) ) {
-	    		return;
+	    		return false;
 	    	}
 	    } else if ( x1 > x2 ) {
 	    	if ( (x > x1) || (x < x2) ) {
-	    		return;
+	    		return false;
 	    	}
 	    } else {
 	    	if ( x != x1 ) {
-	    		return;
+	    		return false;
 	    	}
 	    }
 	    int i = ctx.xIntersects;
@@ -92,13 +92,14 @@ The outer edges of the pixel image will be at the min/max points.
 				// don't double-add a duplicate
 				// TODO: epsilon of 1/2 or 1/4 pixel size?
 				// TODO: if this is a point /\ or \/, drop it.
-				return;
+				return false;
 	    	} else {
 	    		break;
 	    	}
 	    }
 	    ctx.xIntersectScratch[i] = x;
 	    ctx.xIntersects++;
+	    return true;
 	}
 
 	public static final void bresenham(double x0, double y0, double x1, double y1, RasterizationContext ctx) {

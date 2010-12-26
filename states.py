@@ -10,6 +10,7 @@ states = [
 	('Colorado',	'CO',	8),
 	('Connecticut',	'CT',	9),
 	('Delaware',	'DE',	10),
+	('Washington D.C.',	'DC',	11),
 	('Florida',	'FL',	12),
 	('Georgia',	'GA',	13),
 	('Hawaii',	'HI',	15),
@@ -72,6 +73,8 @@ def codeForState(stateName):
 def stateAbbreviations():
 	"""Generator over two letter codes."""
 	for x in states:
+		if x[1] == 'DC':
+			continue
 		yield x[1]
 
 def fipsForPostalCode(code):

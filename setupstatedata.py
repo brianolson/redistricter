@@ -314,8 +314,8 @@ def checkZipFile(path):
 
 
 class StateData(object):
-	def __init__(self, globals, st, options):
-		self.pg = globals
+	def __init__(self, pg, st, options):
+		self.pg = pg
 		self.stl = st.lower()
 		self.stu = st.upper()
 		self.fips = fipsForPostalCode(self.stu)
@@ -821,7 +821,11 @@ class StateData(object):
 		self.logf('start at %s\n', time.ctime(start))
 		ok = False
 		try:
-			ok = self.dostate_inner()
+			if self.options.clean:
+				self.clean()
+				ok = True
+			else:
+				ok = self.dostate_inner()
 		except:
 			errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (self.stu, self.stu))
 			self.logf(errmsg)
@@ -830,9 +834,6 @@ class StateData(object):
 		sys.stdout.flush()
 	
 	def dostate_inner(self):
-		if self.options.clean:
-			self.clean()
-			return True
 		self.mkdir(self.dpath, self.options)
 		if self.options.extras:
 			self.getextras()
@@ -884,7 +885,7 @@ class StateData(object):
 		return True
 
 
-def getOptions():
+def getOptionParser():
 	default_bindir = os.environ.get('REDISTRICTER_BIN')
 	if default_bindir is None:
 		default_bindir = os.path.dirname(os.path.abspath(__file__))
@@ -912,6 +913,10 @@ def getOptions():
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
 	argp.add_option('--datasets', dest='archive_runfiles', help='directory path to store tar archives of run file sets into')
 	argp.add_option('--threads', dest='threads', type='int', default=1, help='number of threads to run')
+	return argp
+
+def getOptions():
+	argp = getOptionParser()
 	return argp.parse_args()
 
 
@@ -934,11 +939,11 @@ class SyncrhonizedIteratorWrapper(object):
 		return out
 
 
-def runloop(states, globals, options):
+def runloop(states, pg, options):
 	for a in states:
 		start = time.time()
 		try:
-			sd = globals.getState(a)
+			sd = pg.getState(a)
 			sd.dostate()
 		except:
 			traceback.print_exc()
@@ -960,12 +965,15 @@ def main(argv):
 		makefile_fragment_template = string.Template(
 			basic_make_rules_ + old_makepolys_rules_)
 	pg = ProcessGlobals(options)
-	
+	runMaybeThreaded(args, pg, options)
+
+
+def runMaybeThreaded(stulist, pg, options):
 	if options.threads == 1:
-		runloop(args, pg, options)
+		runloop(stulist, pg, options)
 	else:
 		tlist = []
-		statelist = SyncrhonizedIteratorWrapper(args)
+		statelist = SyncrhonizedIteratorWrapper(stulist)
 		for x in xrange(0, options.threads):
 			threadLabel = 't%d' % x
 			tlist.append(threading.Thread(target=runloop, args=(statelist, pg, options), name=threadLabel))
@@ -973,6 +981,7 @@ def main(argv):
 			x.start()
 		for x in tlist:
 			x.join()
+
 
 if __name__ == '__main__':
 	main(sys.argv)

@@ -688,7 +688,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 1FEF15BD0A577CFD000B2C93 /* Build configuration list for PBXProject "guidistricter" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* guidistricter */;
 			projectDirPath = "";
 			projectRoot = "";

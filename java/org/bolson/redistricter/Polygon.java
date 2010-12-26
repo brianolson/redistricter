@@ -157,7 +157,26 @@ class Polygon extends ESRIShape {
 					partend = (points.length / 2) - 1;
 				}
 				for (int pointi = parts[parti]; pointi < partend; ++pointi) {
-					intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
+					boolean hit = intersect(points[pointi*2], points[pointi*2 + 1], points[pointi*2 + 2], points[pointi*2 + 3], y, ctx);
+					if (hit) {
+						if (points[pointi*2 + 1] == y) {
+							assert false;
+						} else if (points[pointi*2 + 3] == y) {
+							int np = pointi + 2;
+							if (np >= partend) {
+								np = parts[parti];
+							}
+							double y1 = points[pointi*2 + 1];
+							double y2 = points[np + 1];
+							if ((y1 > y) && (y2 > y)) {
+								// \/ drop point
+								System.err.println("\\/ maybe drop point at y=" + y);
+							} else if ((y1 < y) && (y2 < y)) {
+								// /\ drop point
+								System.err.println("/\\ maybe drop point at y=" + y);
+							}
+						}
+					}
 				}
 			}
 			//assert(ctx.xIntersects > 0);

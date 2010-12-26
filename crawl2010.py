@@ -156,7 +156,8 @@ class Crawler(object):
 				dpath = os.path.join(destdir, it.path)
 				if not os.path.exists(dpath):
 					logging.info('%s -> %s', url + it.path, dpath)
-					urllib.urlretrieve(url + it.path, dpath)
+					if not self.options.dryrun:
+						urllib.urlretrieve(url + it.path, dpath)
 					self.fetchCount += 1
 				else:
 					self.alreadyCount += 1
@@ -170,7 +171,8 @@ class Crawler(object):
 		logging.debug('fetching for %s (fips=%d) into %s', stu, fips, destdir)
 		if not os.path.isdir(destdir):
 			logging.debug('making destdir "%s"', destdir)
-			os.makedirs(destdir)
+			if not self.options.dryrun:
+				os.makedirs(destdir)
 		self.fetchCount = 0
 		self.alreadyCount = 0
 		self._fetchSetForState(fips, self.tabblock, TABBLOCK_URL, destdir)
@@ -182,14 +184,17 @@ class Crawler(object):
 	def _fetchAllSet(self, tset, url):
 		for it in tset:
 			stu = states.codeForFips(it.state_fips)
+			assert stu
 			destdir = os.path.join(self.options.datadir, stu, 'zips')
 			if not os.path.isdir(destdir):
 				logging.debug('making destdir "%s"', destdir)
-				os.makedirs(destdir)
+				if not self.options.dryrun:
+					os.makedirs(destdir)
 			dpath = os.path.join(destdir, it.path)
 			if not os.path.exists(dpath):
 				logging.info('%s -> %s', url + it.path, dpath)
-				urllib.urlretrieve(url + it.path, dpath)
+				if not self.options.dryrun:
+					urllib.urlretrieve(url + it.path, dpath)
 				self.fetchCount += 1
 			else:
 				self.alreadyCount += 1
@@ -202,11 +207,22 @@ class Crawler(object):
 		self._fetchAllSet(self.edges, EDGES_URL)
 		self._fetchAllSet(self.county, COUNTY_URL)
 		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
+	
+	def getAllStulist(self):
+		stulist = []
+		for it in self.tabblock:
+			stu = states.codeForFips(it.state_fips)
+			assert(stu)
+			if stu == 'DC':
+				continue
+			stulist.append(stu)
+		return stulist
 
 
 class ProcessGlobals(setupstatedata.ProcessGlobals):
-	def __init__(self, options):
-		super(setupstatedata.ProcessGlobals,self).__init__(options)
+	def __init__(self, options, crawley):
+		super(ProcessGlobals, self).__init__(options)
+		self.crawley = crawley
 		self.tigerlatest = 'http://www2.census.gov/geo/tiger/TIGER2010/'
 	
 	def getState(self, name):
@@ -214,11 +230,33 @@ class ProcessGlobals(setupstatedata.ProcessGlobals):
 
 
 class StateData(setupstatedata.StateData):
-	def __init__(self, globals, st, options):
-		super(setupstatedata.StateData, self).__init__(globals, st, options)
+	def __init__(self, pg, st, options):
+		super(StateData, self).__init__(pg, st, options)
 	
-	def dostate(self):
-		pass
+	def downloadTigerZips(self, dpath):
+		"""Return a list of tabblock*zip files."""
+		out = []
+		for it in self.pg.crawley.tabblock:
+			if it.state_fips == self.fips:
+				out.append(it.path)
+		return out
+	
+	def dostate_inner(self):
+		linkspath = self.processShapefile(self.dpath)
+		if not linkspath:
+			self.logf('processShapefile failed')
+			return False
+#		self.compileBinaryData(self.dpath)
+#		makefile = self.writeMakeFragment()
+		generaterunconfigs.run(
+			datadir=self.options.datadir,
+			stulist=[self.stu],
+			dryrun=self.options.dryrun)
+		if self.options.archive_runfiles:
+			start = time.time()
+			outname = self.archiveRunfiles()
+			self.logf('wrote "%s" in %f seconds', outname, (time.time() - start))
+		return True
 
 
 def strbool(x):
@@ -228,7 +266,10 @@ def strbool(x):
 
 
 def main():
-	(options, args) = setupstatedata.getOptions()
+	argp = setupstatedata.getOptionParser()
+	argp.add_option('--download', dest='download', default='True', action='store_true')
+	argp.add_option('--no-download', dest='download', action='store_false')
+	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
 		logging.debug('options=%r', options)
@@ -236,22 +277,30 @@ def main():
 	if not os.path.isdir(options.datadir):
 		raise Exception('data dir "%s" does not exist' % options.datadir)
 	stulist = []
-	all = False
+	doall = False
 	crawley = Crawler(options)
 	for arg in args:
 		arg = arg.upper()
 		if arg == 'ALL':
-			all = True
+			doall = True
 			stulist = []
 			break
 		stulist.append(arg)
+	if doall and stulist:
+		logging.error('specified ALL and some things which appear to be states: %r', stulist)
+		sys.exit(2)
 	if options.download:
-		if all:
+		if doall:
 			crawley.getAllStates()
 		else:
 			for arg in stulist:
 				logging.debug('starting %s', arg)
 				crawley.getState(arg)
+	if doall:
+		stulist = crawley.getAllStulist()
+	pg = ProcessGlobals(options, crawley)
+	setupstatedata.runMaybeThreaded(stulist, pg, options)
+		
 
 if __name__ == '__main__':
 	main()
