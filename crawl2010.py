@@ -239,6 +239,8 @@ class StateData(setupstatedata.StateData):
 		for it in self.pg.crawley.tabblock:
 			if it.state_fips == self.fips:
 				out.append(it.path)
+		if not out:
+			sys.stderr.write('%s (%d) not in: %r' % (self.stu, self.fips, self.pg.crawley.tabblock))
 		return out
 	
 	def dostate_inner(self):

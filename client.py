@@ -143,6 +143,9 @@ class Client(object):
 		"""
 		cpath = self.configCachePath()
 		needsConfigFetch = self.options.force_config_reload
+		if self.options.force_config_reload:
+			# only do it once
+			self.options.force_config_reload = False
 		if not needsConfigFetch:
 			try:
 				cstat = os.stat(cpath)

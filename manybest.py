@@ -157,7 +157,7 @@ class manybest(object):
 			if m:
 				kmpp = float(m.group(1))
 				if m.lastindex >= 2:
-					spread = int(m.group(2))
+					spread = int(float(m.group(2)))
 				lines.append(line[1:])
 			elif line[0] == "#":
 				lines.append(line[1:])

@@ -278,7 +278,9 @@ class SubmissionAnalyzer(object):
 	def writeConfigOverride(self, outpath):
 		out = open(outpath, 'w')
 		bestconfigs = self.getBestConfigs()
-		for cname, config in self.config.iteritems():
+		cnames = self.config.keys()
+		cnames.sort()
+		for cname in cnames:
 			if cname not in bestconfigs:
 				out.write('%s:sendAnything\n' % (cname,))
 			else:
