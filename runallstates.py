@@ -548,6 +548,7 @@ class runallstates(object):
 		# For local cache when running as a client
 		self.diskQuota = 100000000
 		self.diskUsage = None
+		self.runtimeLoadDataCountdown = 1
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -937,6 +938,7 @@ class runallstates(object):
 		while not self.shouldstop():
 			# sleep 1 is a small price to pay to prevent stupid runaway loops
 			time.sleep(1)
+			self.runtimeLoadDataFromServer()
 			self.loadConfigOverride()
 			stu = self.getNextState()
 			self.runstate(stu, label)
@@ -1206,6 +1208,21 @@ class runallstates(object):
 			newConfigs = self.loadStateConfigurations(path)
 			for name, cf in newConfigs:
 				logging.info('got new config "%s" under path "%s"', name, path)
+
+	def runtimeLoadDataFromServer(self):
+		"""Part of runthread, occasionally load more data."""
+		if self.lock:
+			self.lock.acquire()
+		doit = self.runtimeLoadDataCountdown == 0
+		if doit:
+			self.runtimeLoadDataCountdown = (self.numthreads * 7) + 1
+		else:
+			self.runtimeLoadDataCountdown -= 1
+		if self.lock:
+			self.lock.release()
+		if not doit:
+			return
+		self.loadDataFromServer()
 	
 	def main(self, argv):
 		self.readArgs(argv)

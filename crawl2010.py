@@ -75,11 +75,17 @@ def getCensusTigerSetList(datadir, url, cachename, regex):
 	for line in f:
 		for match in regex.finditer(line):
 			path = match.group(0)
-			state_fips = match.group(1)
+			state_fips = int(match.group(1))
 			if match.lastindex == 2:
-				county = match.group(2)
+				county = int(match.group(2))
 			else:
 				county = None
+			stname = states.nameForFips(state_fips)
+			if not stname:
+				logging.error('no state for fips=%r found as %s in %s', state_fips, match.group(0), cachename)
+				continue
+			else:
+				logging.debug('found %s in %s', stname, cachename)
 			tigerSet.add(CensusTigerBundle(path, state_fips, county))
 	return tigerSet
 
@@ -184,7 +190,7 @@ class Crawler(object):
 	def _fetchAllSet(self, tset, url):
 		for it in tset:
 			stu = states.codeForFips(it.state_fips)
-			assert stu
+			assert stu, 'got stu=%r for fips=%r from it=%r' % (stu, it.state_fips, it)
 			destdir = os.path.join(self.options.datadir, stu, 'zips')
 			if not os.path.isdir(destdir):
 				logging.debug('making destdir "%s"', destdir)

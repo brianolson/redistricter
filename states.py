@@ -85,6 +85,13 @@ def fipsForPostalCode(code):
 			return x[2]
 	return None
 
+def nameForFips(fips):
+	"""Get proper name for fips number."""
+	for x in states:
+		if x[2] == fips:
+			return x[1]
+	return None
+
 def codeForFips(fips):
 	"""Get two letter postal code for fips number."""
 	for x in states:

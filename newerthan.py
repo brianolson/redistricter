@@ -15,3 +15,19 @@ def newerthan(a, b):
 	except:
 		return True
 	return sa.st_mtime > sb.st_mtime
+
+def any_newerthan(alist, b):
+	"""Return true if b doesn't exist or anything in a is newerthan b."""
+	try:
+		sb = os.stat(b)
+	except:
+		return True
+	for a in alist:
+		try:
+			sa = os.stat(a)
+		except:
+			# item in alist doesn't exist, maybe raise an Exception?
+			return False
+		if sa.st_mtime > sb.st_mtime:
+			return True
+	return False

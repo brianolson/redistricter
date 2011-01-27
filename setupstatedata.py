@@ -35,7 +35,7 @@ import zipfile
 import generaterunconfigs
 import linksfromedges
 import makelinks
-from newerthan import newerthan
+from newerthan import newerthan, any_newerthan
 import shapefile
 import solution
 
@@ -586,25 +586,40 @@ class StateData(object):
 		edgesPaths = filterMinSize(edgesPaths, 100)
 		linksname = os.path.join(dpath, self.stl + '101.uf1.links')
 		mppb_name = os.path.join(dpath, self.stu + '.mppb')
-		mask_name = os.path.join(dpath, self.stu + 'mask.png')
+		mask_name = os.path.join(dpath, self.stu + 'blocks.png')
 		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
-		masksm_name = os.path.join(dpath, self.stu + 'mask_sm.png')
+		masksm_name = os.path.join(dpath, self.stu + 'blocks_sm.png')
 		linksargs = None
-		renderArgs = None
-		commands = []
-		if not os.path.exists(linksname):
-			self.logf('need %s', linksname)
-			if edgesPaths and facesPaths:
-				lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
-				commands.append(lecmd)
-			else:
-				linksargs = ['--links', linksname]
-		if not os.path.exists(mppb_name):
-			self.logf('need %s', mppb_name)
-			renderArgs = ['--rast', mppb_name, '--mask', mask_name,
-				'--boundx', '1920', '--boundy', '1080',
+		baseRenderArgs = ['--boundx', '1920', '--boundy', '1080',
 				'--rastgeom', os.path.join(dpath, 'rastgeom')]
+		renderArgs = []
+		commands = []
+		if edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
+			self.logf('need %s from edges+faces', linksname)
+			lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
+			commands.append(lecmd)
+		elif (not edgesPaths) and facesPaths and any_newerthan(facesPaths, linksname):
+			self.logf('need %s from faces', linksname)
+			linksargs = ['--links', linksname]
+		elif (not edgesPaths) and (not facesPaths) and newerthan(bestzip, linksname):
+			self.logf('need %s from %s', linksname, bestzip)
+			linksargs = ['--links', linksname]
+		if facesPaths:
+			if any_newerthan(facesPaths, mppb_name):
+				self.logf('need %s from faces', mppb_name)
+				renderArgs += ['--rast', mppb_name]
+			if any_newerthan(facesPaths, mask_name):
+				self.logf('need %s from faces', mask_name)
+				renderArgs += ['--mask', mask_name]
+		else:
+			if newerthan(bestzip, mppb_name):
+				self.logf('need %s from %s', mppb_name, bestzip)
+				renderArgs += ['--rast', mppb_name]
+			if newerthan(bestzip, mask_name):
+				self.logf('need %s from %s', mask_name, bestzip)
+				renderArgs += ['--mask', mask_name]
 		if renderArgs:
+			renderArgs = baseRenderArgs + renderArgs
 			if linksargs:
 				if not facesPaths:
 					command = shapefile.makeCommand(
@@ -630,10 +645,15 @@ class StateData(object):
 				command = shapefile.makeCommand(
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
-		if not os.path.exists(mppbsm_name):
+		smargs = []
+		if (facesPaths and any_newerthan(facesPaths, mppbsm_name)) or newerthan(bestzip, mppbsm_name):
 			self.logf('need %s', mppbsm_name)
-			smargs = ['--rast', mppbsm_name, '--mask', masksm_name,
-				'--boundx', '640', '--boundy', '480']
+			smargs += ['--rast', mppbsm_name]
+		if (facesPaths and any_newerthan(facesPaths, masksm_name)) or newerthan(bestzip, masksm_name):
+			self.logf('need %s', masksm_name)
+			smargs += ['--mask', masksm_name]
+		if smargs:
+			smargs += ['--boundx', '640', '--boundy', '480']
 			if facesPaths:
 				smargs = smargs + facesPaths
 			else:
