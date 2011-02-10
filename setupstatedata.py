@@ -580,11 +580,13 @@ class StateData(object):
 		zipspath = self.zipspath(dpath)
 		assert zipspath is not None
 		bestzip = os.path.join(zipspath, bestzip)
+		tabblockPath = os.path.join(zipspath, 'tl_2010_%02d_tabblock10.zip' % (self.fips,))
 		facesPaths = glob.glob(os.path.join(zipspath, '*faces*zip'))
 		edgesPaths = glob.glob(os.path.join(zipspath, '*edges*zip'))
 		facesPaths = filterMinSize(facesPaths, 100)
 		edgesPaths = filterMinSize(edgesPaths, 100)
-		linksname = os.path.join(dpath, self.stl + '101.uf1.links')
+		#linksname = os.path.join(dpath, self.stl + '101.uf1.links')
+		linksname = os.path.join(dpath, 'geoblocks.links')
 		mppb_name = os.path.join(dpath, self.stu + '.mppb')
 		mask_name = os.path.join(dpath, self.stu + 'blocks.png')
 		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
@@ -594,14 +596,19 @@ class StateData(object):
 				'--rastgeom', os.path.join(dpath, 'rastgeom')]
 		renderArgs = []
 		commands = []
-		if edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
+		needlinks = True
+		if newerthan(tabblockPath, linksname):
+			commands.append(shapefile.makeCommand(
+				[tabblockPath, '--links', linksname]))
+			needlinks = False
+		if needlinks and edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
 			self.logf('need %s from edges+faces', linksname)
 			lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
 			commands.append(lecmd)
-		elif (not edgesPaths) and facesPaths and any_newerthan(facesPaths, linksname):
+		elif needlinks and (not edgesPaths) and facesPaths and any_newerthan(facesPaths, linksname):
 			self.logf('need %s from faces', linksname)
 			linksargs = ['--links', linksname]
-		elif (not edgesPaths) and (not facesPaths) and newerthan(bestzip, linksname):
+		elif needlinks and (not edgesPaths) and (not facesPaths) and newerthan(bestzip, linksname):
 			self.logf('need %s from %s', linksname, bestzip)
 			linksargs = ['--links', linksname]
 		if facesPaths:

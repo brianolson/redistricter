@@ -171,3 +171,8 @@ TODO: link problem may be due to disjointness in ubids between geo-101 data
 and faces+edges
 
 TODO: project states into something like azimuthal equal distance projection centered over the state  http://trac.osgeo.org/proj/
+
+
+2011-02-10 Thursday 10:24 AM Boston
+I have a first result on 2011 data, for NJ. It's just 1000 generations of the nearest neighbor solver, so I'm sure I'll do better soon. Had to toss the super-fine face+edges based linking and fall back to common-line-segment linking based on the tabblock tiger maps. The faces seem to have lots of 'blocks' that don't exist in the redistricting data. Probably extra detail on water and unpopulated areas.
+

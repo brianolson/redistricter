@@ -421,7 +421,7 @@ int PlGeo::load() {
 			reinterpret_cast<uintptr_t>(data) + (i * sizeof_pl_line));
 		// longitude, "x"
 		copyPlGeoField( buf, data, i, 347, 359 );
-		pos[i*2  ] = strtol( buf, &endp, 10 );
+		pos[i*2  ] = strtod( buf, &endp ) * 1000000;
 		assert( endp != buf );
 		if ( pos[i*2  ] > maxx ) {
 			maxx = pos[i*2  ];
@@ -431,7 +431,7 @@ int PlGeo::load() {
 		}
 		// latitude, "y"
 		copyPlGeoField( buf, data, i, 336, 347 );
-		pos[i*2+1] = strtol( buf, &endp, 10 );
+		pos[i*2+1] = strtod( buf, &endp ) * 1000000;
 		assert( endp != buf );
 		if ( pos[i*2+1] > maxy ) {
 			maxy = pos[i*2+1];
@@ -464,7 +464,7 @@ int PlGeo::load() {
 
 		// ubid
 		{
-			unsigned int offset = 0;
+			//unsigned int offset = 0;
 			uint64_t tubid = 0;
 			// state county tract blkgrp block
 			PL_UBID_CHAR(tubid, line[27]); // state
@@ -483,7 +483,7 @@ int PlGeo::load() {
 			PL_UBID_CHAR(tubid, line[62]); // 
 			PL_UBID_CHAR(tubid, line[63]); // 
 			PL_UBID_CHAR(tubid, line[64]); // 
-			printf("tubid=%lu i=%d\n", tubid, i);
+			//printf("tubid=%lu i=%d\n", tubid, i);
 			ubids[i].ubid = tubid;
 			ubids[i].index = i;
 		}
@@ -499,7 +499,7 @@ int PlGeo::load() {
 	for ( i = 0; i < 10; i++ ) {
 		fprintf( stderr, "%lld\t%d\n", ubids[i].ubid, ubids[i].index );
 	}
-	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
+	printf("PlGeo::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
 	if (recnos != NULL) {
 		qsort( recno_map, numPoints, sizeof(RecnoNode), recnoSortF );
 	}

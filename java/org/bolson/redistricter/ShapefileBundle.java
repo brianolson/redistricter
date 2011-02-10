@@ -430,6 +430,12 @@ public class ShapefileBundle {
 		boolean tree;
 		int threads;
 
+		PolygonLinker(Shapefile shp, String linksOut, boolean tree, int threads, int awidth, int aheight) throws IOException {
+			pba = new PolygonBucketArray(shp, awidth, aheight);
+			this.linksOut = linksOut;
+			this.tree = tree;
+			this.threads = threads;
+		}
 		PolygonLinker(Shapefile shp, String linksOut, boolean tree, int threads) throws IOException {
 			pba = new PolygonBucketArray(shp, 20, 20);
 			this.linksOut = linksOut;
@@ -1200,6 +1206,8 @@ public static final String usage =
 		RasterizationOptions rastOpts = new RasterizationOptions();
 		String rastOptOut = null;
 		BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
+		int awidth = 20;
+		int aheight = 20;
 		
 		public void main(String[] argv) throws IOException {
 			parseArgv(argv);
@@ -1234,6 +1242,14 @@ public static final String usage =
 					// upper bound on pixel size
 					i++;
 					boundy = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--awidth")) {
+					// PolygonBucketArray buckets wide
+					i++;
+					awidth = Integer.parseInt(argv[i]);
+				} else if (argv[i].equals("--aheight")) {
+					// PolygonBucketArray buckets high
+					i++;
+					aheight = Integer.parseInt(argv[i]);
 				} else if (argv[i].equals("--verbose")) {
 					log.setLevel(Level.FINEST);
 					//log.info(log.getLevel().toString());
@@ -1268,7 +1284,7 @@ public static final String usage =
 			ArrayList<PolygonProcessor> pps = new ArrayList<PolygonProcessor>();
 			if (linksOut != null) {
 				log.info("calculating links");
-				PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads);
+				PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads, awidth, aheight);
 				for (int i = 1; i < bundles.size(); ++i) {
 					linker.growForShapefile(bundles.get(i).shp);
 				}

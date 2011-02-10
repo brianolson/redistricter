@@ -134,6 +134,7 @@ int main( int argc, char** argv ) {
 	double mind;
 
 	do {
+		int bfhitcount = 0;
 		while ( bfin != bfout ) {
 			int nn = bfsearchq[bfout];
 			Node* n = nodes + nn;
@@ -145,9 +146,11 @@ int main( int argc, char** argv ) {
 					bfsearchq[bfin] = nin;
 					modinc( bfin );
 					hit.set( nin );
+					bfhitcount++;
 				}
 			}
 		}
+		printf("bf search hit %d out of %d\n", bfhitcount, numPoints);
 		
 		mini = -1;
 		minj = -1;
