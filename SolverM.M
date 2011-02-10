@@ -551,7 +551,7 @@ extern "C" void setDebugDistrictNumber(int index);
 - (IBAction)startOpenData:(id)sender {
 	NSOpenPanel* sheet = [NSOpenPanel openPanel];
 	[sheet setAllowsMultipleSelection:NO];
-	NSArray* fileTypes = [NSArray arrayWithObjects:@"pb", @"gbin", @"zcta", @"uf1", @"args", nil];
+	NSArray* fileTypes = [NSArray arrayWithObjects:@"pb", @"gbin", /*@"zcta",*/ @"uf1", @"args", nil];
 	[sheet beginSheetForDirectory:nil file:nil types:fileTypes modalForWindow:[view window] modalDelegate:self didEndSelector:@selector(openDataDidEnd:returnCode:contextInfo:) contextInfo:NULL];
 }
 - (void)openDataDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
@@ -700,9 +700,12 @@ extern "C" void setDebugDistrictNumber(int index);
 	assert(mapr != NULL);
 	//fprintf(stderr,"loading %s\n", dataPath);
 	char* suffixpos = NULL;
+#if 0
 	if ( strstr( dataPath, "zcta" ) != NULL ) {
 		sov->geoFact = openZCTA;
-	} else if ( (suffixpos = strstr( dataPath, "pb" )) != NULL ) {
+	} else
+#endif
+	if ( (suffixpos = strstr( dataPath, "pb" )) != NULL ) {
 		sov->geoFact = protobufGeoDataTag;
 	} else {
 		sov->geoFact = openUf1;

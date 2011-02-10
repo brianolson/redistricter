@@ -34,16 +34,4 @@
 #define COUNT_DISTRICTS 1
 #endif
 
-#ifndef READ_INT_POS
-#define READ_INT_POS 1
-#endif
-
-#ifndef READ_DOUBLE_POS
-#define READ_DOUBLE_POS 0
-#endif
-
-#ifndef READ_UBIDS
-#define READ_UBIDS 1
-#endif
-
 #endif /* CONFIG_H */

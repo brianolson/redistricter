@@ -41,6 +41,7 @@ states = [
 	('Oklahoma',	'OK',	40),
 	('Oregon',	'OR',	41),
 	('Pennsylvania',	'PA',	42),
+	('Puerto Rico',	'PR',	72),
 	('Rhode Island',	'RI',	44),
 	('South Carolina',	'SC',	45),
 	('South Dakota',	'SD',	46),
@@ -73,7 +74,7 @@ def codeForState(stateName):
 def stateAbbreviations():
 	"""Generator over two letter codes."""
 	for x in states:
-		if x[1] == 'DC':
+		if (x[1] == 'DC') or (x[1] == 'PR'):
 			continue
 		yield x[1]
 

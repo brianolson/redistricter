@@ -158,13 +158,7 @@ static void drawLinksArrayB( int numEdges, long* edgeData, GeoData* gd, double z
 		varray[j*3 +  2] = color[2] * LINK_RATE;
 	}
 
-#if READ_DOUBLE_POS
-#define DLAB_VT GL_DOUBLE
-#elif READ_INT_POS
 #define DLAB_VT GL_INT
-#else
-#error what kind of pos?
-#endif
 
 	glebail(glVertexPointer( 2, DLAB_VT, 0, gd->pos ));
 	glebail(glColorPointer( 3, GL_FLOAT, 0, varray ));

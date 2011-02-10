@@ -248,6 +248,7 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 	char buf[14];
 	buf[13] = '\0';
 	j = 0;
+	int noIndexEdgeDataCount = 0;
 	for ( i = 0 ; i < numEdges; i++ ) {
 		uint64_t tubid;
 		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i, 13 );
@@ -262,6 +263,7 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {
 			printf("ubid %lld => index %ld\n", tubid, edgeData[j*2+1] );
+			noIndexEdgeDataCount++;
 			continue;
 		}
 		//printf("ubid %lld => index %d\n", tubid, edgeData[i*2] );
@@ -269,6 +271,9 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 		//printf("ubid %lld => index %d\n", tubid, edgeData[i*2+1] );
 		nodes[edgeData[j*2+1]].numneighbors++;
 		j++;
+	}
+	if (noIndexEdgeDataCount) {
+		printf("%d no index edgeData parts\n", noIndexEdgeDataCount);
 	}
 	numEdges = j;
 	linksFile.close();

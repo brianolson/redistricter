@@ -998,8 +998,12 @@ public class ShapefileBundle {
 	 */
 	public int read(Iterable<PolygonProcessor> pps) throws IOException {
 		boolean y2kmode = true;
-		// BLKIDFP part of tabblock
-		DBaseFieldDescriptor blockIdField = dbf.getField("BLKIDFP");
+		// GEOID10 part of tabblock10
+		DBaseFieldDescriptor blockIdField = dbf.getField("GEOID10");
+		if (blockIdField == null) {
+			// BLKIDFP tabblock00
+			blockIdField = dbf.getField("BLKIDFP");
+		}
 		if (blockIdField == null) {
 			// BLKIDFP00 tabblock00
 			blockIdField = dbf.getField("BLKIDFP00");

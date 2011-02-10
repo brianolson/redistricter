@@ -149,7 +149,6 @@ int GeoData::writeBin( int fd, const char* fname ) {
 		//::close( fd );
 		return -1;
 	}
-#if READ_UBIDS
 	{
 		void* buf = malloc( sizeof(uint64_t)*numPoints );
 		uint32_t* ib = (uint32_t*)buf;
@@ -176,7 +175,6 @@ int GeoData::writeBin( int fd, const char* fname ) {
 		}
 		free( buf );
 	}
-#endif
 	return 0;
 }
 int GeoData::readBin( const char* fname ) {
@@ -217,14 +215,9 @@ int GeoData::readBin( int fd, const char* fname ) {
 	if ( endianness ) {
 		numPoints = swap32( numPoints );
 	}
-#if READ_INT_POS
 	pos = new int[numPoints*2];
 	maxx = maxy = INT_MIN;
 	minx = miny = INT_MAX;
-#endif
-#if READ_DOUBLE_POS
-	pos = new double[numPoints*2];
-#endif
 	s = sizeof(*pos) * numPoints * 2;
 	err = ::read( fd, pos, s );
 	if ( err != s ) {
@@ -234,14 +227,8 @@ int GeoData::readBin( int fd, const char* fname ) {
 	}
 	if ( endianness ) {
 		for ( int i = 0; i < numPoints; i++ ) {
-#if READ_INT_POS
 		pos[i*2] = swap32( pos[i*2] );
 		pos[i*2 + 1] = swap32( pos[i*2 + 1] );
-#endif
-#if READ_DOUBLE_POS
-		((uint64_t*)pos)[i*2] = swap64( ((uint64_t*)pos)[i*2] );
-		((uint64_t*)pos)[i*2 + 1] = swap64( ((uint64_t*)pos)[i*2 + 1] );
-#endif
 		}
 	}
 	for ( int i = 0; i < numPoints; i++ ) {
@@ -287,7 +274,6 @@ int GeoData::readBin( int fd, const char* fname ) {
 			area[i] = swap32( area[i] );
 		}
 	}
-#if READ_UBIDS
 	ubids = new UST[numPoints];
 	{
 		void* buf = malloc( sizeof(uint64_t)*numPoints );
@@ -327,7 +313,6 @@ int GeoData::readBin( int fd, const char* fname ) {
 		}
 		free( buf );
 	}
-#endif
 	return 0;
 }
 
@@ -335,9 +320,11 @@ int GeoData::readBin( int fd, const char* fname ) {
 #define MAX_DISTRICTS 100
 #endif
 
+#if 0
 int ZCTA::load() {
 	return -1;
 }
+#endif
 
 // Sort by ubid to aid lookup mapping ubid->internal-index
 int ubidSortF( const void* a, const void* b ) {
@@ -378,9 +365,162 @@ static inline int countADistrict(void* data, int i, char** dsts, int num) {
 	return num;
 }
 
+PlGeo::PlGeo() {
+}
+PlGeo::~PlGeo() {
+}
 /*
+Census 2010 PL94-171 (redistricting) geography
+http://www.census.gov/prod/cen2010/pl94-171.pdf
+
+0,6 "PLST  "
+6,8	state postal code
+8,11	summary level
+18,25	logical record number
+27,29	state (fips)
+29,32	county
+54,60	cenus tract
+60,61	block group
+61,65	block
+198,212	area land
+212,226	area water
+318,327	population
+336,347	latitude
+347,359	longitude
+
+len=501
+ */
+static const unsigned int sizeof_pl_line = 501;
+#define copyPlGeoField( dst, src, i, start, stop ) memcpy( dst, (void*)((unsigned long)src + i*sizeof_pl_line + start ), stop - start ); ((unsigned char*)dst)[stop-start] = '\0';
+static inline void PL_UBID_CHAR(uint64_t& tubid, char c) {
+	assert(c >= '0');
+	assert(c <= '9');
+	tubid = (tubid * 10) + (c - '0');
+}
+
+int PlGeo::load() {
+	assert(0 == memcmp(data, "PLST  ", 6));
+	// For each point, read lat,lon,area,population,ubid
+	int i;
+	char buf[128];
+	char* endp;
+
+	numPoints = sb.st_size / sizeof_pl_line;
+	pos = new int[numPoints*2];
+	maxx = maxy = INT_MIN;
+	minx = miny = INT_MAX;
+	area = new uint64_t[numPoints];
+	pop = new int[numPoints];
+	totalpop = 0;
+	maxpop = 0;
+	ubids = new UST[numPoints];
+	recno_map = new RecnoNode[numPoints];
+	recnos = new uint32_t[numPoints];
+	for ( i = 0; i < numPoints; i++ ) {
+		char* line = reinterpret_cast<char*>(
+			reinterpret_cast<uintptr_t>(data) + (i * sizeof_pl_line));
+		// longitude, "x"
+		copyPlGeoField( buf, data, i, 347, 359 );
+		pos[i*2  ] = strtol( buf, &endp, 10 );
+		assert( endp != buf );
+		if ( pos[i*2  ] > maxx ) {
+			maxx = pos[i*2  ];
+		}
+		if ( pos[i*2  ] < minx ) {
+			minx = pos[i*2  ];
+		}
+		// latitude, "y"
+		copyPlGeoField( buf, data, i, 336, 347 );
+		pos[i*2+1] = strtol( buf, &endp, 10 );
+		assert( endp != buf );
+		if ( pos[i*2+1] > maxy ) {
+			maxy = pos[i*2+1];
+		}
+		if ( pos[i*2+1] < miny ) {
+			miny = pos[i*2+1];
+		}
+
+		// area land
+		copyPlGeoField( buf, data, i, 198, 212 );
+		{
+			errno = 0;
+			area[i] = strtoull( buf, &endp, 10 );
+			if (errno != 0) {
+				perror("strtoull");
+				fprintf(stderr, "failed to parse \"%s\" => %llu\n", buf, area[i]);
+				assert( errno == 0 );
+			}
+			assert( endp != buf );
+		}
+
+		// population
+		copyPlGeoField( buf, data, i, 318, 327 );
+		pop[i] = strtoul( buf, &endp, 10 );
+		assert( endp != buf );
+		totalpop += pop[i];
+		if ( pop[i] > maxpop ) {
+			maxpop = pop[i];
+		}
+
+		// ubid
+		{
+			unsigned int offset = 0;
+			uint64_t tubid = 0;
+			// state county tract blkgrp block
+			PL_UBID_CHAR(tubid, line[27]); // state
+			PL_UBID_CHAR(tubid, line[28]); // 
+			PL_UBID_CHAR(tubid, line[29]); // county
+			PL_UBID_CHAR(tubid, line[30]); // 
+			PL_UBID_CHAR(tubid, line[31]); // 
+			PL_UBID_CHAR(tubid, line[54]); // tract
+			PL_UBID_CHAR(tubid, line[55]); // 
+			PL_UBID_CHAR(tubid, line[56]); // 
+			PL_UBID_CHAR(tubid, line[57]); // 
+			PL_UBID_CHAR(tubid, line[58]); // 
+			PL_UBID_CHAR(tubid, line[59]); // 
+			//PL_UBID_CHAR(tubid, line[60]); // block group
+			PL_UBID_CHAR(tubid, line[61]); // block
+			PL_UBID_CHAR(tubid, line[62]); // 
+			PL_UBID_CHAR(tubid, line[63]); // 
+			PL_UBID_CHAR(tubid, line[64]); // 
+			printf("tubid=%lu i=%d\n", tubid, i);
+			ubids[i].ubid = tubid;
+			ubids[i].index = i;
+		}
+
+		// logrecno
+		copyPlGeoField( buf, data, i, 18, 25 );
+		recno_map[i].recno = strtoul( buf, NULL, 10 );
+		recno_map[i].index = i;
+		recnos[i] = recno_map[i].recno;
+	}
+
+	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
+	for ( i = 0; i < 10; i++ ) {
+		fprintf( stderr, "%lld\t%d\n", ubids[i].ubid, ubids[i].index );
+	}
+	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
+	if (recnos != NULL) {
+		qsort( recno_map, numPoints, sizeof(RecnoNode), recnoSortF );
+	}
+	return 0;
+}
+int PlGeo::numDistricts() {
+	return 0;
+}
+#if 0
+uint64_t PlGeo::ubid( int index ) {
+	return 0;
+}
+uint32_t PlGeo::logrecno( int index ) {
+	return 0;
+}
+#endif
+/*
+ Census 2000 Summary File 1 geography
 http://www.census.gov/prod/cen2000/doc/sf1.pdf
 
+0,6	"uSF1  "
 6,8	state postal code
 8,11	summary level
 18,25	logical record number
@@ -390,11 +530,12 @@ http://www.census.gov/prod/cen2000/doc/sf1.pdf
 55,61	cenus tract
 61,62	block group
 62,66	block
-
-*/
+len=402
+ */
 int Uf1::load() {
 	int i;
 	char buf[128];
+	char* endp;
 		
 	numPoints = sb.st_size / sizeof_GeoUf1;
 #if 0
@@ -403,21 +544,14 @@ int Uf1::load() {
 	}
 #endif
 	
-#if READ_INT_POS
 	pos = new int[numPoints*2];
 	maxx = maxy = INT_MIN;
 	minx = miny = INT_MAX;
-#endif
-#if READ_DOUBLE_POS
-	pos = new double[numPoints*2];
-#endif
 	area = new uint64_t[numPoints];
 	pop = new int[numPoints];
 	totalpop = 0;
 	maxpop = 0;
-#if READ_UBIDS
 	ubids = new UST[numPoints];
-#endif
 #if COUNT_DISTRICTS
 	char* dsts[MAX_DISTRICTS];
 	congressionalDistricts = 0;
@@ -428,15 +562,10 @@ int Uf1::load() {
 	}
 
 	for ( i = 0; i < numPoints; i++ ) {
-#if READ_DOUBLE_POS || READ_INT_POS
 		// longitude, "x"
 		copyGeoUf1Field( buf, data, i, 319, 331 );
-#if READ_DOUBLE_POS
-		pos[i*2  ] = atof( buf ) / 1000000.0;
-#endif
-#if READ_INT_POS
-		pos[i*2  ] = strtol( buf, NULL, 10 );
-#endif
+		pos[i*2  ] = strtol( buf, &endp, 10 );
+		assert( endp != buf );
 		if ( pos[i*2  ] > maxx ) {
 			maxx = pos[i*2  ];
 		}
@@ -445,23 +574,17 @@ int Uf1::load() {
 		}
 		// latitude, "y"
 		copyGeoUf1Field( buf, data, i, 310, 319 );
-#if READ_DOUBLE_POS
-		pos[i*2+1] = atof( buf ) / 1000000.0;
-#endif
-#if READ_INT_POS
-		pos[i*2+1] = strtol( buf, NULL, 10 );
-#endif
+		pos[i*2+1] = strtol( buf, &endp, 10 );
+		assert( endp != buf );
 		if ( pos[i*2+1] > maxy ) {
 			maxy = pos[i*2+1];
 		}
 		if ( pos[i*2+1] < miny ) {
 			miny = pos[i*2+1];
 		}
-#endif /* read pos */
 
 		copyGeoUf1Field( buf, data, i, 172, 186 );
 		{
-			char* endp;
 			errno = 0;
 			area[i] = strtoull( buf, &endp, 10 );
 			if (errno != 0) {
@@ -479,10 +602,8 @@ int Uf1::load() {
 		if ( pop[i] > maxpop ) {
 			maxpop = pop[i];
 		}
-#if READ_UBIDS
 		ubids[i].ubid = ubid( i );
 		ubids[i].index = i;
-#endif
 		if (recnos != NULL) {
 			recno_map[i].recno = logrecno( i );
 			recno_map[i].index = i;
@@ -492,15 +613,11 @@ int Uf1::load() {
 		congressionalDistricts = countADistrict(data, i, dsts, congressionalDistricts);
 #endif
 	}
-#if READ_UBIDS
 	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
 	for ( i = 0; i < 10; i++ ) {
 		fprintf( stderr, "%lld\t%d\n", ubids[i].ubid, ubids[i].index );
 	}
-#endif
-#if READ_INT_POS
 	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
-#endif
 	if (recnos != NULL) {
 		qsort( recno_map, numPoints, sizeof(RecnoNode), recnoSortF );
 	}
@@ -560,13 +677,20 @@ POPTYPE Uf1::oldDist( int index ) {
 		return ERRDISTRICT;
 	}
 
+#if 0
 GeoData* openZCTA( char* inputname ) {
 	ZCTA* toret = new ZCTA();
 	toret->open( inputname );
 	return toret;
 }
+#endif
 GeoData* openUf1( char* inputname ) {
 	Uf1* toret = new Uf1();
+	toret->open( inputname );
+	return toret;
+}
+GeoData* openPlGeo( char* inputname ) {
+	PlGeo* toret = new PlGeo();
 	toret->open( inputname );
 	return toret;
 }

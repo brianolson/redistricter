@@ -6,9 +6,11 @@ import optparse
 import os
 import re
 import states
+import subprocess
 import sys
 import time
 import urllib
+import zipfile
 
 # local
 import generaterunconfigs
@@ -249,12 +251,54 @@ class StateData(setupstatedata.StateData):
 			sys.stderr.write('%s (%d) not in: %r' % (self.stu, self.fips, self.pg.crawley.tabblock))
 		return out
 	
+	def getGeoBlocks(self):
+		"""From xx2010.pl.zip get block level geo file."""
+		plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
+		geoblockspath = os.path.join(self.dpath, 'geoblocks')
+		# TODO: maybe fetch
+		assert os.path.exists(plzip), "missing %s" % (plzip,)
+		if not newerthan(plzip, geoblockspath):
+			return
+		self.logf('%s -> %s', plzip, geoblockspath)
+		if self.options.dryrun:
+			return
+		fo = open(geoblockspath, 'w')
+		zf = zipfile.ZipFile(plzip, 'r')
+		raw = zf.read(self.stl + 'geo2010.pl')
+		zf.close()
+		filter = 'PLST  ' + self.stu + '750'
+		for line in raw.splitlines(True):
+			if line.startswith(filter):
+				fo.write(line)
+		fo.close()
+	
+	def compileBinaryData(self):
+		geoblockspath = os.path.join(self.dpath, 'geoblocks')
+		linkspath = os.path.join(self.dpath, self.stl + '101.uf1.links')
+		binpath = os.path.join(self.options.bindir, 'linkfixup')
+		outpath = os.path.join(self.dpath, self.stl + '.pb')
+		cmd = [binpath, '--plgeo', geoblockspath, '-p', outpath]
+		needsbuild = newerthan(geoblockspath, outpath)
+		needsbuild = needsbuild or newerthan(linkspath, outpath)
+		needsbuild = needsbuild or newerthan(binpath, outpath)
+		if not needsbuild:
+			return
+		self.logf('cd %s && "%s"', self.dpath, '" "'.join(cmd))
+		if self.options.dryrun:
+			return
+		start = time.time()
+		status = subprocess.call(cmd, cwd=self.dpath)
+		self.logf('data compile took %f seconds', time.time() - start)
+		if status != 0:
+			raise Exception('error (%d) executing: cd %s && "%s"' % (status, self.dpath,'" "'.join(cmd)))
+	
 	def dostate_inner(self):
 		linkspath = self.processShapefile(self.dpath)
 		if not linkspath:
 			self.logf('processShapefile failed')
 			return False
-#		self.compileBinaryData(self.dpath)
+		self.getGeoBlocks()
+		self.compileBinaryData()
 #		makefile = self.writeMakeFragment()
 		generaterunconfigs.run(
 			datadir=self.options.datadir,

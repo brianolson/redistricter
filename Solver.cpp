@@ -77,7 +77,7 @@ void Solver::setFactoryByIndex(int index) {
 }
 
 
-static char oldDefaultInputName[] = "NM_zcta5";
+static char oldDefaultInputName[] = "ca.pb";
 
 Solver::Solver() :
 	districts( 5 ), totalpop( 0.0 ), districtPopTarget( 0.0 ),
@@ -96,13 +96,9 @@ Solver::Solver() :
 #if WITH_PNG
 	pngname( NULL ), pngWidth( 1000 ), pngHeight( 1000 ),
 #endif
-	gd( NULL ), geoFact( openZCTA ),
+	gd( NULL ), geoFact( openUf1 ),
 	/*sorti( NULL ),*/
-#if READ_DOUBLE_POS
-	minx( HUGE_VAL ), miny( HUGE_VAL ), maxx( -HUGE_VAL ), maxy( -HUGE_VAL ),
-#elif READ_INT_POS
 	minx( INT_MAX ), miny( INT_MAX ), maxx( INT_MIN ), maxy( INT_MIN ),
-#endif
 	viewportRatio( 1.0 ), gencount( 0 ), blaf( NULL ),
 	recentKmpp( NULL ),
 	recentSpread( NULL ),
@@ -262,6 +258,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 	}
 	numEdges = len / sizeof_linkLine;
 	edgeData = new int32_t[numEdges*2];
+	int noIndexEdgeDataCount = 0;
 	for ( unsigned int i = 0 ; i < numEdges; i++ ) {
 		uint64_t tubid;
 		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offseta, sizeof_ubid );
@@ -269,6 +266,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
 			printf("ubid %lld => index %d\n", tubid, edgeData[j*2] );
+			noIndexEdgeDataCount++;
 			continue;
 		}
 		memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offsetb, sizeof_ubid );
@@ -279,6 +277,9 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 			continue;
 		}
 		j++;
+	}
+	if (noIndexEdgeDataCount) {
+		printf("%d no index edgeData parts of %d\n", noIndexEdgeDataCount, numEdges);
 	}
 	numEdges = j;
 	return true;
@@ -296,10 +297,8 @@ void Solver::readLinksBin() {
 	p += sizeof(*(gd->pos)) * gd->numPoints * 2;
 	p += sizeof(int)*gd->numPoints;
 	p += sizeof(gd->area[0])*gd->numPoints;
-#if READ_UBIDS
 	p += sizeof(uint32_t)*gd->numPoints;
 	p += sizeof(uint64_t)*gd->numPoints;
-#endif
 	if ( endianness ) {
 		numEdges = swap32( *((uint32_t*)p) );
 	} else {
@@ -861,6 +860,7 @@ int Solver::handleArgs( int argc, char** argv ) {
 	popRatioFactor.setPoint( -1, District2::popRatioFactor );
 	int argi = 1;
 	char* uf1InputName = NULL;
+	char* plGeoInputName = NULL;
 	char* pbInputName = NULL;
 	const char* binLogName = NULL;
 	const char* statLogName = NULL;
@@ -874,8 +874,9 @@ int Solver::handleArgs( int argc, char** argv ) {
 	bool d2mode = false;
 	while (argi < argc) {
 		StringArg("i", &inputname);  // deprecated
-		StringArg("U", &uf1InputName);  // deprecated
-		StringArg("B", &pbInputName);  // deprecated
+		StringArg("U", &uf1InputName);  // only for linkfixup
+		StringArg("plgeo", &plGeoInputName);  // only for linkfixup
+		StringArg("B", &pbInputName);  // deprecated, old binary format
 		StringArg("P", &pbInputName);
 		IntArg("g", &generations);
 		IntArg("d", &districts);
@@ -923,6 +924,10 @@ int Solver::handleArgs( int argc, char** argv ) {
 	if (pbInputName != NULL) {
 		inputname = pbInputName;
 		geoFact = protobufGeoDataTag;
+	}
+	if (plGeoInputName != NULL) {
+		inputname = plGeoInputName;
+		geoFact = openPlGeo;
 	}
 	if (statLogName != NULL) {
 		statLog = fopen(statLogName, "w");

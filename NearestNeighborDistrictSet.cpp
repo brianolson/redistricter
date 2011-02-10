@@ -575,14 +575,12 @@ void NearestNeighborDistrictSet::getStats(SolverStats* stats) {
 			nod++;
 			nodpop += gd->pop[i];		
 		} else {
-#if READ_INT_POS || READ_DOUBLE_POS
 			double dx, dy;
 			NearestNeighborDistrict* cd;
 			cd = &(dists[winner[i]]);
 			dx = cd->distx - gd->pos[i*2  ];
 			dy = cd->disty - gd->pos[i*2+1];
 			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
-#endif
 		}
 	}
 	// earthradius_equatorial  6378136.49 m * 2 * Pi = 40075013.481 m earth circumfrence at equator

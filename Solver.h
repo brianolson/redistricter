@@ -68,13 +68,8 @@ public:
 	
 	//POPTYPE* sorti;
 	
-#if READ_INT_POS
-	int minx, miny, maxx, maxy;
 #define POS_TYPE int
-#elif READ_DOUBLE_POS
-	double minx, miny, maxx, maxy;
-#define POS_TYPE double
-#endif
+	POS_TYPE minx, miny, maxx, maxy;
 	double viewportRatio;
 	
 	int gencount;

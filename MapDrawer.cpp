@@ -540,30 +540,14 @@ void MapDrawer::clearToBackgroundColor() {
 	}
 }
 
-#if READ_INT_POS
 #define DPRSET( dim, src ) if ( ! isnan( src ) ) {\
 		l##dim = (int)(1000000.0 * (src) );	  \
 	} else { \
 		l##dim = sov->dim;\
 	}
-#elif READ_DOUBLE_POS
-#define DPRSET( dim, src ) if ( ! isnan( src ) ) {\
-		l##dim = ( src ); \
-	} else { \
-		l##dim = sov->dim;\
-	}
-#else
-#error "what type is pos?"
-#endif
 
 void MapDrawer::paintPoints( Solver* sov ) {
-#if READ_INT_POS
 	int lminx, lminy, lmaxx, lmaxy;
-#elif READ_DOUBLE_POS
-	double lminx, lminy, lmaxx, lmaxy;
-#else
-#error "what type is pos?"
-#endif
 
 	DPRSET( minx, minlon );
 	DPRSET( maxx, maxlon );
@@ -573,15 +557,9 @@ void MapDrawer::paintPoints( Solver* sov ) {
 	/* setup transformation */
 	double ym = 0.999 * height / (lmaxy - lminy);
 	double xm = 0.999 * width / (lmaxx - lminx);
-#if READ_INT_POS
         debugprintf(
             "min lat,lon=(%d, %d), max (%d, %d)\n",
             lminx, lminy, lmaxx, lmaxy);
-#elif READ_DOUBLE_POS
-        debugprintf(
-            "min lat,lon=(%f, %f), max (%f, %f)\n",
-            lminx, lminy, lmaxx, lmaxy);
-#endif
         debugprintf("scale x,y=(%f, %f)\n", xm, ym);
 	
 	GeoData* gd = sov->gd;
@@ -622,13 +600,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 		paintPoints( sov );
 		return;
 	}
-#if READ_INT_POS
 	int lminx, lminy, lmaxx, lmaxy;
-#elif READ_DOUBLE_POS
-	double lminx, lminy, lmaxx, lmaxy;
-#else
-#error "what type is pos?"
-#endif
 
 	DPRSET( minx, minlon );
 	DPRSET( maxx, maxlon );
@@ -691,13 +663,7 @@ void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green
 			setPoint(x, y, red, green, blue);
 		}
 	} else {
-#if READ_INT_POS
 		int lminx, lminy, lmaxx, lmaxy;
-#elif READ_DOUBLE_POS
-		double lminx, lminy, lmaxx, lmaxy;
-#else
-#error "what type is pos?"
-#endif
 		
 		DPRSET( minx, minlon );
 		DPRSET( maxx, maxlon );

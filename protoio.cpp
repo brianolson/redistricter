@@ -23,6 +23,14 @@ class ProtobufGeoData : public GeoData {
 		assert(false);
 		return 0;
 	}
+	virtual uint64_t ubid( int index ) {
+		assert(0);
+		return 0;
+	}
+	virtual uint32_t logrecno( int index ) {
+		assert(0);
+		return 0;
+	}
 };
 
 int writeToProtoFile(Solver* sov, const char* filename) {
@@ -34,21 +42,11 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	GeoData* gd = sov->gd;
 	RedistricterData rd;
 	rd.Clear();
-#if READ_INT_POS
 	google::protobuf::RepeatedField<int32>* pos = rd.mutable_intpoints();
 	pos->Reserve(gd->numPoints * 2);
 	for (int i = 0; i < (gd->numPoints * 2); ++i) {
 		pos->Add(gd->pos[i]);
 	}
-#elif READ_DOUBLE_POS
-	google::protobuf::RepeatedField<double>* pos = rd.mutable_intpoints();
-	pos.Reserve(gd->numPoints * 2);
-	for (int i = 0; i < (gd->numPoints * 2); ++i) {
-		pos.Add(gd->pos[i]);
-	}
-#else
-#error "neither int nor double pos"
-#endif
 	google::protobuf::RepeatedField<int32>* pop = rd.mutable_population();
 	pop->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
@@ -59,7 +57,6 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	for (int i = 0; i < gd->numPoints; ++i) {
 		area->Add(gd->area[i]);
 	}
-#if READ_UBIDS
 	google::protobuf::RepeatedField<uint64>* ubids = rd.mutable_ubids();
 	ubids->Reserve(gd->numPoints);
 	for (int i = 0; i < gd->numPoints; ++i) {
@@ -68,7 +65,6 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	for (int i = 0; i < gd->numPoints; ++i) {
 		ubids->Set(gd->ubids[i].index, gd->ubids[i].ubid);
 	}
-#endif
 	if (gd->recnos != NULL) {
 		google::protobuf::RepeatedField<int32>* recnos = rd.mutable_recnos();
 		for (int i = 0; i < gd->numPoints; ++i) {
@@ -178,7 +174,6 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			gd->area[i] = rd.area(i);
 		}
 	}
-#if READ_UBIDS
 	fprintf(stderr, "reading ubids\n");
 	if (rd.ubids_size() > 0) {
 		assert(rd.ubids_size() == gd->numPoints);
@@ -197,7 +192,6 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			if (ii != ti) fprintf(stderr, "%d -> %d\n", ti, ii);
 		}
 	}
-#endif
 	if (rd.recnos_size() > 0) {
 		extern int recnoSortF( const void* a, const void* b );
 		assert(rd.recnos_size() == gd->numPoints);

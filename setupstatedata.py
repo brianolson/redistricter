@@ -707,7 +707,9 @@ class StateData(object):
 			self.logf('makelinks took %f seconds', time.time() - start)
 		return linkspath
 	
-	def compileBinaryData(self, dpath):
+	def compileBinaryData(self, dpath=None):
+		if dpath is None:
+			dpath = self.dpath
 		uf1path = os.path.join(dpath, self.stl + '101.uf1')
 		linkspath = uf1path + '.links'
 		outpath = None

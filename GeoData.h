@@ -21,7 +21,6 @@ public:
 	int congressionalDistricts;
 #endif
 
-#if READ_INT_POS
 	int32_t* pos;
 	int minx, maxx, miny, maxy;
 
@@ -54,48 +53,12 @@ public:
 		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
 		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
 	}
-#endif
-#if READ_DOUBLE_POS
-	double* pos;
-	double minx, maxx, miny, maxy;
-
-	inline void allocPoints() {
-		pos = new double[numPoints*2];
-	}
-	inline double lon(int x) {
-		return pos[(x*2)];
-	}
-	inline double lat(int x) {
-		return pos[(x*2) + 1];
-	}
-	inline void set_lon(int x, int32_t microdegrees) {
-		pos[(x*2)] = microdegrees / 1000000.0;
-		if (pos[(x*2)] < minx) minx = pos[(x*2)];
-		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
-	}
-	inline void set_lon(int x, double degrees) {
-		pos[(x*2)] = degrees;
-		if (pos[(x*2)] < minx) minx = pos[(x*2)];
-		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
-	}
-	inline void set_lat(int x, int32_t microdegrees) {
-		pos[(x*2) + 1] = microdegrees / 1000000.0;
-		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
-		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
-	}
-	inline void set_lat(int x, double degrees) {
-		pos[(x*2) + 1] = degrees;
-		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
-		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
-	}
-#endif
 
 	uint64_t* area;
 
 	int32_t* pop;
 	int totalpop;
 	int maxpop;
-#if READ_UBIDS
 	// Ubid Sort Thing
 	class UST {
 public:
@@ -107,7 +70,6 @@ public:
 	uint32_t indexOfUbid( uint64_t u );
 	/* linear search, sloooow */
 	uint64_t ubidOfIndex( uint32_t index );
-#endif
 
 	// Map "Logical Record Number" to internal index so that we can map in 
 	// other Census data files.
@@ -132,6 +94,9 @@ public:
 	int open( char* inputname );
 	virtual int load() = 0;
 	virtual int numDistricts();
+	//virtual uint64_t ubid( int index ) = 0;
+	// get "Logical Record Number" which links to deeper census data.
+	//virtual uint32_t logrecno( int index ) = 0;
 	
 	/** Binary Format:
 	int32_t endianness; Should read as 1 in the correct endianness.
@@ -145,6 +110,7 @@ public:
 	uint64_t ubid[numPoints];
 	)
 	*/
+	// deprecated, use protobufs
 	int writeBin( int fd, const char* fname = ((const char*)0) );
 	int readBin( int fd, const char* fname = ((const char*)0) );
 	int writeBin( const char* fname );
@@ -153,18 +119,25 @@ public:
 	virtual ~GeoData();
 };
 
+#if 0
+// deprecated
 class ZCTA : public GeoData {
 	virtual int load();
 	//virtual int numDistricts();
 };
+#endif
 
 #define sizeof_GeoUf1 402
 #define copyGeoUf1Field( dst, src, i, start, stop ) memcpy( dst, (void*)((unsigned long)src + i*sizeof_GeoUf1 + start ), stop - start ); ((unsigned char*)dst)[stop-start] = '\0';
 
 class Uf1 : public GeoData {
+public:
 	virtual int load();
 	virtual int numDistricts();
-	
+
+	virtual POPTYPE oldDist( int index );
+
+private:	
 	// Get Unique Block ID, the ull interpretation of concatenated
 	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	// Ubid links to geometry data which tags blocks by this string.
@@ -176,14 +149,33 @@ class Uf1 : public GeoData {
 	uint32_t logrecno( int index );
 	
 	int countDistricts();
+};
 
+class PlGeo : public GeoData {
 public:
+	PlGeo();
+	virtual ~PlGeo();
+
+	virtual int load();
+	virtual int numDistricts();
+	
+	// Get Unique Block ID, the ull interpretation of concatenated
+	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
+	// Ubid links to geometry data which tags blocks by this string.
+	// This is eqivalent to Cenus 2000 tiger shapefile BLOCKID.
+	// TODO: 2010 shapefile has an extra digit appended.
+	//virtual uint64_t ubid( int index );
+	
+	// get "Logical Record Number" which links to deeper census data.
+	//virtual uint32_t logrecno( int index );
+		
 	POPTYPE oldDist( int index );
 };
 
 
-GeoData* openZCTA( char* inputname );
+//GeoData* openZCTA( char* inputname );
 GeoData* openUf1( char* inputname );
+GeoData* openPlGeo( char* inputname );
 GeoData* protobufGeoDataTag( char* inputname );
 
 #endif /* GEODATA_H */
