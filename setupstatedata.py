@@ -238,6 +238,7 @@ class ProcessGlobals(object):
 #http://www2.census.gov/geo/tiger/TIGER2010/FACES/tl_2010_22001_faces.zip
 #http://www2.census.gov/geo/tiger/TIGER2010/EDGES/tl_2010_22001_edges.zip
 #http://www2.census.gov/geo/tiger/TIGER2010/COUNTY/2010/tl_2010_22_county10.zip
+#http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Virginia/va2010.pl.zip
 
 		bestyear = None
 		editions = re.compile(r'href="TIGER(\d\d\d\d)/')
@@ -319,6 +320,7 @@ class StateData(object):
 		self.stl = st.lower()
 		self.stu = st.upper()
 		self.fips = fipsForPostalCode(self.stu)
+		self.name = nameForPostalCode(self.stu)
 		self.bestYear = None
 		self.turl = None
 		self.turl_time = None

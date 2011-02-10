@@ -124,6 +124,10 @@ def getCountySet(datadir):
 	return getCensusTigerSetList(datadir, COUNTY_URL, 'county_index.html', COUNTY_RE)
 
 
+# e.g. http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Virginia/va2010.pl.zip
+# takes (state name, stl) like ('Virginia', 'va')
+PL_ZIP_TEMPLATE = 'http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/%s/%s2010.pl.zip'
+
 class Crawler(object):
 	def __init__(self, options):
 		self.options = options
@@ -256,6 +260,11 @@ class StateData(setupstatedata.StateData):
 		plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
 		# TODO: maybe fetch
+		if not os.path.exists(plzip):
+			plzipurl = PL_ZIP_TEMPLATE % (self.name, self.stl)
+			self.logf('%s -> %s', plzipurl, plzip)
+			if not self.options.dryrun:
+				urllib.urlretrieve(plzipurl, plzip)
 		assert os.path.exists(plzip), "missing %s" % (plzip,)
 		if not newerthan(plzip, geoblockspath):
 			return
