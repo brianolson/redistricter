@@ -220,6 +220,8 @@ HAS_PARAM_ = {
 	'--maxSpreadFraction': True,
 	'--maxSpreadAbsolute': True,
 	'--mppb': True,
+	'--runDutySeconds': True,
+	'--sleepDutySeconds': True,
 }
 
 
@@ -253,6 +255,19 @@ def dictToArgList(x):
 		out.append(arg)
 		if value is not None:
 			out.append(value)
+	return out
+
+
+def argListToDict(they):
+	i = 0
+	out = {}
+	while i < len(they):
+		if HAS_PARAM_[they[i]]:
+			out[they[i]] = they[i+1]
+			i += 2
+		else:
+			out[they[i]] = None
+			i += 1
 	return out
 
 
@@ -660,7 +675,7 @@ class runallstates(object):
 	
 	def readArgs(self, argv):
 		default_server = os.environ.get('REDISTRICTER_SERVER')
-		argp = optparse.OptionParser()
+		argp = optparse.OptionParser(description="arguments after '--' will be passed to the solver")
 		# TODO: add options to not make PNG after run or to not store g/ intermediates.
 		argp.add_option('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
 		argp.add_option('--bindir', '--bin', dest='bindir', default=self.bindir)
@@ -697,6 +712,13 @@ class runallstates(object):
 		if options.diskQuota:
 			self.diskQuota = sizeStringToInt(
 				options.diskQuota, self.diskQuota)
+		extraArgs = []
+		if '--' in args:
+			# append args after '-' to self.stdarg via argListToDict()
+			ddindex = args.index('-')
+			extra = args[ddindex + 1:]
+			args = args[:ddindex]
+			self.stdargs.update(argListToDict(extraArgs))
 		for arg in args:
 			astu = arg.upper()
 			#if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
@@ -706,8 +728,12 @@ class runallstates(object):
 				logging.debug('add stu "%s"', astu)
 				self.statearglist.append(astu)
 			else:
-				sys.stderr.write("%s: bogus arg \"%s\"\n" % (argv[0], arg))
-				sys.exit(1)
+				extraArgs.append(arg)
+				#sys.stderr.write("%s: bogus arg \"%s\" of %r\n" % (argv[0], arg, args))
+				#sys.exit(1)
+		if extraArgs:
+			logging.info('passing extra args to solver: %r', extraArgs)
+			self.stdargs.update(argListToDict(extraArgs))
 		self.datadir = os.path.realpath(options.datadir)
 		options.datadir = self.datadir
 		self.bindir = os.path.realpath(options.bindir)
@@ -1187,6 +1213,8 @@ class runallstates(object):
 			return True
 	
 	def loadDataFromServer(self):
+		if not self.client:
+			return
 		loadedDirPaths = []
 		if self.statearglist:
 			for stu in self.statearglist:
@@ -1211,6 +1239,8 @@ class runallstates(object):
 
 	def runtimeLoadDataFromServer(self):
 		"""Part of runthread, occasionally load more data."""
+		if not self.client:
+			return
 		if self.lock:
 			self.lock.acquire()
 		doit = self.runtimeLoadDataCountdown == 0

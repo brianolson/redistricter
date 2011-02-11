@@ -100,6 +100,7 @@ Solver::Solver() :
 	/*sorti( NULL ),*/
 	minx( INT_MAX ), miny( INT_MAX ), maxx( INT_MIN ), maxy( INT_MIN ),
 	viewportRatio( 1.0 ), gencount( 0 ), blaf( NULL ),
+	runDutySeconds(10), sleepDutySeconds(0),
 	recentKmpp( NULL ),
 	recentSpread( NULL ),
 	giveupSteps( 5000 ),
@@ -852,7 +853,9 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
 "-nearest-neighbor   use NearestNeighbor solver\n"
 "-d2                 use District2 solver\n"
 "-maxSpreadFraction  ignore results if district populations ((max - min)/avg) greater than this\n"
-"-maxSpreadAbsolute  ignore results if district populations (max - min) greater than this\n";
+"-maxSpreadAbsolute  ignore results if district populations (max - min) greater than this\n"
+"-runDutySeconds     run for this many seconds, then sleep (10)\n"
+"-sleepDutySeconds   sleep for this many seconds, then run (0)\n";
 
 int Solver::handleArgs( int argc, char** argv ) {
 	int argcout = 1;
@@ -907,6 +910,8 @@ int Solver::handleArgs( int argc, char** argv ) {
 		IntArg("giveupSteps", &giveupSteps);
 		DoubleArg("kmppGiveupFraction", &recentKmppGiveupFraction);
 		DoubleArg("spreadGiveupFraction", &recentSpreadGiveupFraction);
+		IntArg("sleepDutySeconds", &sleepDutySeconds);
+		IntArg("runDutySeconds", &runDutySeconds);
 #if 1
 		argv[argcout] = argv[argi];
 		argcout++;
@@ -1057,7 +1062,13 @@ int Solver::main( int argc, char** argv ) {
 	assert(bestStdMap != NULL);
 	assert(bestSpreadMap != NULL);
 	assert(bestKmppMap != NULL);
+	time_t runDutyStart = time(NULL);
+	
 	while ( gencount < genmax ) {
+		if (sleepDutySeconds && ((time(NULL) - runDutyStart) >= runDutySeconds)) {
+			sleep(sleepDutySeconds);
+			runDutyStart = time(NULL);
+		}
 		District2::popRatioFactor = popRatioFactor.value(gencount);
 		//if (!(gencount%50))fprintf(stderr,"%d/%d popRatioFactor=%f\n", gencount, genmax, District2::popRatioFactor);
 		if ( solutionLogPrefix != NULL ) {

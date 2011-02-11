@@ -76,6 +76,9 @@ public:
 
 	FILE* blaf;
 	
+	int runDutySeconds;
+	int sleepDutySeconds;
+	
 	LastNMinMax<double>* recentKmpp;
 	LastNMinMax<double>* recentSpread;
 	int giveupSteps;
