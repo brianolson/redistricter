@@ -102,7 +102,7 @@ class outTarfileSet(object):
 		ti = tarfile.TarInfo()
 		ti.name = name
 		ti.size = len(value)
-		ti.mode = 0o444
+		ti.mode = 0444
 		# TODO: set mtime from Last-Modified if present
 		ti.mtime = time.time()
 		ti.type = tarfile.REGTYPE
