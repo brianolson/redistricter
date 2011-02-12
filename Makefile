@@ -62,6 +62,7 @@ districter2:	$(D2OBJS)
 # TODO: switch to libprotobuf-lite.a
 districter2_staticproto:	${D2OBJS}
 	${CXXLD} ${D2OBJS} -lpthread ${LDPNG} -lz /usr/local/lib/libprotobuf.a -o districter2_staticproto
+	strip districter2_staticproto
 
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
 #districter2:	 District2.cpp fileio.cpp nonguimain.cpp renderDistricts.cpp Solver.cpp tiger/mmaped.cpp
@@ -132,6 +133,10 @@ dumpBinLog:	dumpBinLog.cpp redata.pb.cc
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj
+
+# make clean && make -j 2 OG='-O2 -DNDEBUG' clientdist
+clientdist:	.FORCE districter2_staticproto
+	./makedist.py
 
 .FORCE:
 
