@@ -30,10 +30,10 @@ def makeCommand(extra_args, bindir=None, enableassertions=False):
 	return cmd + ['-Xmx1000M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
 
 
-BUNDLE_NAME_RE_ = re.compile(r'.*tl_(\d\d\d\d)_(\d\d)_tabblock(0?0?).zip$', re.IGNORECASE)
+BUNDLE_NAME_RE_ = re.compile(r'.*tl_(\d\d\d\d)_(\d\d)_tabblock(\d?\d?).zip$', re.IGNORECASE)
 
 # TODO: swap 00 vs non 00 meaning
-def betterShapefileZip(a, b, prefer00=True):
+def betterShapefileZip(a, b, prefer00=False):
 	"""Return True if a is better than b.
 	
 	"Better" means newer year, or not Census00 type.
@@ -48,12 +48,17 @@ def betterShapefileZip(a, b, prefer00=True):
 		raise Exception, '"%s" is not understood bundle name' % b
 	if ma.group(2) != mb.group(2):
 		raise Exception, 'trying to compare different states, %s and %s' % (ma.group(2), mb.group(2))
+	# newer year is better
 	if int(ma.group(1)) > int(mb.group(1)):
 		return True
 	if prefer00:
 		if ma.group(3) and not mb.group(3):
 			return True
 	else:
+		if mb.group(3) == '10':
+			return False
+		if ma.group(3) == '10':
+			return True
 		if mb.group(3) and not ma.group(3):
 			return True
 	return False
