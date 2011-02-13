@@ -583,7 +583,8 @@ class StateData(object):
 		assert zipspath is not None
 		bestzip = os.path.join(zipspath, bestzip)
 		tabblockPath = os.path.join(zipspath, 'tl_2010_%02d_tabblock10.zip' % (self.fips,))
-		if True:
+		useFaces = True
+		if not useFaces:
 			# Disable detailed rendering for now, the blocks don't line up right.
 			facesPaths = None
 			edgesPaths = None
@@ -604,10 +605,12 @@ class StateData(object):
 		renderArgs = []
 		commands = []
 		needlinks = True
-		#if newerthan(tabblockPath, linksname):
-		#	commands.append(shapefile.makeCommand(
-		#		[tabblockPath, '--links', linksname]))
-		#	needlinks = False
+		# trying links from tabblock, render from faces
+		#if (not useFaces) and newerthan(tabblockPath, linksname):
+		if newerthan(tabblockPath, linksname):
+			commands.append(shapefile.makeCommand(
+				[tabblockPath, '--links', linksname]))
+			needlinks = False
 		if needlinks and edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
 			self.logf('need %s from edges+faces', linksname)
 			lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)

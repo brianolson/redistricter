@@ -1003,7 +1003,7 @@ public class ShapefileBundle {
 	 * @throws IOException
 	 */
 	public int read(Iterable<PolygonProcessor> pps) throws IOException {
-		boolean y2kmode = true;
+		boolean y2kmode = false;
 		// GEOID10 part of tabblock10
 		DBaseFieldDescriptor blockIdField = dbf.getField("GEOID10");
 		if (blockIdField == null) {
@@ -1018,22 +1018,36 @@ public class ShapefileBundle {
 			// NAMELSAD part of places
 			blockIdField = dbf.getField("NAMELSAD");
 		}
-		if (blockIdField == null) {
+		if (blockIdField == null && !y2kmode) {
 			// maybe synthesize blockId from parts of faces file
-			DBaseFieldDescriptor state = dbf.getField("STATEFP00");
-			DBaseFieldDescriptor county = dbf.getField("COUNTYFP00");
-			DBaseFieldDescriptor tract = dbf.getField("TRACTCE00");
-			DBaseFieldDescriptor block = dbf.getField("BLOCKCE00");
-			DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
-			if ((state != null) && (county != null) && (tract != null) && (block != null) && (y2kmode || (suffix != null))) {
+			DBaseFieldDescriptor state = dbf.getField("STATEFP10");
+			DBaseFieldDescriptor county = dbf.getField("COUNTYFP10");
+			DBaseFieldDescriptor tract = dbf.getField("TRACTCE10");
+			//BLKGRPCE10
+			DBaseFieldDescriptor block = dbf.getField("BLOCKCE10");
+			//DBaseFieldDescriptor suffix = dbf.getField("SUFFIX1CE");
+			if ((state != null) && (county != null) && (tract != null) && (block != null)) {
 				CompositeDBaseField cfield = new CompositeDBaseField();
 				cfield.add(state);
 				cfield.add(county);
 				cfield.add(tract);
 				cfield.add(block);
-				if (!y2kmode) {
-					cfield.add(suffix);
-				}
+				//cfield.add(suffix);
+				blockIdField = cfield;
+			}
+		}
+		if (blockIdField == null && y2kmode) {
+			// maybe synthesize blockId from parts of faces file
+			DBaseFieldDescriptor state = dbf.getField("STATEFP00");
+			DBaseFieldDescriptor county = dbf.getField("COUNTYFP00");
+			DBaseFieldDescriptor tract = dbf.getField("TRACTCE00");
+			DBaseFieldDescriptor block = dbf.getField("BLOCKCE00");
+			if ((state != null) && (county != null) && (tract != null) && (block != null)) {
+				CompositeDBaseField cfield = new CompositeDBaseField();
+				cfield.add(state);
+				cfield.add(county);
+				cfield.add(tract);
+				cfield.add(block);
 				blockIdField = cfield;
 			}
 		}

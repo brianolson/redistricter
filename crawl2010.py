@@ -308,7 +308,6 @@ class StateData(setupstatedata.StateData):
 			return False
 		self.getGeoBlocks()
 		self.compileBinaryData()
-#		makefile = self.writeMakeFragment()
 		generaterunconfigs.run(
 			datadir=self.options.datadir,
 			stulist=[self.stu],

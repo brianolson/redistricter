@@ -563,7 +563,7 @@ class runallstates(object):
 		# For local cache when running as a client
 		self.diskQuota = 100000000
 		self.diskUsage = None
-		self.runtimeLoadDataCountdown = 1
+		self.runtimeLoadDataNext = time.time() + 120
 
 	def addStopReason(self, reason):
 		if self.lock:
@@ -961,6 +961,7 @@ class runallstates(object):
 			os.mkdir(path)
 	
 	def runthread(self, label='x'):
+		# See also RunThread.run below
 		while not self.shouldstop():
 			# sleep 1 is a small price to pay to prevent stupid runaway loops
 			time.sleep(1)
@@ -1243,11 +1244,9 @@ class runallstates(object):
 			return
 		if self.lock:
 			self.lock.acquire()
-		doit = self.runtimeLoadDataCountdown == 0
+		doit = self.runtimeLoadDataNext < time.time()
 		if doit:
-			self.runtimeLoadDataCountdown = (self.numthreads * 7) + 1
-		else:
-			self.runtimeLoadDataCountdown -= 1
+			self.runtimeLoadDataNext = time.time() + 20000
 		if self.lock:
 			self.lock.release()
 		if not doit:
@@ -1305,7 +1304,8 @@ class runallstates(object):
 			threads = []
 			for x in xrange(0, self.numthreads):
 				threadLabel = 't%d' % x
-				threads.append(threading.Thread(target=runallstates.runthread, args=(self,threadLabel), name=threadLabel))
+				threads.append(RunThread(self, threadLabel))
+				#threads.append(threading.Thread(target=runallstates.runthread, args=(self,threadLabel), name=threadLabel))
 			for x in threads:
 				x.start()
 				time.sleep(1.5)
@@ -1317,6 +1317,51 @@ class runallstates(object):
 				print self.stopreason
 			if os.path.exists(self.stoppath):
 				os.remove(self.stoppath)
+
+class RunThread(object):
+	allthreads = []
+	lock = threading.Lock()
+	
+	def __init__(self, runner, label):
+		self.runner = runner
+		self.thread = threading.Thread(target=self.run, name=label)
+		self.label = label
+		self.stu = None
+		RunThread.lock.acquire()
+		RunThread.allthreads.append(self)
+		RunThread.lock.release()
+	
+	def start(self):
+		self.thread.start()
+	
+	def join(self):
+		self.thread.join()
+	
+	def getNextState(self):
+		stu = None
+		while stu is None:
+			stu = self.runner.getNextState()
+			RunThread.lock.acquire()
+			for ot in RunThread.allthreads:
+				if ot.stu == stu:
+					stu = None
+					break
+			self.stu = stu
+			RunThread.lock.release()
+	
+	def run(self):
+		# See also runthread() above
+		while not self.runner.shouldstop():
+			# sleep 1 is a small price to pay to prevent stupid runaway loops
+			time.sleep(1)
+			self.runner.runtimeLoadDataFromServer()
+			self.runner.loadConfigOverride()
+			self.getNextState()
+			if self.stu is None:
+				# try again in a second
+				continue
+			self.runner.runstate(self.stu, self.label)
+			self.stu = None
 
 if __name__ == "__main__":
 	it = runallstates()
