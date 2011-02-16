@@ -97,7 +97,7 @@ CLIENT_DEFAULTS_ = {
 	'configurl': 'http://127.0.0.1:8111/config',
 #	'dataurl': 'http://127.0.0.1:8111/data/',
 	'submiturl': 'http://127.0.0.1:8111/submit',
-	'configCacheSeconds': (3600 * 24),
+	'configCacheSeconds': str(3600 * 24),
 }
 
 EXAMPLE_CONFIG_ = """[config]
@@ -143,20 +143,24 @@ class Client(object):
 		"""
 		cpath = self.configCachePath()
 		needsConfigFetch = self.options.force_config_reload
+		configCacheMissing = False
+		configCacheExpired = False
 		if self.options.force_config_reload:
 			# only do it once
 			self.options.force_config_reload = False
 		if not needsConfigFetch:
 			try:
 				cstat = os.stat(cpath)
-				logging.info('reading cached config "%s"', cpath)
-				self.config.read(cpath)
+				logging.info('reading cached config "%s" cstat=%s', cpath, cstat)
+				#self.config.read(cpath)
 				if (cstat.st_mtime + self.config.getint('config', 'configCacheSeconds')) < time.time():
+					configCacheExpired = True
 					needsConfigFetch = True
 			except Exception, e:
-				logging.info('stat("%s") failed: %s', cpath, e)
+				logging.info('stat("%s") failed: %s\ntraceback:\n%s', cpath, e, traceback.format_exc())
+				configCacheMissing = True
 				needsConfigFetch = True
-		if needsConfigFetch and self.options.dry_run and os.path.exists(cpath):
+		if needsConfigFetch and self.options.dry_run and (not configCacheMissing):
 			logging.info('using cached config for dry-run')
 			needsConfigFetch = False
 		if not needsConfigFetch:
@@ -166,9 +170,10 @@ class Client(object):
 			f.close()
 			return
 		GET_headers = {}
-		if_modified_since = self.lastmods.get('.configCache')
-		if if_modified_since:
-			GET_headers['If-Modified-Since'] = if_modified_since
+		if not configCacheMissing:
+			if_modified_since = self.lastmods.get('.configCache')
+			if if_modified_since:
+				GET_headers['If-Modified-Since'] = if_modified_since
 		# Fetch config from server
 		configurl = self.configUrl()
 		logging.info('fetching config from "%s"', configurl)
@@ -190,6 +195,15 @@ class Client(object):
 		except urllib2.HTTPError, he:
 			if he.code == 304:
 				# Not modified. Load cached copy.
+				f = open(cpath, 'rb')
+				raw = f.read()
+				f.close()
+			else:
+				raise
+		except urllib2.URLError, ue:
+			logging.warn('URLError %r', ue)
+			if not configCacheMissing:
+				logging.warn('fetch "%s" failed (%s), using cache', configurl, ue)
 				f = open(cpath, 'rb')
 				raw = f.read()
 				f.close()
@@ -252,6 +266,12 @@ class Client(object):
 				pass
 			else:
 				raise
+		except urllib2.URLError, ue:
+			# if the file exists, just go with it
+			if os.path.exists(localpath):
+				return localpath
+			logging.error('local %s does not exist and fetch %s fails', localpath, remoteurl)
+			raise
 		return localpath
 	
 	def archiveToDirName(self, archivename):
@@ -271,10 +291,10 @@ class Client(object):
 		markerPath = os.path.join(dirpath, '.unpackmarker')
 		needsUnpack = newerthan(archpath, markerPath)
 		if not needsUnpack:
-			return
+			return None
 		if self.options.dry_run:
 			logging.info('would unpack "%s" to "%s"', archpath, self.options.datadir)
-			return
+			return None
 		tf = tarfile.open(archpath, 'r|gz')
 		tf.extractall(self.options.datadir)
 		tf.close()

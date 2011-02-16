@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # touch work/stop to gracefully stop with a cycle is done
 # touch work/reload to make this script exec itself at that time
+# These are also settable by buttons on the web interface.
+# (these files are deleted after they're detected so that they only apply once)
 #
-# some interesting options to pass to the underlying script after '--'
+# Some interesting options to pass to the underlying script after '--':
 #--verbose
 #--diskQuota=1000000000
+#
+# Additional arguments to the solver can be set in work/configoverride
 
 import gzip
 import optparse
@@ -14,12 +18,32 @@ import subprocess
 import sys
 import time
 
+def read_flagfile(op, linesource, options=None, old_args=None):
+	"""Return (options, args) as per OptionParser.parse_args()."""
+	lines = []
+	for line in linesource:
+		line = line.strip()
+		if not line:
+			continue
+		if line[0] == '#':
+			continue
+		lines.append(line)
+	(options, args) = op.parse_args(args=lines, values=options)
+	if old_args:
+		args = old_args + args
+	return (options, args)
+
 def main():
 	op = optparse.OptionParser()
 	op.add_option('--port', dest='port', type='int', default=9988)
 	op.add_option('--threads', dest='threads', type='int', default=2)
+	op.add_option('--flagfile', dest='flagfile', default=None)
 	(options, args) = op.parse_args()
 
+	if options.flagfile:
+		(options, args) = read_flagfile(op, open(options.flagfile, 'r'), options, args)
+	elif os.path.exists('flagfile'):
+		(options, args) = read_flagfile(op, open('flagfile', 'r'), options, args)
 	rootdir = os.path.dirname(os.path.abspath(__file__))
 	bindir = os.path.join(rootdir, 'bin')
 	datadir = os.path.join(rootdir, 'data')
@@ -65,6 +89,7 @@ class RotatingLogWriter(object):
 		self.outname = None
 		self.out = None
 		self.currentDay = None
+		self.lastMarkerTime = None
 		
 		now = time.localtime()
 		self.startOut(now)
@@ -75,11 +100,15 @@ class RotatingLogWriter(object):
 		self.out = gzip.open(self.outname, 'ab', 9)
 	
 	def write(self, data):
+		now = time.time()
+		lnow = time.localtime(now)
+		if (not self.lastMarkerTime) or ((now - self.lastMarkerTime) > 60):
+			self.lastMarkerTime = now
+			self.out.write(time.strftime('# %Y%m%d_%H%M%S\n', lnow))
 		self.out.write(data)
-		now = time.localtime()
-		if now[2] != self.currentDay:
+		if lnow[2] != self.currentDay:
 			self.out.close()
-			self.startOut(now)
+			self.startOut(lnow)
 	
 	def close(self):
 		self.out.close()

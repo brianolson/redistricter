@@ -38,6 +38,7 @@ JAVAC?=javac
 
 #TODO: this is getting rediculous, might be time for autoconf. ew. autoconf.
 LDPNG?=-lpng12
+STATICPNG?=${LDPNG}
 LDFLAGS+=${LDPNG} -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
@@ -60,8 +61,9 @@ districter2:	$(D2OBJS)
 	$(CXXLD) $(D2OBJS) $(LDFLAGS) -o districter2
 
 # TODO: switch to libprotobuf-lite.a
+# TODO: maybe use local static libpng.a
 districter2_staticproto:	${D2OBJS}
-	${CXXLD} ${D2OBJS} -lpthread ${LDPNG} -lz /usr/local/lib/libprotobuf.a -o districter2_staticproto
+	${CXXLD} ${D2OBJS} -lpthread ${STATICPNG} -lz /usr/local/lib/libprotobuf.a -o districter2_staticproto
 	strip districter2_staticproto
 
 # compile all the sources together in case there's any cross-sourcefile optimization to be done
@@ -100,6 +102,9 @@ DRENDOBJS:=${COREOBJS} drendmain.o MapDrawer.o
 drend:	${DRENDOBJS}
 	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(LDFLAGS) -o drend
 
+drend_static:	${DRENDOBJS}
+	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(STATICPNG) -lz /usr/local/lib/libprotobuf.a -o drend_static
+
 ANALYZEOBJS:=${COREOBJS} analyze.o
 
 analyze:	${ANALYZEOBJS}
@@ -135,7 +140,7 @@ xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj
 
 # make clean && make -j 2 OG='-O2 -DNDEBUG' clientdist
-clientdist:	.FORCE districter2_staticproto
+clientdist:	.FORCE districter2_staticproto drend_static
 	./makedist.py
 
 .FORCE:

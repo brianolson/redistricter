@@ -152,7 +152,8 @@ def poll_run(p, stu):
 	poller.register(p.stderr, select.POLLIN | select.POLLPRI )
 	lastolines = []
 	lastelines = []
-	while p.poll() is None:
+	pollx = p.poll()
+	while pollx is None:
 		for (fd, event) in poller.poll(500):
 			if p.stdout.fileno() == fd:
 				line = p.stdout.readline()
@@ -166,6 +167,8 @@ def poll_run(p, stu):
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
+		pollx = p.poll()
+	sys.stderr.write('ended with %r\n' % (pollx,))
 	return (lastolines, lastelines)
 
 def select_run(p, stu):
@@ -173,7 +176,8 @@ def select_run(p, stu):
 	Return last 10 lines of error in list."""
 	lastolines = []
 	lastelines = []
-	while p.poll() is None:
+	pollx = p.poll()
+	while pollx is None:
 		(il, ol, el) = select.select([p.stdout, p.stderr], [], [], 0.5)
 		for fd in il:
 			if (p.stdout.fileno() == fd) or (fd == p.stdout):
@@ -188,6 +192,8 @@ def select_run(p, stu):
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
+		pollx = p.poll()
+	sys.stderr.write('ended with %r\n' % (pollx,))
 	return (lastolines, lastelines)
 
 HAS_PARAM_ = {
@@ -901,6 +907,10 @@ class runallstates(object):
 	def applyConfigOverrideLine(self, line):
 		(cname, cline) = line.split(':', 1)
 		cname = cname.strip()
+		if cname == 'all':
+			for cfg in self.config.itervalues():
+				cfg.applyConfigLine(cline)
+			return
 		if cname in self.config:
 			self.config[cname].applyConfigLine(cline)
 	
@@ -924,11 +934,12 @@ class runallstates(object):
 		return out
 
 	def loadConfigOverride(self):
-		lines = self._loadConfigOverrideFile()
+		lines = []
 		if self.client:
 			self.client.loadConfiguration()
 			for line in self.client.runOptionLines():
 				lines.append(line)
+		lines.extend(self._loadConfigOverrideFile())
 		if not lines:
 			return
 		if self.lock:
@@ -1217,22 +1228,26 @@ class runallstates(object):
 		if not self.client:
 			return
 		loadedDirPaths = []
-		if self.statearglist:
-			for stu in self.statearglist:
-				loadedDirPath = self.client.getDataForStu(stu)
+		try:
+			if self.statearglist:
+				for stu in self.statearglist:
+					loadedDirPath = self.client.getDataForStu(stu)
+					if loadedDirPath:
+						loadedDirPaths.append(loadedDirPath)
+			else:
+				# Pick one randomly, fetch it
+				self.diskUsage = du(self.datadir)
+				if self.diskQuota - self.diskUsage < QUOTA_HEADROOM_:
+					logging.warn('using %d bytes of %d quota, want at least %d free before fetching more data', self.diskUsage, self.diskQuota, QUOTA_HEADROOM_)
+					return
+				loadedDirPath = self.client.unpackArchive(
+					self.client.randomDatasetName())
 				if loadedDirPath:
 					loadedDirPaths.append(loadedDirPath)
-		else:
-			# Pick one randomly, fetch it
-			# TODO: download new datasets in background up to some local cache limit.
-			self.diskUsage = du(self.datadir)
-			if self.diskQuota - self.diskUsage < QUOTA_HEADROOM_:
-				logging.warn('using %d bytes of %d quota, want at least %d free before fetching more data', self.diskUsage, self.diskQuota, QUOTA_HEADROOM_)
-				return
-			loadedDirPath = self.client.unpackArchive(
-				self.client.randomDatasetName())
-			if loadedDirPath:
-				loadedDirPaths.append(loadedDirPath)
+		except:
+			# something went wrong, try to go with what we got
+			traceback.print_exc()
+			pass
 		for path in loadedDirPaths:
 			newConfigs = self.loadStateConfigurations(path)
 			for name, cf in newConfigs:
@@ -1289,7 +1304,11 @@ class runallstates(object):
 			import resultserver
 			def extensionFu(handler):
 				return self.setCurrentRunningHtml(handler)
-			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu)
+			actions = {}
+			if self.stoppath:
+				resultserver.TouchAction(self.stoppath, 'Graceful Stop', 'stop').setDict(actions)
+			resultserver.TouchAction(os.path.join(rootdir, 'reload'), 'Reload After Stop', 'reload').setDict(actions)
+			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu, actions=actions)
 			if serverthread is not None:
 				print "serving status at\nhttp://localhost:%d/" % self.options.port
 			else:

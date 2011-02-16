@@ -9,6 +9,7 @@ import time
 # in name \t archive name
 PACKAGEDEF = """
 districter2_staticproto	bin/districter2
+drend_static	bin/drend
 client.py	bin/client.py
 kmppspreadplot.py	bin/kmppspreadplot.py
 manybest.py	bin/manybest.py
@@ -24,6 +25,7 @@ states.py	bin/states.py
 totaltime.py	bin/totaltime.py
 variability.py	bin/variability.py
 run_redistricter.py	run_redistricter
+at_home_README.txt	README.TXT
 """
 
 def parsePackageDef(linesource):

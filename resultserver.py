@@ -250,13 +250,16 @@ if (window.redistricter_statlog['nodist']) {
 
 
 class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-	def __init__(self, request, client_address, server, extensions=None):
+	def __init__(self, request, client_address, server, extensions=None, actions=None):
 		self.extensions = extensions
 		self.dirExtra = None
 		self.query = {}
 		#print 'request=' + repr(request)
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 		#print 'dir(self)=' + repr(dir(self))
+		self.actions = actions
+		if self.actions is None:
+			self.actions = {}
 		self.extensions_map.update({
 			'.png': 'image/png',
 			'.jpg': 'image/jpeg',
@@ -297,6 +300,8 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(self.dirExtra)
 		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
 		if path == '':
+			for action in self.actions.itervalues():
+				self.wfile.write(action.html)
 			self.wfile.write(htmlRootDirListing('', fpath, they, self.query.get('count') != None))
 		else:
 			self.wfile.write(htmlDirListing('', fpath, they))
@@ -325,7 +330,6 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
 		pathQuery = self.path.split('?', 1)
 		self.path = pathQuery[0]
-		query = {}
 		if len(pathQuery) > 1:
 			self.query = cgi.parse_qs(pathQuery[1])
 		if self.runExtensions():
@@ -348,13 +352,57 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.GET_dir(path, fpath)
 			return
 		SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+	
+	def do_POST(self):
+		pathQuery = self.path.split('?', 1)
+		dest = '/'
+		if pathQuery[0] == '/action':
+			query = {}
+			if len(pathQuery) > 1:
+				query = cgi.parse_qs(pathQuery[1])
+			dest = query.get('dest', dest)
+			action = query.get('a')
+			if action and (action in self.actions):
+				self.actions[action]()
+		else:
+			print 'bogus action "%s"' % (self.path,)
+		self.send_response(307)
+		self.send_header('Location', dest)
+		self.end_headers()
+		return
+
+
+class TouchAction(object):
+	def __init__(self, path, name, paramname):
+		self.path = path
+		self.name = name
+		self.paramname = paramname
+	
+	@property
+	def html(self):
+		return '''<div><form action="/action?%s=1" method="POST"><input type="submit" value="%s"></form></div>''' % (self.paramname, self.name)
+	
+	def __call__(self, *args, **kwargs):
+		if not os.path.exists(self.path):
+			f = open(self.path, 'w')
+			f.write(timestamp())
+			f.close()
+		else:
+			f = open(self.path, 'ab')
+			f.close()
+	
+	def setDict(self, x):
+		x[self.paramname] = self
 
 class RuntimeExtensibleHandler(object):
-	def __init__(self, extensions=None):
+	def __init__(self, extensions=None, actions=None):
 		self.extensions = extensions
+		self.actions = actions
+		if self.actions is None:
+			self.actions = {}
 	
 	def __call__(self, request, client_address, server):
-		return ResultServerHandler(request, client_address, server, self.extensions)
+		return ResultServerHandler(request, client_address, server, self.extensions, self.actions)
 
 
 def runServer(port=8080):
@@ -363,10 +411,10 @@ def runServer(port=8080):
 	httpd.serve_forever()
 
 
-def startServer(port=8080, exitIfLastThread=True, extensions=None):
+def startServer(port=8080, exitIfLastThread=True, extensions=None, actions=None):
 	"""extensions should be callable and take an argument of
 	SimpleHTTPServer.SimpleHTTPRequestHandler"""
-	reh = RuntimeExtensibleHandler(extensions)
+	reh = RuntimeExtensibleHandler(extensions, actions)
 	httpd = BaseHTTPServer.HTTPServer( ('',port), reh )
 	t = threading.Thread(target=httpd.serve_forever, args=())
 	t.setDaemon(exitIfLastThread)
