@@ -12,6 +12,7 @@ import os
 import re
 import SimpleHTTPServer
 import threading
+import traceback
 import time
 import zlib
 
@@ -255,7 +256,6 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.dirExtra = None
 		self.query = {}
 		#print 'request=' + repr(request)
-		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 		#print 'dir(self)=' + repr(dir(self))
 		self.actions = actions
 		if self.actions is None:
@@ -270,6 +270,7 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			'.bz2': 'application/bzip2',
 #			'': '',
 })
+		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 	
 	def GET_dir(self, path, fpath):
 		they = os.listdir(fpath)
@@ -360,13 +361,25 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			query = {}
 			if len(pathQuery) > 1:
 				query = cgi.parse_qs(pathQuery[1])
-			dest = query.get('dest', dest)
+			dest = query.get('dest', [dest])
+			dest = dest[0]
 			action = query.get('a')
+			if action:
+				action = action[0]
 			if action and (action in self.actions):
-				self.actions[action]()
+				try:
+					self.actions[action]()
+				except:
+					self.send_response(500)
+					self.end_headers()
+					self.wfile.write(traceback.format_exc())
+					return
 		else:
-			print 'bogus action "%s"' % (self.path,)
-		self.send_response(307)
+			self.send_response(400)
+			self.end_headers()
+			self.wfile.write('bogus action "%s"\n' % (self.path,))
+			return
+		self.send_response(303)
 		self.send_header('Location', dest)
 		self.end_headers()
 		return
@@ -380,12 +393,12 @@ class TouchAction(object):
 	
 	@property
 	def html(self):
-		return '''<div><form action="/action?%s=1" method="POST"><input type="submit" value="%s"></form></div>''' % (self.paramname, self.name)
+		return '''<div><form action="/action?a=%s" method="POST"><input type="submit" value="%s"></form></div>''' % (self.paramname, self.name)
 	
 	def __call__(self, *args, **kwargs):
 		if not os.path.exists(self.path):
 			f = open(self.path, 'w')
-			f.write(timestamp())
+			f.write(time.strftime('%Y%m%d_%H%M%S'))
 			f.close()
 		else:
 			f = open(self.path, 'ab')

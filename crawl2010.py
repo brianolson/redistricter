@@ -261,7 +261,7 @@ class StateData(setupstatedata.StateData):
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
 		# TODO: maybe fetch
 		if not os.path.exists(plzip):
-			plzipurl = PL_ZIP_TEMPLATE % (self.name, self.stl)
+			plzipurl = PL_ZIP_TEMPLATE % (self.name.replace(' ', '_'), self.stl)
 			self.logf('%s -> %s', plzipurl, plzip)
 			if not self.options.dryrun:
 				urllib.urlretrieve(plzipurl, plzip)
