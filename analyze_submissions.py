@@ -20,6 +20,7 @@ import tarfile
 import time
 import traceback
 
+from newerthan import newerthan
 import resultspage
 import runallstates
 import states
@@ -371,12 +372,17 @@ class SubmissionAnalyzer(object):
 		if configs is None:
 			configs = self.getBestConfigs()
 		for cname, data in configs.iteritems():
+			if self.options.configlist and (cname not in self.options.configlist):
+				logging.debug('skipping %s not in configlist', cname)
+				continue
 			sdir = os.path.join(outdir, cname, str(data['id']))
 			if not os.path.isdir(sdir):
 				os.makedirs(sdir)
+			logging.debug('%s -> %s', cname, sdir)
 			ihpath = os.path.join(sdir, 'index.html')
-			if os.path.exists(ihpath):
+			if os.path.exists(ihpath) and (not self.options.redraw):
 				# already made, no need to re-write it
+				logging.debug('skipping %s', cname)
 				continue
 			tpath = data['path']
 			if tpath[0] == os.sep:
@@ -384,12 +390,18 @@ class SubmissionAnalyzer(object):
 			tpath = os.path.join(self.options.soldir, tpath)
 			tfparts = extractSome(tpath, ('solution', 'statsum'))
 			mappath = os.path.join(sdir, 'map.png')
-			if not os.path.exists(mappath):
+			if self.options.redraw or (not os.path.exists(mappath)):
 				self.doDrend(cname, data, tfparts['solution'], mappath)
+			solpath = os.path.join(sdir, 'solution.dsz')
+			if self.options.redraw or (not os.path.exists(solpath)):
+				logging.debug('write %s', solpath)
+				dszout = open(solpath, 'wb')
+				dszout.write(tfparts['solution'])
+				dszout.close()
 			# TODO: run `measurerace` to get demographic analysis
 			# 500x500 smallish size version
 			map500path = os.path.join(sdir, 'map500.png')
-			if not os.path.exists(map500path):
+			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 			(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
 			st_template = self.getPageTemplate()
@@ -442,6 +454,8 @@ def main():
 	argp.add_option('--configoverride', dest='configoverride', default=None, help='where to write configoverride file')
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'))
+	argp.add_option('--redraw', dest='redraw', action='store_true', default=False)
+	argp.add_option('--config', dest='configlist', action='append', default=[])
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
