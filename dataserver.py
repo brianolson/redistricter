@@ -126,6 +126,8 @@ def makeHTMLBodyForDirectory(dirpath='.', datasets=''):
 
 def needsUpdate(dirpath, outpath):
 	"""Check mod times of inputs against output. Return true if should generate output."""
+	if newerthan(__file__, outpath):
+		return True
 	if newerthan(os.path.join(dirpath, 'client_config'), outpath):
 		return True
 	if newerthan(os.path.join(dirpath, 'configoverride'), outpath):

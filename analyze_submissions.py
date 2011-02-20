@@ -291,13 +291,24 @@ class SubmissionAnalyzer(object):
 	def writeConfigOverride(self, outpath):
 		out = open(outpath, 'w')
 		bestconfigs = self.getBestConfigs()
+		counts = []
+		for cname, data in bestconfigs.iteritems():
+			counts.append(data['count'])
+		totalruncount = sum(counts)
+		mincount = min(counts)
+		maxcount = max(counts)
+		def rweight(count):
+			return 5.0 - (4.0 * (count - mincount) / (maxcount - mincount))
 		cnames = self.config.keys()
 		cnames.sort()
 		for cname in cnames:
 			if cname not in bestconfigs:
 				out.write('%s:sendAnything\n' % (cname,))
+				out.write('%s:weight:5.0\n' % (cname,))
 			else:
+				data = bestconfigs[cname]
 				out.write('%s:sendAnything: False\n' % (cname,))
+				out.write('%s:weight:%f\n' % (cname, rweight(data['count'])))
 			# TODO: tweak weight/kmppSendTheshold/spreadSendTheshold automatically
 			#out.write('%s:disabled\n')
 		mpath = outpath + '_manual'
