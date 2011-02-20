@@ -12,6 +12,7 @@ import logging
 import os
 import random
 import re
+import shutil
 import sys
 import sqlite3
 import string
@@ -25,7 +26,12 @@ import resultspage
 import runallstates
 import states
 
-legpath_ = os.path.join(os.path.dirname(__file__), 'legislatures.csv')
+srcdir_ = os.path.dirname(os.path.abspath(__file__))
+legpath_ = os.path.join(srcdir_, 'legislatures.csv')
+
+
+def localtime():
+	return time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime())
 
 
 def scandir(path):
@@ -64,9 +70,14 @@ def extractSome(fpath, names):
 
 def atomicLink(src, dest):
 	assert dest[-1] != os.sep
+	if os.path.samefile(src, dest):
+		return
 	tdest = dest + str(random.randint(100000,999999))
 	os.link(src, tdest)
 	os.rename(tdest, dest)
+	if os.path.exists(tdest):
+		logging.warn('temp link %s still exists, unlinking', tdest)
+		os.unlink(tdest)
 
 
 # Example analyze output:
@@ -126,7 +137,7 @@ class SubmissionAnalyzer(object):
 	def getPageTemplate(self, rootdir=None):
 		if self.pageTemplate is None:
 			if rootdir is None:
-				rootdir = os.path.dirname(os.path.abspath(__file__))
+				rootdir = srcdir_
 			f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
 			self.pageTemplate = string.Template(f.read())
 			f.close()
@@ -303,7 +314,7 @@ class SubmissionAnalyzer(object):
 		out = open(outpath, 'w')
 		out.write("""<!doctype html>
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
-""" % (time.ctime(),))
+""" % (localtime(),))
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
@@ -332,7 +343,7 @@ class SubmissionAnalyzer(object):
 		else:
 			citer = self.config.iterkeys()
 		for cname in citer:
-			(st, variation) = cname.split('_')
+			(st, variation) = cname.split('_', 1)
 			if st not in statevars:
 				statevars[st] = [variation]
 			else:
@@ -353,15 +364,15 @@ class SubmissionAnalyzer(object):
 				stu_v = stu + '_' + v
 				if stu_v == current:
 					isCurrent = True
-					vlist.append('<b>%s</b>' % (v,))
+					vlist.append('<td><b>%s</b></td>' % (v,))
 				else:
-					vlist.append('<a href="%s">%s</a>' % (self.options.rooturl + '/' + stu_v + '/', v))
+					vlist.append('<td><a href="%s">%s</a></td>' % (self.options.rooturl + '/' + stu_v + '/', v))
 			if isCurrent:
 				dclazz = 'slgC'
 			else:
 				dclazz = 'slg'
-			outl.append('<div class="%s">%s %s</div>' % (dclazz, name, ' '.join(vlist)))
-		return '<div class="snl">' + ''.join(outl) + '</div>'
+			outl.append('<tr class="%s"><td>%s</td>%s</tr>' % (dclazz, name, ' '.join(vlist)))
+		return '<table class="snl">' + ''.join(outl) + '</table>'
 	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
@@ -380,7 +391,7 @@ class SubmissionAnalyzer(object):
 				os.makedirs(sdir)
 			logging.debug('%s -> %s', cname, sdir)
 			ihpath = os.path.join(sdir, 'index.html')
-			if os.path.exists(ihpath) and (not self.options.redraw):
+			if os.path.exists(ihpath) and (not self.options.redraw) and (not self.options.rehtml):
 				# already made, no need to re-write it
 				logging.debug('skipping %s', cname)
 				continue
@@ -408,8 +419,10 @@ class SubmissionAnalyzer(object):
 			out = open(ihpath, 'w')
 			# TODO: permalink
 			permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
+			(px, body) = cname.split('_', 1)
+			statename = states.nameForPostalCode(px) + ' ' + body
 			out.write(st_template.substitute(
-				statename=cname,
+				statename=statename,
 				statenav=self.statenav(cname, configs),
 				ba_large='map.png',
 				ba_small='map500.png',
@@ -427,16 +440,24 @@ class SubmissionAnalyzer(object):
 			out.close()
 			for x in ('map.png', 'map500.png', 'index.html'):
 				atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
-		result_index_html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'result_index_pyt.html')
+		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		f = open(result_index_html_path, 'r')
 		result_index_html_template = string.Template(f.read())
 		f.close()
-		index_html = open(os.path.join(outdir, 'index.html'), 'w')
+		index_html_path = os.path.join(outdir, 'index.html')
+		index_html = open(index_html_path, 'w')
 		index_html.write(result_index_html_template.substitute(
 			statenav=self.statenav(None, configs),
 			rooturl=self.options.rooturl,
+			localtime=localtime(),
 		))
 		index_html.close()
+		logging.debug('wrote %s', index_html_path)
+		reportcssSource = os.path.join(srcdir_, 'report.css')
+		reportcssDest = os.path.join(outdir, 'report.css')
+		if newerthan(reportcssSource, reportcssDest):
+			logging.debug('%s -> %s', reportcssSource, reportcssDest)
+			shutil.copy2(reportcssSource, reportcssDest)
 
 
 def main():
@@ -455,6 +476,7 @@ def main():
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
 	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'))
 	argp.add_option('--redraw', dest='redraw', action='store_true', default=False)
+	argp.add_option('--rehtml', dest='rehtml', action='store_true', default=False)
 	argp.add_option('--config', dest='configlist', action='append', default=[])
 	(options, args) = argp.parse_args()
 	if options.verbose:

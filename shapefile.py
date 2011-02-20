@@ -27,7 +27,7 @@ def makeCommand(extra_args, bindir=None, enableassertions=False):
 		cmd = ['java']
 	if enableassertions:
 		cmd.append('-enableassertions')
-	return cmd + ['-Xmx1000M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
+	return cmd + ['-Xmx1500M', '-cp', classpath, 'org.bolson.redistricter.ShapefileBundle'] + extra_args
 
 
 BUNDLE_NAME_RE_ = re.compile(r'.*tl_(\d\d\d\d)_(\d\d)_tabblock(\d?\d?).zip$', re.IGNORECASE)
