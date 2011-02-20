@@ -70,7 +70,8 @@ def extractSome(fpath, names):
 
 def atomicLink(src, dest):
 	assert dest[-1] != os.sep
-	if os.path.samefile(src, dest):
+	assert os.path.exists(src)
+	if os.path.exists(dest) and os.path.samefile(src, dest):
 		return
 	tdest = dest + str(random.randint(100000,999999))
 	os.link(src, tdest)
