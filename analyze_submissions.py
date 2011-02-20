@@ -30,6 +30,17 @@ srcdir_ = os.path.dirname(os.path.abspath(__file__))
 legpath_ = os.path.join(srcdir_, 'legislatures.csv')
 
 
+_ga_cache = None
+def _google_analytics():
+	global _ga_cache
+	if _ga_cache is None:
+		gapath = os.path.join(srcdir_, 'google_analytics')
+		if not os.path.exists(gapath):
+			_ga_cache = ''
+			return _ga_cache
+		_ga_cache = open(gapath, 'rb').read()
+	return _ga_cache
+
 def localtime():
 	return time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime())
 
@@ -79,6 +90,11 @@ def atomicLink(src, dest):
 	if os.path.exists(tdest):
 		logging.warn('temp link %s still exists, unlinking', tdest)
 		os.unlink(tdest)
+
+
+def configToName(cname):
+	(px, body) = cname.split('_', 1)
+	return states.nameForPostalCode(px) + ' ' + body
 
 
 # Example analyze output:
@@ -267,7 +283,7 @@ class SubmissionAnalyzer(object):
 		rows = c.execute('SELECT config, count(*) FROM submissions GROUP BY config')
 		configs = {}
 		for config, count in rows:
-			configs[config] = {'count': count}
+			configs[config] = {'count': count, 'config': config}
 		return configs
 	
 	def getBestSolutionInfo(self, cname, data):
@@ -318,15 +334,24 @@ class SubmissionAnalyzer(object):
 				out.write(line)
 		out.close()
 	
+	def newestWinner(self, configs):
+		newestconfig = None
+		for cname, data in configs.iteritems():
+			if (newestconfig is None) or (data['id'] > newestconfig['id']):
+				newestconfig = data
+		return newestconfig
+	
 	def writeHtml(self, outpath, configs=None):
 		if configs is None:
 			configs = self.getBestConfigs()
+		newestconfig = self.newestWinner(configs)
 		clist = configs.keys()
 		clist.sort()
 		out = open(outpath, 'w')
 		out.write("""<!doctype html>
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
 """ % (localtime(),))
+		out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
@@ -431,23 +456,26 @@ class SubmissionAnalyzer(object):
 			out = open(ihpath, 'w')
 			# TODO: permalink
 			permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
-			(px, body) = cname.split('_', 1)
-			statename = states.nameForPostalCode(px) + ' ' + body
+			statename = configToName(cname)
+			#(px, body) = cname.split('_', 1)
+			#statename = states.nameForPostalCode(px) + ' ' + body
 			out.write(st_template.substitute(
 				statename=statename,
 				statenav=self.statenav(cname, configs),
 				ba_large='map.png',
 				ba_small='map500.png',
+				# TODO: get avgpop for state
 				avgpop='',
 				current_kmpp='',
 				current_spread='',
 				current_std='',
 				my_kmpp=str(kmpp),
-				my_spread=str(spread),
+				my_spread=str(int(float(spread))),
 				my_std=str(std),
 				extra='',
 				racedata='',
 				rooturl=self.options.rooturl,
+				google_analytics=_google_analytics(),
 			))
 			out.close()
 			for x in ('map.png', 'map500.png', 'index.html'):
@@ -456,12 +484,17 @@ class SubmissionAnalyzer(object):
 		f = open(result_index_html_path, 'r')
 		result_index_html_template = string.Template(f.read())
 		f.close()
+		newestconfig = self.newestWinner(configs)['config']
+		newestname = configToName(newestconfig)
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
 		index_html.write(result_index_html_template.substitute(
 			statenav=self.statenav(None, configs),
 			rooturl=self.options.rooturl,
 			localtime=localtime(),
+			nwinner=newestconfig,
+			nwinnername=newestname,
+			google_analytics=_google_analytics(),
 		))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)

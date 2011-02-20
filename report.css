@@ -2,3 +2,9 @@ p.gentime{color:#555;}
 table.snl{font-size:10pt; font-family:'Helvetica',sans-serif;}
 tr.slg{}
 tr.slgC{background-color:#ddd}
+table.sp td{vertical-align:top;}
+table.myo{}
+table.myo td{padding-left:3px;}
+td.myoh{max-width:30em;text-align:center;}
+td.myow{max-width:30em;}
+td.myon{max-width:30em;text-align:center;}
