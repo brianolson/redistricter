@@ -7,6 +7,7 @@ import optparse
 import os
 import string
 import sys
+import time
 
 try:
 	from boto.s3.connection import S3Connection
@@ -35,6 +36,7 @@ ${datasets}
 <h1>run configuration overrides</h1>
 <p>Can be further overridden locally by 'configoverride' file in run directory or other file --config-override is pointing to.</p>
 <pre class="runopts">${runopts}</pre>
+<p>Generated at: ${gentime}</p>
 </body></html>
 """)
 
@@ -119,6 +121,7 @@ def makeHTMLBodyForDirectory(dirpath='.', datasets=''):
 		'title': 'redistricter data and config',
 		'datasets': datasets,
 		'config': config,
+		'gentime': time.asctime(),
 		'runopts': runopts})
 
 def needsUpdate(dirpath, outpath):
