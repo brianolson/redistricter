@@ -94,6 +94,7 @@
 		1F9B311210C060140026FEE7 /* libprotobuf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9B310B10C060140026FEE7 /* libprotobuf.dylib */; };
 		1F9B311310C060140026FEE7 /* libprotobuf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9B310B10C060140026FEE7 /* libprotobuf.dylib */; };
 		1F9B311410C060140026FEE7 /* libprotobuf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9B310B10C060140026FEE7 /* libprotobuf.dylib */; };
+		1FA3E1181311B8E500F83C3D /* BinaryStatLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28A5271260E47300842329 /* BinaryStatLogger.cpp */; };
 		1FB634530A60C9120041F3BE /* District2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F260CC508ACA31200C2C4FE /* District2.cpp */; };
 		1FB634540A60C9180041F3BE /* mmaped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FDA5CB708AC581900C8F5A3 /* mmaped.cpp */; };
 		1FB634550A60C91C0041F3BE /* renderDistricts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45307ADFE7200171C83 /* renderDistricts.cpp */; };
@@ -911,6 +912,7 @@
 				325935400FD9DFA8008A40FB /* StatThing.cpp in Sources */,
 				325935410FD9DFAE008A40FB /* uf1.cpp in Sources */,
 				325935440FD9DFBF008A40FB /* mmaped.cpp in Sources */,
+				1FA3E1181311B8E500F83C3D /* BinaryStatLogger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

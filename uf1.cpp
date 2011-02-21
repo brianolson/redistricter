@@ -198,7 +198,7 @@ uint32_t* read_uf1_for_recnos(GeoData* gd, const char* filename, int column) {
 		if (index != ((uint32_t)-1)) {
 			uint32_t value;
 			if (!uint32_field_from_csv(&value, line, column)) {
-				fprintf(stderr, "%s:%d csv parse fail getting field %d\n", filename, line_number, column);
+				fprintf(stderr, "%s:%d csv parse fail getting field %d, line:%s\n", filename, line_number, column, line);
 				free(out);
 				out = NULL;
 				goto done;
@@ -255,7 +255,7 @@ bool read_uf1_columns_for_recnos(
 				int column = columns[i];
 				uint32_t value;
 				if (!uint32_field_from_csv(&value, line, column)) {
-					fprintf(stderr, "%s:%d csv parse fail getting field %d\n", filename, line_number, column);
+					fprintf(stderr, "%s:%d csv parse fail getting field %d, line:%s\n", filename, line_number, column, line);
 					good = false;
 					goto done;
 				}

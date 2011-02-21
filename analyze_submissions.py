@@ -20,6 +20,7 @@ import subprocess
 import tarfile
 import time
 import traceback
+import zipfile
 
 from newerthan import newerthan
 import resultspage
@@ -411,6 +412,116 @@ class SubmissionAnalyzer(object):
 			outl.append('<tr class="%s"><td>%s</td>%s</tr>' % (dclazz, name, ' '.join(vlist)))
 		return '<table class="snl">' + ''.join(outl) + '</table>'
 	
+	def measureRace(self, cname, solution, htmlout):
+		config = self.config[cname]
+		#zipname = 'VA/zips/va2010.pl.zip'
+		stl = cname[0:2].lower()
+		zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
+		if not os.path.exists(zipname):
+			logging.error('could not measure race without %s', zipname)
+			return
+		zf = zipfile.ZipFile(zipname, 'r')
+		part1name = stl + '000012010.pl'
+		#part1f = zf.open(part1name, 'r')
+		#p1csv = csv.reader(part1f)
+		numd = config.args['-d']
+		pbfile = config.args['-P']
+
+		analyzebin = os.path.join(self.options.bindir, 'analyze')
+		cmd = [analyzebin, '--compare', ':5,7,8,9,10,11,12,13',
+			'--labels', 'total,white,black,native,asian,pacific,other,mixed',
+			'--dsort', '1', '--notext',
+			'--html', htmlout,
+			'-P', pbfile, '-d', numd, '--loadSolution', solution]
+
+		p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE)
+		p.stdin.write(zf.read(part1name))
+		p.stdin.close()
+		p.wait()
+
+	
+	def buildReportDirForConfig(self, configs, cname, data):
+		"""Write report/$config/{index.html,map.png,map500.png,solution.dsz}
+		"""
+		if self.options.configlist and (cname not in self.options.configlist):
+			logging.debug('skipping %s not in configlist', cname)
+			return
+		outdir = self.options.outdir
+		sdir = os.path.join(outdir, cname, str(data['id']))
+		if not os.path.isdir(sdir):
+			os.makedirs(sdir)
+		logging.debug('%s -> %s', cname, sdir)
+		ihpath = os.path.join(sdir, 'index.html')
+		mappath = os.path.join(sdir, 'map.png')
+		needsIndexHtml = self.options.redraw or self.options.rehtml or (not os.path.exists(ihpath))
+		needsDrend = self.options.redraw or (not os.path.exists(mappath))
+		if not (needsIndexHtml or needsDrend):
+			logging.debug('nothing to do for %s', cname)
+			return
+		
+		tpath = data['path']
+		if tpath[0] == os.sep:
+			tpath = tpath[len(os.sep):]
+		tpath = os.path.join(self.options.soldir, tpath)
+		tfparts = extractSome(tpath, ('solution', 'statsum'))
+		
+		# write solution.dsz
+		solpath = os.path.join(sdir, 'solution.dsz')
+		if not os.path.exists(solpath):
+			logging.debug('write %s', solpath)
+			dszout = open(solpath, 'wb')
+			dszout.write(tfparts['solution'])
+			dszout.close()
+		
+		# TODO: run `measurerace` to get demographic analysis
+		racehtml = os.path.join(sdir, 'race.html')
+		if self.options.redraw or (not os.path.exists(racehtml)):
+			self.measureRace(cname, solpath, racehtml)
+		
+		# Make images map.png and map500.png
+		if needsDrend:
+			self.doDrend(cname, data, tfparts['solution'], mappath)
+		map500path = os.path.join(sdir, 'map500.png')
+		if newerthan(mappath, map500path):
+			subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
+		
+		# index.html
+		(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
+		st_template = self.getPageTemplate()
+		# TODO: permalink
+		permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
+		racedata = ''
+		if os.path.exists(racehtml):
+			racedata = '<h3>Population Race Breakdown Per District</h3>'
+			racedata += open(racehtml, 'r').read()
+		extrapath = os.path.join(outdir, cname, 'extra.html')
+		extrahtml = ''
+		if os.path.exists(extrapath):
+			extrahtml = open(extrapath, 'r').read()
+		statename = configToName(cname)
+		out = open(ihpath, 'w')
+		out.write(st_template.substitute(
+			statename=statename,
+			statenav=self.statenav(cname, configs),
+			ba_large='map.png',
+			ba_small='map500.png',
+			# TODO: get avgpop for state
+			avgpop='',
+			current_kmpp='',
+			current_spread='',
+			current_std='',
+			my_kmpp=str(kmpp),
+			my_spread=str(int(float(spread))),
+			my_std=str(std),
+			extra=extrahtml,
+			racedata=racedata,
+			rooturl=self.options.rooturl,
+			google_analytics=_google_analytics(),
+		))
+		out.close()
+		for x in ('map.png', 'map500.png', 'index.html'):
+			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
+	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
 		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best."""
@@ -420,66 +531,8 @@ class SubmissionAnalyzer(object):
 		if configs is None:
 			configs = self.getBestConfigs()
 		for cname, data in configs.iteritems():
-			if self.options.configlist and (cname not in self.options.configlist):
-				logging.debug('skipping %s not in configlist', cname)
-				continue
-			sdir = os.path.join(outdir, cname, str(data['id']))
-			if not os.path.isdir(sdir):
-				os.makedirs(sdir)
-			logging.debug('%s -> %s', cname, sdir)
-			ihpath = os.path.join(sdir, 'index.html')
-			if os.path.exists(ihpath) and (not self.options.redraw) and (not self.options.rehtml):
-				# already made, no need to re-write it
-				logging.debug('skipping %s', cname)
-				continue
-			tpath = data['path']
-			if tpath[0] == os.sep:
-				tpath = tpath[len(os.sep):]
-			tpath = os.path.join(self.options.soldir, tpath)
-			tfparts = extractSome(tpath, ('solution', 'statsum'))
-			mappath = os.path.join(sdir, 'map.png')
-			if self.options.redraw or (not os.path.exists(mappath)):
-				self.doDrend(cname, data, tfparts['solution'], mappath)
-			solpath = os.path.join(sdir, 'solution.dsz')
-			if self.options.redraw or (not os.path.exists(solpath)):
-				logging.debug('write %s', solpath)
-				dszout = open(solpath, 'wb')
-				dszout.write(tfparts['solution'])
-				dszout.close()
-			# TODO: run `measurerace` to get demographic analysis
-			# 500x500 smallish size version
-			map500path = os.path.join(sdir, 'map500.png')
-			if newerthan(mappath, map500path):
-				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
-			(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
-			st_template = self.getPageTemplate()
-			out = open(ihpath, 'w')
-			# TODO: permalink
-			permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
-			statename = configToName(cname)
-			#(px, body) = cname.split('_', 1)
-			#statename = states.nameForPostalCode(px) + ' ' + body
-			out.write(st_template.substitute(
-				statename=statename,
-				statenav=self.statenav(cname, configs),
-				ba_large='map.png',
-				ba_small='map500.png',
-				# TODO: get avgpop for state
-				avgpop='',
-				current_kmpp='',
-				current_spread='',
-				current_std='',
-				my_kmpp=str(kmpp),
-				my_spread=str(int(float(spread))),
-				my_std=str(std),
-				extra='',
-				racedata='',
-				rooturl=self.options.rooturl,
-				google_analytics=_google_analytics(),
-			))
-			out.close()
-			for x in ('map.png', 'map500.png', 'index.html'):
-				atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
+			self.buildReportDirForConfig(configs, cname, data)
+		# build top level index.html
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		f = open(result_index_html_path, 'r')
 		result_index_html_template = string.Template(f.read())
