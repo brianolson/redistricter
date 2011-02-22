@@ -356,7 +356,8 @@ class SubmissionAnalyzer(object):
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
-			out.write('<tr><td>%s</td><td>%d</td><td>%f</td><td>%d</td><td>%d</td><td>%s</td></tr>\n' % (cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
+			out.write('<tr><td><a href="%s/">%s</a></td><td>%d</td><td>%f</td><td>%d</td><td>%d</td><td>%s</td></tr>\n' % (
+				cname, cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
 		out.write('</table>\n')
 		out.write('</html></body>\n')
 		out.close()
