@@ -49,6 +49,7 @@ int main( int argc, char** argv ) {
 	int i, nargc;
 	char* upxfname = NULL;
 	char* mppbfname = NULL;
+	char* popdensityname = NULL;
 
 	nargc=1;
 	sov.districtSetFactory = District2SetFactory;
@@ -93,6 +94,9 @@ int main( int argc, char** argv ) {
 		} else if ( ! strcmp( argv[i], "--colorsOut" ) ) {
 			i++;
 			colorFileOut = argv[i];
+		} else if ( ! strcmp( argv[i], "--density" ) ) {
+			i++;
+			popdensityname = argv[i];
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;
@@ -151,6 +155,11 @@ int main( int argc, char** argv ) {
 		mr.runDrendCommandFile( sov, commandFileName );
 	} else {
 		runBasic( sov );
+	}
+	if (popdensityname != NULL) {
+		mr.clearToBackgroundColor();
+		mr.paintPopulation(&sov);
+		myDoPNG( popdensityname, mr.rows, mr.height, mr.width );
 	}
 
 	return 0;

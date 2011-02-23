@@ -595,6 +595,124 @@ void MapDrawer::paintPoints( Solver* sov ) {
 	}
 }
 
+double _tpd(int pop, unsigned long long area) {
+	double tpd = (1.0 * pop) / area;
+	// could be logarithmic, but linear is working for now.
+//	tpd = log(tpd + 1.0);
+	return tpd;
+}
+
+bool MapDrawer::getPopulationDensityRenderParams( Solver* sov, double* minpdP, double* pdrangeP ) {
+	if ( px == NULL ) {
+		return false;
+	}
+	int numPoints = sov->gd->numPoints;
+	bool first = true;
+	double minpd = 9999999;
+	double maxpd = 0;
+	// Find minimum and maximums so we can scale color gradient.
+	for ( int i = 0; i < numPoints; i++ ) {
+		pxlist* cpx = px + i;
+		if ( cpx->numpx <= 0 ) {
+			continue;
+		}
+		double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
+		//fprintf(stderr, "%d: pop=%d area=%llu tpd=%g\n", i, sov->gd->pop[i], sov->gd->area[i], tpd);
+		if (first) {
+			minpd = maxpd = tpd;
+			first = false;
+		} else if (tpd < minpd) {
+			minpd = tpd;
+		} else if (tpd > maxpd) {
+			maxpd = tpd;
+		}
+	}
+	fprintf(stderr, "min density %g max density %g\n", minpd, maxpd);
+	double pdrange = maxpd - minpd;
+	int ghist[256];
+	memset(ghist, 0, sizeof(ghist));
+	for ( int i = 0; i < numPoints; i++ ) {
+		pxlist* cpx = px + i;
+		if ( cpx->numpx <= 0 ) {
+			continue;
+		}
+		double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
+		int grey = (int)(255.0 * (tpd - minpd) / pdrange);
+		//fprintf(stderr, "tpd %g -> grey %d\n", tpd, grey);
+		if (grey < 0) {
+			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			grey = 0;
+		} else if (grey > 255) {
+			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			grey = 255;
+		}
+		ghist[grey]++;
+	}
+	int newHighGrey = 255;
+	// clamp top 5% to white (smooshes outliers)
+	int pointsClamped = ghist[newHighGrey];
+	while (pointsClamped < (numPoints / 20)) {
+		assert(newHighGrey >= 0);
+		newHighGrey--;
+		pointsClamped += ghist[newHighGrey];
+	}
+	pdrange *= (newHighGrey / 255.0);
+	*minpdP = minpd;
+	*pdrangeP = pdrange;
+	return true;
+}
+
+// Piant population density (pop/area)
+void MapDrawer::paintPopulation( Solver* sov ) {
+	if ( px == NULL ) {
+		fprintf(stderr, "not painting population without --px rendering\n");
+		return;
+	}
+	int numPoints = sov->gd->numPoints;
+	double minpd = 9999999;
+	double pdrange;
+	/*bool ok =*/ getPopulationDensityRenderParams(sov, &minpd, &pdrange);
+	int ghist[256];
+	memset(ghist, 0, sizeof(ghist));
+	int blocksSkipped = 0;
+	for ( int i = 0; i < numPoints; i++ ) {
+		pxlist* cpx = px + i;
+		if ( cpx->numpx <= 0 ) {
+			blocksSkipped++;
+			continue;
+		}
+		double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
+		int grey = (int)(255.0 * (tpd - minpd) / pdrange);
+		//fprintf(stderr, "tpd %g -> grey %d\n", tpd, grey);
+		if (grey < 0) {
+			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			grey = 0;
+		} else if (grey > 255) {
+			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			grey = 255;
+		}
+		ghist[grey]++;
+		uint8_t alpha = abs(grey - 128) / 4;
+		for ( int j = 0; j < cpx->numpx; j++ ) {
+			int x, y;
+			x = cpx->px[j*2];
+			if ( x < 0 || x > width ) {
+				fprintf(stderr,"index %d[%d] x=%d out of bounds (0<=x<=%d)\n", i, j, x, width );
+				continue;
+			}
+			y = cpx->px[j*2 + 1];
+			if ( y < 0 || y > height ) {
+				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", i, y, height );
+				continue;
+			}
+			setPoint(x, y, grey, grey, grey, alpha);
+		}
+	}
+	for (int i = 0; i < 256; ++i) {
+		fprintf(stderr, "ghist[%d] %d\n", i, ghist[i]);
+	}
+	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
+}
 void MapDrawer::paintPixels( Solver* sov ) {
 	if ( px == NULL ) {
 		paintPoints( sov );
@@ -610,6 +728,10 @@ void MapDrawer::paintPixels( Solver* sov ) {
 	POPTYPE* winner = sov->winner;
 	int numPoints = sov->gd->numPoints;
 	int blocksSkipped = 0;
+	double minpd = 9999999;
+	double pdrange;
+	// TODO: make a command line flag to turn this off.
+	bool doPopDensityShading = getPopulationDensityRenderParams(sov, &minpd, &pdrange);
 	
 	for ( int i = 0; i < numPoints; i++ ) {
 		const unsigned char* color;
@@ -624,6 +746,21 @@ void MapDrawer::paintPixels( Solver* sov ) {
 			blocksSkipped++;
 			continue;
 		}
+		double alpha = 1.0;
+		double oma = 0.0;
+		int grey;
+		if (doPopDensityShading) {
+			double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
+			grey = (int)(255.0 * (tpd - minpd) / pdrange);
+			if (grey > 255) {
+				grey = 255;
+			} else if (grey < 0) {
+				grey = 0;
+			}
+			alpha = abs(grey - 128) / (3.0 * 255);
+			oma = 1.0 - alpha;
+			grey = grey * alpha;
+		}
 		for ( int j = 0; j < cpx->numpx; j++ ) {
 			int x, y;
 			x = cpx->px[j*2];
@@ -636,10 +773,17 @@ void MapDrawer::paintPixels( Solver* sov ) {
 				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", i, y, height );
 				continue;
 			}
-			setPoint(x, y, color[0], color[1], color[2]);
+			if (doPopDensityShading) {
+				setPoint(x, y,
+					(color[0] * oma) + grey,
+					(color[1] * oma) + grey,
+					(color[2] * oma) + grey);
+			} else {
+				setPoint(x, y, color[0], color[1], color[2]);
+			}
 		}
 	}
-	fprintf(stderr, "%d blocks skipped\n", blocksSkipped);
+	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
 }
 
 void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green, uint8_t blue) {

@@ -329,7 +329,8 @@ class Client(object):
 			sys.stderr.write('found "%s", already sent dir %s, not sending again\n' % (sentmarker, resultdir))
 			return
 		bkpath = os.path.join(resultdir, 'bestKmpp.dsz')
-		if (not os.path.exists(bkpath)) and (not sendAnything):
+		have_bestkmpp = os.path.exists(bkpath)
+		if (not have_bestkmpp) and (not sendAnything):
 			sys.stderr.write('trying to send result dir "%s" but there is no bestKmpp.dsz\n' % resultdir)
 			return
 		def partMsg(parent, path, mtype, name):
@@ -343,7 +344,8 @@ class Client(object):
 			x = MyMimePart(name=name, mtype=mtype, filename=name, value=raw)
 			parent.append(x)
 		outer = []
-		partMsg(outer, bkpath, 'application/octet-stream', 'solution')
+		if have_bestkmpp:
+			partMsg(outer, bkpath, 'application/octet-stream', 'solution')
 		#partMsg(outer, os.path.join(resultdir, 'statlog.gz'), 'application/gzip', 'statlog')
 		partMsg(outer, os.path.join(resultdir, 'binlog'), 'application/octet-stream', 'binlog')
 		partMsg(outer, os.path.join(resultdir, 'statsum'), 'text/plain', 'statsum')

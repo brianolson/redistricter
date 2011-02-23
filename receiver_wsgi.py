@@ -147,7 +147,7 @@ def application(environ, start_response):
 	else:
 		headers.append( ('Content-Type', 'text/plain') )
 	
-	if solution:
+	if solution or binlog or statlog_gz:
 		solsave = outTarfileSet(os.path.join(dest_dir, eventid + '.tar.gz'))
 		# solsave = outFileSet(os.path.join(dest_dir, eventid))
 		start_response('200 OK', headers)
@@ -161,7 +161,7 @@ def application(environ, start_response):
 		status = 'ok'
 	else:
 		start_response('400 bad request', headers)
-		status = 'no solution'
+		status = 'no solution|binlog|statlog.gz'
 	outl = []
 	if html:
 		outl.append("""<!DOCTYPE html>

@@ -67,6 +67,7 @@
 		1F6CF46007ADFE7A00171C83 /* SolverGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45C07ADFE7A00171C83 /* SolverGLView.m */; };
 		1F6CF46107ADFE7A00171C83 /* SolverM.h in Resources */ = {isa = PBXBuildFile; fileRef = 1F6CF45D07ADFE7A00171C83 /* SolverM.h */; };
 		1F6CF46207ADFE7A00171C83 /* SolverM.M in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CF45E07ADFE7A00171C83 /* SolverM.M */; };
+		1F7C54D51312F7BD005D2FE2 /* BinaryStatLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28A5271260E47300842329 /* BinaryStatLogger.cpp */; };
 		1F7DD9B213036537002C9384 /* BinaryStatLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F28A5271260E47300842329 /* BinaryStatLogger.cpp */; };
 		1F8427CA0CCB220000ACC6A4 /* District2GLDebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427C90CCB220000ACC6A4 /* District2GLDebug.cpp */; };
 		1F8427CC0CCB221A00ACC6A4 /* AbstractDistrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F8427CB0CCB221A00ACC6A4 /* AbstractDistrict.cpp */; };
@@ -840,6 +841,7 @@
 				1F2DFD1D0F3DDA34008FF766 /* logging.cpp in Sources */,
 				1F9B310410C05E9B0026FEE7 /* redata.pb.cc in Sources */,
 				1F903D7311CEE0140058F139 /* protoio.cpp in Sources */,
+				1F7C54D51312F7BD005D2FE2 /* BinaryStatLogger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
