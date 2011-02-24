@@ -82,7 +82,10 @@ def extractSome(fpath, names):
 
 def atomicLink(src, dest):
 	assert dest[-1] != os.sep
-	assert os.path.exists(src)
+	#assert os.path.exists(src)
+	if not os.path.exists(src):
+		logging.error('atomicLink: %s does not exist', src)
+		return
 	if os.path.exists(dest) and os.path.samefile(src, dest):
 		return
 	tdest = dest + str(random.randint(100000,999999))
@@ -242,12 +245,15 @@ class SubmissionAnalyzer(object):
 		if not config:
 			logging.warn('no config for "%s"', fpath)
 			return False
-		kmppSpread = self.measureSolution(tfparts['solution'], config)
-		if kmppSpread is None:
-			logging.warn('failed to analyze solution in "%s"', fpath)
-			return False
+		if 'solution' in tfparts:
+			kmppSpread = self.measureSolution(tfparts['solution'], config)
+			if kmppSpread is None:
+				logging.warn('failed to analyze solution in "%s"', fpath)
+				return False
+		else:
+			kmppSpread = (None, None)
 		logging.debug(
-			'%s %d kmpp=%f spread=%f from %s',
+			'%s %d kmpp=%s spread=%s from %s',
 			config, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath)
 		c = self.db.cursor()
 		c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
@@ -356,7 +362,7 @@ class SubmissionAnalyzer(object):
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
-			out.write('<tr><td><a href="%s/">%s</a></td><td>%d</td><td>%f</td><td>%d</td><td>%d</td><td>%s</td></tr>\n' % (
+			out.write('<tr><td><a href="%s/">%s</a></td><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n' % (
 				cname, cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
 		out.write('</table>\n')
 		out.write('</html></body>\n')
@@ -466,25 +472,26 @@ class SubmissionAnalyzer(object):
 		tpath = os.path.join(self.options.soldir, tpath)
 		tfparts = extractSome(tpath, ('solution', 'statsum'))
 		
-		# write solution.dsz
-		solpath = os.path.join(sdir, 'solution.dsz')
-		if not os.path.exists(solpath):
-			logging.debug('write %s', solpath)
-			dszout = open(solpath, 'wb')
-			dszout.write(tfparts['solution'])
-			dszout.close()
-		
-		# TODO: run `measurerace` to get demographic analysis
-		racehtml = os.path.join(sdir, 'race.html')
-		if self.options.redraw or (not os.path.exists(racehtml)):
-			self.measureRace(cname, solpath, racehtml)
-		
-		# Make images map.png and map500.png
-		if needsDrend:
-			self.doDrend(cname, data, tfparts['solution'], mappath)
-		map500path = os.path.join(sdir, 'map500.png')
-		if newerthan(mappath, map500path):
-			subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
+		if 'solution' in tfparts:
+			# write solution.dsz
+			solpath = os.path.join(sdir, 'solution.dsz')
+			if not os.path.exists(solpath):
+				logging.debug('write %s', solpath)
+				dszout = open(solpath, 'wb')
+				dszout.write(tfparts['solution'])
+				dszout.close()
+			
+			# TODO: run `measurerace` to get demographic analysis
+			racehtml = os.path.join(sdir, 'race.html')
+			if self.options.redraw or (not os.path.exists(racehtml)):
+				self.measureRace(cname, solpath, racehtml)
+			
+			# Make images map.png and map500.png
+			if needsDrend:
+				self.doDrend(cname, data, tfparts['solution'], mappath)
+			map500path = os.path.join(sdir, 'map500.png')
+			if newerthan(mappath, map500path):
+				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 		
 		# index.html
 		(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
@@ -520,7 +527,7 @@ class SubmissionAnalyzer(object):
 			google_analytics=_google_analytics(),
 		))
 		out.close()
-		for x in ('map.png', 'map500.png', 'index.html'):
+		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
 	
 	def buildBestSoFarDirs(self, configs=None):
