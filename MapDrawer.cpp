@@ -598,7 +598,7 @@ void MapDrawer::paintPoints( Solver* sov ) {
 double _tpd(int pop, unsigned long long area) {
 	double tpd = (1.0 * pop) / area;
 	// could be logarithmic, but linear is working for now.
-//	tpd = log(tpd + 1.0);
+	tpd = log(tpd + 1.0);
 	return tpd;
 }
 
@@ -630,6 +630,8 @@ bool MapDrawer::getPopulationDensityRenderParams( Solver* sov, double* minpdP, d
 	fprintf(stderr, "min density %g max density %g\n", minpd, maxpd);
 	double pdrange = maxpd - minpd;
 	int ghist[256];
+	// TODO: shame on me, rewrite flow control away from goto.
+tryagain:
 	memset(ghist, 0, sizeof(ghist));
 	for ( int i = 0; i < numPoints; i++ ) {
 		pxlist* cpx = px + i;
@@ -640,22 +642,30 @@ bool MapDrawer::getPopulationDensityRenderParams( Solver* sov, double* minpdP, d
 		int grey = (int)(255.0 * (tpd - minpd) / pdrange);
 		//fprintf(stderr, "tpd %g -> grey %d\n", tpd, grey);
 		if (grey < 0) {
-			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			fprintf(stderr, "gpdrp grey %d tpd=%g\n", grey, tpd);
 			grey = 0;
 		} else if (grey > 255) {
-			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			//fprintf(stderr, "gpdrp grey %d tpd=%g\n", grey, tpd);
 			grey = 255;
 		}
 		ghist[grey]++;
 	}
 	int newHighGrey = 255;
+	// TODO: make clamp fraction configurable.
 	// clamp top 5% to white (smooshes outliers)
-	int pointsClamped = ghist[newHighGrey];
-	while (pointsClamped < (numPoints / 20)) {
-		assert(newHighGrey >= 0);
-		newHighGrey--;
+	int pointsClamped = 0;
+	while (pointsClamped < (numPoints / 40)) {
 		pointsClamped += ghist[newHighGrey];
+		//fprintf(stderr, "drop %d points at grey=%d\n", ghist[newHighGrey], newHighGrey);
+		newHighGrey--;
+		if (newHighGrey == 0) {
+			fprintf(stderr, "too squashed, expand, try again\n");
+			pdrange *= 1/255.0;
+			goto tryagain;
+		}
+		assert(newHighGrey >= 0);
 	}
+	fprintf(stderr, "pdrange %g newHighGrey %d\n", pdrange, newHighGrey);
 	pdrange *= (newHighGrey / 255.0);
 	*minpdP = minpd;
 	*pdrangeP = pdrange;
@@ -669,9 +679,10 @@ void MapDrawer::paintPopulation( Solver* sov ) {
 		return;
 	}
 	int numPoints = sov->gd->numPoints;
-	double minpd = 9999999;
+	double minpd = 0.0;
 	double pdrange;
 	/*bool ok =*/ getPopulationDensityRenderParams(sov, &minpd, &pdrange);
+	fprintf(stderr, "minpd %g range %g\n", minpd, pdrange);
 	int ghist[256];
 	memset(ghist, 0, sizeof(ghist));
 	int blocksSkipped = 0;
@@ -688,7 +699,7 @@ void MapDrawer::paintPopulation( Solver* sov ) {
 			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
 			grey = 0;
 		} else if (grey > 255) {
-			fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
+			//fprintf(stderr, "grey %d tpd=%g\n", grey, tpd);
 			grey = 255;
 		}
 		ghist[grey]++;
@@ -708,9 +719,11 @@ void MapDrawer::paintPopulation( Solver* sov ) {
 			setPoint(x, y, grey, grey, grey, alpha);
 		}
 	}
+#if 0
 	for (int i = 0; i < 256; ++i) {
 		fprintf(stderr, "ghist[%d] %d\n", i, ghist[i]);
 	}
+#endif
 	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
 }
 void MapDrawer::paintPixels( Solver* sov ) {
