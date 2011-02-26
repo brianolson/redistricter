@@ -22,6 +22,7 @@ import time
 import traceback
 import zipfile
 
+from kmppspreadplot import svgplotter
 from newerthan import newerthan
 import resultspage
 import runallstates
@@ -325,7 +326,12 @@ class SubmissionAnalyzer(object):
 		cnames = self.config.keys()
 		cnames.sort()
 		for cname in cnames:
+			sendAnything = False
 			if cname not in bestconfigs:
+				sendAnything = True
+			elif bestconfigs[cname]['kmpp'] is None:
+				sendAnything = True
+			if sendAnything:
 				out.write('%s:sendAnything\n' % (cname,))
 				out.write('%s:weight:5.0\n' % (cname,))
 			else:
@@ -358,7 +364,13 @@ class SubmissionAnalyzer(object):
 		out.write("""<!doctype html>
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
 """ % (localtime(),))
+		out.write("""<div style="float:left"><div></div>""" + self.statenav(None, configs) + """</div>\n""")
 		out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
+		for cname in clist:
+			data = configs[cname]
+			if not data['kmpp']:
+				out.write("""<div><a href="%s/kmpp.svg">%s</a></div>\n""" % (cname, cname))
+
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
@@ -446,6 +458,53 @@ class SubmissionAnalyzer(object):
 		p.stdin.close()
 		p.wait()
 
+	def processFailedSubmissions(self, configs, cname):
+		c = self.db.cursor()
+		rows = c.execute('SELECT id, path FROM submissions WHERE config = ? AND kmpp IS NULL', (cname,))
+		dumpBinLog = os.path.join(self.options.bindir, 'dumpBinLog')
+		points = []
+		dumpBinLogRE = re.compile(r'.*kmpp=([.0-9]+).*minPop=([0-9]+).*maxPop=([0-9]+)')
+		rand = random.Random()
+		for (rid, tpath) in rows:
+			tpath = self.cleanupSolutionPath(tpath)
+			data = extractSome(tpath, ('binlog',))
+			if 'binlog' not in data:
+				continue
+			cmd = [dumpBinLog]
+			p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+			p.stdin.write(data['binlog'])
+			p.stdin.close()
+			raw = p.stdout.read()
+			p.wait()
+			allpoints = []
+			for line in raw.splitlines():
+				 m = dumpBinLogRE.match(line)
+				 if m:
+					 kmpp = float(m.group(1))
+					 minPop = int(m.group(2))
+					 maxPop = int(m.group(3))
+					 spread = maxPop - minPop
+					 allpoints.append((spread, kmpp))
+			if len(allpoints) > 20:
+				half = len(allpoints) / 2
+				allpoints = allpoints[half:]
+			elif len(allpoints) < 10:
+				continue
+			points.extend(rand.sample(allpoints, 10))
+		outdir = self.options.outdir
+		kmpppath = os.path.join(outdir, cname, 'kmpp.svg')
+		logging.info('writing %s', kmpppath)
+		out = svgplotter(kmpppath)
+		for (spread, kmpp) in points:
+			out.xy(spread, kmpp)
+		out.close()
+		return kmpppath
+
+	def cleanupSolutionPath(self, tpath):
+		if tpath[0] == os.sep:
+			tpath = tpath[len(os.sep):]
+		tpath = os.path.join(self.options.soldir, tpath)
+		return tpath
 	
 	def buildReportDirForConfig(self, configs, cname, data):
 		"""Write report/$config/{index.html,map.png,map500.png,solution.dsz}
@@ -466,10 +525,7 @@ class SubmissionAnalyzer(object):
 			logging.debug('nothing to do for %s', cname)
 			return
 		
-		tpath = data['path']
-		if tpath[0] == os.sep:
-			tpath = tpath[len(os.sep):]
-		tpath = os.path.join(self.options.soldir, tpath)
+		tpath = self.cleanupSolutionPath(data['path'])
 		tfparts = extractSome(tpath, ('solution', 'statsum'))
 		
 		if 'solution' in tfparts:
@@ -494,7 +550,7 @@ class SubmissionAnalyzer(object):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 		else:
 			logging.error('no solution for %s', cname)
-			return
+			self.processFailedSubmissions(configs, cname)
 		
 		# index.html
 		(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])

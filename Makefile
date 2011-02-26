@@ -3,7 +3,7 @@ UNAME:=$(shell uname)
 -include makeopts/${UNAME}.pre
 -include localvars.make
 
-all:	districter2 linkfixup drend rta2dsz analyze
+all:	districter2 linkfixup drend rta2dsz analyze dumpBinLog
 jall:	tools.jar
 
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze tools.jar
@@ -133,8 +133,8 @@ run:	districter2
 pw:	pw.cpp
 	g++ -Wall ${LDPNG} pw.cpp -lz -o pw -g
 
-dumpBinLog:	dumpBinLog.cpp redata.pb.cc
-	g++ -lz -lprotobuf dumpBinLog.cpp redata.pb.cc -o dumpBinLog
+dumpBinLog:	dumpBinLog.cpp redata.pb.cc redata.pb.h
+	g++ -lz -lprotobuf -lpthread dumpBinLog.cpp redata.pb.cc -o dumpBinLog
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj

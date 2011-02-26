@@ -34,35 +34,45 @@ set output '${outname}'
 plot '-'
 """)
 
+
+def plotStatsum(out, sumpath):
+  """Return True on successful parse and output."""
+  f = open(sumpath, 'r')
+  m = kmppspread.match(f.read())
+  f.close()
+  if m:
+    kmpp = float(m.group(1))
+    spread = float(m.group(2))
+    out.xy(spread, kmpp)
+    return True
+  return False
+
+
+def plotStatlogGz(out, logpath):
+  f = gzip.open(logpath, 'rb')
+  raw = f.read()
+  f.close()
+  outlist = []
+  for m in statlog_re.finditer(raw):
+    kmpp = float(m.group(1))
+    pmax = float(m.group(2))
+    pmin = float(m.group(3))
+    spread = pmax - pmin
+    outlist.append( (spread, kmpp) )
+  if outlist:
+    if len(outlist) > 10:
+      outlist = outlist[-10:]
+    for sk in outlist:
+      out.xy(sk[0], sk[1])
+  
+
 def walk_statsums(out, startpath, useStatlogGz=True):
   for root, dirs, files in os.walk(startpath):
     gotData = False
     if 'statsum' in files:
-      f = open(os.path.join(root, 'statsum'), 'r')
-      m = kmppspread.match(f.read())
-      f.close()
-      if m:
-        kmpp = float(m.group(1))
-        spread = float(m.group(2))
-        out.xy(spread, kmpp)
-        gotData = True
+      gotData = plotStatsum(os.path.join(root, 'statsum'))
     if (not gotData) and useStatlogGz and ('statlog.gz' in files):
-      #print os.path.join(root, 'statlog.gz')
-      f = gzip.open(os.path.join(root, 'statlog.gz'), 'rb')
-      raw = f.read()
-      f.close()
-      outlist = []
-      for m in statlog_re.finditer(raw):
-        kmpp = float(m.group(1))
-        pmax = float(m.group(2))
-        pmin = float(m.group(3))
-        spread = pmax - pmin
-        outlist.append( (spread, kmpp) )
-      if outlist:
-        if len(outlist) > 10:
-          outlist = outlist[-10:]
-        for sk in outlist:
-          out.xy(sk[0], sk[1])
+      plotStatlogGz(out, os.path.join(root, 'statlog.gz'))
 
 
 def gnuplot_out(png_name):
