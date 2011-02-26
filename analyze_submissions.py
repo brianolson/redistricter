@@ -344,6 +344,8 @@ class SubmissionAnalyzer(object):
 		if os.path.exists(mpath):
 			mf = open(mpath, 'r')
 			for line in mf:
+				if (not line) or (line[0] == '#'):
+					continue
 				out.write(line)
 		out.close()
 	
