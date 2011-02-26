@@ -93,7 +93,10 @@ def parse_startstats(raw, desthash=None):
 
 
 def parse_statsum(statsum, desthash=None):
-	(kmpp, spread, std) = statsum_pat.search(statsum).groups()
+	m = statsum_pat.search(statsum)
+	if not m:
+		return (None, None, None)
+	(kmpp, spread, std) = m.groups()
 	if desthash is not None:
 		desthash['my_kmpp'] = kmpp
 		desthash['my_spread'] = spread

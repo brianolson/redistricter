@@ -492,9 +492,15 @@ class SubmissionAnalyzer(object):
 			map500path = os.path.join(sdir, 'map500.png')
 			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
+		else:
+			logging.error('no solution for %s', cname)
+			return
 		
 		# index.html
 		(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
+		if (kmpp is None) or (spread is None) or (std is None):
+			logging.error('bad statsum for %s', cname)
+			return
 		st_template = self.getPageTemplate()
 		# TODO: permalink
 		permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
