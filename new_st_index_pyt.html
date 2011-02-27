@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html><head><title>$statename Redistricting</title>
-<link href="$rooturl/report.css" rel="stylesheet" type="text/css" />
+<link href="${rooturl}report.css" rel="stylesheet" type="text/css" />
 <style>body{color:#000000;background-color:#ffffff;}</style></head>
 <body bgcolor="#ffffff">
 <div style="float:right;width:20em;">
 
 </div>
 <h1>$statename Redistricting</h1>
+<div class="small">From 2010 data</div>
 <table class="sp"><tr><td>
-<a href="/">Redistricting Home</a><br />Other States:<br />${statenav}</td><td>
+<div><a href="/2010/">2010 Redistricting Home</a></div>
+${statenav}
+<div><a href="${buzzurl}" style="text-decoration:none"><img src="http://www.gstatic.com/buzz/api/images/buzz-link.png"> Buzz</a> <a href="http://www.reddit.com/submit" onclick="window.location = 'http://www.reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="http://www.reddit.com/static/spreddit7.gif" alt="submit to reddit" border="0" /></a> <span id="custom-tweet-button"><a href="${tweeturl}" target="_blank">Tweet</a></span></div>
+</td><td>
 
 <table id="imt"><tr><td align="center" colspan="3"><a href="${ba_large}"><img src="${ba_small}" title="$statename congressional district map, current and my way" alt="$statename congressional district map, current and my way" border="1"></a></td></tr>
 <tr><td align="center" colspan="3">$statename possible district map from my solver.<br /><a href="${ba_large}" title="$statename congressional district map, current and my way">Larger $statename map</a></td></tr>

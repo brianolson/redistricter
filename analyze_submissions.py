@@ -20,6 +20,7 @@ import subprocess
 import tarfile
 import time
 import traceback
+import urllib
 import zipfile
 
 from kmppspreadplot import svgplotter
@@ -101,6 +102,22 @@ def configToName(cname):
 	(px, body) = cname.split('_', 1)
 	return states.nameForPostalCode(px) + ' ' + body
 
+
+def urljoin(*args):
+	parts = []
+	prevSlash = False
+	for x in args:
+		if not x:
+			continue
+		if prevSlash:
+			if x[0] == '/':
+				x = x[1:]
+		else:
+			if x[0] != '/':
+				parts.append('/')
+		prevSlash = x[-1] == '/'
+		parts.append(x)
+	return ''.join(parts)
 
 # Example analyze output:
 # generation 0: 21.679798418 Km/person
@@ -368,14 +385,22 @@ class SubmissionAnalyzer(object):
 """ % (localtime(),))
 		out.write("""<div style="float:left"><div></div>""" + self.statenav(None, configs) + """</div>\n""")
 		out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
+		firstNoSolution = True
 		for cname in clist:
 			data = configs[cname]
 			if not data['kmpp']:
-				out.write("""<div><a href="%s/kmpp.svg">%s</a></div>\n""" % (cname, cname))
+				if firstNoSolution:
+					firstNoSolution = False
+					out.write("""<h2>no solution</h2>\n<table>""")
+				out.write("""<tr><td><a href="%s/kmpp.svg">%s</a></td><td>%s</td></tr>\n""" % (cname, cname, data['count']))
+		if not firstNoSolution:
+			out.write("""</table>\n""")
 
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
+			if not data['kmpp']:
+				continue
 			out.write('<tr><td><a href="%s/">%s</a></td><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n' % (
 				cname, cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
 		out.write('</table>\n')
@@ -425,7 +450,7 @@ class SubmissionAnalyzer(object):
 					isCurrent = True
 					vlist.append('<td><b>%s</b></td>' % (v,))
 				else:
-					vlist.append('<td><a href="%s">%s</a></td>' % (self.options.rooturl + '/' + stu_v + '/', v))
+					vlist.append('<td><a href="%s">%s</a></td>' % (os.path.join(self.options.rooturl, stu_v) + '/', v))
 			if isCurrent:
 				dclazz = 'slgC'
 			else:
@@ -472,12 +497,13 @@ class SubmissionAnalyzer(object):
 			data = extractSome(tpath, ('binlog',))
 			if 'binlog' not in data:
 				continue
+			logging.info('processing %s binlog from %s', cname, tpath)
 			cmd = [dumpBinLog]
 			p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-			p.stdin.write(data['binlog'])
-			p.stdin.close()
-			raw = p.stdout.read()
-			p.wait()
+			#p.stdin.write(data['binlog'])
+			#p.stdin.close()
+			#raw = p.stdout.read()
+			(raw, _unused) = p.communicate(data['binlog'])
 			allpoints = []
 			for line in raw.splitlines():
 				 m = dumpBinLogRE.match(line)
@@ -561,7 +587,7 @@ class SubmissionAnalyzer(object):
 			return
 		st_template = self.getPageTemplate()
 		# TODO: permalink
-		permalink = self.options.rooturl + '/' + cname + '/' + str(data['id']) + '/'
+		permalink = os.path.join(self.options.rooturl, cname, str(data['id'])) + '/'
 		racedata = ''
 		if os.path.exists(racehtml):
 			racedata = '<h3>Population Race Breakdown Per District</h3>'
@@ -571,6 +597,11 @@ class SubmissionAnalyzer(object):
 		if os.path.exists(extrapath):
 			extrahtml = open(extrapath, 'r').read()
 		statename = configToName(cname)
+		pageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname) + '/')
+		imageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
+		buzzurl = 'http://www.google.com/buzz/post?url=%s&imageurl=%s' % (pageabsurl, imageurl)
+		tweeturl = 'http://twitter.com/share?url=' + pageabsurl
+		
 		out = open(ihpath, 'w')
 		out.write(st_template.substitute(
 			statename=statename,
@@ -588,6 +619,8 @@ class SubmissionAnalyzer(object):
 			extra=extrahtml,
 			racedata=racedata,
 			rooturl=self.options.rooturl,
+			buzzurl=buzzurl,
+			tweeturl=tweeturl,
 			google_analytics=_google_analytics(),
 		))
 		out.close()
@@ -597,6 +630,7 @@ class SubmissionAnalyzer(object):
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
 		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best."""
+		# TODO: build state dirs /??/ which has latest sub image and link to full page for each
 		outdir = self.options.outdir
 		if not os.path.isdir(outdir):
 			os.makedirs(outdir)
@@ -606,11 +640,16 @@ class SubmissionAnalyzer(object):
 			self.buildReportDirForConfig(configs, cname, data)
 		# build top level index.html
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
+		newestconfig = self.newestWinner(configs)['config']
+		newestname = configToName(newestconfig)
+		pageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl))
+		imageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
+		buzzurl = 'http://www.google.com/buzz/post?url=%s&imageurl=%s' % (pageabsurl, imageurl)
+		tweeturl = 'http://twitter.com/share?url=' + pageabsurl
+		
 		f = open(result_index_html_path, 'r')
 		result_index_html_template = string.Template(f.read())
 		f.close()
-		newestconfig = self.newestWinner(configs)['config']
-		newestname = configToName(newestconfig)
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
 		index_html.write(result_index_html_template.substitute(
@@ -619,6 +658,8 @@ class SubmissionAnalyzer(object):
 			localtime=localtime(),
 			nwinner=newestconfig,
 			nwinnername=newestname,
+			buzzurl=buzzurl,
+			tweeturl=tweeturl,
 			google_analytics=_google_analytics(),
 		))
 		index_html.close()
@@ -644,7 +685,8 @@ def main():
 	argp.add_option('--outdir', dest='outdir', default='report', help='directory to write html best-so-far displays to.')
 	argp.add_option('--configoverride', dest='configoverride', default=None, help='where to write configoverride file')
 	argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
-	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'))
+	argp.add_option('--rooturl', dest='rooturl', default='file://' + os.path.abspath('.'), help='root suitable for making relative urls off of')
+	argp.add_option('--siteurl', dest='siteurl', default='http://bdistricting.com/', help='for fully qualified absolute urls')
 	argp.add_option('--redraw', dest='redraw', action='store_true', default=False)
 	argp.add_option('--rehtml', dest='rehtml', action='store_true', default=False)
 	argp.add_option('--config', dest='configlist', action='append', default=[])
