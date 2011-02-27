@@ -1,11 +1,4 @@
 #!/usr/bin/python
-# TODO: move results into directories per config?
-# solutions/YYYYMMDD/HHMMSS_IP_XXX.tar.gz
-# ->
-# processed/XX_Config/YYYYMMDD/HHMMSS_IP_XXX.tar.gz
-# TODO: emit config information for cliens for threshold of kmpp to send to server.
-# TODO: emit web directory of best-so-far results.
-# TODO: extract kmpp_spread.svg from these.
 
 import cgi
 import logging
@@ -100,6 +93,8 @@ def atomicLink(src, dest):
 
 def configToName(cname):
 	(px, body) = cname.split('_', 1)
+	legstats = states.legislatureStatsForPostalCode(px)
+	body = states.expandLegName(legstats, body)
 	return states.nameForPostalCode(px) + ' ' + body
 
 
@@ -176,6 +171,9 @@ class SubmissionAnalyzer(object):
 		if self.dbpath:
 			self.opendb(self.dbpath)
 		self.pageTemplate = None
+		self.dirTemplate = None
+		# cache for often used self.statenav(None, configs)
+		self._statenav_all = None
 	
 	def getPageTemplate(self, rootdir=None):
 		if self.pageTemplate is None:
@@ -185,6 +183,15 @@ class SubmissionAnalyzer(object):
 			self.pageTemplate = string.Template(f.read())
 			f.close()
 		return self.pageTemplate
+	
+	def getDirTemplate(self, rootdir=None):
+		if self.dirTemplate is None:
+			if rootdir is None:
+				rootdir = srcdir_
+			f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
+			self.dirTemplate = string.Template(f.read())
+			f.close()
+		return self.dirTemplate
 	
 	def loadDatadir(self, path=None):
 		if path is None:
@@ -359,8 +366,13 @@ class SubmissionAnalyzer(object):
 				data = bestconfigs[cname]
 				out.write('%s:sendAnything: False\n' % (cname,))
 				out.write('%s:weight:%f\n' % (cname, rweight(data['count'])))
-			# TODO: tweak weight/kmppSendTheshold/spreadSendTheshold automatically
-			#out.write('%s:disabled\n')
+			if (cname in bestconfigs) and (bestconfigs[cname]['count'] >= 10):
+				c = self.db.cursor()
+				rows = c.execute('SELECT kmpp FROM submissions WHERE config = ? ORDER BY kmpp ASC LIMIT 10', (cname,))
+				rows = list(rows)
+				kmpplimit = float(rows[-1][0])
+				out.write('%s:kmppSendThreshold:%f' % (cname, kmpplimit))
+			# TODO: tweak spreadSendThreshold automatically ?
 		mpath = outpath + '_manual'
 		if os.path.exists(mpath):
 			mf = open(mpath, 'r')
@@ -424,13 +436,13 @@ class SubmissionAnalyzer(object):
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
 			return None
 	
-	def statenav(self, current, configs=None):
+	def statenav(self, current, configs):
+		if (current is None) and self._statenav_all:
+			return self._statenav_all
 		statevars = {}
-		if configs:
-			citer = configs.iterkeys()
-		else:
-			citer = self.config.iterkeys()
-		for cname in citer:
+		for cname, data in configs.iteritems():
+			if not data.get('kmpp'):
+				continue
 			(st, variation) = cname.split('_', 1)
 			if st not in statevars:
 				statevars[st] = [variation]
@@ -454,13 +466,79 @@ class SubmissionAnalyzer(object):
 					isCurrent = True
 					vlist.append('<td><b>%s</b></td>' % (v,))
 				else:
-					vlist.append('<td><a href="%s">%s</a></td>' % (os.path.join(self.options.rooturl, stu_v) + '/', v))
+					vlist.append('<td><a href="%s">%s</a></td>' % (urljoin(self.options.rooturl, stu_v) + '/', v))
 			if isCurrent:
 				dclazz = 'slgC'
 			else:
 				dclazz = 'slg'
-			outl.append('<tr class="%s"><td>%s</td>%s</tr>' % (dclazz, name, ' '.join(vlist)))
-		return '<table class="snl">' + ''.join(outl) + '</table>'
+			outl.append('<tr class="%s"><td><a href="%s/">%s</a></td>%s</tr>' % (dclazz, urljoin(self.options.rooturl, stu), name, ' '.join(vlist)))
+		text = '<table class="snl">' + ''.join(outl) + '</table>'
+		if current is None:
+			self._statenav_all = text
+		return text
+	
+	def statedir(self, stu, configs):
+		stu = stu.upper()
+		name = states.nameForPostalCode(stu)
+		if not name:
+			logging.error('no name for postal code %s', stu)
+			return
+		variations = []
+		for cname, data in configs.iteritems():
+			if not data.get('kmpp'):
+				continue
+			(st, variation) = cname.split('_', 1)
+			if st != stu:
+				continue
+			variations.append(variation)
+		if not variations:
+			logging.warn('no active variations for %s', stu)
+		if 'Congress' in variations:
+			variations.remove('Congress')
+			variations.sort()
+			variations.insert(0, 'Congress')
+		legstats = states.legislatureStatsForPostalCode(stu)
+		bodyrows = []
+		firstvar = None
+		for variation in variations:
+			if not firstvar:
+				firstvar = stu + '_' + variation
+			bodyname = variation
+			numd = 'X'
+			for ls in legstats:
+				if ls.shortname == variation:
+					bodyname = ls.name
+					numd = ls.count
+			#bodyname = states.expandLegName(legstats, variation)
+			configurl = '%s%s_%s/' % (self.options.rooturl, stu, variation)
+			tr = """<tr><td><div><a href="%s">%s %s</a></div><div><a href="%s"><img src="%smap500.png" height="150"></a> %s districts</div></td></tr>""" % (configurl, name, bodyname, configurl, configurl, numd)
+			bodyrows.append(tr)
+		outdir = self.options.outdir
+		sdir = os.path.join(outdir, stu)
+		ihtmlpath = os.path.join(sdir, 'index.html')
+		st_template = self.getDirTemplate()
+		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, stu) + '/')
+		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
+		
+		if not os.path.isdir(sdir):
+			os.makedirs(sdir)
+		extrahtml = ''
+		extrahtmlpath = os.path.join(sdir, 'extra.html')
+		if os.path.isfile(extrahtmlpath):
+			extrahtml = open(extrahtmlpath, 'r').read()
+		
+		out = open(ihtmlpath, 'w')
+		out.write(st_template.substitute(
+			statename=name,
+			statenav=self.statenav(None, configs),
+			bodyrows='\n'.join(bodyrows),
+			extra=extrahtml,
+			rooturl=self.options.rooturl,
+			cgipageabsurl=cgipageabsurl,
+			cgiimageurl=cgiimageurl,
+			google_analytics=_google_analytics(),
+		))
+		out.close()
 	
 	def measureRace(self, cname, solution, htmlout):
 		config = self.config[cname]
@@ -488,7 +566,7 @@ class SubmissionAnalyzer(object):
 		p.stdin.write(zf.read(part1name))
 		p.stdin.close()
 		p.wait()
-
+	
 	def processFailedSubmissions(self, configs, cname):
 		c = self.db.cursor()
 		rows = c.execute('SELECT id, path FROM submissions WHERE config = ? AND kmpp IS NULL', (cname,))
@@ -531,7 +609,7 @@ class SubmissionAnalyzer(object):
 			out.xy(spread, kmpp)
 		out.close()
 		return kmpppath
-
+	
 	def cleanupSolutionPath(self, tpath):
 		if tpath[0] == os.sep:
 			tpath = tpath[len(os.sep):]
@@ -569,7 +647,6 @@ class SubmissionAnalyzer(object):
 				dszout.write(tfparts['solution'])
 				dszout.close()
 			
-			# TODO: run `measurerace` to get demographic analysis
 			racehtml = os.path.join(sdir, 'race.html')
 			if self.options.redraw or (not os.path.exists(racehtml)):
 				self.measureRace(cname, solpath, racehtml)
@@ -589,7 +666,6 @@ class SubmissionAnalyzer(object):
 		if (kmpp is None) or (spread is None) or (std is None):
 			logging.error('bad statsum for %s', cname)
 			return
-		st_template = self.getPageTemplate()
 		# TODO: permalink
 		permalink = os.path.join(self.options.rooturl, cname, str(data['id'])) + '/'
 		racedata = ''
@@ -601,11 +677,10 @@ class SubmissionAnalyzer(object):
 		if os.path.exists(extrapath):
 			extrahtml = open(extrapath, 'r').read()
 		statename = configToName(cname)
-		pageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname) + '/')
-		imageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
-		buzzurl = 'http://www.google.com/buzz/post?url=%s&imageurl=%s' % (pageabsurl, imageurl)
-		tweeturl = 'http://twitter.com/share?url=' + pageabsurl
+		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname) + '/')
+		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
 		
+		st_template = self.getPageTemplate()
 		out = open(ihpath, 'w')
 		out.write(st_template.substitute(
 			statename=statename,
@@ -623,8 +698,8 @@ class SubmissionAnalyzer(object):
 			extra=extrahtml,
 			racedata=racedata,
 			rooturl=self.options.rooturl,
-			buzzurl=buzzurl,
-			tweeturl=tweeturl,
+			cgipageabsurl=cgipageabsurl,
+			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
 		))
 		out.close()
@@ -634,22 +709,24 @@ class SubmissionAnalyzer(object):
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
 		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best."""
-		# TODO: build state dirs /??/ which has latest sub image and link to full page for each
 		outdir = self.options.outdir
 		if not os.path.isdir(outdir):
 			os.makedirs(outdir)
 		if configs is None:
 			configs = self.getBestConfigs()
+		stutodo = set()
 		for cname, data in configs.iteritems():
 			self.buildReportDirForConfig(configs, cname, data)
+			(stu, rest) = cname.split('_', 1)
+			stutodo.add(stu)
+		for stu in stutodo:
+			self.statedir(stu, configs)
 		# build top level index.html
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		newestconfig = self.newestWinner(configs)['config']
 		newestname = configToName(newestconfig)
-		pageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl))
-		imageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
-		buzzurl = 'http://www.google.com/buzz/post?url=%s&imageurl=%s' % (pageabsurl, imageurl)
-		tweeturl = 'http://twitter.com/share?url=' + pageabsurl
+		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl))
+		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
 		f = open(result_index_html_path, 'r')
 		result_index_html_template = string.Template(f.read())
@@ -662,8 +739,8 @@ class SubmissionAnalyzer(object):
 			localtime=localtime(),
 			nwinner=newestconfig,
 			nwinnername=newestname,
-			buzzurl=buzzurl,
-			tweeturl=tweeturl,
+			cgipageabsurl=cgipageabsurl,
+			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
 		))
 		index_html.close()

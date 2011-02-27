@@ -1151,10 +1151,10 @@ class runallstates(object):
 			self.client and
 			(bestPath != didSend) and
 			((not sconf.kmppSendThreshold)
-			 or (mb.they[0].kmpp >= sconf.kmppSendThreshold)) and
+			 or (mb.they[0].kmpp <= sconf.kmppSendThreshold)) and
 			((not sconf.spreadSendThreshold) or
 			 (mb.they[0].spread is None) or
-			 (mb.they[0].spread >= sconf.spreadSendThreshold))):
+			 (mb.they[0].spread <= sconf.spreadSendThreshold))):
 			if self.dry_run:
 				print 'would send best dir "%s" if it has not already been sent' % (mb.they[0], )
 			else:

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import os
+
 states = [
 # name, abbrev, fips number
 	('Alabama',	'AL',	1),
@@ -99,3 +101,48 @@ def codeForFips(fips):
 		if x[2] == fips:
 			return x[1]
 	return None
+
+_legpath = None
+
+# dict from postal code to [(body name, body short name, body count), ...]
+_legstats = None
+
+class LegislatureStat(object):
+	"""Basic info for a state legislature or congressional delegation."""
+	
+	def __init__(self, name, shortname, code, count):
+		self.name = name
+		self.shortname = shortname
+		self.code = code
+		self.count = count
+
+def legislatureStatsForPostalCode(code):
+	"""Return [LegislatureStat, ...].
+	Returns None if code is bogus."""
+	global _legpath
+	global _legstats
+	if not _legstats:
+		_legstats = {}
+		if not _legpath:
+			_legpath = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
+		f = open(_legpath, 'r')
+		for line in f:
+			line = line.strip()
+			if (not line) or (line[0] == '#'):
+				continue
+			(state, body, count) = line.split(',')
+			count = int(count)
+			bodyshort = body.split()[0]
+			code = codeForState(state)
+			ls = LegislatureStat(body, bodyshort, code, count)
+			if code not in _legstats:
+				_legstats[code] = [ls]
+			else:
+				_legstats[code].append(ls)
+	return _legstats.get(code)
+
+def expandLegName(leglist, name):
+	for ls in leglist:
+		if ls.shortname == name:
+			return ls.name
+	return name
