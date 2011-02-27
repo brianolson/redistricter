@@ -106,10 +106,14 @@ def configToName(cname):
 def urljoin(*args):
 	parts = []
 	prevSlash = False
+	first = True
 	for x in args:
 		if not x:
 			continue
-		if prevSlash:
+		if first:
+			# don't change leading slash quality
+			first = False
+		elif prevSlash:
 			if x[0] == '/':
 				x = x[1:]
 		else:

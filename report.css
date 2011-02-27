@@ -10,3 +10,4 @@ td.myow{max-width:30em;}
 td.myon{max-width:30em;text-align:center;}
 div.small{font-size:70%;}
 #custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('http://a4.twimg.com/images/favicon.ico') 1px center no-repeat;text-decoration:none;}
+p{max-width:100ex;}
