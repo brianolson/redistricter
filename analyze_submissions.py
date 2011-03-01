@@ -368,10 +368,13 @@ class SubmissionAnalyzer(object):
 				out.write('%s:weight:%f\n' % (cname, rweight(data['count'])))
 			if (cname in bestconfigs) and (bestconfigs[cname]['count'] >= 10):
 				c = self.db.cursor()
-				rows = c.execute('SELECT kmpp FROM submissions WHERE config = ? ORDER BY kmpp ASC LIMIT 10', (cname,))
+				rows = c.execute('SELECT kmpp FROM submissions WHERE config = ? AND kmpp > 0 ORDER BY kmpp ASC LIMIT 10', (cname,))
 				rows = list(rows)
-				kmpplimit = float(rows[-1][0])
-				out.write('%s:kmppSendThreshold:%f' % (cname, kmpplimit))
+				if rows and (len(rows) == 10):
+					kmpplimit = float(rows[-1][0])
+					out.write('%s:kmppSendThreshold:%f' % (cname, kmpplimit))
+				else:
+					logging.warn('%s count=%s but fetched %s', cname, bestconfigs[cname]['count'], len(rows))
 			# TODO: tweak spreadSendThreshold automatically ?
 		mpath = outpath + '_manual'
 		if os.path.exists(mpath):
