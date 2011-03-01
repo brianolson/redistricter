@@ -72,7 +72,6 @@ def makeUrlAbsolute(url, base):
 	# no change, return as was
 	return url
 
-
 def getIfNewer(url, path, lastModifiedString):
 	try:
 		req = urllib2.Request(url, data=None, headers={'If-Modified-Since': lastModifiedString})
@@ -137,6 +136,15 @@ class Client(object):
 			return []
 		return self.runoptsraw.splitlines()
 	
+	def defaultGETHeaders(self):
+		# track which client is which by a random number it picks.
+		aid = self.lastmods.get('AGENT_ID')
+		if not aid:
+			aid = rand.randint(100000, 999999999)
+			self.lastmods['AGENT_ID'] = str(aid)
+		useragent = 'bdistricting_client_%s_%s' % (os.stat(__file__).st_mtime, aid)
+		return {'User-Agent':useragent}
+	
 	def loadConfiguration(self):
 		"""Load config from server or cache.
 		Maybe read cache, maybe refetch config and store it to cache.
@@ -169,7 +177,7 @@ class Client(object):
 			self.parseHtmlConfigPage(f.read())
 			f.close()
 			return
-		GET_headers = {}
+		GET_headers = self.defaultGETHeaders()
 		if not configCacheMissing:
 			if_modified_since = self.lastmods.get('.configCache')
 			if if_modified_since:
@@ -242,7 +250,7 @@ class Client(object):
 			logging.info('fetchIfServerCopyNewer "%s" -> "%s"', remoteurl, localpath)
 			return localpath
 		lastmod = self.lastmods.get(dataset)
-		GET_headers = {}
+		GET_headers = self.defaultGETHeaders()
 		if lastmod:
 			GET_headers['If-Modified-Since'] = lastmod
 		try:
@@ -362,9 +370,9 @@ class Client(object):
 		body.write(ddboundary)
 		body.write('--\r\n\r\n')
 		sbody = body.getvalue()
-		GET_headers = {
-			'Content-Type': 'multipart/form-data; charset="utf-8"; boundary=' + boundary,
-			'Content-Length': str(len(sbody))}
+		GET_headers = self.defaultGETHeaders()
+		GET_headers['Content-Type'] = 'multipart/form-data; charset="utf-8"; boundary=' + boundary
+		GET_headers['Content-Length'] = str(len(sbody))
 		print 'sending to ' + submiturl
 		req = urllib2.Request(submiturl, data=sbody, headers=GET_headers)
 		try:

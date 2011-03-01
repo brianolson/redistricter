@@ -397,11 +397,20 @@ class configuration(object):
 				if not self.readDatadirConfig():
 					raise ParseError('problem with datadir "%s"' % self.datadir)
 		elif line.startswith('weight:'):
-			self.weight = float(line[7:].strip())
+			try:
+				self.weight = float(line[7:].strip())
+			except:
+				pass
 		elif line.startswith('kmppSendThreshold:'):
-			self.kmppSendThreshold = float(line[18:].strip())
+			try:
+				self.kmppSendThreshold = float(line[18:].strip())
+			except:
+				pass
 		elif line.startswith('spreadSendThreshold:'):
-			self.spreadSendThreshold = float(line[20:].strip())
+			try:
+				self.spreadSendThreshold = float(line[20:].strip())
+			except:
+				pass
 		elif line.startswith('sendAnything'):
 			self.sendAnything = line.lower() != 'sendanything: false'
 		elif line == 'enable' or line == 'enabled':
@@ -1172,7 +1181,17 @@ class runallstates(object):
 		cmdstr = "(cd %s && %s)" % (stu, ' '.join(cmd))
 		print cmdstr
 		if not self.dry_run:
-			ret = subprocess.Popen(cmd, shell=False, cwd=stu).wait()
+			p = subprocess.Popen(cmd, shell=False, cwd=stu)
+			timeout = time.time() + 60
+			ret = p.poll()
+			while ret is None:
+				if time.time() > timeout:
+					# occasional hang bugs in drend shouldn't kill the calculation. move on.
+					p.kill()
+					ret = p.returncode
+					break
+				time.sleep(1)
+				ret = p.poll()
 			if ret != 0:
 				self.addStopReason("drend failed (%d): %s\n" % (ret, cmdstr))
 				sys.stderr.write(self.stopreason + '\n')
