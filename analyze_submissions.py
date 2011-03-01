@@ -349,8 +349,9 @@ class SubmissionAnalyzer(object):
 		totalruncount = sum(counts)
 		mincount = min(counts)
 		maxcount = max(counts)
+		maxweight = 10.0
 		def rweight(count):
-			return 5.0 - (4.0 * (count - mincount) / (maxcount - mincount))
+			return maxweight - ((maxweight - 1.0) * (count - mincount) / (maxcount - mincount))
 		cnames = self.config.keys()
 		cnames.sort()
 		for cname in cnames:
@@ -361,7 +362,7 @@ class SubmissionAnalyzer(object):
 				sendAnything = True
 			if sendAnything:
 				out.write('%s:sendAnything\n' % (cname,))
-				out.write('%s:weight:5.0\n' % (cname,))
+				out.write('%s:weight:%f\n' % (cname, maxweight))
 			else:
 				data = bestconfigs[cname]
 				out.write('%s:sendAnything: False\n' % (cname,))
@@ -372,7 +373,7 @@ class SubmissionAnalyzer(object):
 				rows = list(rows)
 				if rows and (len(rows) == 10):
 					kmpplimit = float(rows[-1][0])
-					out.write('%s:kmppSendThreshold:%f' % (cname, kmpplimit))
+					out.write('%s:kmppSendThreshold:%f\n' % (cname, kmpplimit))
 				else:
 					logging.warn('%s count=%s but fetched %s', cname, bestconfigs[cname]['count'], len(rows))
 			# TODO: tweak spreadSendThreshold automatically ?
