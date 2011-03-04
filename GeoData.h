@@ -70,6 +70,8 @@ public:
 	uint32_t indexOfUbid( uint64_t u );
 	/* linear search, sloooow */
 	uint64_t ubidOfIndex( uint32_t index );
+	/* allocate new uint64_t[] look-up-table, fill it, pass-out min and max index for it. */
+	uint64_t* makeUbidLUT(uint32_t* minIndex, uint32_t* maxIndex);
 
 	// Map "Logical Record Number" to internal index so that we can map in 
 	// other Census data files.

@@ -732,6 +732,26 @@ uint64_t GeoData::ubidOfIndex( uint32_t index ) {
 	}
 	return (uint64_t)-1;
 }
+uint64_t* GeoData::makeUbidLUT(uint32_t* minIndexP, uint32_t* maxIndexP) {
+	uint32_t minIndex = ubids[0].index;
+	uint32_t maxIndex = ubids[0].index;
+	for ( int i = 1; i < numPoints; i++ ) {
+		if ( ubids[i].index > maxIndex ) {
+			maxIndex = ubids[i].index;
+		}
+		if ( ubids[i].index < minIndex ) {
+			minIndex = ubids[i].index;
+		}
+	}
+	int length = maxIndex - minIndex + 1;
+	uint64_t* out = new uint64_t[length];
+	for ( int i = 0; i < numPoints; i++ ) {
+		out[ubids[i].index - minIndex] = ubids[i].ubid;
+	}
+	*minIndexP = minIndex;
+	*maxIndexP = maxIndex;
+	return out;
+}
 
 /* binary search, fastish */
 uint32_t GeoData::indexOfRecno( uint32_t rn ) {

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import cgi
+import gzip
 import logging
 import os
 import random
@@ -544,7 +545,7 @@ class SubmissionAnalyzer(object):
 		))
 		out.close()
 	
-	def measureRace(self, cname, solution, htmlout):
+	def measureRace(self, cname, solution, htmlout, exportpath):
 		config = self.config[cname]
 		#zipname = 'VA/zips/va2010.pl.zip'
 		stl = cname[0:2].lower()
@@ -565,6 +566,8 @@ class SubmissionAnalyzer(object):
 			'--dsort', '1', '--notext',
 			'--html', htmlout,
 			'-P', pbfile, '-d', numd, '--loadSolution', solution]
+		if exportpath:
+			cmd += ['--export', exportpath]
 
 		p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE)
 		p.stdin.write(zf.read(part1name))
@@ -652,8 +655,20 @@ class SubmissionAnalyzer(object):
 				dszout.close()
 			
 			racehtml = os.path.join(sdir, 'race.html')
-			if self.options.redraw or (not os.path.exists(racehtml)):
-				self.measureRace(cname, solpath, racehtml)
+			solutioncsvgz = os.path.join(sdir, 'solution.csv.gz')
+			if self.options.redraw or newerthan(solpath, racehtml) or newerthan(solpath, solutioncsvgz):
+				# TODO: there could be smarter logic here to run faster if only one piece is needed.
+				self.measureRace(cname, solpath, racehtml, solutioncsvgz)
+			
+			solutionzip = os.path.join(sdir, 'solution.zip')
+			if newerthan(solutioncsvgz, solutionzip):
+				try:
+					solutioncsv = gzip.open(solutioncsvgz, 'rb').read()
+					oz = zipfile.ZipFile(solutionzip, 'w', zipfile.ZIP_DEFLATED)
+					oz.writestr(cname + '.csv', solutioncsv)
+					oz.close()
+				except IOError, e:
+					logging.error('failed %s -> %s: %s', solutioncsvgz, solutionzip, e)
 			
 			# Make images map.png and map500.png
 			if needsDrend:
@@ -707,7 +722,7 @@ class SubmissionAnalyzer(object):
 			google_analytics=_google_analytics(),
 		))
 		out.close()
-		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz'):
+		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
 	
 	def buildBestSoFarDirs(self, configs=None):

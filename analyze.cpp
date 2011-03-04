@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <zlib.h>
 #include "District2.h"
 #include "Bitmap.h"
 #include "Node.h"
@@ -181,11 +182,13 @@ int main( int argc, char** argv ) {
 	}
 	
 	if (exportPath != NULL) {
-		FILE* exportf = fopen(exportPath, "w");
-		if (exportf == NULL) {
-			perror(exportPath);
-			exit(1);
-			return 1;
+		bool exportCsv = false;
+		bool gz = false;
+		if (strcasestr(exportPath, ".csv")) {
+			exportCsv = true;
+		}
+		if (strcasestr(exportPath, ".gz")) {
+			gz = true;
 		}
 		uint64_t maxUbid = 0;
 		for (int i = 0; i < sov.gd->numPoints; ++i) {
@@ -208,13 +211,49 @@ int main( int argc, char** argv ) {
 		} else if (length < 15) {
 			length = 15;  // round up to 2 state + 3 county + 6 tract + 4 block
 		}
-		char format[30];
-		snprintf(format, sizeof(format), "%%0%dlld%%02d\n", length);
-		for (int i = 0; i < sov.gd->numPoints; ++i) {
-			uint64_t ubid = sov.gd->ubidOfIndex(i);
-			fprintf(exportf, format, ubid, sov.winner[i]);
+		char format[50];
+		if (exportCsv) {
+			snprintf(format, sizeof(format), "%%0%dlld,%%d\n", length);
+		} else {
+			// fixed length lines
+			snprintf(format, sizeof(format), "%%0%dlld%%02d\n", length);
 		}
-		fclose(exportf);
+		FILE* exportf = NULL;
+		gzFile exportgzf = NULL;
+		if (gz) {
+			exportgzf = gzopen(exportPath, "wb");
+			if (exportgzf == NULL) {
+				int gzerrno = 0;
+				fprintf(stderr, "gzip error \"%s\" on file \"%s\"\n", gzerror(exportgzf, &gzerrno), exportPath);
+				perror(exportPath);
+				exit(1);
+				return 1;
+			}
+		} else {
+			exportf = fopen(exportPath, "w");
+			if (exportf == NULL) {
+				perror(exportPath);
+				exit(1);
+				return 1;
+			}
+		}
+		uint32_t minIndex = 0, maxIndex = 0;
+		uint64_t* ubidLut = sov.gd->makeUbidLUT(&minIndex, &maxIndex);
+		for (int i = 0; i < sov.gd->numPoints; ++i) {
+			uint64_t ubid = ubidLut[i - minIndex];  //sov.gd->ubidOfIndex(i);
+			if (gz) {
+				gzprintf(exportgzf, format, ubid, sov.winner[i]);
+			} else {
+				fprintf(exportf, format, ubid, sov.winner[i]);
+			}
+		}
+		delete [] ubidLut;
+		if (gz) {
+			gzflush(exportgzf, Z_FINISH);
+			gzclose(exportgzf);
+		} else {
+			fclose(exportf);
+		}
 	}
 	
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
