@@ -390,7 +390,7 @@ class SubmissionAnalyzer(object):
 	def newestWinner(self, configs):
 		newestconfig = None
 		for cname, data in configs.iteritems():
-			if (newestconfig is None) or (data['id'] > newestconfig['id']):
+			if data['kmpp'] and ((newestconfig is None) or (data['id'] > newestconfig['id'])):
 				newestconfig = data
 		return newestconfig
 	
