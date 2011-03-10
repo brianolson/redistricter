@@ -681,12 +681,21 @@ class SubmissionAnalyzer(object):
 			solutionzip = os.path.join(sdir, 'solution.zip')
 			if newerthan(solutioncsvgz, solutionzip):
 				try:
-					solutioncsv = gzip.open(solutioncsvgz, 'rb').read()
+					zin = gzip.open(solutioncsvgz, 'rb')
+					solutioncsv = zin.read()
+					zin.close()
+					zcsvname = str(cname + '.csv')
+					logging.debug('got %d bytes from %r, to zipfile entry %r', len(solutioncsv), solutioncsvgz, zcsvname)
 					oz = zipfile.ZipFile(solutionzip, 'w', zipfile.ZIP_DEFLATED)
-					oz.writestr(cname + '.csv', solutioncsv)
+					oz.writestr(zcsvname, solutioncsv)
 					oz.close()
-				except IOError, e:
-					logging.error('failed %s -> %s: %s', solutioncsvgz, solutionzip, e)
+				except Exception, e:
+					logging.error('failed %r -> %r: %s', solutioncsvgz, solutionzip, traceback.format_exc())
+					if os.path.exists(solutionzip):
+						try:
+							os.unlink(solutionzip)
+						except:
+							pass
 			
 			# Make images map.png and map500.png
 			if needsDrend:
