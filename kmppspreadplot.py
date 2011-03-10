@@ -107,6 +107,7 @@ class svgplotter(object):
     self.yoffset = 30
     self.scalex = 1.0
     self.scaley = 1.0
+    self.comments = []
 
   def xy(self, x, y):
     if (self.minx is None) or (self.minx > x):
@@ -124,6 +125,9 @@ class svgplotter(object):
 
   def ty(self, y):
     return ((self.maxy - y) * self.scaley) + self.yoffset
+
+  def comment(self, blah):
+    self.comments.append(blah)
 
   def close(self):
     if not self.fout:
@@ -185,6 +189,8 @@ class svgplotter(object):
         (minxp + ((maxxp - minxp) * 0.75), minyp + 5, len(self.points)))
 
     self.fout.write('</g>\n')
+    if self.comments:
+      self.fout.write('<!-- ' + '\n'.join(self.comments) + ' -->\n')
     self.fout.write('</svg>\n')
     self.fout.close()
     self.fout = None

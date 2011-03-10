@@ -428,14 +428,24 @@ class SubmissionAnalyzer(object):
 		out.write('</html></body>\n')
 		out.close()
 	
-	def doDrend(self, cname, data, solutionDszRaw, pngpath):
+	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None):
 		args = dict(self.config[cname].drendargs)
-		args.update({'--loadSolution': '-', '--pngout': pngpath})
+		args['--pngout'] = pngpath
+		if dszpath:
+			args['--loadSolution'] = dszpath
+		elif solutionDszRaw:
+			args['--loadSolution'] = '-'
+		else:
+			self.stderr.write('error: need dsz or raw dsz bytes for doDrend\n')
+			return None
 		cmd = [os.path.join(self.options.bindir, 'drend')] + runallstates.dictToArgList(args)
 		logging.debug('run %r', cmd)
-		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-		p.stdin.write(solutionDszRaw)
-		p.stdin.close()
+		if solutionDszRaw:
+			p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+			p.stdin.write(solutionDszRaw)
+			p.stdin.close()
+		else:
+			p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
 		retcode = p.wait()
 		if retcode != 0:
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
@@ -581,6 +591,7 @@ class SubmissionAnalyzer(object):
 		points = []
 		dumpBinLogRE = re.compile(r'.*kmpp=([.0-9]+).*minPop=([0-9]+).*maxPop=([0-9]+)')
 		rand = random.Random()
+		bestSpreadPoints = []
 		for (rid, tpath) in rows:
 			tpath = self.cleanupSolutionPath(tpath)
 			data = extractSome(tpath, ('binlog',))
@@ -594,6 +605,7 @@ class SubmissionAnalyzer(object):
 			#raw = p.stdout.read()
 			(raw, _unused) = p.communicate(data['binlog'])
 			allpoints = []
+			bestSpreadPoint = None
 			for line in raw.splitlines():
 				 m = dumpBinLogRE.match(line)
 				 if m:
@@ -602,6 +614,10 @@ class SubmissionAnalyzer(object):
 					 maxPop = int(m.group(3))
 					 spread = maxPop - minPop
 					 allpoints.append((spread, kmpp))
+					 if (bestSpreadPoint is None) or (spread < bestSpreadPoint[0]):
+						bestSpreadPoint = (spread, kmpp)
+			if bestSpreadPoint:
+				bestSpreadPoints.append(bestSpreadPoint)
 			if len(allpoints) > 20:
 				half = len(allpoints) / 2
 				allpoints = allpoints[half:]
@@ -614,6 +630,8 @@ class SubmissionAnalyzer(object):
 		out = svgplotter(kmpppath)
 		for (spread, kmpp) in points:
 			out.xy(spread, kmpp)
+		if bestSpreadPoints:
+			out.comment(repr(bestSpreadPoints))
 		out.close()
 		return kmpppath
 	
@@ -672,7 +690,7 @@ class SubmissionAnalyzer(object):
 			
 			# Make images map.png and map500.png
 			if needsDrend:
-				self.doDrend(cname, data, tfparts['solution'], mappath)
+				self.doDrend(cname, data, mappath, dszpath=solpath)
 			map500path = os.path.join(sdir, 'map500.png')
 			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
