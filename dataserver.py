@@ -75,9 +75,13 @@ def wrapConfigFile(configData):
 def datasetListForDirectory(dirpath):
 	"""Return HTML string."""
 	datasets = []
+	dsfiles = []
 	for name in os.listdir(dirpath):
 		if name.endswith('_runfiles.tar.gz'):
-			datasets.append(datafileLine(name))
+			dsfiles.append(name)
+	dsfiles.sort()
+	for name in dsfiles:
+		datasets.append(datafileLine(name))
 	return ''.join(datasets)
 
 

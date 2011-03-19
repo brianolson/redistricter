@@ -631,6 +631,8 @@ bool MapDrawer::getPopulationDensityRenderParams( Solver* sov, double* minpdP, d
 	double pdrange = maxpd - minpd;
 	int ghist[256];
 	// TODO: shame on me, rewrite flow control away from goto.
+	int retrylimit = 5;
+	int rangeErrorLimit = 100;
 tryagain:
 	memset(ghist, 0, sizeof(ghist));
 	for ( int i = 0; i < numPoints; i++ ) {
@@ -643,6 +645,11 @@ tryagain:
 		//fprintf(stderr, "tpd %g -> grey %d\n", tpd, grey);
 		if (grey < 0) {
 			fprintf(stderr, "gpdrp grey %d tpd=%g\n", grey, tpd);
+			rangeErrorLimit--;
+			if (rangeErrorLimit <= 0) {
+				fprintf(stderr, "population shading failed out after too many scale errors\n");
+				return false;
+			}
 			grey = 0;
 		} else if (grey > 255) {
 			//fprintf(stderr, "gpdrp grey %d tpd=%g\n", grey, tpd);
@@ -659,8 +666,13 @@ tryagain:
 		//fprintf(stderr, "drop %d points at grey=%d\n", ghist[newHighGrey], newHighGrey);
 		newHighGrey--;
 		if (newHighGrey == 0) {
+			if (retrylimit <= 0) {
+				fprintf(stderr, "population shading failed out after too many rescale retries\n");
+				return false;
+			}
 			fprintf(stderr, "too squashed, expand, try again\n");
 			pdrange *= 1/255.0;
+			retrylimit--;
 			goto tryagain;
 		}
 		assert(newHighGrey >= 0);
