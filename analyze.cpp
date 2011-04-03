@@ -73,6 +73,7 @@ int main( int argc, char** argv ) {
 	bool distrow = true;
 	bool distcol = false;
 	bool quiet = false;
+	bool loadSolutionCsvMode = false;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
@@ -149,6 +150,10 @@ int main( int argc, char** argv ) {
 		} else if (!strcmp(argv[i], "--export")) {
 			++i;
 			exportPath = argv[i];
+		} else if (!strcmp(argv[i], "--csv-solution")) {
+			++i;
+			sov.loadname = argv[i];
+			loadSolutionCsvMode = true;
 		} else {
 			argv[nargc] = argv[i];
 			nargc++;
@@ -170,8 +175,14 @@ int main( int argc, char** argv ) {
 		if (!quiet) {
 			fprintf(stdout, "loading \"%s\"\n", sov.loadname);
 		}
-		if (sov.loadZSolution(sov.loadname) < 0) {
-			return 1;
+		if (loadSolutionCsvMode) {
+			if (sov.loadCsvSolution(sov.loadname) < 0) {
+				return 1;
+			}
+		} else {
+			if (sov.loadZSolution(sov.loadname) < 0) {
+				return 1;
+			}
 		}
 		if (!quiet) {
 			char* statstr = new char[10000];

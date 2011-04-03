@@ -722,7 +722,7 @@ uint32_t GeoData::indexOfUbid( uint64_t u ) {
 			return ubids[mid].index;
 		}
 	}
-	return (uint32_t)-1;
+	return INVALID_INDEX; // -1
 }
 uint64_t GeoData::ubidOfIndex( uint32_t index ) {
 	for ( int i = 0; i < numPoints; i++ ) {

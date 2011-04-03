@@ -279,6 +279,7 @@ class SubmissionAnalyzer(object):
 			kmppSpread = self.measureSolution(tfparts['solution'], config)
 			if kmppSpread is None:
 				logging.warn('failed to analyze solution in "%s"', fpath)
+				# TODO: set attempt count in 'vars' and retry up to N times
 				return False
 		else:
 			kmppSpread = (None, None)

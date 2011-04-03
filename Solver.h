@@ -108,6 +108,7 @@ public:
 	void allocSolution();
 	int saveZSolution( const char* filename );
 	int loadZSolution( const char* filename );
+	int loadCsvSolution( const char* filename );
 	/* from loadname */
 	int loadSolution( const char* loadname );
 	void initSolution();

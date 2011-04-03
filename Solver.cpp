@@ -615,6 +615,86 @@ loadZFail:
 	close( readfd );
 	return -1;
 }
+int Solver::loadCsvSolution( const char* filename ) {
+	FILE* fin;
+	if (0 == strcmp(filename, "-")) {
+		fin = stdin;
+	} else {
+		fin = fopen(filename, "rb");
+	}
+	if (fin == NULL) {
+		perror( filename );
+		return -1;
+	}
+	static const int MAX_LINE_LENGTH = 1024;
+	char* lineBuf = new char[MAX_LINE_LENGTH];
+	char* line;
+	line = fgets(lineBuf, MAX_LINE_LENGTH, fin);
+	int err = 0;
+	int errcount = 0;
+	memset(winner, NODISTRICT, gd->numPoints);
+	int setcount = 0;
+	while (line != NULL) {
+		char* c = line;
+		while ((c != '\0') && (!isnumber(*c))) {
+			c++;
+		}
+		char* endp = NULL;
+		uint64_t tubid = strtoull(c, &endp, 10);
+		if ((endp == NULL) || (endp == c)) {
+			perror("reading ubid");
+			err = errno;
+			break;
+		}
+		c = endp;
+		while ((c != '\0') && (!isnumber(*c))) {
+			c++;
+		}
+		endp = NULL;
+		long district = strtol(c, &endp, 10);
+		if ((endp == NULL) || (endp == c)) {
+			perror("reading district number");
+			err = errno;
+			break;
+		} 
+		uint32_t index = gd->indexOfUbid(tubid);
+		if (index == INVALID_INDEX) {
+			fprintf(stderr, "bogus ubid %lld\n" , tubid);
+			errcount++;
+			if (errcount > 20) {
+				err = -1;
+				break;
+			}
+		} else if ((district < 1) || (district > districts)) {
+			fprintf(stderr, "winner[%d]=%lu would be out of range (1..%d)\n", index, district, districts);
+			errcount++;
+			if (errcount > 20) {
+				err = -1;
+				break;
+			}
+		} else {
+			winner[index] = district - 1;
+			setcount++;
+		}
+		line = fgets(lineBuf, MAX_LINE_LENGTH, fin);
+	}
+	if (err == 0) {
+		err = ferror(fin);
+	}
+	delete [] lineBuf;
+	if (err != 0) {
+		fprintf(stderr, "error reading file \"%s\" (%d): %s\n", filename, err, strerror(err));
+	}
+	int notset = 0;
+	for (int i = 0; i < gd->numPoints; ++i) {
+		if (winner[i] == NODISTRICT) {
+			notset++;
+		}
+	}
+	fprintf(stderr, "set %d points of %d, %d not set\n", setcount, gd->numPoints, notset);
+	dists->initFromLoadedSolution();
+	return err;
+}
 
 
 void Solver::initSolution() {

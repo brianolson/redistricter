@@ -66,7 +66,7 @@ public:
 		uint32_t index;
 	};
 	UST* ubids;
-	/* binary search, fastish */
+	/* binary search, fastish, return INVALID_INDEX on failure */
 	uint32_t indexOfUbid( uint64_t u );
 	/* linear search, sloooow */
 	uint64_t ubidOfIndex( uint32_t index );
@@ -120,6 +120,8 @@ public:
 	int close();
 	virtual ~GeoData();
 };
+
+static const uint32_t INVALID_INDEX = ((uint32_t)-1);
 
 #if 0
 // deprecated
