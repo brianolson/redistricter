@@ -1193,7 +1193,7 @@ class runallstates(object):
 				time.sleep(1)
 				ret = p.poll()
 			if ret != 0:
-				self.addStopReason("drend failed (%d): %s\n" % (ret, cmdstr))
+				self.addStopReason("drend failed (%s): %s\n" % (ret, cmdstr))
 				sys.stderr.write(self.stopreason + '\n')
 				self.softfail = True
 				return False

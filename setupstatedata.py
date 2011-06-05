@@ -115,14 +115,6 @@ ${dpath}/${stu}_start_sm.png:	${bindir}/drend ${dpath}/${stu}_sm.mppb ${dpath}/$
 	${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stu}current.dsz
 """
 
-# don't need these, compileBinaryData does it
-compileBinaryData_rules_ = """
-${dpath}/${stu}.gbin:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -o ${dpath}/${stu}.gbin
-
-${dpath}/${stu}.pb:	${dpath}/.uf1 linkfixup
-	./linkfixup -U ${dpath}/.uf1 -p ${dpath}/${stu}.pb
-"""
 
 # we don't need these when building from shapefile
 old_makepolys_rules_ = ("""
