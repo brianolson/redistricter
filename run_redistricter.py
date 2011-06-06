@@ -38,6 +38,7 @@ def main():
 	op.add_option('--port', dest='port', type='int', default=9988)
 	op.add_option('--threads', dest='threads', type='int', default=2)
 	op.add_option('--flagfile', dest='flagfile', default=None)
+	op.add_option('--log', dest='logname', default=None)
 	(options, args) = op.parse_args()
 
 	if options.flagfile:
@@ -72,7 +73,18 @@ def main():
 	print 'status should be available on'
 	print 'http://localhost:%d/' % (options.port,)
 	
-	log = RotatingLogWriter(os.path.join(workdir, 'dblog_'))
+	log = None
+	if options.logname:
+		if options.logname == '-':
+			logpath = None
+			log = sys.stdout
+		else:
+			logpath = options.logname
+	else:
+		logpath = os.path.join(workdir, 'dblog_')
+	if log is None:
+		log = RotatingLogWriter(logpath)
+	log.write('# cmd: "%s"\n' % ('" "'.join(cmd),))
 	piped_run(proc, log)
 	log.close()
 

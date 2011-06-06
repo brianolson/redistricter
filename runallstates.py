@@ -697,8 +697,8 @@ class runallstates(object):
 		argp.add_option('--exe', dest='exepath', default=None)
 		argp.add_option('--runsecs', dest='runsecs', type='float', default=None)
 		argp.add_option('--config', dest='configList', action='append', default=[])
-		argp.add_option('--config-include', dest='config_include', action='append', default=[])
-		argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[])
+		argp.add_option('--config-include', dest='config_include', action='append', default=[], help='regex compared to unpacked config file path, like "AZ/config/Senate". partial match includes the config. overrides --config-exclude')
+		argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[], help='regex compared to config file path. partial match causes config to not be used. overriden by --config-include')
 		argp.add_option('--configdir', dest='configdir', default=None)
 		argp.add_option('--config-override', dest='config_override_path', default='configoverride')
 		argp.add_option('--threads', dest='threads', type='int', default=1)
@@ -810,11 +810,12 @@ class runallstates(object):
 				sys.exit(1)
 	
 	def allowConfigPath(self, path):
+		for pattern in self.config_include:
+			if pattern.search(path):
+				return True
 		if self.config_include:
-			# must match all
-			for pattern in self.config_include:
-				if not pattern.search(path):
-					return False
+			# if include was specified, but none hit, default to exclude
+			return False
 		for pattern in self.config_exclude:
 			if pattern.search(path):
 				return False
@@ -1152,7 +1153,7 @@ class runallstates(object):
 		self.doDrend(stu, mb)
 		self.doBestlog(stu, mb)
 		bestPath = None
-		if len(mb.they) > 0:
+		if mb.they:
 			bestPath = os.path.join(stu, mb.they[0].root)
 		sconf = self.config[stu]
 		if (
