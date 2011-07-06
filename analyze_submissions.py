@@ -476,6 +476,8 @@ class SubmissionAnalyzer(object):
 				variations.insert(0, 'Congress')
 			vlist = []
 			isCurrent = False
+			if 'Congress' not in variations:
+				vlist.append('<td class="nc">-</td>')
 			for v in variations:
 				stu_v = stu + '_' + v
 				if stu_v == current:
