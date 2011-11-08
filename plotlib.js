@@ -50,9 +50,15 @@ PlotCommon.prototype.py = function(dy) {
 };
 
 PlotCommon.prototype.axisLabels = function(opt) {
+	var minxlabel = null;
+	var maxxlabel = null;
 	if (opt && opt['xlabels']) {
-		
+		minxlabel = opt['xlabels'][0];
+		maxxlabel = opt['xlabels'][1];
 	} else {
+		minxlabel = new String(this.minx);
+		maxxlabel = new String(this.maxx);
+	}
 		/* Label minx and this.maxx on bottom of graph */
 		this.ctx.strokeStyle = '#555';
 		this.ctx.beginPath();
@@ -63,10 +69,10 @@ PlotCommon.prototype.axisLabels = function(opt) {
 		this.ctx.stroke();
 		this.ctx.textAlign = 'left';
 		this.ctx.textBaseline = 'top';
-		this.ctx.fillText(new String(this.minx), this.px(this.minx), this.py(this.miny));
+		this.ctx.fillText(minxlabel, this.px(this.minx), this.py(this.miny));
 		this.ctx.textAlign = 'right';
-		this.ctx.fillText(new String(this.maxx), this.px(this.maxx), this.py(this.miny));
-	}
+		this.ctx.fillText(maxxlabel, this.px(this.maxx), this.py(this.miny));
+	
 	if (opt && opt['ylabels']) {
 		
 	} else {
@@ -107,7 +113,7 @@ LinePlot.prototype.plot = function(canvas, xy, opt) {
 		this.ctx.lineTo(this.px(xy[i]), this.py(xy[i+1]));
 	}
 	this.ctx.stroke();
-	this.axisLabels();
+	this.axisLabels(opt);
 };
 
 function lineplot(canvas, xy, opt) {
@@ -140,7 +146,7 @@ CalPlot.prototype.plot = function(canvas, xy, opt) {
 		this.ctx.lineTo(tx, this.py(xy[i+1]));
 	}
 	this.ctx.stroke();
-	this.axisLabels();
+	this.axisLabels(opt);
 };
 
 function calplot(canvas, xy, opt) {
