@@ -331,6 +331,7 @@ def readDbf(fname):
 	print 'read %d records in %f seconds' % (
 	    dbf.recordCount, (stop - start))
 	print dbf.getRow(100)
+	return dbf
 
 def readShapefile(fname):
 	start = time.time()

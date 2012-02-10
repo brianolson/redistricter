@@ -121,6 +121,24 @@ function lineplot(canvas, xy, opt) {
 	lp.plot(canvas, xy, opt);
 };
 
+function ScatterPlot() {};
+ScatterPlot.prototype = new PlotCommon;
+
+ScatterPlot.prototype.plot = function(canvas, xy, opt) {
+	this.setup(canvas, xy);
+	this.ctx.clearRect(0,0, canvas.width, canvas.height);
+	this.ctx.strokeStyle = '#000';
+	this.ctx.fillStyle = '#000';
+	for (var i = 0; i < xy.length; i += 2) {
+		this.ctx.fillRect(this.px(xy[i])-1, this.py(xy[i+1])-1, 3, 3);
+	}
+	this.axisLabels();
+}
+function scatterplot(canvas, xy, opt) {
+	var sp = new ScatterPlot();
+	sp.plot(canvas, xy, opt);
+};
+
 function CalPlot() {};
 CalPlot.prototype = new PlotCommon;
 

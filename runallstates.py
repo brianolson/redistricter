@@ -1387,6 +1387,9 @@ class RunThread(object):
 					break
 			self.stu = stu
 			RunThread.lock.release()
+			if stu is None:
+				# don't busy spin trying to get state
+				time.sleep(2)
 	
 	def run(self):
 		# See also runthread() above
