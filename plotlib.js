@@ -31,10 +31,10 @@ PlotCommon.prototype.setupxy = function(xy) {
 }
 
 PlotCommon.prototype.setup = function(canvas, xy, opt) {
-    if (opt.data) {
-	for (var di = 0, ds; ds = opt.data[di]; di++) {
-	    this.setupxy(ds.xy);
-	}
+    if (opt && opt.data) {
+		for (var di = 0, ds; ds = opt.data[di]; di++) {
+			this.setupxy(ds.xy);
+		}
     } else {
 	this.setupxy(xy);
     }
@@ -111,7 +111,7 @@ PlotCommon.prototype.axisLabels = function(opt) {
 		// TODO: something smart about how if lasty is close to miny or maxy, adjust text baselines so they don't clobber each other
 		this.ctx.fillText(new String(this.lasty), this.px(this.maxx), this.py(this.lasty));
 	}
-    if (opt.data) {
+    if (opt && opt.data) {
 	this.ctx.textAlign = 'left';
 	this.ctx.textBaseline = 'top';
 	var lx = this.px(this.maxx);
@@ -124,6 +124,17 @@ PlotCommon.prototype.axisLabels = function(opt) {
 	    this.ctx.fillText(ds.name, lx, ly);
 	}
     }
+	if (opt && opt.vlines) {
+		// draw vertical lines at various X values
+		this.ctx.strokeStyle = 'rgba(0,0,255,128)';
+		//this.ctx.strokeStyle = '#00f';
+		for (var vi = 0, vv; vv = opt.vlines[vi]; vi++) {
+			this.ctx.beginPath();
+			this.ctx.moveTo(this.px(vv), this.py(this.miny));
+			this.ctx.lineTo(this.px(vv), this.py(this.maxy));
+			this.ctx.stroke();
+		}
+	}
 }
 
 function LinePlot() {};
@@ -156,7 +167,7 @@ accepts data either in xy = [x,y, x,y, ...] or opt['data'] = [{'fillStyle':'#123
 ScatterPlot.prototype.plot = function(canvas, xy, opt) {
     this.setup(canvas, xy, opt);
 	this.ctx.clearRect(0,0, canvas.width, canvas.height);
-	if (opt.data) {
+	if (opt && opt.data) {
 	    for (var di = 0, ds; ds = opt.data[di]; di++) {
 		this.ctx.strokeStyle = ds.strokeStyle || '#000';
 		this.ctx.fillStyle = ds.fillStyle || '#000';
