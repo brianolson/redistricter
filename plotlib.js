@@ -4,12 +4,15 @@
 
 function PlotCommon() {};
 
-PlotCommon.prototype.setup = function(canvas, xy, opt) {
+PlotCommon.prototype.setupxy = function(xy) {
+    if (!this.firstdatas) {
 	this.minx = xy[0];
 	this.miny = xy[1];
 	this.maxx = xy[0];
 	this.maxy = xy[1];
 	this.lasty = xy[1];
+	this.firstdatas = true;
+    }
 	for (var i = 2; i < xy.length; i += 2) {
 		if (xy[i] < this.minx) {
 			this.minx = xy[i];
@@ -25,6 +28,16 @@ PlotCommon.prototype.setup = function(canvas, xy, opt) {
 		}
 		this.lasty = xy[i+1];
 	}
+}
+
+PlotCommon.prototype.setup = function(canvas, xy, opt) {
+    if (opt.data) {
+	for (var di = 0, ds; ds = opt.data[di]; di++) {
+	    this.setupxy(ds.xy);
+	}
+    } else {
+	this.setupxy(xy);
+    }
 	this.ctx = canvas.getContext('2d');
 	this.miny_str = new String(this.miny);
 	this.miny_width = this.ctx.measureText(this.miny_str).width;
@@ -98,13 +111,26 @@ PlotCommon.prototype.axisLabels = function(opt) {
 		// TODO: something smart about how if lasty is close to miny or maxy, adjust text baselines so they don't clobber each other
 		this.ctx.fillText(new String(this.lasty), this.px(this.maxx), this.py(this.lasty));
 	}
+    if (opt.data) {
+	this.ctx.textAlign = 'left';
+	this.ctx.textBaseline = 'top';
+	var lx = this.px(this.maxx);
+	var ly = this.py(this.maxy);
+	for (var di = 0, ds; ds = opt.data[di]; di++) {
+	    if (!ds.name) {continue;}
+	    this.ctx.strokeStyle = ds.strokeStyle || '#000';
+	    this.ctx.fillStyle = ds.fillStyle || '#000';
+	    ly += 10;
+	    this.ctx.fillText(ds.name, lx, ly);
+	}
+    }
 }
 
 function LinePlot() {};
 LinePlot.prototype = new PlotCommon;
 
 LinePlot.prototype.plot = function(canvas, xy, opt) {
-	this.setup(canvas, xy);
+    this.setup(canvas, xy, opt);
 	this.ctx.clearRect(0,0, canvas.width, canvas.height);
 	this.ctx.strokeStyle = '#000';
 	this.ctx.beginPath();
@@ -124,15 +150,31 @@ function lineplot(canvas, xy, opt) {
 function ScatterPlot() {};
 ScatterPlot.prototype = new PlotCommon;
 
+/**
+accepts data either in xy = [x,y, x,y, ...] or opt['data'] = [{'fillStyle':'#123', 'xy':[x,y, x,y, ...]}, ... ]
+*/
 ScatterPlot.prototype.plot = function(canvas, xy, opt) {
-	this.setup(canvas, xy);
+    this.setup(canvas, xy, opt);
 	this.ctx.clearRect(0,0, canvas.width, canvas.height);
-	this.ctx.strokeStyle = '#000';
-	this.ctx.fillStyle = '#000';
+	if (opt.data) {
+	    for (var di = 0, ds; ds = opt.data[di]; di++) {
+		this.ctx.strokeStyle = ds.strokeStyle || '#000';
+		this.ctx.fillStyle = ds.fillStyle || '#000';
+		xy = ds.xy;
+		for (var i = 0; i < xy.length; i += 2) {
+		    this.ctx.fillRect(this.px(xy[i])-1, this.py(xy[i+1])-1, 3, 3);
+		}
+	    }
+	} else {
+	    this.ctx.strokeStyle = '#000';
+	    this.ctx.fillStyle = '#000';
 	for (var i = 0; i < xy.length; i += 2) {
 		this.ctx.fillRect(this.px(xy[i])-1, this.py(xy[i+1])-1, 3, 3);
 	}
-	this.axisLabels();
+	}
+	this.ctx.strokeStyle = '#000';
+	this.ctx.fillStyle = '#000';
+	this.axisLabels(opt);
 }
 function scatterplot(canvas, xy, opt) {
 	var sp = new ScatterPlot();
