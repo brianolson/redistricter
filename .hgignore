@@ -1,0 +1,11 @@
+syntax: glob
+*.o
+*.d
+*.pyc
+analyze
+districter2
+drend
+linkfixup
+redata.pb.cc
+redata.pb.h
+*~
