@@ -103,6 +103,13 @@ PlotCommon.prototype.axisLabels = function(opt) {
 		this.ctx.textBaseline = 'top';
 		this.ctx.fillText(this.maxy_str, this.px(this.maxx), this.py(this.maxy));
 	}
+	if (opt && opt['ytitle']) {
+/* put y title right of right edge at center */
+		this.ctx.fillStyle = '#900';
+		this.ctx.textAlign = 'left';
+		this.ctx.textBaseline = 'middle';
+		this.ctx.fillText(new String(opt['ytitle']), this.px(this.maxx), this.py((this.maxy + this.miny)/2));
+	}
 	if ((this.lasty != this.miny) && (this.lasty != this.maxy)) {
 		// Put the last Y value on the right edge in red.
 		this.ctx.fillStyle = '#900';

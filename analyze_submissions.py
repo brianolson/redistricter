@@ -119,6 +119,19 @@ def urljoin(*args):
 		parts.append(x)
 	return ''.join(parts)
 
+
+def stripDjangoishComments(text):
+	"""Return text with {# ... #} stripped out (multiline)."""
+	commentFilter = re.compile(r'{#.*#}', re.DOTALL|re.MULTILINE)
+	return commentFilter.replace('', text)
+
+
+def templateFromFile(f):
+	raw = f.read()
+	cooked = stripDjangoishComments(raw)
+	return string.Template(cooked)
+
+
 # Example analyze output:
 # generation 0: 21.679798418 Km/person
 # population avg=634910 std=1707.11778
@@ -181,7 +194,7 @@ class SubmissionAnalyzer(object):
 			if rootdir is None:
 				rootdir = srcdir_
 			f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
-			self.pageTemplate = string.Template(f.read())
+			self.pageTemplate = templateFromFile(f)
 			f.close()
 		return self.pageTemplate
 	
@@ -190,7 +203,7 @@ class SubmissionAnalyzer(object):
 			if rootdir is None:
 				rootdir = srcdir_
 			f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
-			self.dirTemplate = string.Template(f.read())
+			self.dirTemplate = templateFromFile(f)
 			f.close()
 		return self.dirTemplate
 	
@@ -778,7 +791,7 @@ class SubmissionAnalyzer(object):
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
 		f = open(result_index_html_path, 'r')
-		result_index_html_template = string.Template(f.read())
+		result_index_html_template = templateFromFile(f)
 		f.close()
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')

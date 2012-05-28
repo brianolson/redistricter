@@ -11,7 +11,7 @@
 <table class="sp"><tr><td>
 <div><a href="/2010/">2010 Redistricting Home</a></div>
 ${statenav}
-<div><a href="http://www.google.com/buzz/post?url=${cgipageabsurl}&imageurl=${cgiimageurl}" style="text-decoration:none" target="_blank"><img src="http://www.gstatic.com/buzz/api/images/buzz-link.png"> Buzz</a> <a href="http://www.reddit.com/submit?url=${cgipageabsurl}" target="_blank"><img src="http://www.reddit.com/static/spreddit7.gif" alt="submit to reddit" border="0" /></a> <span id="custom-tweet-button"><a href="http://twitter.com/share?url=${cgipageabsurl}" target="_blank">Tweet</a></span></div>
+<div>{# <a href="http://www.google.com/buzz/post?url=${cgipageabsurl}&imageurl=${cgiimageurl}" style="text-decoration:none" target="_blank"><img src="http://www.gstatic.com/buzz/api/images/buzz-link.png"> Buzz</a> #}<a href="http://www.reddit.com/submit?url=${cgipageabsurl}" target="_blank"><img src="http://www.reddit.com/static/spreddit7.gif" alt="submit to reddit" border="0" /></a> <span id="custom-tweet-button"><a href="http://twitter.com/share?url=${cgipageabsurl}" target="_blank">Tweet</a></span> <a href="https://plusone.google.com/_/+1/confirm?url=${cgipageabsurl}">Google+</a></div>
 </td><td>
 
 <table id="imt"><tr><td align="center" colspan="3"><a href="${ba_large}"><img src="${ba_small}" title="$statename congressional district map, current and my way" alt="$statename congressional district map, current and my way" border="1"></a></td></tr>
@@ -28,5 +28,23 @@ ${racedata}
 <div><a href="solution.zip">zipped csv block list for $statename</a></div>
 </td></tr></table>
 <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work by <a xmlns:cc="http://creativecommons.org/ns#" href="http://bdistricting.com/" property="cc:attributionName" rel="cc:attributionURL">Brian Olson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.</p>
+{# make a google+ button without letting them track my viewers #}
+<script type="text/javascript">
+var gplustext = '<script type="text/javascript" src="https://apis.google.com/js/plusone.js"><\u002fscript><g:plusone></g:plusone>';
+var dogplusload = function() {
+    document.getElementById('gplusbox').innerHTML = '<g:plusone></g:plusone>';
+    var po = document.createElement('script');
+    po.type = 'text/javascript';
+    po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+    return true;
+};
+window.___gcfg = {
+  href: '${cgipageabsurl}'
+};
+document.getElementById('gpluslink').onclick = dogplusload;
+</script>
+
 ${google_analytics}
 </body></html>
