@@ -122,8 +122,8 @@ def urljoin(*args):
 
 def stripDjangoishComments(text):
 	"""Return text with {# ... #} stripped out (multiline)."""
-	commentFilter = re.compile(r'{#.*#}', re.DOTALL|re.MULTILINE)
-	return commentFilter.replace('', text)
+	commentFilter = re.compile(r'{#.*?#}', re.DOTALL|re.MULTILINE)
+	return commentFilter.sub('', text)
 
 
 def templateFromFile(f):
@@ -561,6 +561,7 @@ class SubmissionAnalyzer(object):
 		out = open(ihtmlpath, 'w')
 		out.write(st_template.substitute(
 			statename=name,
+			stu=stu,
 			statenav=self.statenav(None, configs),
 			bodyrows='\n'.join(bodyrows),
 			extra=extrahtml,
@@ -657,7 +658,7 @@ class SubmissionAnalyzer(object):
 		tpath = os.path.join(self.options.soldir, tpath)
 		return tpath
 	
-	def buildReportDirForConfig(self, configs, cname, data):
+	def buildReportDirForConfig(self, configs, cname, data, stu):
 		"""Write report/$config/{index.html,map.png,map500.png,solution.dsz}
 		"""
 		if self.options.configlist and (cname not in self.options.configlist):
@@ -746,6 +747,7 @@ class SubmissionAnalyzer(object):
 		out = open(ihpath, 'w')
 		out.write(st_template.substitute(
 			statename=statename,
+			stu=stu,
 			statenav=self.statenav(cname, configs),
 			ba_large='map.png',
 			ba_small='map500.png',
@@ -778,8 +780,8 @@ class SubmissionAnalyzer(object):
 			configs = self.getBestConfigs()
 		stutodo = set()
 		for cname, data in configs.iteritems():
-			self.buildReportDirForConfig(configs, cname, data)
 			(stu, rest) = cname.split('_', 1)
+			self.buildReportDirForConfig(configs, cname, data, stu)
 			stutodo.add(stu)
 		for stu in stutodo:
 			self.statedir(stu, configs)
