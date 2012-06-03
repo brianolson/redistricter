@@ -1,11 +1,30 @@
 <a href="http://www.reddit.com/submit?url=${cgipageabsurl}" target="_blank"><img src="${rooturl}spreddit7.gif" alt="submit to reddit" border="0" /></a>
 <span id="custom-tweet-button"><a href="http://twitter.com/share?url=${cgipageabsurl}" target="_blank">Tweet</a></span>
 <span id="gplusbox"><span id="gpluslink">Google+ ...</span></span>
+<div id="fbwrapper" style="display:inline-block;">
+<span class="fakelink" id="fbstart">facebook...</span>
+<div id="fb-root"></div>
+<div class="fb-like" data-href="${cgipageabsurl}" data-send="true" data-width="450" data-show-faces="true"></div></div>
+<div><span id="linkexp">why the odd links?<div id="lefl">Facebook and Google+ have the ability to track you around the internet when you visit any page that has a [like] or [+1] button on it. I don't like that. So, at this site, those buttons only appear when you ask for them (when you're about to actually use them). Also, it makes the page load slightly faster. (Twitter and Reddit use more traditional links that only act when clicked on.)</div></span></div>
 <!-- make a google+ button without letting them track my viewers -->
 <script type="text/javascript">
 (function(){
+var linkexp = document.getElementById('linkexp');
+var lefl = document.getElementById('lefl');
+linkexp.onmouseover = function(e) {
+console.log('over');
+lefl.style.display = 'block';
+};
+linkexp.onmouseout = function(e) {
+console.log('out');
+lefl.style.display = 'none';
+};
+
 var gplustext = '<script type="text/javascript" src="https://apis.google.com/js/plusone.js"><\u002fscript><g:plusone></g:plusone>';
+var gplusloaded = 0;
 var dogplusload = function() {
+  if (gplusloaded) {return;}
+  gplusloaded = 1;
     document.getElementById('gplusbox').innerHTML = '<g:plusone></g:plusone>';
     var po = document.createElement('script');
     po.type = 'text/javascript';
@@ -14,9 +33,24 @@ var dogplusload = function() {
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
     return true;
 };
+var fbcode = function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+};
+var fbstarted = 0;
+var startfb = function() {
+  if (fbstarted) {return;}
+  fbstarted = 1;
+  fbcode(document, 'script', 'facebook-jssdk');
+  document.getElementById('fbstart').style.display = 'none';
+};
 window.___gcfg = {
   href: '${pageabsurl}'
 };
 document.getElementById('gpluslink').onclick = dogplusload;
+document.getElementById('fbstart').onclick = startfb;
 })();
 </script>
