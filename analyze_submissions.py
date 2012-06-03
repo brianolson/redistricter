@@ -186,6 +186,7 @@ class SubmissionAnalyzer(object):
 			self.opendb(self.dbpath)
 		self.pageTemplate = None
 		self.dirTemplate = None
+		self.socialTemplate = None
 		# cache for often used self.statenav(None, configs)
 		self._statenav_all = None
 	
@@ -206,7 +207,22 @@ class SubmissionAnalyzer(object):
 			self.dirTemplate = templateFromFile(f)
 			f.close()
 		return self.dirTemplate
+
+	def getSocialTemplate(self, rootdir=None):
+		if self.socialTemplate is None:
+			if rootdir is None:
+				rootdir = srcdir_
+			f = open(os.path.join(rootdir, 'social.html'), 'r')
+			self.socialTemplate = templateFromFile(f)
+			f.close()
+		return self.socialTemplate
 	
+	def getSocial(self, pageabsurl, cgipageabsurl):
+		socialTemplate = self.getSocialTemplate()
+		return socialTemplate.substitute(
+			pageabsurl=pageabsurl,
+			cgipageabsurl=cgipageabsurl)
+
 	def loadDatadir(self, path=None):
 		if path is None:
 			path = self.options.datadir
@@ -548,7 +564,8 @@ class SubmissionAnalyzer(object):
 		sdir = os.path.join(outdir, stu)
 		ihtmlpath = os.path.join(sdir, 'index.html')
 		st_template = self.getDirTemplate()
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, stu) + '/')
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, stu) + '/'
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
 		
 		if not os.path.isdir(sdir):
@@ -569,6 +586,7 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		out.close()
 	
@@ -740,7 +758,8 @@ class SubmissionAnalyzer(object):
 		if os.path.exists(extrapath):
 			extrahtml = open(extrapath, 'r').read()
 		statename = configToName(cname)
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname) + '/')
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, cname) + '/'
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
 		
 		st_template = self.getPageTemplate()
@@ -765,6 +784,7 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		out.close()
 		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
@@ -789,7 +809,8 @@ class SubmissionAnalyzer(object):
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		newestconfig = self.newestWinner(configs)['config']
 		newestname = configToName(newestconfig)
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl))
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
 		f = open(result_index_html_path, 'r')
@@ -806,6 +827,7 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)

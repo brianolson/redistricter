@@ -1,3 +1,4 @@
+body{color:#000000;background-color:#ffffff;}
 p.gentime{color:#555;}
 table.snl{font-size:10pt; font-family:'Helvetica',sans-serif;margin-bottom:4px;}
 tr.slg{}
@@ -12,3 +13,4 @@ div.small{font-size:70%;}
 #custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('http://a4.twimg.com/images/favicon.ico') 1px center no-repeat;text-decoration:none;}
 p{max-width:100ex;}
 td.nc{text-align:center;}
+#gpluslink{color:#007;text-decoration:underline;cursor:pointer;}

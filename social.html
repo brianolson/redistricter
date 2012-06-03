@@ -1,0 +1,22 @@
+<a href="http://www.reddit.com/submit?url=${cgipageabsurl}" target="_blank"><img src="http://www.reddit.com/static/spreddit7.gif" alt="submit to reddit" border="0" /></a>
+<span id="custom-tweet-button"><a href="http://twitter.com/share?url=${cgipageabsurl}" target="_blank">Tweet</a></span>
+<span id="gplusbox"><span id="gpluslink">Google+ ...</span></span>
+<!-- make a google+ button without letting them track my viewers -->
+<script type="text/javascript">
+(function(){
+var gplustext = '<script type="text/javascript" src="https://apis.google.com/js/plusone.js"><\u002fscript><g:plusone></g:plusone>';
+var dogplusload = function() {
+    document.getElementById('gplusbox').innerHTML = '<g:plusone></g:plusone>';
+    var po = document.createElement('script');
+    po.type = 'text/javascript';
+    po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+    return true;
+};
+window.___gcfg = {
+  href: '${pageabsurl}'
+};
+document.getElementById('gpluslink').onclick = dogplusload;
+})();
+</script>
