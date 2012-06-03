@@ -70,10 +70,13 @@ def extractSome(fpath, names):
 	"""From .tar.gz at fpath, get members in list names.
 	Return {name; value}."""
 	out = {}
-	tf = tarfile.open(fpath, 'r:gz')
-	for info in tf:
-		if info.name in names:
-			out[info.name] = tf.extractfile(info).read()
+	try:
+		tf = tarfile.open(fpath, 'r:gz')
+		for info in tf:
+			if info.name in names:
+				out[info.name] = tf.extractfile(info).read()
+	except:
+		pass
 	return out
 
 
@@ -255,7 +258,7 @@ class SubmissionAnalyzer(object):
 		config = self.config.get(configname)
 		if not config:
 			logging.warn('config %s not loaded. cannot analyze', configname)
-			return None
+			return (None,None)
 		datapb = config.args['-P']
 		districtNum = config.args['-d']
 		cmd = [os.path.join(self.options.bindir, 'analyze'),
@@ -269,17 +272,17 @@ class SubmissionAnalyzer(object):
 		retcode = p.wait()
 		if retcode != 0:
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
-			return None
+			return (None,None)
 		raw = p.stdout.read()
 		m = kmppRe.search(raw)
 		if not m:
 			self.stderr.write('failed to find kmpp in analyze output:\n%s\n' % raw)
-			return None
+			return (None,None)
 		kmpp = float(m.group(1))
 		m = maxMinRe.search(raw)
 		if not m:
 			self.stderr.write('failed to find max/min in analyze output:\n%s\n' % raw)
-			return None
+			return (None,None)
 		max = int(m.group(1))
 		min = int(m.group(2))
 		spread = max - min
