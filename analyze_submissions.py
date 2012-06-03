@@ -26,6 +26,7 @@ import states
 srcdir_ = os.path.dirname(os.path.abspath(__file__))
 legpath_ = os.path.join(srcdir_, 'legislatures.csv')
 
+_resources = ('report.css', 'tweet.ico', 'spreddit7.gif')
 
 _ga_cache = None
 def _google_analytics():
@@ -69,10 +70,13 @@ def extractSome(fpath, names):
 	"""From .tar.gz at fpath, get members in list names.
 	Return {name; value}."""
 	out = {}
-	tf = tarfile.open(fpath, 'r:gz')
-	for info in tf:
-		if info.name in names:
-			out[info.name] = tf.extractfile(info).read()
+	try:
+		tf = tarfile.open(fpath, 'r:gz')
+		for info in tf:
+			if info.name in names:
+				out[info.name] = tf.extractfile(info).read()
+	except:
+		pass
 	return out
 
 
@@ -118,6 +122,19 @@ def urljoin(*args):
 		prevSlash = x[-1] == '/'
 		parts.append(x)
 	return ''.join(parts)
+
+
+def stripDjangoishComments(text):
+	"""Return text with {# ... #} stripped out (multiline)."""
+	commentFilter = re.compile(r'{#.*?#}', re.DOTALL|re.MULTILINE)
+	return commentFilter.sub('', text)
+
+
+def templateFromFile(f):
+	raw = f.read()
+	cooked = stripDjangoishComments(raw)
+	return string.Template(cooked)
+
 
 # Example analyze output:
 # generation 0: 21.679798418 Km/person
@@ -173,6 +190,7 @@ class SubmissionAnalyzer(object):
 			self.opendb(self.dbpath)
 		self.pageTemplate = None
 		self.dirTemplate = None
+		self.socialTemplate = None
 		# cache for often used self.statenav(None, configs)
 		self._statenav_all = None
 	
@@ -181,7 +199,7 @@ class SubmissionAnalyzer(object):
 			if rootdir is None:
 				rootdir = srcdir_
 			f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
-			self.pageTemplate = string.Template(f.read())
+			self.pageTemplate = templateFromFile(f)
 			f.close()
 		return self.pageTemplate
 	
@@ -190,10 +208,26 @@ class SubmissionAnalyzer(object):
 			if rootdir is None:
 				rootdir = srcdir_
 			f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
-			self.dirTemplate = string.Template(f.read())
+			self.dirTemplate = templateFromFile(f)
 			f.close()
 		return self.dirTemplate
+
+	def getSocialTemplate(self, rootdir=None):
+		if self.socialTemplate is None:
+			if rootdir is None:
+				rootdir = srcdir_
+			f = open(os.path.join(rootdir, 'social.html'), 'r')
+			self.socialTemplate = templateFromFile(f)
+			f.close()
+		return self.socialTemplate
 	
+	def getSocial(self, pageabsurl, cgipageabsurl):
+		socialTemplate = self.getSocialTemplate()
+		return socialTemplate.substitute(
+			pageabsurl=pageabsurl,
+			cgipageabsurl=cgipageabsurl,
+			rooturl=self.options.rooturl)
+
 	def loadDatadir(self, path=None):
 		if path is None:
 			path = self.options.datadir
@@ -224,7 +258,7 @@ class SubmissionAnalyzer(object):
 		config = self.config.get(configname)
 		if not config:
 			logging.warn('config %s not loaded. cannot analyze', configname)
-			return None
+			return (None,None)
 		datapb = config.args['-P']
 		districtNum = config.args['-d']
 		cmd = [os.path.join(self.options.bindir, 'analyze'),
@@ -238,17 +272,17 @@ class SubmissionAnalyzer(object):
 		retcode = p.wait()
 		if retcode != 0:
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
-			return None
+			return (None,None)
 		raw = p.stdout.read()
 		m = kmppRe.search(raw)
 		if not m:
 			self.stderr.write('failed to find kmpp in analyze output:\n%s\n' % raw)
-			return None
+			return (None,None)
 		kmpp = float(m.group(1))
 		m = maxMinRe.search(raw)
 		if not m:
 			self.stderr.write('failed to find max/min in analyze output:\n%s\n' % raw)
-			return None
+			return (None,None)
 		max = int(m.group(1))
 		min = int(m.group(2))
 		spread = max - min
@@ -428,6 +462,7 @@ class SubmissionAnalyzer(object):
 		out.write('</table>\n')
 		out.write('</html></body>\n')
 		out.close()
+		self.copyResources()
 	
 	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None):
 		args = dict(self.config[cname].drendargs)
@@ -535,7 +570,8 @@ class SubmissionAnalyzer(object):
 		sdir = os.path.join(outdir, stu)
 		ihtmlpath = os.path.join(sdir, 'index.html')
 		st_template = self.getDirTemplate()
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, stu) + '/')
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, stu) + '/'
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
 		
 		if not os.path.isdir(sdir):
@@ -548,6 +584,7 @@ class SubmissionAnalyzer(object):
 		out = open(ihtmlpath, 'w')
 		out.write(st_template.substitute(
 			statename=name,
+			stu=stu,
 			statenav=self.statenav(None, configs),
 			bodyrows='\n'.join(bodyrows),
 			extra=extrahtml,
@@ -555,6 +592,7 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		out.close()
 	
@@ -644,7 +682,7 @@ class SubmissionAnalyzer(object):
 		tpath = os.path.join(self.options.soldir, tpath)
 		return tpath
 	
-	def buildReportDirForConfig(self, configs, cname, data):
+	def buildReportDirForConfig(self, configs, cname, data, stu):
 		"""Write report/$config/{index.html,map.png,map500.png,solution.dsz}
 		"""
 		if self.options.configlist and (cname not in self.options.configlist):
@@ -726,13 +764,15 @@ class SubmissionAnalyzer(object):
 		if os.path.exists(extrapath):
 			extrahtml = open(extrapath, 'r').read()
 		statename = configToName(cname)
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname) + '/')
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, cname) + '/'
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
 		
 		st_template = self.getPageTemplate()
 		out = open(ihpath, 'w')
 		out.write(st_template.substitute(
 			statename=statename,
+			stu=stu,
 			statenav=self.statenav(cname, configs),
 			ba_large='map.png',
 			ba_small='map500.png',
@@ -750,6 +790,7 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		out.close()
 		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
@@ -765,8 +806,8 @@ class SubmissionAnalyzer(object):
 			configs = self.getBestConfigs()
 		stutodo = set()
 		for cname, data in configs.iteritems():
-			self.buildReportDirForConfig(configs, cname, data)
 			(stu, rest) = cname.split('_', 1)
+			self.buildReportDirForConfig(configs, cname, data, stu)
 			stutodo.add(stu)
 		for stu in stutodo:
 			self.statedir(stu, configs)
@@ -774,11 +815,12 @@ class SubmissionAnalyzer(object):
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		newestconfig = self.newestWinner(configs)['config']
 		newestname = configToName(newestconfig)
-		cgipageabsurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl))
+		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
+		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
 		f = open(result_index_html_path, 'r')
-		result_index_html_template = string.Template(f.read())
+		result_index_html_template = templateFromFile(f)
 		f.close()
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
@@ -791,14 +833,20 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)
-		reportcssSource = os.path.join(srcdir_, 'report.css')
-		reportcssDest = os.path.join(outdir, 'report.css')
-		if newerthan(reportcssSource, reportcssDest):
-			logging.debug('%s -> %s', reportcssSource, reportcssDest)
-			shutil.copy2(reportcssSource, reportcssDest)
+		self.copyResources()
+
+	def copyResources(self):
+		outdir = self.options.outdir
+		for resourcename in _resources:
+			resourceSource = os.path.join(srcdir_, resourcename)
+			resourceDest = os.path.join(outdir, resourcename)
+			if newerthan(resourceSource, resourceDest):
+				logging.debug('%s -> %s', resourceSource, resourceDest)
+				shutil.copy2(resourceSource, resourceDest)
 
 
 def main():

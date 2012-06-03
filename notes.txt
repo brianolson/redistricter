@@ -181,6 +181,14 @@ http://www.redistricting.wa.gov/
 
 TODO: try to keep precincts/cities/counties together by imposing a distance penalty on blocks that are part of a region that isn't entirely within the district.
 
+<b>Keep-Together regions</b> (city, county, other). If a region is not wholly within within one district, population in region counts as N miles more away from district centers. (KT region may not encompass more than one district worth of population, probably shouldn't encompass more than (WAG) 70% of a district population.)
+
+<b>Do-Not-Cross lines</b>. If the line from district center to population crosses this line, a N-mile penalty is added to that distance. Apply this to rivers, mountains, other natural or man made well recognized dividing lines. (If the penalty is not high enough there might wind up being just a few people on the far side of it, and that could be weird. Placement and high penalties could result in weird constrained solutions in other ways too.)
 
 http://www.legis.iowa.gov/Resources/Redist/redistricting.aspx
 http://www.house.mo.gov/largemap.aspx
+
+2012-05-28 14:38:05 EDT (Monday, May 28 02:38:05 PM)
+
+TODO: set G+ on the website
+https://plusone.google.com/_/+1/confirm?hl=en&url=${url} 

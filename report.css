@@ -1,3 +1,4 @@
+body{color:#000000;background-color:#ffffff;}
 p.gentime{color:#555;}
 table.snl{font-size:10pt; font-family:'Helvetica',sans-serif;margin-bottom:4px;}
 tr.slg{}
@@ -9,6 +10,11 @@ td.myoh{max-width:30em;text-align:center;}
 td.myow{max-width:30em;}
 td.myon{max-width:30em;text-align:center;}
 div.small{font-size:70%;}
-#custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('http://a4.twimg.com/images/favicon.ico') 1px center no-repeat;text-decoration:none;}
 p{max-width:100ex;}
 td.nc{text-align:center;}
+#gpluslink{color:#00f;text-decoration:underline;cursor:pointer;}
+.fakelink{color:#00f;text-decoration:underline;cursor:pointer;}
+#sociald{padding:8px;}
+#linkexp{font-size:60%;position:relative;}
+#lefl{position:absolute;z-index:9;display:none;background-color:#fff;padding:4px;font-size:12pt;border:1px solid #555;width:50ex;}
+.fakelink{color:#00f;text-decoration:underline;cursor:pointer;}
