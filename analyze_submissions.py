@@ -26,6 +26,7 @@ import states
 srcdir_ = os.path.dirname(os.path.abspath(__file__))
 legpath_ = os.path.join(srcdir_, 'legislatures.csv')
 
+_resources = ('report.css', 'tweet.ico', 'spreddit7.gif')
 
 _ga_cache = None
 def _google_analytics():
@@ -221,7 +222,8 @@ class SubmissionAnalyzer(object):
 		socialTemplate = self.getSocialTemplate()
 		return socialTemplate.substitute(
 			pageabsurl=pageabsurl,
-			cgipageabsurl=cgipageabsurl)
+			cgipageabsurl=cgipageabsurl,
+			rooturl=self.options.rooturl)
 
 	def loadDatadir(self, path=None):
 		if path is None:
@@ -457,6 +459,7 @@ class SubmissionAnalyzer(object):
 		out.write('</table>\n')
 		out.write('</html></body>\n')
 		out.close()
+		self.copyResources()
 	
 	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None):
 		args = dict(self.config[cname].drendargs)
@@ -831,11 +834,16 @@ class SubmissionAnalyzer(object):
 		))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)
-		reportcssSource = os.path.join(srcdir_, 'report.css')
-		reportcssDest = os.path.join(outdir, 'report.css')
-		if newerthan(reportcssSource, reportcssDest):
-			logging.debug('%s -> %s', reportcssSource, reportcssDest)
-			shutil.copy2(reportcssSource, reportcssDest)
+		self.copyResources()
+
+	def copyResources(self):
+		outdir = self.options.outdir
+		for resourcename in _resources:
+			resourceSource = os.path.join(srcdir_, resourcename)
+			resourceDest = os.path.join(outdir, resourcename)
+			if newerthan(resourceSource, resourceDest):
+				logging.debug('%s -> %s', resourceSource, resourceDest)
+				shutil.copy2(resourceSource, resourceDest)
 
 
 def main():
