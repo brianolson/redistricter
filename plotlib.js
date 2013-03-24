@@ -165,6 +165,47 @@ function lineplot(canvas, xy, opt) {
 	lp.plot(canvas, xy, opt);
 };
 
+function MultiLinePlot() {};
+MultiLinePlot.prototype = new PlotCommon;
+
+var defaultLineStyles = ['#900', '#00b', '#aa0', '#0aa', '#444'];
+
+// canvas HTMLCanvasElement
+// datas {'name', {'data': [x,y, ...], 'strokeStyle': '#000'}, ...}
+MultiLinePlot.prototype.plot = function(canvas, datas, opt) {
+    var defaultLineStylesIter = 0;
+    var allxy = [];
+    for (var dataname in datas) {
+	var dat = datas[dataname];
+	var xy = dat.data;
+	allxy = allxy.concat(xy);
+    }
+    this.setup(canvas, allxy, opt);
+	this.ctx.clearRect(0,0, canvas.width, canvas.height);
+    for (var dataname in datas) {
+	var dat = datas[dataname];
+	var xy = dat.data;
+	var strokeStyle = dat.strokeStyle;
+	if (!strokeStyle) {
+	    strokeStyle = defaultLineStyles[defaultLineStylesIter];
+	    defaultLineStylesIter = (defaultLineStylesIter + 1) % defaultLineStylesIter.length;
+	}
+	this.ctx.strokeStyle = strokeStyle;
+	this.ctx.beginPath();
+	this.ctx.moveTo(this.px(xy[0]), this.py(xy[1]));
+	for (var i = 2; i < xy.length; i += 2) {
+		this.ctx.lineTo(this.px(xy[i]), this.py(xy[i+1]));
+	}
+	this.ctx.stroke();
+    }
+	this.axisLabels(opt);
+};
+
+function multilineplot(canvas, datas, opt) {
+	var lp = new MultiLinePlot();
+	lp.plot(canvas, datas, opt);
+};
+
 function ScatterPlot() {};
 ScatterPlot.prototype = new PlotCommon;
 
