@@ -62,10 +62,10 @@ int processRTA(Solver* sov, const char* fname) {
 	return 0;
 }
 
-int main( int argc, char** argv ) {
+int main( int argc, const char** argv ) {
 	Solver sov;
 	int i, nargc;
-	vector<char*> filenames;
+	vector<const char*> filenames;
 	
 	nargc=1;
 	
@@ -97,7 +97,7 @@ int main( int argc, char** argv ) {
 	for ( i = 0; i < sov.gd->numPoints; i++ ) {
 		sov.winner[i] = NODISTRICT;
 	}
-	for (vector<char*>::iterator fni = filenames.begin();
+	for (vector<const char*>::iterator fni = filenames.begin();
 			fni != filenames.end(); ++fni) {
 		if (processRTA(&sov, *fni) < 0) {
 			return 1;

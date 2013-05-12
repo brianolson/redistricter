@@ -28,7 +28,7 @@ public:
 	DistrictSet* (*districtSetFactory)(Solver*);
 	DistrictSet* dists;
 	
-	char* inputname;
+	const char* inputname;
 	int generations;
 	char* dumpname;
 	char* loadname;
@@ -61,7 +61,7 @@ public:
 #endif
 	
 	GeoData* gd;
-	GeoData* (*geoFact)(char*);
+	GeoData* (*geoFact)(const char*);
 	
 	uint32_t numEdges;
 	int32_t* edgeData;
@@ -89,7 +89,7 @@ public:
 	Solver();
 	~Solver();
 	
-	int handleArgs( int argc, char** argv );
+	int handleArgs( int argc, const char** argv );
 	void load();
 	// If filename is null, add ".links" to inputname
 	void readLinksFile(const char* filename);
@@ -167,7 +167,7 @@ public:
 	void zoomOut();
 	void zoomAll();
 	void centerOnPoint( int index );
-	int main( int argc, char** argv );
+	int main( int argc, const char** argv );
 		
 	inline int setDist( POPTYPE d, int i ) {
 		return (*dists)[(d)].add( this, (i), (d) );

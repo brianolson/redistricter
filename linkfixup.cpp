@@ -44,7 +44,7 @@ int necount = 0;
 
 Node* initNodesFromLinksFile( GeoData* gd, const char* inputname );
 
-int main( int argc, char** argv ) {
+int main( int argc, const char** argv ) {
 	Solver sov;
 	int i, nargc;
 	const char* foname = NULL;

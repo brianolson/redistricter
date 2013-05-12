@@ -17,20 +17,15 @@
 
 #include <ctype.h>
 
+#include "arghandler.h"
 #include "Solver.h"
 #include "tiger/mmaped.h"
 #include "MapDrawer.h"
 #include "renderDistricts.h"
 
-char* commandFileName = NULL;
 
-char* colorFileIn = NULL;
-char* colorFileOut = NULL;
-
-void runBasic( Solver& sov );
+void runBasic( Solver& sov, MapDrawer& mr, const char* colorFileIn, const char* colorFileOut );
 void runDrendCommandFile( Solver& sov );
-
-MapDrawer mr;
 
 const char usage[] = 
 "usage: drend [--minlat 000.000000 | --minlatd delta from maxlat]\n"
@@ -44,17 +39,51 @@ const char usage[] =
 "  [--pngW pixels wide][--pngH pixels high][--pngout out.png]\n"
 ;
 
-int main( int argc, char** argv ) {
+int main( int argc, const char** argv ) {
 	Solver sov;
-	int i, nargc;
-	char* upxfname = NULL;
-	char* mppbfname = NULL;
-	char* popdensityname = NULL;
+	int nargc;
+	const char* upxfname = NULL;
+	const char* mppbfname = NULL;
+	const char* popdensityname = NULL;
+
+	const char* commandFileName = NULL;
+
+	const char* colorFileIn = NULL;
+	const char* colorFileOut = NULL;
+
+	MapDrawer mr;
 
 	nargc=1;
 	sov.districtSetFactory = District2SetFactory;
 
-	for ( i = 1; i < argc; i++ ) {
+	double minlatd = NAN;
+	double minlond = NAN;
+	double maxlatd = NAN;
+	double maxlond = NAN;
+
+	int argi = 1;
+	while (argi < argc) {
+#if 1
+	    DoubleArg("minlat", &mr.minlat);
+	    DoubleArg("minlatd", &minlatd);
+	    DoubleArg("minlon", &mr.minlon);
+	    DoubleArg("minlond", &minlond);
+	    DoubleArg("maxlat", &mr.maxlat);
+	    DoubleArg("maxlatd", &maxlatd);
+	    DoubleArg("maxlon", &mr.maxlon);
+	    DoubleArg("maxlond", &maxlond);
+	    StringArg("f", &commandFileName);
+	    StringArg("px", &upxfname);
+	    StringArg("mppb", &mppbfname);
+	    StringArg("colorsIn", &colorFileIn);
+	    StringArg("colorsOut", &colorFileOut);
+	    StringArg("density", &popdensityname);
+
+	    // default:
+	    argv[nargc] = argv[argi];
+	    nargc++;
+	    argi++;
+#else
 		if ( ! strcmp( argv[i], "--minlat" ) ) {
 			i++;
 			mr.minlat = strtod( argv[i], NULL );
@@ -101,7 +130,23 @@ int main( int argc, char** argv ) {
 			argv[nargc] = argv[i];
 			nargc++;
 		}
+#endif
 	}
+
+	if (!isnan(minlatd)) {
+	    mr.minlat = mr.maxlat + minlatd;
+	}
+	if (!isnan(maxlatd)) {
+	    mr.maxlat = mr.minlat + maxlatd;
+	}
+	if (!isnan(minlond)) {
+	    mr.minlon = mr.maxlon + minlond;
+	}
+	if (!isnan(maxlond)) {
+	    mr.maxlon = mr.minlon + maxlond;
+	}
+
+
 	argv[nargc]=NULL;
 	int argcout = sov.handleArgs( nargc, argv );
 	if (argcout != 1) {
@@ -154,7 +199,7 @@ int main( int argc, char** argv ) {
 	if ( commandFileName != NULL ) {
 		mr.runDrendCommandFile( sov, commandFileName );
 	} else {
-		runBasic( sov );
+	    runBasic( sov, mr, colorFileIn, colorFileOut );
 	}
 	if (popdensityname != NULL) {
 		mr.clearToBackgroundColor();
@@ -165,7 +210,7 @@ int main( int argc, char** argv ) {
 	return 0;
 }
 
-void runBasic( Solver& sov ) {
+void runBasic( Solver& sov, MapDrawer& mr, const char* colorFileIn, const char* colorFileOut ) {
 	if ( colorFileIn != NULL ) {
 		FILE* cfi = fopen( colorFileIn, "r" );
 		if ( cfi == NULL ) {

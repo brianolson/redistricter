@@ -192,3 +192,9 @@ http://www.house.mo.gov/largemap.aspx
 
 TODO: set G+ on the website
 https://plusone.google.com/_/+1/confirm?hl=en&url=${url} 
+
+2013-05-04 16:11:54 EDT (Saturday, May 04 04:11:54 PM)
+
+analyze and render 2013 actual districts
+
+./analyze -P ../../CT/ct.pb -d 5 --csv-solution --loadSolution 09_CT_CD113.txt

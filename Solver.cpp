@@ -156,7 +156,7 @@ Solver::~Solver() {
 }
 
 // doesn't do anything, just a tag to switch on in Solver::load()
-GeoData* protobufGeoDataTag( char* inputname ) {
+GeoData* protobufGeoDataTag( const char* inputname ) {
 	assert(0);
 	exit(1);
 	return NULL;
@@ -937,14 +937,14 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
 "-runDutySeconds     run for this many seconds, then sleep (10)\n"
 "-sleepDutySeconds   sleep for this many seconds, then run (0)\n";
 
-int Solver::handleArgs( int argc, char** argv ) {
+int Solver::handleArgs( int argc, const char** argv ) {
 	int argcout = 1;
 	popRatioFactor.clear();
 	popRatioFactor.setPoint( -1, District2::popRatioFactor );
 	int argi = 1;
-	char* uf1InputName = NULL;
-	char* plGeoInputName = NULL;
-	char* pbInputName = NULL;
+	const char* uf1InputName = NULL;
+	const char* plGeoInputName = NULL;
+	const char* pbInputName = NULL;
 	const char* binLogName = NULL;
 	const char* statLogName = NULL;
 	bool oldCDs = false;
@@ -1062,7 +1062,7 @@ static char bestSpreadPng[] = "bestSpread.png";
 static char bestKmppPng[] = "bestKmpp.png";
 #endif
 
-int Solver::main( int argc, char** argv ) {
+int Solver::main( int argc, const char** argv ) {
 	struct rusage start, sa, sb, end;
 	struct rusage* a = &sa;
 	struct rusage* b = &sb;

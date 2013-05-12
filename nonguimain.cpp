@@ -73,7 +73,7 @@ void printRUDiff( FILE* f, const struct rusage* a, const struct rusage* b ) {
 #endif
 
 
-int main( int argc, char** argv ) {
+int main( int argc, const char** argv ) {
 	Solver sov;
 	return sov.main( argc, argv );
 }

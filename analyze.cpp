@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <math.h>
 #include <zlib.h>
+
+#include "arghandler.h"
 #include "District2.h"
 #include "Bitmap.h"
 #include "Node.h"
@@ -63,17 +65,32 @@ void parseCompareArg(char* arg, vector<int>* columns) {
 	}
 }
 
-int main( int argc, char** argv ) {
+void stringVectorAppendCallback(vector<const char*>& context, const char* str) {
+    context.push_back(str);
+}
+
+int main( int argc, const char** argv ) {
 	Solver sov;
 	int nargc;
+
+	const char* textOutName = NULL;
+	bool notext = false;
 	FILE* textout = stdout;
+
+	const char* csvOutName = NULL;
+	bool nocsv = false;
 	FILE* csvout = NULL;
+
+	const char* htmlOutName = NULL;
+	bool nohtml = false;
 	FILE* htmlout = NULL;
+
 	int dsort = -1;
 	bool distrow = true;
 	bool distcol = false;
 	bool quiet = false;
 	bool loadSolutionCsvMode = false;
+	const char* csvInName = NULL;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
@@ -82,84 +99,34 @@ int main( int argc, char** argv ) {
 	nargc = 1;
 	sov.districtSetFactory = District2SetFactory;
 
-	for (int i = 1; i < argc; i++) {
-		if (!strcmp(argv[i], "--compare")) {
-			// --compare filename:colnum,colnum,colnum
-			++i;
-			compareArgs.push_back(argv[i]);
-		} else if (!strcmp(argv[i], "--labels")) {
-			// comma separated list of labels to match a corresponding compare set
-			++i;
-			labelArgs.push_back(argv[i]);
-		} else if (!strcmp(argv[i], "--dsort")) {
-			// when printing districts as rows, sort by column N
-			++i;
-			dsort = atoi(argv[i]);
-		} else if (!strcmp(argv[i], "--html")) {
-			++i;
-			if (argv[i][0] == '\0') {
-				htmlout = stdout;
-				quiet = true;
-			} else {
-				htmlout = fopen(argv[i], "w");
-				if (htmlout == NULL) {
-					perror(argv[i]);
-					exit(1);
-				}
-			}
-		} else if (!strcmp(argv[i], "--nohtml")) {
-			htmlout = NULL;
-		} else if (!strcmp(argv[i], "--text")) {
-			++i;
-			if (argv[i][0] == '\0') {
-				textout = stdout;
-				quiet = true;
-			} else {
-				textout = fopen(argv[i], "w");
-				if (textout == NULL) {
-					perror(argv[i]);
-					exit(1);
-				}
-			}
-		} else if (!strcmp(argv[i], "--notext")) {
-			textout = NULL;
-		} else if (!strcmp(argv[i], "--csv")) {
-			++i;
-			if (argv[i][0] == '\0') {
-				csvout = stdout;
-				quiet = true;
-			} else {
-				csvout = fopen(argv[i], "w");
-				if (csvout == NULL) {
-					perror(argv[i]);
-					exit(1);
-				}
-			}
-		} else if (!strcmp(argv[i], "--nocsv")) {
-			csvout = NULL;
-		} else if (!strcmp(argv[i], "--distrow")) {
-			// print table with districts in rows
-			distrow = true;
-		} else if (!strcmp(argv[i], "--nodistrow")) {
-			distrow = false;
-		} else if (!strcmp(argv[i], "--distcol")) {
-			// print table with districts in columns
-			distcol = true;
-		} else if (!strcmp(argv[i], "--nodistcol")) {
-			distcol = false;
-		} else if (!strcmp(argv[i], "--export")) {
-			++i;
-			exportPath = argv[i];
-		} else if (!strcmp(argv[i], "--csv-solution")) {
-			++i;
-			sov.loadname = argv[i];
-			loadSolutionCsvMode = true;
-		} else {
-			argv[nargc] = argv[i];
-			nargc++;
-		}
+	int argi = 1;
+	while (argi < argc) {
+	    StringArgWithCallback("compare", stringVectorAppendCallback, compareArgs);
+	    StringArgWithCallback("labels", stringVectorAppendCallback, labelArgs);
+	    IntArg("dsort", &dsort);
+	    StringArg("html", &htmlOutName);
+	    BoolArg("nohtml", &nohtml);
+	    StringArg("text", &textOutName);
+	    BoolArg("notext", &notext);
+	    StringArg("csv", &csvOutName);
+	    BoolArg("nocsv", &nocsv);
+	    BoolArg("distrow", &distrow);
+	    BoolArg("distcol", &distcol);
+	    StringArg("export", &exportPath);
+	    StringArg("csv-solution", &csvInName);
+
+	    // default:
+	    argv[nargc] = argv[argi];
+	    nargc++;
+	    argi++;
 	}
 	argv[nargc]=NULL;
+
+	if (csvInName != NULL) {
+	    sov.loadname = strdup(csvInName);
+	    loadSolutionCsvMode = true;
+	}
+
 	int argcout = sov.handleArgs(nargc, argv);
 	if (argcout != 1) {
 		// TODO: print local usage here too
@@ -168,6 +135,52 @@ int main( int argc, char** argv ) {
 		exit(1);
 		return 1;
 	}
+
+	if (notext) {
+	    textout = NULL;
+	} else {
+	    if ((textOutName == NULL) || (textOutName[0] == '\0') || (0 == strcmp("-", textOutName))) {
+		textout = stdout;
+		quiet = true;
+	    } else {
+		textout = fopen(textOutName, "w");
+		if (textout == NULL) {
+		    perror(textOutName);
+		    exit(1);
+		}
+	    }
+	}
+
+	if (nocsv || (csvOutName == NULL)) {
+	    csvout = NULL;
+	} else {
+	    if ((csvOutName[0] == '\0') || (0 == strcmp("-", csvOutName))) {
+		csvout = stdout;
+		quiet = true;
+	    } else {
+		csvout = fopen(csvOutName, "w");
+		if (csvout == NULL) {
+		    perror(csvOutName);
+		    exit(1);
+		}
+	    }
+	}
+
+	if (nohtml || (htmlOutName == NULL)) {
+	    htmlout = NULL;
+	} else {
+	    if ((htmlOutName[0] == '\0') || (0 == strcmp("-", htmlOutName))) {
+		htmlout = stdout;
+		quiet = true;
+	    } else {
+		htmlout = fopen(htmlOutName, "w");
+		if (htmlout == NULL) {
+		    perror(htmlOutName);
+		    exit(1);
+		}
+	    }
+	}
+
 	sov.load();
 	sov.initNodes();
 	sov.allocSolution();

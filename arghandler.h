@@ -148,11 +148,12 @@ case 0: break; \
 case 1: argi++; continue; \
 default: fprintf(stderr, "ICE %d\n", __LINE__); exit(1); return 1;}
 
-#define StringArgWithCopy(optname, value) switch(_StringArg(argc, argv, &argi, (optname), (value))) { \
+#define StringArgWithCopy(optname, value) {const char* __cb_str_value = NULL; switch(_StringArg(argc, argv, &argi, (optname), &__cb_str_value)) { \
 case -1: fprintf(stderr, "bogus argv[%d] \"%s\"\n", argi, argv[argi]); exit(1); break; \
 case 0: break; \
-case 1: argi++; (*(value)) = strdup(*(value)); continue; \
-default: fprintf(stderr, "ICE %d\n", __LINE__); exit(1); return 1;}
+case 1: argi++; (*(value)) = strdup(__cb_str_value); continue; \
+default: fprintf(stderr, "ICE %d\n", __LINE__); exit(1); return 1;} \
+}
 
 // Calls: callback(context, string value);
 #define StringArgWithCallback(optname, callback, context) {const char* __cb_str_value = NULL; switch(_StringArg(argc, argv, &argi, (optname), &__cb_str_value)) { \

@@ -93,7 +93,7 @@ public:
 	}
 	
 	GeoData();
-	int open( char* inputname );
+	int open( const char* inputname );
 	virtual int load() = 0;
 	virtual int numDistricts();
 	//virtual uint64_t ubid( int index ) = 0;
@@ -177,9 +177,9 @@ public:
 };
 
 
-//GeoData* openZCTA( char* inputname );
-GeoData* openUf1( char* inputname );
-GeoData* openPlGeo( char* inputname );
-GeoData* protobufGeoDataTag( char* inputname );
+//GeoData* openZCTA( const char* inputname );
+GeoData* openUf1( const char* inputname );
+GeoData* openPlGeo( const char* inputname );
+GeoData* protobufGeoDataTag( const char* inputname );
 
 #endif /* GEODATA_H */

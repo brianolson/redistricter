@@ -27,7 +27,7 @@ extern FILE* blaf __attribute__ ((weak));
 extern FILE* blaf;
 #endif
 
-int GeoData::open( char* inputname ) {
+int GeoData::open( const char* inputname ) {
 	int err;
 	
 	fd = ::open( inputname, O_RDONLY );
@@ -684,12 +684,12 @@ GeoData* openZCTA( char* inputname ) {
 	return toret;
 }
 #endif
-GeoData* openUf1( char* inputname ) {
+GeoData* openUf1( const char* inputname ) {
 	Uf1* toret = new Uf1();
 	toret->open( inputname );
 	return toret;
 }
-GeoData* openPlGeo( char* inputname ) {
+GeoData* openPlGeo( const char* inputname ) {
 	PlGeo* toret = new PlGeo();
 	toret->open( inputname );
 	return toret;
