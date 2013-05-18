@@ -109,8 +109,6 @@ public:
 	int saveZSolution( const char* filename );
 	int loadZSolution( const char* filename );
 	int loadCsvSolution( const char* filename );
-	/* from loadname */
-	int loadSolution( const char* loadname );
 	void initSolution();
 	void initSolutionFromOldCDs();
 	void init();
@@ -122,7 +120,8 @@ public:
 	void doPNG();
 	void doPNG(POPTYPE* soln, const char* outname);
 	//void doPNG_r( unsigned char* data, unsigned char** rows, int pngWidth, int pngHeight, const char* pngname );
-#endif
+#endif /* WITH_PNG */
+
 	void printDistricts(const char* filename);
 	void printDistricts() {
 		printDistricts(distfname);

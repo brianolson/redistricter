@@ -132,10 +132,10 @@ run:	districter2
 	./districter2 -U build/input.uf1 -g 100 --pngout fl_test.png --pngW 400 --pngH 400 --oldCDs -d -10 -o fl_test_oz
 
 pw:	pw.cpp
-	g++ -Wall ${LDPNG} pw.cpp -lz -o pw -g
+	$(CXX) ${CXXFLAGS} -Wall ${LDPNG} pw.cpp -lz -o pw -g
 
 dumpBinLog:	dumpBinLog.cpp redata.pb.cc redata.pb.h
-	g++ -lz -lprotobuf -lpthread dumpBinLog.cpp redata.pb.cc -o dumpBinLog
+	$(CXX) ${CXXFLAGS} -lz -lprotobuf -lpthread dumpBinLog.cpp redata.pb.cc -o dumpBinLog
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj

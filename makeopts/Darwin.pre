@@ -5,3 +5,4 @@
 # Use an alternate option like this if just using one architecture
 # for better development compilation.
 #CCOMMONFLAGS:=-m64 -I/usr/X11/include -L/usr/X11/lib -MMD
+CCOMMONFLAGS:=-MMD
