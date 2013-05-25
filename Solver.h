@@ -26,12 +26,12 @@ public:
 	int* allneigh;
 	POPTYPE* winner;
 	DistrictSet* (*districtSetFactory)(Solver*);
-	DistrictSet* dists;
+	DistrictSet* _dists;
+	DistrictSet* getDistricts(); // lazy allocating caching accessor
 	
 	const char* inputname;
 	int generations;
 	char* dumpname;
-	char* loadname;
 	enum initModeEnum {
 		initWithNewDistricts = 1,
 		initWithOldDistricts
@@ -107,6 +107,10 @@ public:
 	void initNodes();
 	void allocSolution();
 	int saveZSolution( const char* filename );
+	int loadSolution();
+	bool hasSolutionToLoad();  // did handleArgs get something?
+	const char* getSolutionFilename() const;
+	// immediate solution load .. probably for drend in animation mode
 	int loadZSolution( const char* filename );
 	int loadCsvSolution( const char* filename );
 	void initSolution();
@@ -169,7 +173,7 @@ public:
 	int main( int argc, const char** argv );
 		
 	inline int setDist( POPTYPE d, int i ) {
-		return (*dists)[(d)].add( this, (i), (d) );
+		return (*getDistricts())[(d)].add( this, (i), (d) );
 	}
 	
 	int debugDistrictNumber;
@@ -181,6 +185,18 @@ public:
 	int getDistrictStats( char* str, int len );
 	
 	static const char* argHelp;
+
+    private:
+	enum {
+	    DszFormat = 1,
+	    CsvFormat = 2,
+	    DetectFormat = 3,
+	} loadFormat;
+	char* loadname;
+
+	// callbacks for arghanlding.h StringArgWithCallback
+	void setCsvLoadname(void* context, const char* filename);
+	void setDszLoadname(void* context, const char* filename);
 };
 
 class SolverStats {

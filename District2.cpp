@@ -671,7 +671,7 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 	Solver* sov = d2set->sov;
 	Node* nodes = sov->nodes;
 	POPTYPE* winner = sov->winner;
-	District2* dists = ((District2Set*)(sov->dists))->dists;
+	District2* dists = ((District2Set*)(sov->getDistricts()))->dists;
 	const GeoData* gd = sov->gd;
 
 	POPTYPE odi;
@@ -926,7 +926,7 @@ int District2::grab( District2Set* d2set, POPTYPE d ) {
 	Solver* sov = d2set->sov;
 	Node* nodes = sov->nodes;
 	POPTYPE* winner = sov->winner;
-	District2* dists = ((District2Set*)(sov->dists))->dists;
+	District2* dists = ((District2Set*)(sov->getDistricts()))->dists;
 	const GeoData* gd = sov->gd;
 	//double districtPopTarget = sov->districtPopTarget;
 	// best neighbor to claim
@@ -1044,7 +1044,7 @@ int District2::disown( Solver* sov, POPTYPE d ) {
 	const GeoData* gd = sov->gd;
 	if ( mi != -1 ) {
 		POPTYPE* winner = sov->winner;
-		District2* dists = ((District2Set*)(sov->dists))->dists;
+		District2* dists = ((District2Set*)(sov->getDistricts()))->dists;
 		int err = unsetDist( d, mi );
 		if ( err < 0 ) {
 			sov->centerOnPoint( mi );

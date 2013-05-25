@@ -89,8 +89,8 @@ int main( int argc, const char** argv ) {
 	bool distrow = true;
 	bool distcol = false;
 	bool quiet = false;
-	bool loadSolutionCsvMode = false;
-	const char* csvInName = NULL;
+	//bool loadSolutionCsvMode = false;
+	//const char* csvInName = NULL;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
@@ -113,7 +113,7 @@ int main( int argc, const char** argv ) {
 	    BoolArg("distrow", &distrow);
 	    BoolArg("distcol", &distcol);
 	    StringArg("export", &exportPath);
-	    StringArg("csv-solution", &csvInName);
+	    //StringArg("csv-solution", &csvInName);
 
 	    // default:
 	    argv[nargc] = argv[argi];
@@ -122,10 +122,12 @@ int main( int argc, const char** argv ) {
 	}
 	argv[nargc]=NULL;
 
+#if 0
 	if (csvInName != NULL) {
 	    sov.loadname = strdup(csvInName);
 	    loadSolutionCsvMode = true;
 	}
+#endif
 
 	int argcout = sov.handleArgs(nargc, argv);
 	if (argcout != 1) {
@@ -184,11 +186,14 @@ int main( int argc, const char** argv ) {
 	sov.load();
 	sov.initNodes();
 	sov.allocSolution();
-	if (sov.loadname != NULL) {
+	if (sov.hasSolutionToLoad()) {
 		if (!quiet) {
-			fprintf(stdout, "loading \"%s\"\n", sov.loadname);
+		    fprintf(stdout, "loading \"%s\"\n", sov.getSolutionFilename());
 		}
-		if (loadSolutionCsvMode) {
+		if (sov.hasSolutionToLoad()) {
+		    sov.loadSolution();
+#if 0
+		} else if (loadSolutionCsvMode) {
 			if (sov.loadCsvSolution(sov.loadname) < 0) {
 				return 1;
 			}
@@ -196,6 +201,7 @@ int main( int argc, const char** argv ) {
 			if (sov.loadZSolution(sov.loadname) < 0) {
 				return 1;
 			}
+#endif
 		}
 		if (!quiet) {
 			char* statstr = new char[10000];

@@ -157,7 +157,7 @@ int main( int argc, const char** argv ) {
 		return 1;
 	}
 	
-	if ( sov.loadname == NULL && commandFileName == NULL ) {
+	if ( (!sov.hasSolutionToLoad()) && commandFileName == NULL ) {
 		fprintf(stderr,"useless drend, null loadname and null command file name\n");
 		exit(1);
 	}
@@ -169,9 +169,9 @@ int main( int argc, const char** argv ) {
 
 	sov.initNodes();
 	sov.allocSolution();
-	if ( sov.loadname != NULL ) {
-		fprintf( stdout, "loading \"%s\"\n", sov.loadname );
-		if ( sov.loadZSolution( sov.loadname ) < 0 ) {
+	if ( sov.hasSolutionToLoad() ) {
+		fprintf( stdout, "loading \"%s\"\n", sov.getSolutionFilename() );
+		if ( sov.loadSolution() < 0 ) {
 			return 1;
 		}
 		char* statstr = new char[10000];

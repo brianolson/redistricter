@@ -82,10 +82,9 @@ static char oldDefaultInputName[] = "ca.pb";
 Solver::Solver() :
 	districts( 5 ), totalpop( 0.0 ), districtPopTarget( 0.0 ),
 	nodes( NULL ), allneigh( NULL ), winner( NULL ),
-	districtSetFactory( NULL ), dists( NULL ),
+	districtSetFactory( NULL ), _dists( NULL ),
 	inputname( oldDefaultInputName ), generations( -1 ),
 	dumpname( NULL ),
-	loadname( NULL ),
 	initMode( initWithNewDistricts ),
 	solutionLogPrefix( NULL ), solutionLogInterval( 100 ), solutionLogCountdown( 0 ),
 #if WITH_PNG
@@ -111,7 +110,9 @@ Solver::Solver() :
 	_point_draw_array( NULL ), 
 	lastGenDrawn( -1 ), vertexBufferObject(0), colorBufferObject(0), linesBufferObject(0),
 	drawHistoryPos( 0 ),
-	maxSpreadFraction( 1000.0 ), maxSpreadAbsolute( 9.0e9 )
+	maxSpreadFraction( 1000.0 ), maxSpreadAbsolute( 9.0e9 ),
+	loadFormat( DetectFormat ),
+	loadname( NULL )
 {
 		//_link_draw_array( NULL ),
 }
@@ -125,8 +126,8 @@ Solver::~Solver() {
 	if ( winner != NULL ) {
 		delete [] winner;
 	}
-	if ( dists != NULL ) {
-		delete dists;
+	if ( _dists != NULL ) {
+		delete _dists;
 	}
 	if ( gd != NULL ) {
 		delete gd;
@@ -192,6 +193,7 @@ void Solver::load() {
 		readLinksFile(NULL);
 	}
 	
+#if 0
 	if ( districts <= 0 ) {
 		int tdistricts = gd->numDistricts();
 		if ( tdistricts > 1 ) {
@@ -200,6 +202,7 @@ void Solver::load() {
 			districts = districts * -1;
 		}
 	}
+#endif
 
 	minx = gd->minx;
 	maxx = gd->maxx;
@@ -453,23 +456,27 @@ void Solver::initNodes() {
 #endif
 }
 
+DistrictSet* Solver::getDistricts() { // lazy allocating caching accessor
+	if ( districtSetFactory != NULL ) {
+		_dists = districtSetFactory(this);
+	} else {
+#if 1
+		_dists = new NearestNeighborDistrictSet(this);
+#else
+		_dists = new District2Set(this);
+#endif
+	}
+	assert(_dists != NULL);
+	_dists->alloc(districts);  // TODO: mave this into lazy allocating within a DistrictSet
+	return _dists;
+}
+
 void Solver::allocSolution() {
 	winner = new POPTYPE[gd->numPoints];
 	assert(winner != NULL);
 	for ( int i = 0; i < gd->numPoints; i++ ) {
 		winner[i] = NODISTRICT;
 	}
-	if ( districtSetFactory != NULL ) {
-		dists = districtSetFactory(this);
-	} else {
-#if 1
-		dists = new NearestNeighborDistrictSet(this);
-#else
-		dists = new District2Set(this);
-#endif
-	}
-	assert(dists != NULL);
-	dists->alloc(districts);
 }
 
 #define ZFILE_VERSION 4
@@ -523,6 +530,7 @@ int _readOrFail( int fd, void* ib, size_t len ) {
 #define compressBound( n ) ( (n) + ((n) / 500) + 12 )
 #endif
 
+// TODO: Write magic number prefix bytes? "BDSZ" maybe? (Brian's District Solution (Zlib compressed))
 // Format (variable endianness, use fileversion to detect):
 // uint32 fileversion
 // uint32 numPoints
@@ -554,10 +562,16 @@ saveZFail:
 	return -1;
 }
 
-
 int Solver::saveZSolution( const char* filename ) {
 	return ::saveZSolution( filename, winner, gd->numPoints );
 }
+
+// todo: template?
+int max(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
 int Solver::loadZSolution( const char* filename ) {
 	ZFILE_INT ti;
 	uLongf unzlen;
@@ -608,13 +622,31 @@ int Solver::loadZSolution( const char* filename ) {
 	if ( endianness ) {
 		assert( sizeof(POPTYPE) == 1 );
 	}
-	dists->initFromLoadedSolution();
+	if (districts == -1) {
+	    int maxd = -1;
+	    for (int i = 0; i < gd->numPoints; ++i) {
+		maxd = max(winner[i], maxd);
+	    }
+	    districts = maxd + 1;
+	}
+	getDistricts()->initFromLoadedSolution();
 	return close( readfd );
 loadZFail:
 	free( zb );
 	close( readfd );
 	return -1;
 }
+
+static bool districtNumberIsValid(int d, int districts) {
+    if (d < 1) return false;
+    if (districts == -1) {
+	if (d > POPTYPE_MAX) return false;
+    } else {
+	if (d > districts) return false;
+    }
+    return true;
+}
+
 int Solver::loadCsvSolution( const char* filename ) {
 	FILE* fin;
 	if (0 == strcmp(filename, "-")) {
@@ -634,6 +666,9 @@ int Solver::loadCsvSolution( const char* filename ) {
 	int errcount = 0;
 	memset(winner, NODISTRICT, gd->numPoints);
 	int setcount = 0;
+	int maxd = -1;
+
+
 	while (line != NULL) {
 		char* c = line;
 		while ((c != '\0') && (!isdigit(*c))) {
@@ -665,7 +700,7 @@ int Solver::loadCsvSolution( const char* filename ) {
 				err = -1;
 				break;
 			}
-		} else if ((district < 1) || (district > districts)) {
+		} else if (!districtNumberIsValid(district, districts)) {
 			fprintf(stderr, "winner[%d]=%lu would be out of range (1..%d)\n", index, district, districts);
 			errcount++;
 			if (errcount > 20) {
@@ -674,6 +709,7 @@ int Solver::loadCsvSolution( const char* filename ) {
 			}
 		} else {
 			winner[index] = district - 1;
+			maxd = max(maxd, winner[index]);
 			setcount++;
 		}
 		line = fgets(lineBuf, MAX_LINE_LENGTH, fin);
@@ -692,13 +728,44 @@ int Solver::loadCsvSolution( const char* filename ) {
 		}
 	}
 	fprintf(stderr, "set %d points of %d, %d not set\n", setcount, gd->numPoints, notset);
-	dists->initFromLoadedSolution();
+	if (districts == -1) {
+	    districts = maxd + 1;
+	} else {
+	    if (maxd + 1 != districts) {
+		fprintf(stderr, "expected %d districts but got %d\n", districts, maxd + 1);
+	    }
+	}
+	getDistricts()->initFromLoadedSolution();
 	return err;
 }
 
 
+int Solver::loadSolution() {
+    switch (loadFormat) {
+    case DszFormat:
+	return loadZSolution(loadname);
+	break;
+    case CsvFormat:
+	return loadCsvSolution(loadname);
+	break;
+    default:
+	fprintf(stderr, "loadSolution file type detection not implemented\n");
+	assert(false);
+    }
+    return -1;
+}
+
+
+bool Solver::hasSolutionToLoad() {
+    return (loadname != NULL) && (loadname[0] != '\0');
+}
+
+const char* Solver::getSolutionFilename() const {
+    return loadname;
+}
+
 void Solver::initSolution() {
-	dists->initNewRandomStart();
+	getDistricts()->initNewRandomStart();
 }
 
 void Solver::initSolutionFromOldCDs() {
@@ -717,7 +784,7 @@ void Solver::initSolutionFromOldCDs() {
 		assert( d < districts );
 		winner[i] = d;
 	}
-	dists->initFromLoadedSolution();
+	getDistricts()->initFromLoadedSolution();
 }
 
 void Solver::init() {
@@ -728,14 +795,14 @@ void Solver::init() {
 #endif
 
 int Solver::step() {
-	int err = dists->step();
+	int err = getDistricts()->step();
 	gencount++;
 	return err;
 }
 
 #if 1
 void Solver::printDistricts(const char* filename) {
-	dists->print(filename);
+    getDistricts()->print(filename);
 }
 #else
 void Solver::printDistrcts() {
@@ -754,7 +821,7 @@ void Solver::printDistrcts() {
 
 SolverStats* Solver::getDistrictStats() {
 	SolverStats* stats = new SolverStats();
-	dists->getStats(stats);
+	getDistricts()->getStats(stats);
 	stats->generation = gencount;
 	return stats;
 }
@@ -919,7 +986,8 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
 "-g n                generations (steps) to run\n"
 "-d n                number of districts to create\n"
 "-o file             dump solution here\n"
-"-loadSolution file  load previously generated solution\n"
+"-loadSolution file  load previously generated solution (dsz format)\n"
+"-csv-solution file  load census/portable csv block association file\n"
 "-pngout file        where to write png of final solution\n"
 "-pngW n             width of image to make\n"
 "-pngH n             height of image to make\n"
@@ -964,8 +1032,9 @@ int Solver::handleArgs( int argc, const char** argv ) {
 		IntArg("g", &generations);
 		IntArg("d", &districts);
 		StringArgWithCopy("o", &dumpname);
-		StringArgWithCopy("r", &loadname);
-		StringArgWithCopy("loadSolution", &loadname);
+		StringArgWithCallback("r", setDszLoadname, NULL);
+		StringArgWithCallback("loadSolution", setDszLoadname, NULL);
+		StringArgWithCallback("csv-solution", setCsvLoadname, NULL);
 		StringArgWithCopy("distout", &distfname);  // deprecated?
 		StringArgWithCopy("coordout", &coordfname);  // deprecated?
 #if WITH_PNG
@@ -1056,6 +1125,18 @@ int Solver::handleArgs( int argc, const char** argv ) {
 	return argcout;
 }
 
+
+void Solver::setCsvLoadname(void* context, const char* filename) {
+    loadname = strdup(filename);
+    loadFormat = CsvFormat;
+}
+void Solver::setDszLoadname(void* context, const char* filename) {
+    loadname = strdup(filename);
+    loadFormat = DszFormat;
+}
+
+
+
 #if WITH_PNG
 static char bestStdPng[] = "bestStd.png";
 static char bestSpreadPng[] = "bestSpread.png";
@@ -1128,7 +1209,7 @@ int Solver::main( int argc, const char** argv ) {
 	gd->close();
 	
 	if ( generations == -1 ) {
-		generations = dists->defaultGenerations();
+	    generations = getDistricts()->defaultGenerations();
 	}
 	SolverStats* bestStd = NULL;
 	SolverStats* bestSpread = NULL;

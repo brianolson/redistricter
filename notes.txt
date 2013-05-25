@@ -198,3 +198,10 @@ https://plusone.google.com/_/+1/confirm?hl=en&url=${url}
 analyze and render 2013 actual districts
 
 ./analyze -P ../../CT/ct.pb -d 5 --csv-solution --loadSolution 09_CT_CD113.txt
+
+drend  --csv-solution 09_CT_CD113.txt -P ct.pb --mppb=CT.mppb --pngout=ct113.png
+
+drend --csv-solution=25_MA_CD113.txt -P=ma.pb --mppb=MA.mppb --pngout=/tmp/MA_us2013.png -d=-1
+
+Make drend easier to use, detecting number of districts from loaded solution. Make district allocation lazy to accommodate this.
+

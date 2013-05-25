@@ -16,7 +16,7 @@ def newerthan(a, b):
 		return True
 	return sa.st_mtime > sb.st_mtime
 
-def any_newerthan(alist, b):
+def any_newerthan(alist, b, noSourceCallback=None):
 	"""Return true if b doesn't exist or anything in a is newerthan b."""
 	try:
 		sb = os.stat(b)
@@ -26,7 +26,8 @@ def any_newerthan(alist, b):
 		try:
 			sa = os.stat(a)
 		except:
-			# item in alist doesn't exist, maybe raise an Exception?
+			if noSourceCallback is not None:
+				noSourceCallback(a)
 			return False
 		if sa.st_mtime > sb.st_mtime:
 			return True
