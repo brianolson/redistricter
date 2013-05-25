@@ -145,6 +145,32 @@ kmppRe = re.compile(r'([0-9.]+)\s+Km/person')
 maxMinRe = re.compile(r'max=([0-9]+).*min=([0-9]+)')
 
 
+def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None, bindir=None, printcmd=None):
+	if not os.path.exists(zipname):
+		logging.error('could not measure race without %s', zipname)
+		return
+	zf = zipfile.ZipFile(zipname, 'r')
+	part1name = stl + '000012010.pl'
+	if bindir is None:
+		bindir = srcdir_
+
+	analyzebin = os.path.join(bindir, 'analyze')
+	cmd = [analyzebin, '--compare', ':5,7,8,9,10,11,12,13',
+	       '--labels', 'total,white,black,native,asian,pacific,other,mixed',
+	       '--dsort', '1', '--notext',
+	       '--html', htmlout,
+	       '-P', pbfile, '-d', numd, '--loadSolution', solution]
+	if exportpath:
+		cmd += ['--export', exportpath]
+
+	if printcmd:
+		printcmd(cmd)
+	p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE)
+	p.stdin.write(zf.read(part1name))
+	p.stdin.close()
+	p.wait()
+
+
 def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFilter=None):
 	"""Store to configs[config name]."""
 	for xx in os.listdir(datadir):
@@ -598,32 +624,15 @@ class SubmissionAnalyzer(object):
 	
 	def measureRace(self, cname, solution, htmlout, exportpath):
 		config = self.config[cname]
-		#zipname = 'VA/zips/va2010.pl.zip'
 		stl = cname[0:2].lower()
 		zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
 		if not os.path.exists(zipname):
 			logging.error('could not measure race without %s', zipname)
 			return
-		zf = zipfile.ZipFile(zipname, 'r')
-		part1name = stl + '000012010.pl'
-		#part1f = zf.open(part1name, 'r')
-		#p1csv = csv.reader(part1f)
 		numd = config.args['-d']
 		pbfile = config.args['-P']
 
-		analyzebin = os.path.join(self.options.bindir, 'analyze')
-		cmd = [analyzebin, '--compare', ':5,7,8,9,10,11,12,13',
-			'--labels', 'total,white,black,native,asian,pacific,other,mixed',
-			'--dsort', '1', '--notext',
-			'--html', htmlout,
-			'-P', pbfile, '-d', numd, '--loadSolution', solution]
-		if exportpath:
-			cmd += ['--export', exportpath]
-
-		p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE)
-		p.stdin.write(zf.read(part1name))
-		p.stdin.close()
-		p.wait()
+		measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath, self.options.bindir)
 	
 	def processFailedSubmissions(self, configs, cname):
 		c = self.db.cursor()

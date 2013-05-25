@@ -197,6 +197,7 @@ public:
 	// callbacks for arghanlding.h StringArgWithCallback
 	void setCsvLoadname(void* context, const char* filename);
 	void setDszLoadname(void* context, const char* filename);
+	void setLoadname(void* context, const char* filename);
 };
 
 class SolverStats {

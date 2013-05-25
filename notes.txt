@@ -205,3 +205,7 @@ drend --csv-solution=25_MA_CD113.txt -P=ma.pb --mppb=MA.mppb --pngout=/tmp/MA_us
 
 Make drend easier to use, detecting number of districts from loaded solution. Make district allocation lazy to accommodate this.
 
+~/src/redistricter/render_2013_actual.py --datadir=/Volumes/bulktogo/redata/2010 --districtdir=/Volumes/bulktogo/redata/2010/2013_actual/cd
+~/src/redistricter/render_2013_actual.py --datadir=/Volumes/bulktogo/redata/2010 --districtdir=/Volumes/bulktogo/redata/2010/2013_actual/sldu
+~/src/redistricter/render_2013_actual.py --datadir=/Volumes/bulktogo/redata/2010 --districtdir=/Volumes/bulktogo/redata/2010/2013_actual/sldl
+

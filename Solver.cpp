@@ -701,12 +701,17 @@ int Solver::loadCsvSolution( const char* filename ) {
 				break;
 			}
 		} else if (!districtNumberIsValid(district, districts)) {
-			fprintf(stderr, "winner[%d]=%lu would be out of range (1..%d)\n", index, district, districts);
 			errcount++;
+			if (errcount < 20) {
+			    fprintf(stderr, "winner[%d]=%lu would be out of range (1..%d)\n", index, district, districts);
+			}
+#if false
 			if (errcount > 20) {
 				err = -1;
 				break;
 			}
+#endif
+			winner[index] = NODISTRICT;
 		} else {
 			winner[index] = district - 1;
 			maxd = max(maxd, winner[index]);
@@ -749,7 +754,16 @@ int Solver::loadSolution() {
 	return loadCsvSolution(loadname);
 	break;
     default:
-	fprintf(stderr, "loadSolution file type detection not implemented\n");
+	if (strstr(loadname, ".dsz") != NULL) {
+	    return loadZSolution(loadname);
+	}
+	if (strstr(loadname, ".csv") != NULL) {
+	    return loadCsvSolution(loadname);
+	}
+	if (strstr(loadname, ".text") != NULL) {
+	    return loadCsvSolution(loadname);
+	}
+	fprintf(stderr, "loadSolution could not guess type for '%s'\n", loadname);
 	assert(false);
     }
     return -1;
@@ -1033,7 +1047,7 @@ int Solver::handleArgs( int argc, const char** argv ) {
 		IntArg("d", &districts);
 		StringArgWithCopy("o", &dumpname);
 		StringArgWithCallback("r", setDszLoadname, NULL);
-		StringArgWithCallback("loadSolution", setDszLoadname, NULL);
+		StringArgWithCallback("loadSolution", setLoadname, NULL);
 		StringArgWithCallback("csv-solution", setCsvLoadname, NULL);
 		StringArgWithCopy("distout", &distfname);  // deprecated?
 		StringArgWithCopy("coordout", &coordfname);  // deprecated?
@@ -1133,6 +1147,10 @@ void Solver::setCsvLoadname(void* context, const char* filename) {
 void Solver::setDszLoadname(void* context, const char* filename) {
     loadname = strdup(filename);
     loadFormat = DszFormat;
+}
+void Solver::setLoadname(void* context, const char* filename) {
+    loadname = strdup(filename);
+    loadFormat = DetectFormat;
 }
 
 
