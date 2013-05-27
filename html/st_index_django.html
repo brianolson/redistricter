@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><title>{{statename}} Redistricting</title>
+<link href="{{rooturl}}report.css" rel="stylesheet" type="text/css" />
+<style>#custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('{{rooturl}}tweet.ico') 1px center no-repeat;text-decoration:none;}</style>
+</head>
+<body bgcolor="#ffffff">
+<div style="float:right;width:20em;">
+
+</div>
+<h1>{{statename}} Redistricting</h1>
+<div class="small">From 2010 data</div>
+<table class="sp"><tr><td>
+<div><a href="/2010/">2010 Redistricting Home</a></div>
+{{statenav|safe}}
+<hr width="50%" align="center">
+<div id="sociald">{{social|safe}}</div>
+</td><td>
+
+<table id="imt"><tr><td align="center"><a href="{{ba_large}}"><img src="{{ba_small}}" title="{{statename}} congressional district map, current and my way" alt="{{statename}} congressional district map, current and my way"></a></td>{% if current_small %}<td align="center"><a href="{{current_large}}"><img src="{{current_small}}"></a></td>{% endif %}</tr>
+<tr><td align="center">{{statename}} possible district map from my solver.<br /><a href="{{ba_large}}" title="{{statename}} congressional district map, current and my way">Larger {{statename}} map</a></td>{% if current_small %}<td align="center">{{statename}} current district map<br /><a href="{{current_large}}">Larger {{statename}} map</a></td>{% endif %}</tr>
+</table>
+<table
+<tr>
+{% if current_kmpp %}<td></td>{% endif %}
+<td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about {{avgpop}})--></td><td class="myoh">standard deviation of<br />district populations</td></tr>
+{% if current_kmpp %}
+<tr><td class="myow">Current&nbsp;map</td><td class="myon">{{current_kmpp}}</td><td class="myon">{{current_spread}}</td><td class="myon">{{current_std}}</td></tr>
+{% endif %}
+<tr>{% if current_kmpp %}<td class="myow">My&nbsp;map</td>{% endif %}<td class="myon">{{my_kmpp}}</td><td class="myon">{{my_spread}}</td><td class="myon">{{my_std}}</td></tr></table>
+{{extra|safe}}
+{% if current_demographics %}
+<table><tr><th colspan="2">Demographics</th><tr>
+<tr><th>Current</th><th>My Way</th></tr>
+<tr><td>{{current_demographics|safe}}</td><td>{{racedata|safe}}</td></tr>
+</table>
+{% else %}
+{{racedata|safe}}
+{% endif %}
+<div><a href="solution.zip">zipped csv block list for {{statename}}</a></div>
+<div><a href="/2000/{{stu}}/">{{statename}} from 2000 Census</a></div>
+</td></tr></table>
+<p><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work by <a xmlns:cc="http://creativecommons.org/ns#" href="http://bdistricting.com/" property="cc:attributionName" rel="cc:attributionURL">Brian Olson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.</p>
+{{google_analytics|safe}}
+</body></html>

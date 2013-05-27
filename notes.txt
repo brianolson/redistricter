@@ -209,3 +209,8 @@ Make drend easier to use, detecting number of districts from loaded solution. Ma
 ~/src/redistricter/render_2013_actual.py --datadir=/Volumes/bulktogo/redata/2010 --districtdir=/Volumes/bulktogo/redata/2010/2013_actual/sldu
 ~/src/redistricter/render_2013_actual.py --datadir=/Volumes/bulktogo/redata/2010 --districtdir=/Volumes/bulktogo/redata/2010/2013_actual/sldl
 
+t
+
+~/src/redistricter/analyze -P FL/fl.pb -d=-1 --csv-solution=2013_actual/cd/12_FL_CD113.txt --compare :5,7,8,9,10,11,12,13 --labels total,white,black,native,asian,pacific,other,mixed --dsort 1 --html /tmp/fl.html --notext
+
+~/src/redistricter/analyze_submissions.py --actuals=/Volumes/bulktogo/redata/2010/2013_actual --datadir=/Volumes/bulktogo/redata/2010 --soldir=/Volumes/bulktogo/redata/2010/solutions --report=/Volumes/bulktogo/redata/2010/solutions/report/report.html --outdir=/Volumes/bulktogo/redata/2010/solutions/report --rooturl=/2010/ --rehtml --config=FL_Congress

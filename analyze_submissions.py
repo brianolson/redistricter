@@ -17,14 +17,14 @@ import traceback
 import urllib
 import zipfile
 
+import djangotemplates
 from kmppspreadplot import svgplotter
-from newerthan import newerthan
+from newerthan import newerthan, any_newerthan
 import resultspage
 import runallstates
 import states
 
 srcdir_ = os.path.dirname(os.path.abspath(__file__))
-legpath_ = os.path.join(srcdir_, 'legislatures.csv')
 
 _resources = ('report.css', 'tweet.ico', 'spreddit7.gif')
 
@@ -136,6 +136,24 @@ def templateFromFile(f):
 	return string.Template(cooked)
 
 
+_analyze_re = re.compile(r'.*?([0-9.]+)\s+Km/person.*avg=([0-9.]+).*std=([0-9.]+).*max=([0-9.]+).*min=([0-9.]+).*median=([0-9.]+).*', re.MULTILINE|re.DOTALL)
+
+
+def parseAnalyzeStats(rawblob):
+	"""Return (kmpp, spread, std)"""
+	# e.g.:
+	#generation 0: 38.093901615 Km/person
+	#population avg=696345 std=0.395847391
+	#max=696345 (dist# 1)  min=696344 (dist# 8)  median=696345 (dist# 14)
+	m = _analyze_re.match(rawblob)
+	logging.debug('groups=%r', m.groups())
+	kmpp = float(m.group(1))
+	std = float(m.group(3))
+	maxp = float(m.group(4))
+	minp = float(m.group(5))
+	return (kmpp, maxp - minp, std)
+	
+
 # Example analyze output:
 # generation 0: 21.679798418 Km/person
 # population avg=634910 std=1707.11778
@@ -146,6 +164,7 @@ maxMinRe = re.compile(r'max=([0-9]+).*min=([0-9]+)')
 
 
 def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None, bindir=None, printcmd=None):
+	"""Writes html to htmlout. Returns blob of text with stats. Pass blob to parseAnalyzeStats if desired."""
 	if not os.path.exists(zipname):
 		logging.error('could not measure race without %s', zipname)
 		return
@@ -165,10 +184,84 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
 
 	if printcmd:
 		printcmd(cmd)
-	p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE)
+	p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 	p.stdin.write(zf.read(part1name))
 	p.stdin.close()
 	p.wait()
+	analyze_text = p.stdout.read()
+	return analyze_text
+
+
+def getStatesCsvSources(actualsDir):
+  """For directory of 00_XX_*.txt return map {stu, source csv filename}"""
+  stDistFiles = {}
+  anyError = False
+
+  distdirall = os.listdir(actualsDir)
+  
+  statefileRawRe = re.compile('.._(..)_.*\.txt', re.IGNORECASE)
+
+  for fname in distdirall:
+    m = statefileRawRe.match(fname)
+    if m:
+      stu = m.group(1).upper()
+      if states.nameForPostalCode(stu) is not None:
+        # winner
+        old = stDistFiles.get(stu)
+        if old is None:
+          stDistFiles[stu] = fname
+        else:
+          logging.error('collision %s -> %s AND %s', stu, old, fname)
+          anyError = True
+  
+  return stDistFiles, anyError
+
+
+def noSource(sourceName):
+  logging.error('missing source %s', sourceName)
+
+
+def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname):
+  """process 00_XX_SLDU.txt into intermediate XX.csv, output {XX.png,xx.html,xx_stats.txt}
+  return (kmpp, spread, std)
+  """
+  stl = stu.lower()
+
+  # actuals block source and intermediate csv
+  csvpath = os.path.join(actualsDir, sourceCsvFname)
+  simplecsvpath = os.path.join(actualsDir, stu + '.csv')
+
+  # output html and png
+  htmlout = os.path.join(actualsDir, stl + '.html')
+  pngout = os.path.join(actualsDir, stu + '.png')
+  png500out = os.path.join(actualsDir, stu + '500.png')
+  analyzeout = os.path.join(actualsDir, stl + '_stats.txt')
+  analyzeText = None
+
+  if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, htmlout, analyzeout), noSourceCallback=noSource):
+    if newerthan(csvpath, simplecsvpath):
+      csvToSimpleCsv(csvpath, simplecsvpath)
+    if any_newerthan( (pb, mppb, simplecsvpath), pngout):
+      cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
+      logging.info('%r', cmd)
+      p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
+      retcode = p.wait()
+      if retcode != 0:
+        logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+        sys.exit(1)
+    if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
+      analyzeText = measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
+      atout = open(analyzeout, 'w')
+      atout.write(analyzeText)
+      atout.close()
+    if newerthan(pngout, png500out):
+      subprocess.call(['convert', pngout, '-resize', '500x500', png500out])
+
+  if analyzeText is None:
+    atin = open(analyzeout, 'r')
+    analyzeText = atin.read()
+    atin.close()
+  return parseAnalyzeStats(analyzeText)
 
 
 def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFilter=None):
@@ -219,6 +312,15 @@ class SubmissionAnalyzer(object):
 		self.socialTemplate = None
 		# cache for often used self.statenav(None, configs)
 		self._statenav_all = None
+		self._actualsMaps = {}
+
+	def actualsSource(self, actualSet, stu):
+		"""Lazy loading accessor to find source CSV files for actualsdir/{set}/??_{stu}_*.txt"""
+		maps = self._actualsMaps.get(actualSet)
+		if maps is None:
+			maps, _ = getStatesCsvSources(os.path.join(self.options.actualdir, actualSet))
+			self._actualsMaps[actualSet] = maps
+		return maps[stu]
 	
 	def getPageTemplate(self, rootdir=None):
 		if self.pageTemplate is None:
@@ -459,15 +561,18 @@ class SubmissionAnalyzer(object):
 		if configs is None:
 			configs = self.getBestConfigs()
 		newestconfig = self.newestWinner(configs)
-		clist = configs.keys()
-		clist.sort()
+
+		# TODO: django templates?
 		out = open(outpath, 'w')
 		out.write("""<!doctype html>
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
 """ % (localtime(),))
 		out.write("""<div style="float:left"><div></div>""" + self.statenav(None, configs) + """</div>\n""")
 		out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
+
 		firstNoSolution = True
+		clist = configs.keys()
+		clist.sort()
 		for cname in clist:
 			data = configs[cname]
 			if not data['kmpp']:
@@ -494,9 +599,9 @@ class SubmissionAnalyzer(object):
 		args = dict(self.config[cname].drendargs)
 		args['--pngout'] = pngpath
 		if dszpath:
-			args['--loadSolution'] = dszpath
+			args['-r'] = dszpath
 		elif solutionDszRaw:
-			args['--loadSolution'] = '-'
+			args['-r'] = '-'
 		else:
 			self.stderr.write('error: need dsz or raw dsz bytes for doDrend\n')
 			return None
@@ -697,6 +802,7 @@ class SubmissionAnalyzer(object):
 		if self.options.configlist and (cname not in self.options.configlist):
 			logging.debug('skipping %s not in configlist', cname)
 			return
+		stl = stu.lower()
 		outdir = self.options.outdir
 		sdir = os.path.join(outdir, cname, str(data['id']))
 		if not os.path.isdir(sdir):
@@ -712,6 +818,12 @@ class SubmissionAnalyzer(object):
 		
 		tpath = self.cleanupSolutionPath(data['path'])
 		tfparts = extractSome(tpath, ('solution', 'statsum'))
+		actualMapPath = None
+		actualMap500Path = None
+		actualHtmlPath = None
+		current_kmpp = None
+		current_spread = None
+		current_std = None
 		
 		if 'solution' in tfparts:
 			# write solution.dsz
@@ -753,6 +865,19 @@ class SubmissionAnalyzer(object):
 			map500path = os.path.join(sdir, 'map500.png')
 			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
+
+			# use actual maps if available
+			if self.options.actualdir:
+				# ensure setup
+				actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
+				config = self.config[cname]
+				drendargs = config.drendargs
+				zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
+				(current_kmpp, current_spread, current_std) = processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname)
+
+				actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
+				actualMap500Path = os.path.join(self.options.actualdir, actualSet, stu + '500.png')
+				actualHtmlPath = os.path.join(self.options.actualdir, actualSet, stl + '.html')
 		else:
 			logging.error('no solution for %s', cname)
 			self.processFailedSubmissions(configs, cname)
@@ -766,8 +891,8 @@ class SubmissionAnalyzer(object):
 		permalink = os.path.join(self.options.rooturl, cname, str(data['id'])) + '/'
 		racedata = ''
 		if os.path.exists(racehtml):
-			racedata = '<h3>Population Race Breakdown Per District</h3>'
-			racedata += open(racehtml, 'r').read()
+			#racedata = '<h3>Population Race Breakdown Per District</h3>' +
+			racedata = open(racehtml, 'r').read()
 		extrapath = os.path.join(outdir, cname, 'extra.html')
 		extrahtml = ''
 		if os.path.exists(extrapath):
@@ -776,20 +901,26 @@ class SubmissionAnalyzer(object):
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, cname) + '/'
 		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
+		actualHtmlData = None
+		if actualHtmlPath:
+			ahin = open(actualHtmlPath, 'rb')
+			actualHtmlData = ahin.read()
+			ahin.close
 		
-		st_template = self.getPageTemplate()
-		out = open(ihpath, 'w')
-		out.write(st_template.substitute(
+		context = dict(
 			statename=statename,
 			stu=stu,
 			statenav=self.statenav(cname, configs),
 			ba_large='map.png',
 			ba_small='map500.png',
+			current_large=actualMapPath,
+			current_small=actualMap500Path,
+			current_demographics=actualHtmlData,
 			# TODO: get avgpop for state
 			avgpop='',
-			current_kmpp='',
-			current_spread='',
-			current_std='',
+			current_kmpp=current_kmpp,
+			current_spread=current_spread,
+			current_std=current_std,
 			my_kmpp=str(kmpp),
 			my_spread=str(int(float(spread))),
 			my_std=str(std),
@@ -800,7 +931,20 @@ class SubmissionAnalyzer(object):
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
-		))
+		)
+		if actualMapPath and actualMap500Path:
+			context['current_large'] = stu + '.png'
+			context['current_small'] = stu + '500.png'
+			atomicLink(actualMapPath, os.path.join(sdir, stu + '.png'))
+			atomicLink(actualMap500Path, os.path.join(sdir, stu + '500.png'))
+			atomicLink(actualMapPath, os.path.join(outdir, cname, stu + '.png'))
+			atomicLink(actualMap500Path, os.path.join(outdir, cname, stu + '500.png'))
+		out = open(ihpath, 'w')
+		if False:
+			st_template = self.getPageTemplate()
+			out.write(st_template.substitute(**context))
+		else:
+			out.write(djangotemplates.render('st_index_django.html', context))
 		out.close()
 		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
@@ -877,6 +1021,7 @@ def main():
 	argp.add_option('--redraw', dest='redraw', action='store_true', default=False)
 	argp.add_option('--rehtml', dest='rehtml', action='store_true', default=False)
 	argp.add_option('--config', dest='configlist', action='append', default=[])
+	argp.add_option('--actuals', dest='actualdir', default=None, help='contains /{cd,sldu,sldl}')
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)

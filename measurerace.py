@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 
-"""Create html tables for simple race breakdown per district.
+"""Measure race demographics for 2000 census and 109th Congress. [DEPRECATED]
+Create html tables for simple race breakdown per district.
 Requires '00001' census data files, typically 'data/XX/zips/xx00001_uf1.zip'
 which can be fetched by 'setupstatedata.py --getextra=00001
 """

@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 
-from analyze_submissions import measure_race
+from analyze_submissions import getStatesCsvSources, processActualsSource
 from newerthan import newerthan, any_newerthan
 import states
 
@@ -49,6 +49,21 @@ def csvToSimpleCsv(csvpath, outpath):
   fout.close()
 
 
+_drendpath = None
+
+
+def drendpath():
+  global _drendpath
+  if _drendpath is None:
+    _drendpath = os.path.join(srcdir_, 'drend')
+    if not os.path.exists(_drendpath):
+      logging.error('no drend binary at %r', drendpath)
+      sys.exit(1)
+  return _drendpath
+
+
+
+
 def main():
   srcdir_ = os.path.dirname(os.path.abspath(__file__))
 
@@ -58,66 +73,24 @@ def main():
 
   options, args = op.parse_args()
 
-  stDistFiles = {}
-  anyError = False
-
-  distdirall = os.listdir(options.distdir)
-  
-  statefileRawRe = re.compile('.._(..)_.*\.txt', re.IGNORECASE)
-
-  for fname in distdirall:
-    m = statefileRawRe.match(fname)
-    if m:
-      stu = m.group(1).upper()
-      if states.nameForPostalCode(stu) is not None:
-        # winner
-        old = stDistFiles.get(stu)
-        if old is None:
-          stDistFiles[stu] = fname
-        else:
-          logging.error('collision %s -> %s AND %s', stu, old, fname)
-          anyError = True
-
+  stDistFiles, anyError = getStatesCsvSources(options.distdir)
   #for k,v in stDistFiles.iteritems():
   #  print '%s\t%s' % (k, v)
 
   if anyError:
     sys.exit(1)
 
-  drendpath = os.path.join(srcdir_, 'drend')
-  if not os.path.exists(drendpath):
-    logging.error('no drend binary at %r', drendpath)
-    sys.exit(1)
+  for stu, sourceCsvFname in stDistFiles.iteritems():
+    print stu
+    stl = stu.lower()
 
-  def noSource(sourceName):
-    logging.error('missing source %s', sourceName)
-
-  for k,v in stDistFiles.iteritems():
-    print k
-    stl = k.lower()
-    stu = k.upper()
-    csvpath = os.path.join(options.distdir, v)
-    simplecsvpath = os.path.join(options.distdir, stu + '.csv')
+    # common datadir inputs
     stdir = os.path.join(options.datadir, stu)
     pb = os.path.join(stdir, stl + '.pb')
     mppb = os.path.join(stdir, stu + '.mppb')
     zipname = os.path.join(stdir, 'zips', stl + '2010.pl.zip')
-    htmlout = os.path.join(stu + '.html')
-    pngout = stu + '.png'
-    if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, htmlout), noSourceCallback=noSource):
-      if newerthan(csvpath, simplecsvpath):
-        csvToSimpleCsv(csvpath, simplecsvpath)
-      if any_newerthan( (pb, mppb, simplecsvpath), pngout):
-        cmd = [drendpath, '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
-        print ' '.join(cmd)
-        p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
-        retcode = p.wait()
-        if retcode != 0:
-          logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
-          sys.exit(1)
-      if any_newerthan( (pb, mppb, simplecsvpath, zipname), htmlout):
-        measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: sys.stderr.write(' '.join(x) + '\n'))
 
+    processActualsSource(options.distdir, stu, sourceCsvFname, pb, mppb, zipname)
 
 
 if __name__ == '__main__':

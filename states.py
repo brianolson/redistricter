@@ -68,8 +68,9 @@ def nameForPostalCode(code):
 
 def codeForState(stateName):
 	"""Return two letter postal code for proper Name (case sensitive)."""
+	snl = stateName.lower()
 	for x in states:
-		if x[0] == stateName:
+		if x[0].lower() == snl:
 			return x[1]
 	return None
 
@@ -116,6 +117,12 @@ class LegislatureStat(object):
 		self.code = code
 		self.count = count
 
+	def __str__(self):
+		return '%s "%s" (%s): %s' % (self.code, self.name, self.shortname, self.count)
+
+	def __repr__(self):
+		return 'LegislatureStat(%r, %r, %r, %r)' % (self.name, self.shortname, self.code, self.count)
+
 def legislatureStatsForPostalCode(code):
 	"""Return [LegislatureStat, ...].
 	Returns None if code is bogus."""
@@ -146,3 +153,29 @@ def expandLegName(leglist, name):
 		if ls.shortname == name:
 			return ls.name
 	return name
+
+
+def stateConfigToActual(stu, configname):
+	"""Map ('MA','Senate') to 'sldu' (or 'cd' or 'sldl' as appropriate)"""
+	if configname == 'Congress':
+		return 'cd'
+	ls = legislatureStatsForPostalCode(stu)
+	if ls is None:
+		return None
+	minseats = None
+	confseats = None
+	for tls in ls:
+		if tls.shortname == 'Congress':
+			continue
+		if (minseats is None) or (tls.count < minseats):
+			minseats = tls.count
+		if tls.shortname == configname:
+			confseats = tls.count
+	if confseats is None:
+		raise Exception('unknown configuration %s,%s' % (stu, configname))
+	if confseats == minseats:
+		# the body with fewer seats is the 'upper' house of legislature
+		# Also, Nebraska.
+		return 'sldu'
+	else:
+		return 'sldl'
