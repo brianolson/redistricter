@@ -457,6 +457,9 @@ void Solver::initNodes() {
 }
 
 DistrictSet* Solver::getDistricts() { // lazy allocating caching accessor
+    if (_dists != NULL) {
+	return _dists;
+    }
 	if ( districtSetFactory != NULL ) {
 		_dists = districtSetFactory(this);
 	} else {
