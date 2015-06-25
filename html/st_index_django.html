@@ -30,8 +30,14 @@
 {{extra|safe}}
 {% if current_demographics %}
 <table><tr><th colspan="2">Demographics</th><tr>
-<tr><th>Current</th><th>My Way</th></tr>
-<tr><td>{{current_demographics|safe}}</td><td>{{racedata|safe}}</td></tr>
+<tr>
+<th>My Way</th>
+<th>Current</th>
+</tr>
+<tr>
+<td class="demobox">{{racedata|safe}}</td>
+<td class="demobox">{{current_demographics|safe}}</td>
+</tr>
 </table>
 {% else %}
 {{racedata|safe}}
