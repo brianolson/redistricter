@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argpase
+import argparse
 import os
 import shutil
 import sqlite3
@@ -11,7 +11,7 @@ cwd = os.getcwd()
 
 def main():
         ap = argparse.ArgumentParser()
-        ap.add_option('bad_config', help='name of config to remove, e.g. AZ_Senate')
+        ap.add_argument('bad_config', help='name of config to remove, e.g. AZ_Senate')
         args = ap.parse_args()
 	#bad_config = 'AZ_Senate'
         bad_config = args.bad_config
