@@ -1,8 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+##!/usr/bin/python
 
 import cgi
 import csv
 import gzip
+import json
 import logging
 import os
 import random
@@ -436,7 +438,8 @@ class SubmissionAnalyzer(object):
 		cmd = [os.path.join(self.options.bindir, 'analyze'),
 			'-P', datapb,
 			'-d', districtNum,
-			'--loadSolution', '-']
+                       '-notext',
+			'-r', '-']
 		logging.debug('run %r', cmd)
 		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
 		p.stdin.write(solraw)
@@ -448,12 +451,12 @@ class SubmissionAnalyzer(object):
 		raw = p.stdout.read()
 		m = kmppRe.search(raw)
 		if not m:
-			self.stderr.write('failed to find kmpp in analyze output:\n%s\n' % raw)
+			self.stderr.write('failed to find kmpp %r in analyze output:\n%s\n%s\n' % (kmppRe.pattern, ' '.join(cmd), raw))
 			return (None,None)
 		kmpp = float(m.group(1))
 		m = maxMinRe.search(raw)
 		if not m:
-			self.stderr.write('failed to find max/min in analyze output:\n%s\n' % raw)
+			self.stderr.write('failed to find max/min %r in analyze output:\ns\n%s\n' % (makMinRe.pattern, ' '.join(cmd), raw))
 			return (None,None)
 		max = int(m.group(1))
 		min = int(m.group(2))
@@ -483,8 +486,8 @@ class SubmissionAnalyzer(object):
 			return False
 		if 'solution' in tfparts:
 			kmppSpread = self.measureSolution(tfparts['solution'], config)
-			if kmppSpread is None:
-				logging.warn('failed to analyze solution in "%s"', fpath)
+			if (not kmppSpread) or (kmppSpread[0] is None):
+				logging.warn('failed to analyze solution for %s in "%s"', config, fpath)
 				# TODO: set attempt count in 'vars' and retry up to N times
 				return False
 		else:
@@ -641,6 +644,7 @@ class SubmissionAnalyzer(object):
 	
 	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None):
 		args = dict(self.config[cname].drendargs)
+                args.pop('--loadSolution', None)
 		args['--pngout'] = pngpath
 		if dszpath:
 			args['-r'] = dszpath
@@ -659,6 +663,7 @@ class SubmissionAnalyzer(object):
 			p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
 		retcode = p.wait()
 		if retcode != 0:
+                        self.stderr.write('config args {!r}\n'.format(self.config[cname].drendargs))
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
 			return None
 	
@@ -995,7 +1000,8 @@ class SubmissionAnalyzer(object):
 	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
-		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best."""
+		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best.
+                Also build the top level index.html"""
 		outdir = self.options.outdir
 		if not os.path.isdir(outdir):
 			os.makedirs(outdir)
@@ -1008,6 +1014,7 @@ class SubmissionAnalyzer(object):
 			stutodo.add(stu)
 		for stu in stutodo:
 			self.statedir(stu, configs)
+
 		# build top level index.html
 		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		newestconfig = self.newestWinner(configs)['config']
@@ -1029,12 +1036,24 @@ class SubmissionAnalyzer(object):
 			nwinnername=newestname,
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
+                        configjson=json.dumps(self.availableConfigs(configs)),
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)
 		self.copyResources()
+
+        def availableConfigs(self, configs):
+                # return list [ (nice name, path), ...] for js
+                out = []
+		for cname, data in configs.iteritems():
+			if not data.get('kmpp'):
+				continue
+                        stu, var = cname.split('_', 1)
+                        name = states.nameForPostalCode(stu)
+                        out.append( (name + ' ' + var, cname) )
+                return out
 
 	def copyResources(self):
 		outdir = self.options.outdir

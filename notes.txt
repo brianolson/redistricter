@@ -214,3 +214,18 @@ t
 ~/src/redistricter/analyze -P FL/fl.pb -d=-1 --csv-solution=2013_actual/cd/12_FL_CD113.txt --compare :5,7,8,9,10,11,12,13 --labels total,white,black,native,asian,pacific,other,mixed --dsort 1 --html /tmp/fl.html --notext
 
 ~/src/redistricter/analyze_submissions.py --actuals=/Volumes/bulktogo/redata/2010/2013_actual --datadir=/Volumes/bulktogo/redata/2010 --soldir=/Volumes/bulktogo/redata/2010/solutions --report=/Volumes/bulktogo/redata/2010/solutions/report/report.html --outdir=/Volumes/bulktogo/redata/2010/solutions/report --rooturl=/2010/ --rehtml --config=FL_Congress
+
+
+
+TODO: http://vis4.net/blog/posts/no-more-mercator-tiles/
+
+
+http://leafletjs.com/
+http://polymaps.org/
+http://openlayers.org/
+http://modestmaps.com/
+http://proj4js.org/
+https://www.mapbox.com/tilemill/
+http://mapnik.org/
+http://en.wikipedia.org/wiki/Albers_projection
+"Albers Equal-Area Conic"

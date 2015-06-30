@@ -135,7 +135,7 @@ pw:	pw.cpp
 	$(CXX) ${CXXFLAGS} -Wall ${LDPNG} pw.cpp -lz -o pw -g
 
 dumpBinLog:	dumpBinLog.cpp redata.pb.cc redata.pb.h
-	$(CXX) ${CXXFLAGS} -lz -lprotobuf -lpthread dumpBinLog.cpp redata.pb.cc -o dumpBinLog
+	$(CXX) ${CXXFLAGS} dumpBinLog.cpp redata.pb.cc -lz -lprotobuf -lpthread -o dumpBinLog
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj

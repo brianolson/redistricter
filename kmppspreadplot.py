@@ -130,6 +130,9 @@ class svgplotter(object):
     self.comments.append(blah)
 
   def close(self):
+    if (self.maxx is None) or (self.minx is None) or (self.maxy is None) or (self.miny is None):
+      sys.stderr.write('no min/max dims, skipping {!r}\n'.format(self.fname))
+      return
     if not self.fout:
       self.fout = open(self.fname, 'w')
     self.scalex = self.width / ((self.maxx - self.minx) * 1.10)

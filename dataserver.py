@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+##!/usr/bin/python
 #
 # Run this in datasets dir:
 # ${REDISTRICTER_BIN}/dataserver.py
