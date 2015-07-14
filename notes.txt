@@ -215,10 +215,40 @@ t
 
 ~/src/redistricter/analyze_submissions.py --actuals=/Volumes/bulktogo/redata/2010/2013_actual --datadir=/Volumes/bulktogo/redata/2010 --soldir=/Volumes/bulktogo/redata/2010/solutions --report=/Volumes/bulktogo/redata/2010/solutions/report/report.html --outdir=/Volumes/bulktogo/redata/2010/solutions/report --rooturl=/2010/ --rehtml --config=FL_Congress
 
+election data at precinct level:
+http://www.stanford.edu/~jrodden/jrhome_files/electiondata.htm
+http://projects.iq.harvard.edu/eda/data
 
+http://www.washingtonpost.com/blogs/wonkblog/wp/2014/06/03/this-computer-programmer-solved-gerrymandering-in-his-spare-time/
+
+http://www.washingtonpost.com/blogs/wonkblog/wp/2014/10/08/why-drawing-congressional-districts-by-race-is-a-terrible-idea/
+
+2014-12-11 14:45:17 EST (Thursday, December 11 02:45:17 PM)
+
+ftp://alt.ncsbe.gov/enrs/resultsVTD20141104.zip
+ftp://alt.ncsbe.gov/enrs/resultsPCT20141104.zip
+ftp://alt.ncsbe.gov/enrs/pritabulation11xx06xx2012.zip
+
+TODO: draw map tiles projected with http://trac.osgeo.org/proj/
+
+render tiles using:
+projection EPSG:900913 'google' aka and more officially epsg:3857
+
+
+20150630
+The Richmond Times-Dispatch opined today [1], citing a recent article [2], that gerrymandering is making voting a pointless act and depressing voter turnout and depressing our democracy. In 600 state elections, 19 incumbents were defeated. In 280 party primaries there were 8 challenges to the incumbent. Voter turnout hovers at 8%.[3]
+
+
+[1] http://www.richmond.com/opinion/our-opinion/article_42f07e65-aeb5-5d2e-bffb-f8cd34261e9a.html#.VYs95v4eYu0.wordpress
+[2] http://www.richmond.com/news/virginia/government-politics/jeff-schapiro/article_784cffac-a447-53c0-afba-e97ecb83aa5d.html
+[3] I haven’t checked these numbers; I assume the original sources are public data; I find these numbers plausible and believable.
+
+http://bdistricting.com/2010/VA/
+
+
+@RTDSchapiro Would some example non-gerrymandered compact district maps help? http://bdistricting.com/2010/VA/
 
 TODO: http://vis4.net/blog/posts/no-more-mercator-tiles/
-
 
 http://leafletjs.com/
 http://polymaps.org/
@@ -229,3 +259,4 @@ https://www.mapbox.com/tilemill/
 http://mapnik.org/
 http://en.wikipedia.org/wiki/Albers_projection
 "Albers Equal-Area Conic"
+
