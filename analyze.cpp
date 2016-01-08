@@ -69,6 +69,191 @@ void stringVectorAppendCallback(vector<const char*>& context, const char* str) {
     context.push_back(str);
 }
 
+static int dataExport(const char* exportPath, const Solver& sov) {
+    bool exportCsv = false;
+    bool gz = false;
+    if (strcasestr(exportPath, ".csv")) {
+        exportCsv = true;
+    }
+    if (strcasestr(exportPath, ".gz")) {
+        gz = true;
+    }
+    uint64_t maxUbid = 0;
+    for (int i = 0; i < sov.gd->numPoints; ++i) {
+        if (sov.gd->ubids[i].ubid > maxUbid) {
+            maxUbid = sov.gd->ubids[i].ubid;
+        }
+    }
+    int length = 0;
+    while (maxUbid > 0) {
+        length++;
+        maxUbid /= 10;
+    }
+    if (length < 4) {
+        fprintf(stderr, "unusually short ubid length %d, max ubid=%lld, cowardly exiting\n", length, maxUbid);
+        exit(1); return 1;
+    } else if (length < 10) {
+        length = 10;  // round up to 6 tract + 4 block
+    } else if (length < 13) {
+        length = 13;  // round up to 3 county + 6 tract + 4 block
+    } else if (length < 15) {
+        length = 15;  // round up to 2 state + 3 county + 6 tract + 4 block
+    }
+    char format[50];
+    if (exportCsv) {
+        snprintf(format, sizeof(format), "%%0%dlld,%%d\n", length);
+    } else {
+        // fixed length lines
+        snprintf(format, sizeof(format), "%%0%dlld%%02d\n", length);
+    }
+    FILE* exportf = NULL;
+    gzFile exportgzf = NULL;
+    if (gz) {
+        exportgzf = gzopen(exportPath, "wb");
+        if (exportgzf == NULL) {
+            int gzerrno = 0;
+            fprintf(stderr, "gzip error \"%s\" on file \"%s\"\n", gzerror(exportgzf, &gzerrno), exportPath);
+            perror(exportPath);
+            exit(1);
+            return 1;
+        }
+    } else {
+        exportf = fopen(exportPath, "w");
+        if (exportf == NULL) {
+            perror(exportPath);
+            exit(1);
+            return 1;
+        }
+    }
+    uint32_t minIndex = 0, maxIndex = 0;
+    uint64_t* ubidLut = sov.gd->makeUbidLUT(&minIndex, &maxIndex);
+    for (int i = 0; i < sov.gd->numPoints; ++i) {
+        uint64_t ubid = ubidLut[i - minIndex];  //sov.gd->ubidOfIndex(i);
+        if (gz) {
+            gzprintf(exportgzf, format, ubid, sov.winner[i]);
+        } else {
+            fprintf(exportf, format, ubid, sov.winner[i]);
+        }
+    }
+    delete [] ubidLut;
+    if (gz) {
+        gzflush(exportgzf, Z_FINISH);
+        gzclose(exportgzf);
+    } else {
+        fclose(exportf);
+    }
+    return 0;
+}
+
+static void writeText(const Solver& sov, FILE* textout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies, char* fname) {
+    if (distcol) {
+        // for each column, print district values
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(textout, "%s:%s\n", fname, labels[col]);
+            for (POPTYPE d = 0; d < sov.districts; ++d) {
+                fprintf(textout, "\t%d: %d\n", d, counts[d][col]);
+            }
+        }
+    }
+
+    if (distrow) {
+        // for each district, print column values
+        for (POPTYPE di = 0; di < sov.districts; ++di) {
+            POPTYPE d = dsortIndecies[di];
+            fprintf(textout, "distrct:%d\n", d);
+            for (unsigned int col = 0; col < columns.size(); ++col) {
+                fprintf(textout, "\t%s: %d\n", labels[col], counts[d][col]);
+            }
+        }
+    }
+}
+
+static void writeCSV(const Solver& sov, FILE* csvout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
+    if (distcol) {
+        // for each column, print district values
+        // header row
+        fprintf(csvout, "column");
+        for (POPTYPE d = 0; d < sov.districts; ++d) {
+            fprintf(csvout, ",%d", d);
+        }
+        fprintf(csvout, "\n");
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(csvout, "%s", labels[col]);
+            for (POPTYPE d = 0; d < sov.districts; ++d) {
+                fprintf(csvout, ",%d", counts[d][col]);
+            }
+            fprintf(csvout, "\n");
+        }
+    }
+
+    if (distrow) {
+        // for each district, print column values
+        // header row
+        fprintf(csvout, "district");
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(csvout, ",%s", labels[col]);
+        }
+        fprintf(csvout, "\n");
+        for (POPTYPE di = 0; di < sov.districts; ++di) {
+            POPTYPE d = dsortIndecies[di];
+            fprintf(csvout, "%d", d);
+            for (unsigned int col = 0; col < columns.size(); ++col) {
+                fprintf(csvout, ",%d", counts[d][col]);
+            }
+            fprintf(csvout, "\n");
+        }
+    }
+}
+
+static void writeHtml(const Solver& sov, FILE* htmlout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
+    bool printDistrictNumber = false;
+    if (distcol) {
+        // for each column, print district values
+        // header row
+        fprintf(htmlout, "<table>");
+        if (printDistrictNumber) {
+            fprintf(htmlout, "<tr><th>column</th>");
+            for (POPTYPE d = 0; d < sov.districts; ++d) {
+                fprintf(htmlout, "<th>%d</th>", d);
+            }
+            fprintf(htmlout, "</tr>\n");
+        }
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(htmlout, "<tr><td>%s</td>", labels[col]);
+            for (POPTYPE d = 0; d < sov.districts; ++d) {
+                fprintf(htmlout, "<td>%d</td>", counts[d][col]);
+            }
+            fprintf(htmlout, "</tr>\n");
+        }
+        fprintf(htmlout, "</table>\n");
+    }
+
+    if (distrow) {
+        // for each district, print column values
+        // header row
+        fprintf(htmlout, "<table><tr>");
+        if (printDistrictNumber) {
+            fprintf(htmlout, "<th>district</th>");
+        }
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(htmlout, "<th>%s</th>", labels[col]);
+        }
+        fprintf(htmlout, "</tr>\n");
+        for (POPTYPE di = 0; di < sov.districts; ++di) {
+            POPTYPE d = dsortIndecies[di];
+            fprintf(htmlout, "<tr>");
+            if (printDistrictNumber) {
+                fprintf(htmlout, "<td>%d</td>", d);
+            }
+            for (unsigned int col = 0; col < columns.size(); ++col) {
+                fprintf(htmlout, "<td>%d</td>", counts[d][col]);
+            }
+            fprintf(htmlout, "</tr>\n");
+        }
+        fprintf(htmlout, "</table>\n");
+    }
+}
+
 int main( int argc, const char** argv ) {
 	Solver sov;
 	int nargc;
@@ -212,78 +397,10 @@ int main( int argc, const char** argv ) {
 	}
 	
 	if (exportPath != NULL) {
-		bool exportCsv = false;
-		bool gz = false;
-		if (strcasestr(exportPath, ".csv")) {
-			exportCsv = true;
-		}
-		if (strcasestr(exportPath, ".gz")) {
-			gz = true;
-		}
-		uint64_t maxUbid = 0;
-		for (int i = 0; i < sov.gd->numPoints; ++i) {
-			if (sov.gd->ubids[i].ubid > maxUbid) {
-				maxUbid = sov.gd->ubids[i].ubid;
-			}
-		}
-		int length = 0;
-		while (maxUbid > 0) {
-			length++;
-			maxUbid /= 10;
-		}
-		if (length < 4) {
-			fprintf(stderr, "unusually short ubid length %d, max ubid=%lld, cowardly exiting\n", length, maxUbid);
-			exit(1); return 1;
-		} else if (length < 10) {
-			length = 10;  // round up to 6 tract + 4 block
-		} else if (length < 13) {
-			length = 13;  // round up to 3 county + 6 tract + 4 block
-		} else if (length < 15) {
-			length = 15;  // round up to 2 state + 3 county + 6 tract + 4 block
-		}
-		char format[50];
-		if (exportCsv) {
-			snprintf(format, sizeof(format), "%%0%dlld,%%d\n", length);
-		} else {
-			// fixed length lines
-			snprintf(format, sizeof(format), "%%0%dlld%%02d\n", length);
-		}
-		FILE* exportf = NULL;
-		gzFile exportgzf = NULL;
-		if (gz) {
-			exportgzf = gzopen(exportPath, "wb");
-			if (exportgzf == NULL) {
-				int gzerrno = 0;
-				fprintf(stderr, "gzip error \"%s\" on file \"%s\"\n", gzerror(exportgzf, &gzerrno), exportPath);
-				perror(exportPath);
-				exit(1);
-				return 1;
-			}
-		} else {
-			exportf = fopen(exportPath, "w");
-			if (exportf == NULL) {
-				perror(exportPath);
-				exit(1);
-				return 1;
-			}
-		}
-		uint32_t minIndex = 0, maxIndex = 0;
-		uint64_t* ubidLut = sov.gd->makeUbidLUT(&minIndex, &maxIndex);
-		for (int i = 0; i < sov.gd->numPoints; ++i) {
-			uint64_t ubid = ubidLut[i - minIndex];  //sov.gd->ubidOfIndex(i);
-			if (gz) {
-				gzprintf(exportgzf, format, ubid, sov.winner[i]);
-			} else {
-				fprintf(exportf, format, ubid, sov.winner[i]);
-			}
-		}
-		delete [] ubidLut;
-		if (gz) {
-			gzflush(exportgzf, Z_FINISH);
-			gzclose(exportgzf);
-		} else {
-			fclose(exportf);
-		}
+            int ret = dataExport(exportPath, sov);
+            if (ret != 0) {
+                return ret;
+            }
 	}
 	
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
@@ -373,115 +490,18 @@ int main( int argc, const char** argv ) {
 
 		// plain text out
 		if (textout != NULL) {
-			if (distcol) {
-				// for each column, print district values
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(textout, "%s:%s\n", fname, labels[col]);
-					for (POPTYPE d = 0; d < sov.districts; ++d) {
-						fprintf(textout, "\t%d: %d\n", d, counts[d][col]);
-					}
-				}
-			}
-
-			if (distrow) {
-				// for each district, print column values
-				for (POPTYPE di = 0; di < sov.districts; ++di) {
-					POPTYPE d = dsortIndecies[di];
-					fprintf(textout, "distrct:%d\n", d);
-					for (unsigned int col = 0; col < columns.size(); ++col) {
-						fprintf(textout, "\t%s: %d\n", labels[col], counts[d][col]);
-					}
-				}
-			}
-		}
+                    writeText(sov, textout, distrow, distcol, columns, labels, counts, dsortIndecies, fname);
+                }
 		
 		// csv out
 		if (csvout != NULL) {
-			if (distcol) {
-				// for each column, print district values
-				// header row
-				fprintf(csvout, "column");
-				for (POPTYPE d = 0; d < sov.districts; ++d) {
-					fprintf(csvout, ",%d", d);
-				}
-				fprintf(csvout, "\n");
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(csvout, "%s", labels[col]);
-					for (POPTYPE d = 0; d < sov.districts; ++d) {
-						fprintf(csvout, ",%d", counts[d][col]);
-					}
-					fprintf(csvout, "\n");
-				}
-			}
-
-			if (distrow) {
-				// for each district, print column values
-				// header row
-				fprintf(csvout, "district");
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(csvout, ",%s", labels[col]);
-				}
-				fprintf(csvout, "\n");
-				for (POPTYPE di = 0; di < sov.districts; ++di) {
-					POPTYPE d = dsortIndecies[di];
-					fprintf(csvout, "%d", d);
-					for (unsigned int col = 0; col < columns.size(); ++col) {
-						fprintf(csvout, ",%d", counts[d][col]);
-					}
-					fprintf(csvout, "\n");
-				}
-			}
-		}
+                    writeCSV(sov, csvout, distrow, distcol, columns, labels, counts, dsortIndecies);
+                }
 		
 		// html out
 		if (htmlout != NULL) {
-			bool printDistrictNumber = false;
-			if (distcol) {
-				// for each column, print district values
-				// header row
-				fprintf(htmlout, "<table>");
-				if (printDistrictNumber) {
-					fprintf(htmlout, "<tr><th>column</th>");
-					for (POPTYPE d = 0; d < sov.districts; ++d) {
-						fprintf(htmlout, "<th>%d</th>", d);
-					}
-					fprintf(htmlout, "</tr>\n");
-				}
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(htmlout, "<tr><td>%s</td>", labels[col]);
-					for (POPTYPE d = 0; d < sov.districts; ++d) {
-						fprintf(htmlout, "<td>%d</td>", counts[d][col]);
-					}
-					fprintf(htmlout, "</tr>\n");
-				}
-				fprintf(htmlout, "</table>\n");
-			}
-
-			if (distrow) {
-				// for each district, print column values
-				// header row
-				fprintf(htmlout, "<table><tr>");
-				if (printDistrictNumber) {
-					fprintf(htmlout, "<th>district</th>");
-				}
-				for (unsigned int col = 0; col < columns.size(); ++col) {
-					fprintf(htmlout, "<th>%s</th>", labels[col]);
-				}
-				fprintf(htmlout, "</tr>\n");
-				for (POPTYPE di = 0; di < sov.districts; ++di) {
-					POPTYPE d = dsortIndecies[di];
-					fprintf(htmlout, "<tr>");
-					if (printDistrictNumber) {
-						fprintf(htmlout, "<td>%d</td>", d);
-					}
-					for (unsigned int col = 0; col < columns.size(); ++col) {
-						fprintf(htmlout, "<td>%d</td>", counts[d][col]);
-					}
-					fprintf(htmlout, "</tr>\n");
-				}
-				fprintf(htmlout, "</table>\n");
-			}
-		}
+                    writeHtml(sov, htmlout, distrow, distcol, columns, labels, counts, dsortIndecies);
+                }
 
 		for (unsigned int col = 0; col < data_columns.size(); ++col) {
 			free(data_columns[col]);
