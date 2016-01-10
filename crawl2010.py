@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
 # standard
+import gzip
 import logging
 import optparse
 import os
 import re
 import states
+import struct
 import subprocess
 import sys
 import time
@@ -268,13 +270,25 @@ class GeoBlocksPlaces(object):
                         else:
                                 placelist.append(ubid)
 
-        def write(self, out):
+        def writePlaceUbidMap(self, out):
                 for place, placelist in self.places.iteritems():
                         out.write(place)
                         out.write('\x1d') # group sep
                         out.write('\x1c'.join(placelist)) # field sep
                         out.write('\n') # this will make it easier to `less` the file
                         #out.write('\x1e') # record sep
+
+        def writeUbidPlaceMap(self, out):
+                they = []
+                for place, placelist in self.places.iteritems():
+                        for place_ubid in placelist:
+                                they.append( (long(place_ubid), long(place)) )
+                # sort so that result can be loaded into a block of memory and binary searched on ubid
+                they.sort()
+                for place_ubid, place in they:
+                        # two uint64
+                        # uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
+                        out.write(struct.pack('>QQ', place_ubid, place))
 
 
 class StateData(setupstatedata.StateData):
@@ -321,8 +335,11 @@ class StateData(setupstatedata.StateData):
 				fo.write(line)
                                 places.pl2010line(line)
 		fo.close()
-                with open(placespath, 'wb') as placefile:
-                        places.write(placefile)
+                # with open(placespath, 'wb') as placefile:
+                #         places.writePlaceUbidMap(placefile)
+                with gzip.open(placespath, 'wb') as placefile:
+                        places.writeUbidPlaceMap(placefile)
+                        placefile.flush()
 	
 	def compileBinaryData(self):
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
