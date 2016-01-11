@@ -292,8 +292,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	FILE* htmlout = NULL;
 
 	int dsort = -1;
-	//bool loadSolutionCsvMode = false;
-	//const char* csvInName = NULL;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
@@ -316,7 +314,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    BoolArg("distrow", &distrow);
 	    BoolArg("distcol", &distcol);
 	    StringArg("export", &exportPath);
-	    //StringArg("csv-solution", &csvInName);
 
 	    // default:
 	    argv[nargc] = argv[argi];
@@ -324,13 +321,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    argi++;
 	}
 	argv[nargc]=NULL;
-
-#if 0
-	if (csvInName != NULL) {
-	    sov.loadname = strdup(csvInName);
-	    loadSolutionCsvMode = true;
-	}
-#endif
 
 	int argcout = sov.handleArgs(nargc, argv);
 	if (argcout != 1) {
@@ -340,6 +330,8 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		exit(1);
 		return 1;
 	}
+
+        // Open various output files so they can be appended to while looping through things to compare.
 
 	if (notext) {
 	    textout = NULL;
@@ -395,16 +387,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		}
 		if (sov.hasSolutionToLoad()) {
 		    sov.loadSolution();
-#if 0
-		} else if (loadSolutionCsvMode) {
-			if (sov.loadCsvSolution(sov.loadname) < 0) {
-				return 1;
-			}
-		} else {
-			if (sov.loadZSolution(sov.loadname) < 0) {
-				return 1;
-			}
-#endif
 		}
 		if (!quiet) {
 			char* statstr = new char[10000];
@@ -415,6 +397,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	}
 	
 	if (exportPath != NULL) {
+            // Take the data we just loaded and write it back out again.
             int ret = dataExport(exportPath);
             if (ret != 0) {
                 return ret;
