@@ -69,7 +69,29 @@ void stringVectorAppendCallback(vector<const char*>& context, const char* str) {
     context.push_back(str);
 }
 
-static int dataExport(const char* exportPath, const Solver& sov) {
+class AnalyzeApp {
+    public:
+    AnalyzeApp();
+    int main(int argc, const char** argv);
+
+    int dataExport(const char* exportPath);
+    void writeText(FILE* textout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies, char* fname);
+    void writeCSV(FILE* csvout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
+    void writeHtml(FILE* htmlout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
+
+    protected:
+    Solver sov;
+
+    bool distrow;
+    bool distcol;
+    bool quiet;
+};
+
+AnalyzeApp::AnalyzeApp()
+    : distrow(true), distcol(false), quiet(false)
+{}
+
+int AnalyzeApp::dataExport(const char* exportPath) {
     bool exportCsv = false;
     bool gz = false;
     if (strcasestr(exportPath, ".csv")) {
@@ -145,7 +167,7 @@ static int dataExport(const char* exportPath, const Solver& sov) {
     return 0;
 }
 
-static void writeText(const Solver& sov, FILE* textout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies, char* fname) {
+void AnalyzeApp::writeText(FILE* textout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies, char* fname) {
     if (distcol) {
         // for each column, print district values
         for (unsigned int col = 0; col < columns.size(); ++col) {
@@ -168,7 +190,7 @@ static void writeText(const Solver& sov, FILE* textout, bool distrow, bool distc
     }
 }
 
-static void writeCSV(const Solver& sov, FILE* csvout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
+void AnalyzeApp::writeCSV(FILE* csvout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
     if (distcol) {
         // for each column, print district values
         // header row
@@ -205,7 +227,7 @@ static void writeCSV(const Solver& sov, FILE* csvout, bool distrow, bool distcol
     }
 }
 
-static void writeHtml(const Solver& sov, FILE* htmlout, bool distrow, bool distcol, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
+void AnalyzeApp::writeHtml(FILE* htmlout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies) {
     bool printDistrictNumber = false;
     if (distcol) {
         // for each column, print district values
@@ -254,8 +276,7 @@ static void writeHtml(const Solver& sov, FILE* htmlout, bool distrow, bool distc
     }
 }
 
-int main( int argc, const char** argv ) {
-	Solver sov;
+int AnalyzeApp::main( int argc, const char** argv ) {
 	int nargc;
 
 	const char* textOutName = NULL;
@@ -271,9 +292,6 @@ int main( int argc, const char** argv ) {
 	FILE* htmlout = NULL;
 
 	int dsort = -1;
-	bool distrow = true;
-	bool distcol = false;
-	bool quiet = false;
 	//bool loadSolutionCsvMode = false;
 	//const char* csvInName = NULL;
 	const char* exportPath = NULL;
@@ -397,7 +415,7 @@ int main( int argc, const char** argv ) {
 	}
 	
 	if (exportPath != NULL) {
-            int ret = dataExport(exportPath, sov);
+            int ret = dataExport(exportPath);
             if (ret != 0) {
                 return ret;
             }
@@ -490,17 +508,17 @@ int main( int argc, const char** argv ) {
 
 		// plain text out
 		if (textout != NULL) {
-                    writeText(sov, textout, distrow, distcol, columns, labels, counts, dsortIndecies, fname);
+                    writeText(textout, columns, labels, counts, dsortIndecies, fname);
                 }
 		
 		// csv out
 		if (csvout != NULL) {
-                    writeCSV(sov, csvout, distrow, distcol, columns, labels, counts, dsortIndecies);
+                    writeCSV(csvout, columns, labels, counts, dsortIndecies);
                 }
 		
 		// html out
 		if (htmlout != NULL) {
-                    writeHtml(sov, htmlout, distrow, distcol, columns, labels, counts, dsortIndecies);
+                    writeHtml(htmlout, columns, labels, counts, dsortIndecies);
                 }
 
 		for (unsigned int col = 0; col < data_columns.size(); ++col) {
@@ -508,4 +526,10 @@ int main( int argc, const char** argv ) {
 		}
 		free(fname);
 	}
+        return 0;
+}
+
+int main( int argc, const char** argv ) {
+    AnalyzeApp aa;
+    return aa.main(argc, argv);
 }
