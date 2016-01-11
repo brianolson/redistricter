@@ -75,6 +75,9 @@ class AnalyzeApp {
     int main(int argc, const char** argv);
 
     int dataExport(const char* exportPath);
+
+    int doCompare(char* fname, char* label);
+
     void writeText(FILE* textout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies, char* fname);
     void writeCSV(FILE* csvout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
     void writeHtml(FILE* htmlout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
@@ -85,10 +88,20 @@ class AnalyzeApp {
     bool distrow;
     bool distcol;
     bool quiet;
+
+    int dsort;
+
+    FILE* textout;
+    FILE* csvout;
+    FILE* htmlout;
 };
 
 AnalyzeApp::AnalyzeApp()
-    : distrow(true), distcol(false), quiet(false)
+    : distrow(true), distcol(false), quiet(false),
+      dsort(-1),
+      textout(NULL),
+      csvout(NULL),
+      htmlout(NULL)
 {}
 
 int AnalyzeApp::dataExport(const char* exportPath) {
@@ -281,17 +294,17 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 
 	const char* textOutName = NULL;
 	bool notext = false;
-	FILE* textout = stdout;
+	//FILE* textout = stdout;
 
 	const char* csvOutName = NULL;
 	bool nocsv = false;
-	FILE* csvout = NULL;
+	//FILE* csvout = NULL;
 
 	const char* htmlOutName = NULL;
 	bool nohtml = false;
-	FILE* htmlout = NULL;
+	//FILE* htmlout = NULL;
 
-	int dsort = -1;
+	//int dsort = -1;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
@@ -405,111 +418,125 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	}
 	
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
-		char* fname = strdup(compareArgs[i]);
-		vector<int> columns;
-		parseCompareArg(fname, &columns);
-		if (!quiet) {
-			fprintf(stdout, "reading \"%s\" columns:", fname);
-			for (unsigned int col = 0; col < columns.size(); ++col) {
-				fprintf(stdout, " %d", columns[col]);
-			}
-			fprintf(stdout, "\n");
-		}
-		vector<uint32_t*> data_columns;
-		int recnos_matched;
-		bool ok = read_uf1_columns_for_recnos(
-			sov.gd, fname, columns, &data_columns, &recnos_matched);
-		if (!quiet) {
-			fprintf(stdout, "%d recnos matched of %d points\n",
-				recnos_matched, sov.gd->numPoints);
-		}
-		if (!ok) {
-			fprintf(stderr, "read file \"%s\" failed\n", fname);
-			return 1;
-		}
-		// for each district, for each columns, sum things...
-		// counts[district][column]
-		vector<vector<uint32_t> > counts;
-		for (POPTYPE d = 0; d < sov.districts; ++d) {
-			counts.push_back(vector<uint32_t>());
-			vector<uint32_t>& dc = counts[d];
-			for (unsigned int col = 0; col < data_columns.size(); ++col) {
-				dc.push_back(0);
-			}
-		}
-		for (int x = 0; x < sov.gd->numPoints; ++x) {
-			POPTYPE d = sov.winner[x];
-			if (d == NODISTRICT) {
-				continue;
-			}
-			vector<uint32_t>& dc = counts[d];
-			for (unsigned int col = 0; col < data_columns.size(); ++col) {
-				dc[col] += data_columns[col][x];
-			}
-		}
-		char** labels = new char*[columns.size()];
-		if (labelArgs.size() > i) {
-			labels[0] = strdup(labelArgs[i]);
-		} else {
-			const char* arg = compareArgs[i];
-			labels[0] = strdup(strchr(arg, ':') + 1);
-		}
-		{
-			int lp = 1;
-			int pos = 1;
-			while (labels[0][pos] != '\0') {
-				if (labels[0][pos] == ',') {
-					labels[0][pos] = '\0';
-					pos++;
-					labels[lp] = labels[0] + pos;
-					lp++;
-				} else {
-					pos++;
-				}
-			}
-		}
-		
-		// sort districts based on some column index
-		int* dsortIndecies = new int[sov.districts];
-		for (int d = 0; d < sov.districts; ++d) {
-			dsortIndecies[d] = d;
-		}
-		if (dsort >= 0 && ((unsigned int)dsort) < columns.size()) {
-			bool done = false;
-			while (!done) {
-				done = true;
-				for (int i = 1; i < sov.districts; ++i) {
-					if (counts[dsortIndecies[i-1]][dsort] < counts[dsortIndecies[i]][dsort]) {
-						int x = dsortIndecies[i];
-						dsortIndecies[i] = dsortIndecies[i-1];
-						dsortIndecies[i-1] = x;
-						done = false;
-					}
-				}
-			}
-		}
-
-		// plain text out
-		if (textout != NULL) {
-                    writeText(textout, columns, labels, counts, dsortIndecies, fname);
-                }
-		
-		// csv out
-		if (csvout != NULL) {
-                    writeCSV(csvout, columns, labels, counts, dsortIndecies);
-                }
-		
-		// html out
-		if (htmlout != NULL) {
-                    writeHtml(htmlout, columns, labels, counts, dsortIndecies);
-                }
-
-		for (unsigned int col = 0; col < data_columns.size(); ++col) {
-			free(data_columns[col]);
-		}
-		free(fname);
-	}
+            char* fname = strdup(compareArgs[i]);
+            char* label;
+            if (labelArgs.size() > i) {
+                label = strdup(labelArgs[i]);
+            } else {
+                // labels are just column numbers being compared
+                const char* arg = compareArgs[i];
+                label = strdup(strchr(arg, ':') + 1);
+            }
+            int err = doCompare(fname, label);
+            free(fname);
+            free(label);
+            if (err != 0) {
+                return err;
+            }
+        }
         return 0;
+}
+
+int AnalyzeApp::doCompare(char* fname, char* label) {
+    vector<int> columns;
+    parseCompareArg(fname, &columns);
+    if (!quiet) {
+        fprintf(stdout, "reading \"%s\" columns:", fname);
+        for (unsigned int col = 0; col < columns.size(); ++col) {
+            fprintf(stdout, " %d", columns[col]);
+        }
+        fprintf(stdout, "\n");
+    }
+    vector<uint32_t*> data_columns;
+    int recnos_matched;
+    bool ok = read_uf1_columns_for_recnos(
+                                          sov.gd, fname, columns, &data_columns, &recnos_matched);
+    if (!quiet) {
+        fprintf(stdout, "%d recnos matched of %d points\n",
+                recnos_matched, sov.gd->numPoints);
+    }
+    if (!ok) {
+        fprintf(stderr, "read file \"%s\" failed\n", fname);
+        return 1;
+    }
+    // for each district, for each columns, sum things...
+    // counts[district][column]
+    vector<vector<uint32_t> > counts;
+    for (POPTYPE d = 0; d < sov.districts; ++d) {
+        counts.push_back(vector<uint32_t>());
+        vector<uint32_t>& dc = counts[d];
+        for (unsigned int col = 0; col < data_columns.size(); ++col) {
+            dc.push_back(0);
+        }
+    }
+    for (int x = 0; x < sov.gd->numPoints; ++x) {
+        POPTYPE d = sov.winner[x];
+        if (d == NODISTRICT) {
+            continue;
+        }
+        vector<uint32_t>& dc = counts[d];
+        for (unsigned int col = 0; col < data_columns.size(); ++col) {
+            dc[col] += data_columns[col][x];
+        }
+    }
+    char** labels = new char*[columns.size()];
+    labels[0] = label;
+    {
+        int lp = 1;
+        int pos = 1;
+        while (labels[0][pos] != '\0') {
+            if (labels[0][pos] == ',') {
+                labels[0][pos] = '\0';
+                pos++;
+                labels[lp] = labels[0] + pos;
+                lp++;
+            } else {
+                pos++;
+            }
+        }
+    }
+		
+    // sort districts based on some column index
+    int* dsortIndecies = new int[sov.districts];
+    for (int d = 0; d < sov.districts; ++d) {
+        dsortIndecies[d] = d;
+    }
+    if (dsort >= 0 && ((unsigned int)dsort) < columns.size()) {
+        bool done = false;
+        while (!done) {
+            done = true;
+            for (int i = 1; i < sov.districts; ++i) {
+                if (counts[dsortIndecies[i-1]][dsort] < counts[dsortIndecies[i]][dsort]) {
+                    int x = dsortIndecies[i];
+                    dsortIndecies[i] = dsortIndecies[i-1];
+                    dsortIndecies[i-1] = x;
+                    done = false;
+                }
+            }
+        }
+    }
+
+    // plain text out
+    if (textout != NULL) {
+        writeText(textout, columns, labels, counts, dsortIndecies, fname);
+    }
+		
+    // csv out
+    if (csvout != NULL) {
+        writeCSV(csvout, columns, labels, counts, dsortIndecies);
+    }
+		
+    // html out
+    if (htmlout != NULL) {
+        writeHtml(htmlout, columns, labels, counts, dsortIndecies);
+    }
+
+    for (unsigned int col = 0; col < data_columns.size(); ++col) {
+        free(data_columns[col]);
+    }
+
+    delete [] labels;
+    return 0;
 }
 
 int main( int argc, const char** argv ) {
