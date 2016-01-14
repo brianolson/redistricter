@@ -283,12 +283,14 @@ class GeoBlocksPlaces(object):
                 for place, placelist in self.places.iteritems():
                         for place_ubid in placelist:
                                 they.append( (long(place_ubid), long(place)) )
+                # version, number of records
+                out.write(struct.pack('=QQ', 1, len(they)))
                 # sort so that result can be loaded into a block of memory and binary searched on ubid
                 they.sort()
                 for place_ubid, place in they:
                         # two uint64
                         # uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
-                        out.write(struct.pack('>QQ', place_ubid, place))
+                        out.write(struct.pack('=QQ', place_ubid, place))
 
 
 class StateData(setupstatedata.StateData):

@@ -11,8 +11,12 @@
 #include "Node.h"
 #include "uf1.h"
 #include "GeoData.h"
+#include "placefile.h"
 
 #include <vector>
+#include <map>
+#include <set>
+
 using std::vector;
 
 // Command line utility to analyze results for various good-district measures,
@@ -82,6 +86,8 @@ class AnalyzeApp {
     void writeCSV(FILE* csvout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
     void writeHtml(FILE* htmlout, const vector<int>& columns, char** labels, const vector<vector<uint32_t> >& counts, int* dsortIndecies);
 
+    int placeSplits();
+
     protected:
     Solver sov;
 
@@ -94,6 +100,9 @@ class AnalyzeApp {
     FILE* textout;
     FILE* csvout;
     FILE* htmlout;
+
+    PlaceMap* places;
+    PlaceNames* placenames;
 };
 
 AnalyzeApp::AnalyzeApp()
@@ -310,6 +319,9 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
 
+        const char* placemapPath = NULL;
+        const char* placenamePath = NULL;
+
 	nargc = 1;
 	sov.districtSetFactory = District2SetFactory;
 
@@ -328,6 +340,9 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    BoolArg("distcol", &distcol);
 	    StringArg("export", &exportPath);
 
+	    StringArg("places", &placemapPath);
+	    StringArg("place-names", &placenamePath);
+
 	    // default:
 	    argv[nargc] = argv[argi];
 	    nargc++;
@@ -343,6 +358,13 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		exit(1);
 		return 1;
 	}
+
+        if (placemapPath != NULL) {
+            places = PlaceMap::load(placemapPath);
+        }
+        if ((places != NULL) && (placenamePath != NULL)) {
+            placenames = PlaceNames::load(placenamePath);
+        }
 
         // Open various output files so they can be appended to while looping through things to compare.
 
@@ -416,7 +438,12 @@ int AnalyzeApp::main( int argc, const char** argv ) {
                 return ret;
             }
 	}
-	
+
+        if (places != NULL) {
+            placeSplits();
+        }
+
+        // Do sf1 columnar data comparisons
 	for (unsigned int i = 0; i < compareArgs.size(); ++i) {
             char* fname = strdup(compareArgs[i]);
             char* label;
@@ -435,6 +462,61 @@ int AnalyzeApp::main( int argc, const char** argv ) {
             }
         }
         return 0;
+}
+
+typedef std::map<uint64_t, std::set<POPTYPE> > dfptype;
+
+int AnalyzeApp::placeSplits() {
+    dfptype districtsForPlaces;
+    std::map<uint64_t, uint64_t> placePopulations;
+    for (int i = 0; i < sov.gd->numPoints; ++i) {
+        uint64_t ubid = sov.gd->ubids[i].ubid;
+        uint64_t place = places->placeForUbid(ubid);
+        if (place == PlaceMap::INVALID_PLACE) {
+            continue;
+        }
+        POPTYPE d = sov.winner[i];
+        districtsForPlaces[place].insert(d);
+        uint32_t blockIndex = sov.gd->ubids[i].index;
+        placePopulations[place] += sov.gd->pop[blockIndex];
+    }
+
+    // stats counters
+    int placeCount = 0;
+    int placesNotSplit = 0;
+    int placesSplit = 0;
+    vector<std::string> splitPlaceNames;
+    vector<uint64_t> splitPlaces;
+
+    for (dfptype::const_iterator it = districtsForPlaces.cbegin(); it != districtsForPlaces.cend(); ++it) {
+        placeCount++;
+        uint64_t place = it->first;
+        const std::set<POPTYPE>& districts = it->second;
+        if (districts.size() == 1) {
+            placesNotSplit++;
+        } else {
+            placesSplit++;
+            splitPlaces.push_back(place);
+        }
+    }
+
+    if (htmlout) {
+        fprintf(htmlout, "<p>%d places split (%0.3f%%), %d places not split (%0.3f%%)</p>\n", placesSplit, (placesSplit * 1.0) / placeCount, placesNotSplit, (placesNotSplit * 1.0) / placeCount);
+        if (placenames != NULL) {
+            fprintf(htmlout, "<p id=\"splitplaces\" class=\"hidden\">");
+            for (vector<uint64_t>::const_iterator it = splitPlaces.cbegin(); it != splitPlaces.cend(); ++it) {
+                uint64_t place = *it;
+                const PlaceNames::Place* p = placenames->get(place);
+                //fprintf(htmlout, "<span class=\"SPS\">%s %d</span> ", p->name.c_str());
+                fprintf(htmlout, "%s\t%llu\n", p->name.c_str(), placePopulations[place]);
+            }
+            fprintf(htmlout, "</p>\n");
+        }
+    }
+    if (textout) {
+        fprintf(textout, "%d places split (%0.3f%%), %d places not split (%0.3f%%)\n", placesSplit, (placesSplit * 1.0) / placeCount, placesNotSplit, (placesNotSplit * 1.0) / placeCount);
+    }
+    return 0;
 }
 
 int AnalyzeApp::doCompare(char* fname, char* label) {

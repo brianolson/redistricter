@@ -260,3 +260,9 @@ http://mapnik.org/
 http://en.wikipedia.org/wiki/Albers_projection
 "Albers Equal-Area Conic"
 
+2016-01-14 10:23:26 EST (Thursday, January 14 10:23:26 AM)
+
+~/src/redistricter/analyze -P ~/src/redata/2010/OH/oh.pb -d 16 --places ~/src/redata/2010/OH/geoblocks.places --place-names ~/src/redata/2010/OH/st39_oh_places.txt --loadSolution ~/src/redata/2010/solutions/report/OH_Congress/solution.dsz --text -
+
+~/src/redistricter/analyze -P ~/src/redata/2010/OH/oh.pb -d 16 --places ~/src/redata/2010/OH/geoblocks.places --place-names ~/src/redata/2010/OH/st39_oh_places.txt --csv-solution ~/src/redata/2010/2013_actual/cd/OH.csv --text -
+
