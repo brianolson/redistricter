@@ -126,6 +126,8 @@ public class LinksFromEdges {
 	}
 
 	/**
+	 * Read .zip bundles of shapefile data (edges and faces from Census data).
+	 * Write 'geoblocks.links' file with pairwise link information between loaded Census blocks.
 	 * @param args
 	 * @throws IOException 
 	 */

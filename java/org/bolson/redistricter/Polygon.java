@@ -1,6 +1,5 @@
 package org.bolson.redistricter;
 
-import org.bolson.redistricter.ShapefileBundle.RasterizationContext;
 
 /**
  * An ESRI Shapefile Polygon (type 5) object.
@@ -11,8 +10,13 @@ import org.bolson.redistricter.ShapefileBundle.RasterizationContext;
  */
 class Polygon extends ESRIShape {
 	public double xmin, xmax, ymin, ymax;
+	// index into x,y pairs of starts of loops.
+	// loops will begin and end at the same index into points.
 	public int[] parts;
+	// x,y pairs
+	// points in order make a loop as split at loop starts in parts[].
 	public double[] points;
+	// state-county-tract-block, ubid
 	public byte[] blockid;
 	boolean isWater = false;
 	
