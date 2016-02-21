@@ -160,10 +160,9 @@ include tiger/tiger.make
 java/org/bolson/redistricter/Redata.java:	redata.proto
 	protoc $< --java_out=java
 
-tools.jar:	java/org/bolson/redistricter/Redata.java java/org/bolson/redistricter/*.java jars/protobuf.jar
-	mkdir -p classes
-	cd java && find . -name \*.java | xargs ${JAVAC} -cp ../jars/protobuf.jar -g -d ../classes
-	cd classes && jar cf ../tools.jar org
+tools.jar:
+	mvn package
+	ln -s `ls -t target/redistricter*.jar | head -1` tools.jar
 
 THINGSTOCLEAN+=java/org/bolson/redistricter/Redata.java tools.jar
 
