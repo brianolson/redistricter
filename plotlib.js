@@ -75,6 +75,15 @@ PlotCommon.prototype.setup = function(canvas, xy, opt) {
 	if (opt && (opt['miny'] != undefined)) {
 		this.miny = opt['miny'];
 	}
+	if (opt && (opt['maxy'] != undefined)) {
+		this.maxy = opt['maxy'];
+	}
+	if (opt && (opt['minx'] != undefined)) {
+		this.minx = opt['minx'];
+	}
+	if (opt && (opt['maxx'] != undefined)) {
+		this.maxx = opt['maxx'];
+	}
 	this.insetx = 0;//max_ystr_width * 1.1;
 	this.insety = canvas.height - 11;
 	this.scalex = (canvas.width - this.max_ystr_width) / (this.maxx - this.minx);
@@ -218,7 +227,7 @@ MultiLinePlot.prototype.plot = function(canvas, datas, opt) {
 	var strokeStyle = dat.strokeStyle;
 	if (!strokeStyle) {
 	    strokeStyle = defaultLineStyles[defaultLineStylesIter];
-	    defaultLineStylesIter = (defaultLineStylesIter + 1) % defaultLineStylesIter.length;
+	    defaultLineStylesIter = (defaultLineStylesIter + 1) % defaultLineStyles.length;
 	}
 	this.ctx.strokeStyle = strokeStyle;
 	this.ctx.beginPath();
