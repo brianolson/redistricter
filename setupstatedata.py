@@ -591,6 +591,8 @@ class StateData(object):
 		mask_name = os.path.join(dpath, self.stu + 'blocks.png')
 		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
 		masksm_name = os.path.join(dpath, self.stu + 'blocks_sm.png')
+		mppblg_name = os.path.join(dpath, self.stu + '_lg.mppb')
+		masklg_name = os.path.join(dpath, self.stu + 'blocks_lg.png')
 		linksargs = None
 		baseRenderArgs = ['--boundx', '1920', '--boundy', '1080',
 				'--rastgeom', os.path.join(dpath, 'rastgeom')]
@@ -654,6 +656,7 @@ class StateData(object):
 				command = shapefile.makeCommand(
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
+
 		smargs = []
 		if (facesPaths and any_newerthan(facesPaths, mppbsm_name)) or newerthan(bestzip, mppbsm_name):
 			self.logf('need %s', mppbsm_name)
@@ -670,6 +673,24 @@ class StateData(object):
 			command = shapefile.makeCommand(smargs,
 				self.options.bindir, self.options.strict)
 			commands.append(command)
+
+                lgargs = []
+		if (facesPaths and any_newerthan(facesPaths, mppblg_name)) or newerthan(bestzip, mppblg_name):
+			self.logf('need %s', mppblg_name)
+			lgargs += ['--rast', mppblg_name]
+		if (facesPaths and any_newerthan(facesPaths, masklg_name)) or newerthan(bestzip, masklg_name):
+			self.logf('need %s', masklg_name)
+			lgargs += ['--mask', masklg_name]
+		if lgargs:
+			lgargs += ['--boundx', '3840', '--boundy', '2160']
+			if facesPaths:
+				lgargs = lgargs + facesPaths
+			else:
+				lgargs.append(bestzip)
+			command = shapefile.makeCommand(lgargs,
+				self.options.bindir, self.options.strict)
+			commands.append(command)
+
 		for command in commands:
 			self.logf('command: %s', ' '.join(command))
 			if not self.options.dryrun:
@@ -973,6 +994,7 @@ class SyncrhonizedIteratorWrapper(object):
 def runloop(states, pg, options):
 	for a in states:
 		start = time.time()
+                sd = None
 		try:
 			sd = pg.getState(a)
 			sd.dostate()
@@ -980,7 +1002,8 @@ def runloop(states, pg, options):
 			traceback.print_exc()
 			errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (a, a))
 			sys.stdout.write(errmsg)
-			sd.logf(errmsg)
+                        if sd is not None:
+			        sd.logf(errmsg)
 		sys.stdout.write('%s took %f seconds\n' % (a, time.time() - start))
 		sys.stdout.flush()
 
