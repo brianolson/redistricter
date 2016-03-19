@@ -106,7 +106,7 @@ drend_static:	${DRENDOBJS}
 	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(STATICPNG) -lpthread -lz /usr/local/lib/libprotobuf.a -o drend_static
 	strip drend_static
 
-ANALYZEOBJS:=${COREOBJS} analyze.o
+ANALYZEOBJS:=${COREOBJS} analyze.o placefile.o
 
 analyze:	${ANALYZEOBJS}
 	$(CXX) ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
@@ -135,7 +135,7 @@ pw:	pw.cpp
 	$(CXX) ${CXXFLAGS} -Wall ${LDPNG} pw.cpp -lz -o pw -g
 
 dumpBinLog:	dumpBinLog.cpp redata.pb.cc redata.pb.h
-	$(CXX) ${CXXFLAGS} dumpBinLog.cpp redata.pb.cc -lz -lprotobuf -lpthread -o dumpBinLog
+	$(CXX) ${CXXFLAGS} dumpBinLog.cpp redata.pb.cc -lz -lprotobuf -lpthread $(LDFLAGS) -o dumpBinLog
 
 xcode:
 	xcodebuild -alltargets -project guidistricter.xcodeproj
@@ -160,10 +160,9 @@ include tiger/tiger.make
 java/org/bolson/redistricter/Redata.java:	redata.proto
 	protoc $< --java_out=java
 
-tools.jar:	java/org/bolson/redistricter/Redata.java java/org/bolson/redistricter/*.java jars/protobuf.jar
-	mkdir -p classes
-	cd java && find . -name \*.java | xargs ${JAVAC} -cp ../jars/protobuf.jar -g -d ../classes
-	cd classes && jar cf ../tools.jar org
+tools.jar:
+	mvn package
+	ln -s `ls -t target/redistricter*.jar | head -1` tools.jar
 
 THINGSTOCLEAN+=java/org/bolson/redistricter/Redata.java tools.jar
 

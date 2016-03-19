@@ -8,15 +8,12 @@ import re
 import subprocess
 import sys
 
-def globJarsToClasspath(dirname):
-	jars = glob.glob(dirname + '/*.jar')
-	return ':'.join(jars)
 
 def makeCommand(extra_args, bindir=None, enableassertions=False):
 	"""Return array of commands to run with subprocess."""
 	if bindir is None:
 		bindir = os.path.dirname(os.path.abspath(__file__))
-	classpath = os.path.join(bindir, 'tools.jar') + ':' + globJarsToClasspath(os.path.join(bindir, 'jars'))
+	classpath = os.path.join(bindir, 'tools.jar')
 	java_home = os.environ.get('JAVA_HOME')
 	cmd = None
 	if java_home:

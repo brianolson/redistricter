@@ -177,6 +177,23 @@ public:
 };
 
 
+inline uint32_t ubidBlock(uint64_t ubid) {
+    //  SSCCCTTTTTTBBBB
+    //             9999
+    return ubid % 10000;
+}
+inline uint32_t ubidTract(uint64_t ubid) {
+    //  SSCCCTTTTTTBBBB
+    //       999999
+    return (ubid / 10000) % 1000000;
+}
+inline uint32_t ubidCounty(uint64_t ubid) {
+    return (ubid / 10000000000) % 1000;
+}
+inline uint32_t ubidState(uint64_t ubid) {
+    return (ubid / 10000000000000) % 100;
+}
+
 //GeoData* openZCTA( const char* inputname );
 GeoData* openUf1( const char* inputname );
 GeoData* openPlGeo( const char* inputname );

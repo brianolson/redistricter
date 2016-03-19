@@ -359,6 +359,8 @@ class SubmissionAnalyzer(object):
 		# cache for often used self.statenav(None, configs)
 		self._statenav_all = None
 		self._actualsMaps = {}
+                # mode for sharing template
+                self.safeSocialShare = False
 
 	def actualsSource(self, actualSet, stu):
 		"""Lazy loading accessor to find source CSV files for actualsdir/{set}/??_{stu}_*.txt"""
@@ -386,21 +388,25 @@ class SubmissionAnalyzer(object):
 			f.close()
 		return self.dirTemplate
 
-	def getSocialTemplate(self, rootdir=None):
-		if self.socialTemplate is None:
-			if rootdir is None:
-				rootdir = srcdir_
-			f = open(os.path.join(rootdir, 'social.html'), 'r')
-			self.socialTemplate = templateFromFile(f)
-			f.close()
-		return self.socialTemplate
+	# def getSocialTemplate(self, rootdir=None):
+	# 	if self.socialTemplate is None:
+	# 		if rootdir is None:
+	# 			rootdir = srcdir_
+	# 		f = open(os.path.join(rootdir, 'social.html'), 'r')
+	# 		self.socialTemplate = templateFromFile(f)
+	# 		f.close()
+	# 	return self.socialTemplate
 	
 	def getSocial(self, pageabsurl, cgipageabsurl):
-		socialTemplate = self.getSocialTemplate()
-		return socialTemplate.substitute(
+		context = dict(
 			pageabsurl=pageabsurl,
 			cgipageabsurl=cgipageabsurl,
-			rooturl=self.options.rooturl)
+			rooturl=self.options.rooturl,
+                        socialshare=self.safeSocialShare,
+			)
+		#socialTemplate = self.getSocialTemplate()
+		#return socialTemplate.substitute(context)
+		return djangotemplates.render('social_django.html', context)
 
 	def loadDatadir(self, path=None):
 		if path is None:
@@ -976,9 +982,12 @@ class SubmissionAnalyzer(object):
 			extra=extrahtml,
 			racedata=racedata,
 			rooturl=self.options.rooturl,
+			dirabsurl=pageabsurl,
+			pageabsurl=pageabsurl,
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
+                        socialshare=self.safeSocialShare,
 			social=self.getSocial(pageabsurl, cgipageabsurl),
 		)
 		if actualMapPath and actualMap500Path:

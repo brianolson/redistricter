@@ -1,6 +1,5 @@
 package org.bolson.redistricter;
 
-import org.bolson.redistricter.ShapefileBundle.RasterizationContext;
 
 /**
  * tagging type
