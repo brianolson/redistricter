@@ -276,3 +276,8 @@ cd proj4
 ./autogen.sh
 ./configure --prefix=${PWD}
 make
+
+
+USGS professional paper 1395 (1987) supercedes USGS Bulliten 1532 (1982)
+http://pubs.usgs.gov/pp/1395/report.pdf
+but this appears to all be handilly encoded in PROJ.4
