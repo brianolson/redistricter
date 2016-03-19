@@ -485,7 +485,6 @@ int AnalyzeApp::placeSplits() {
     int placeCount = 0;
     int placesNotSplit = 0;
     int placesSplit = 0;
-    vector<std::string> splitPlaceNames;
     vector<uint64_t> splitPlaces;
 
     for (dfptype::const_iterator it = districtsForPlaces.begin(); it != districtsForPlaces.end(); ++it) {

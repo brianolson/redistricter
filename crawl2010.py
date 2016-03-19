@@ -250,7 +250,7 @@ def pl94_171_2010_ubid(line):
         return line[27:32] + line[54:60] + line[61:65]
 
 
-# place names are available from, e.g.
+# TODO: place names are available from, e.g.
 # http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_places.txt
 class GeoBlocksPlaces(object):
         ACTIVE_INCORPORATED_PLACE_CODES = ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
@@ -291,6 +291,9 @@ class GeoBlocksPlaces(object):
                         # two uint64
                         # uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
                         out.write(struct.pack('=QQ', place_ubid, place))
+
+# TODO: county names
+# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_cou.txt
 
 
 class StateData(setupstatedata.StateData):

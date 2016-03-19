@@ -268,6 +268,14 @@ http://en.wikipedia.org/wiki/Albers_projection
 
 ~/src/redistricter/analyze -P ~/src/redata/2010/OH/oh.pb -d 16 --places ~/src/redata/2010/OH/geoblocks.places --place-names ~/src/redata/2010/OH/st39_oh_places.txt --csv-solution ~/src/redata/2010/2013_actual/cd/OH.csv --text -
 
+2016-02-08 21:03:09 EST (Monday, February 08 09:03:09 PM)
+
+${HOME}/src/redistricter/shapefile.py \
+--csvDist ${HOME}/src/redata/2010/solutions/report/OH_Congress/solution.csv.gz \
+--outlineOut /tmp/outline \
+--verbose \
+${HOME}/src/redata/2010/OH/zips/tl_2010_39_tabblock10.zip
+
 
 2016-03-19 13:39:25 EDT (Saturday, March 19 01:39:25 PM)
 
