@@ -592,8 +592,11 @@ class StateData(object):
 		mppbsm_name = os.path.join(dpath, self.stu + '_sm.mppb')
 		masksm_name = os.path.join(dpath, self.stu + 'blocks_sm.png')
 		linksargs = None
-		baseRenderArgs = ['--boundx', '1920', '--boundy', '1080',
-				'--rastgeom', os.path.join(dpath, 'rastgeom')]
+		baseRenderArgs = [
+                        '--boundx', '1920', '--boundy', '1080',
+#                        '--boundx', '3840', '--boundy', '2160',
+                        '--rastgeom', os.path.join(dpath, 'rastgeom')
+                ]
 		renderArgs = []
 		commands = []
 		needlinks = True
@@ -627,6 +630,8 @@ class StateData(object):
 			if newerthan(bestzip, mask_name):
 				self.logf('need %s from %s', mask_name, bestzip)
 				renderArgs += ['--mask', mask_name]
+
+                # Build primary command to make links and/or .mppb raster
 		if renderArgs:
 			renderArgs = baseRenderArgs + renderArgs
 			if linksargs:
@@ -654,6 +659,8 @@ class StateData(object):
 				command = shapefile.makeCommand(
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
+
+                # Maybe make {stu}_sm.mppb
 		smargs = []
 		if (facesPaths and any_newerthan(facesPaths, mppbsm_name)) or newerthan(bestzip, mppbsm_name):
 			self.logf('need %s', mppbsm_name)
@@ -670,6 +677,8 @@ class StateData(object):
 			command = shapefile.makeCommand(smargs,
 				self.options.bindir, self.options.strict)
 			commands.append(command)
+
+                # Run any accumulated commands in processShapefile()
 		for command in commands:
 			self.logf('command: %s', ' '.join(command))
 			if not self.options.dryrun:

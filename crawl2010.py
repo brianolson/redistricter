@@ -292,11 +292,11 @@ class StateData(setupstatedata.StateData):
 		needsbuild = needsbuild or newerthan(binpath, outpath)
 		if not needsbuild:
 			return
-		self.logf('cd %s && "%s"', self.dpath, '" "'.join(cmd))
+		self.logf('"' + '" "'.join(cmd) + '"')
 		if self.options.dryrun:
 			return
 		start = time.time()
-		status = subprocess.call(cmd, cwd=self.dpath)
+		status = subprocess.call(cmd)
 		self.logf('data compile took %f seconds', time.time() - start)
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, self.dpath,'" "'.join(cmd)))
