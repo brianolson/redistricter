@@ -230,6 +230,8 @@ ftp://alt.ncsbe.gov/enrs/resultsPCT20141104.zip
 ftp://alt.ncsbe.gov/enrs/pritabulation11xx06xx2012.zip
 
 TODO: draw map tiles projected with http://trac.osgeo.org/proj/
+https://github.com/OSGeo/proj.4
+git clone https://github.com/OSGeo/proj.4.git proj4
 
 render tiles using:
 projection EPSG:900913 'google' aka and more officially epsg:3857
@@ -266,3 +268,11 @@ http://en.wikipedia.org/wiki/Albers_projection
 
 ~/src/redistricter/analyze -P ~/src/redata/2010/OH/oh.pb -d 16 --places ~/src/redata/2010/OH/geoblocks.places --place-names ~/src/redata/2010/OH/st39_oh_places.txt --csv-solution ~/src/redata/2010/2013_actual/cd/OH.csv --text -
 
+
+2016-03-19 13:39:25 EDT (Saturday, March 19 01:39:25 PM)
+
+git clone https://github.com/OSGeo/proj.4.git proj4
+cd proj4
+./autogen.sh
+./configure --prefix=${PWD}
+make

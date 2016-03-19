@@ -21,7 +21,7 @@ PBPointOutput::~PBPointOutput() {
 
 bool PBPointOutput::writePoint(uint64_t ubid, int px, int py) {
 	if ((block == NULL) ||
-	    (block->ubid() != static_cast<int64>(ubid))) {
+	    (block->ubid() != ubid)) {
 		block = rast->add_block();
 		block->set_ubid(ubid);
 	}

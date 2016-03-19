@@ -184,7 +184,7 @@ int main( int argc, const char** argv ) {
 			break;
 		}
 		printf("%d not reachable from 0\n", nohitcount);
-		printf("add link: %d,%d\n%013llu%013llu\n", mini, minj, gd->ubidOfIndex(mini), gd->ubidOfIndex(minj) );
+		printf("add link: %d,%d\n%013lu%013lu\n", mini, minj, gd->ubidOfIndex(mini), gd->ubidOfIndex(minj) );
 		neroot = new newedge( mini, minj, neroot );
 		necount++;
 		if (necount > maxNewEdgeCount) {
@@ -258,14 +258,14 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
-			printf("ubid %lld => index %ld\n", tubid, edgeData[j*2] );
+			printf("ubid %lu => index %ld\n", tubid, edgeData[j*2] );
 			continue;
 		}
 		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i + 13, 13 );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {
-			printf("ubid %lld => index %ld\n", tubid, edgeData[j*2+1] );
+			printf("ubid %lu => index %ld\n", tubid, edgeData[j*2+1] );
 			noIndexEdgeDataCount++;
 			continue;
 		}

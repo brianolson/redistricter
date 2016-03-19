@@ -47,13 +47,13 @@ PlaceMap* PlaceMap::load(const char* path) {
         didRead = gzread(placeMapgzf, &version, 8);
         READCHECK(8);
         if (version != 1) {
-            fprintf(stderr, "%s: don't know how to handle version %llu\n", path, version);
+            fprintf(stderr, "%s: don't know how to handle version %lu\n", path, version);
             return NULL;
         }
         didRead = gzread(placeMapgzf, &numrecords, 8);
         READCHECK(8);
 
-        size_t datalen = numrecords * 16;
+        ssize_t datalen = numrecords * 16;
         uint64_t* data = (uint64_t*)malloc(datalen);
         didRead = gzread(placeMapgzf, data, datalen);
         READCHECK(datalen);
@@ -149,7 +149,7 @@ PlaceNames* PlaceNames::load(const char* path) {
     return new PlaceNames(places);
 }
 
-const PlaceNames::Place* PlaceNames::get(int place) const {
+const PlaceNames::Place* PlaceNames::get(uint64_t place) const {
     int hi = places.size() - 1;
     int lo = 0;
     int mid = (hi + lo) / 2;

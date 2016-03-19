@@ -44,7 +44,7 @@ int processRTA(Solver* sov, const char* fname) {
 		if ( lx == (uint32_t)-1 ) {
 			fprintf(
 				stderr,
-				"ubid %llu (county %ld, tract %ld, block %ld) => %u\n",
+				"ubid %lu (county %ld, tract %ld, block %ld) => %u\n",
 				ubid, 
 				ra.COUNTYCU_longValue(i), ra.TRACT_longValue(i),
 				ra.BLOCK_longValue(i),
@@ -105,7 +105,7 @@ int main( int argc, const char** argv ) {
 	}
 	for ( i = 0; i < sov.gd->numPoints; i++ ) {
 		if ( sov.winner[i] == NODISTRICT ) {
-			fprintf(stderr,"index %d has no district, pop=%d, ubid=%llu\n",
+			fprintf(stderr,"index %d has no district, pop=%d, ubid=%lu\n",
 				i, sov.gd->pop[i], sov.gd->ubidOfIndex(i) );
 		}
 	}

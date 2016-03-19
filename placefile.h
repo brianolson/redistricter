@@ -49,7 +49,7 @@ class PlaceNames {
     static PlaceNames* load(const char* path);
 
     // may return NULL
-    const Place* get(int place) const;
+    const Place* get(uint64_t place) const;
 
     private:
     PlaceNames(std::vector<Place>& placesIn)

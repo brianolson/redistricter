@@ -688,8 +688,8 @@ void printPointList( FILE* f, point* cur ) {
 }
 
 void printRTAPU( FILE* f, rtaPolyUbid* r ) {
-	//fprintf(f,"%11llu %.5s%10u", r->ubid , r->cenid, r->polyid );
-	fprintf(f,"%11llu", r->ubid );
+	//fprintf(f,"%11lu %.5s%10u", r->ubid , r->cenid, r->polyid );
+	fprintf(f,"%11lu", r->ubid );
 	printPointList( f, r->pts );
 	fprintf(f,"\n");
 }
@@ -900,7 +900,7 @@ void PolyGroup::reconcileRTAPUChunks( rtaPolyUbid* rp, PointOutput* fout,
 		if ( *(heads[i]) == *(tails[i]) ) {
 			countloops++;
 			if ( loopf != NULL ) {
-				fprintf(loopf,"%11llu", rp->ubid );
+				fprintf(loopf,"%11lu", rp->ubid );
 				cur = heads[i];
 				while ( cur != NULL ) {
 					fprintf(loopf," %d,%d", cur->lon, cur->lat );
@@ -909,7 +909,7 @@ void PolyGroup::reconcileRTAPUChunks( rtaPolyUbid* rp, PointOutput* fout,
 				fprintf(loopf,"\n");
 			}
 		} else {
-			fprintf(stderr,"%11llu line %d not a loop: ", rp->ubid, i );
+			fprintf(stderr,"%11lu line %d not a loop: ", rp->ubid, i );
 			::printPointList(stderr,heads[i]);
 			fprintf(stderr,"\n");
 		}
@@ -1095,7 +1095,7 @@ void PolyGroup::updatePixelSize2() {
 
 #if WITH_PNG
 
-#include "png.h"
+#include <png.h>
 
 static png_voidp user_error_ptr = 0;
 static void user_error_fn( png_structp png_ptr, const char* str ) {

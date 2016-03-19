@@ -134,7 +134,7 @@ int AnalyzeApp::dataExport(const char* exportPath) {
         maxUbid /= 10;
     }
     if (length < 4) {
-        fprintf(stderr, "unusually short ubid length %d, max ubid=%lld, cowardly exiting\n", length, maxUbid);
+        fprintf(stderr, "unusually short ubid length %d, max ubid=%lu, cowardly exiting\n", length, maxUbid);
         exit(1); return 1;
     } else if (length < 10) {
         length = 10;  // round up to 6 tract + 4 block
@@ -488,7 +488,7 @@ int AnalyzeApp::placeSplits() {
     vector<std::string> splitPlaceNames;
     vector<uint64_t> splitPlaces;
 
-    for (dfptype::const_iterator it = districtsForPlaces.cbegin(); it != districtsForPlaces.cend(); ++it) {
+    for (dfptype::const_iterator it = districtsForPlaces.begin(); it != districtsForPlaces.end(); ++it) {
         placeCount++;
         uint64_t place = it->first;
         const std::set<POPTYPE>& districts = it->second;
@@ -504,11 +504,11 @@ int AnalyzeApp::placeSplits() {
         fprintf(htmlout, "<p>%d places split (%0.3f%%), %d places not split (%0.3f%%)</p>\n", placesSplit, (placesSplit * 1.0) / placeCount, placesNotSplit, (placesNotSplit * 1.0) / placeCount);
         if (placenames != NULL) {
             fprintf(htmlout, "<p id=\"splitplaces\" class=\"hidden\">");
-            for (vector<uint64_t>::const_iterator it = splitPlaces.cbegin(); it != splitPlaces.cend(); ++it) {
+            for (vector<uint64_t>::const_iterator it = splitPlaces.begin(); it != splitPlaces.end(); ++it) {
                 uint64_t place = *it;
                 const PlaceNames::Place* p = placenames->get(place);
                 //fprintf(htmlout, "<span class=\"SPS\">%s %d</span> ", p->name.c_str());
-                fprintf(htmlout, "%s\t%llu\n", p->name.c_str(), placePopulations[place]);
+                fprintf(htmlout, "%s\t%lu\n", p->name.c_str(), placePopulations[place]);
             }
             fprintf(htmlout, "</p>\n");
         }

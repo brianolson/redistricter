@@ -447,7 +447,7 @@ int PlGeo::load() {
 			area[i] = strtoull( buf, &endp, 10 );
 			if (errno != 0) {
 				perror("strtoull");
-				fprintf(stderr, "failed to parse \"%s\" => %llu\n", buf, area[i]);
+				fprintf(stderr, "failed to parse \"%s\" => %lu\n", buf, area[i]);
 				assert( errno == 0 );
 			}
 			assert( endp != buf );
@@ -497,7 +497,7 @@ int PlGeo::load() {
 
 	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
 	for ( i = 0; i < 10; i++ ) {
-		fprintf( stderr, "%lld\t%d\n", ubids[i].ubid, ubids[i].index );
+		fprintf( stderr, "%lu\t%d\n", ubids[i].ubid, ubids[i].index );
 	}
 	printf("PlGeo::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
 	if (recnos != NULL) {
@@ -589,7 +589,7 @@ int Uf1::load() {
 			area[i] = strtoull( buf, &endp, 10 );
 			if (errno != 0) {
 				perror("strtoull");
-				fprintf(stderr, "failed to parse \"%s\" => %llu\n", buf, area[i]);
+				fprintf(stderr, "failed to parse \"%s\" => %lu\n", buf, area[i]);
 				assert( errno == 0 );
 			}
 			assert( endp != buf );
@@ -615,7 +615,7 @@ int Uf1::load() {
 	}
 	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
 	for ( i = 0; i < 10; i++ ) {
-		fprintf( stderr, "%lld\t%d\n", ubids[i].ubid, ubids[i].index );
+		fprintf( stderr, "%lu\t%d\n", ubids[i].ubid, ubids[i].index );
 	}
 	printf("Uf1::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
 	if (recnos != NULL) {

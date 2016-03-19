@@ -4,7 +4,7 @@ UNAME:=$(shell uname)
 -include localvars.make
 
 all:	districter2 linkfixup drend rta2dsz analyze dumpBinLog
-jall:	tools.jar
+jall:	java/org/bolson/redistricter/Redata.java tools.jar
 
 THINGSTOCLEAN:=districter2 linkfixup drend gbin rta2dsz analyze tools.jar
 
@@ -28,7 +28,7 @@ CCOMMONFLAGS+=-Wall -Itiger -DHAVE_PROTOBUF
 # -MMD is incompatible with some Apple compile modes
 #CCOMMONFLAGS+=-Wall -Itiger -MMD
 #CCOMMONFLAGS+=-MMD
-CXXFLAGS+=${OG} ${CCOMMONFLAGS}
+CXXFLAGS+=${OG} ${CCOMMONFLAGS} -std=c++11
 CFLAGS+=${OG} ${CCOMMONFLAGS}
 
 JAVAC?=javac

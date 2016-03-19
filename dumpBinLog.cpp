@@ -13,7 +13,7 @@ using google::protobuf::io::CodedInputStream;
 
 
 int main(int argc, const char** argv) {
-	char* filename = NULL;
+    //char* filename = NULL;
 	int fd = STDIN_FILENO;
 	
 	FileInputStream* fis = new FileInputStream(fd);

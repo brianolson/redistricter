@@ -270,7 +270,7 @@ bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 				memcpy( dest, src, sizeof(uint16_t)*newpoints*2 );
 			}
 		} else {
-			printf("%013llu no index!\n", tubid );
+			printf("%013lu no index!\n", tubid );
 		}
 		pos = ep + 4;
 	}
@@ -348,7 +348,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 				assert(cpx->px[xxxi+1] <= height);
 			}
 		} else {
-			fprintf(stderr, "%013llu no index!\n", tubid );
+			fprintf(stderr, "%013lu no index!\n", tubid );
 		}
 	}
 	return true;
@@ -743,12 +743,14 @@ void MapDrawer::paintPixels( Solver* sov ) {
 		paintPoints( sov );
 		return;
 	}
-	int lminx, lminy, lmaxx, lmaxy;
+#if 0
+	int lminx, lminy, lmaxx, lmaxy; // set by DPRSET
 
 	DPRSET( minx, minlon );
 	DPRSET( maxx, maxlon );
 	DPRSET( miny, minlat );
 	DPRSET( maxy, maxlat );
+#endif
 	
 	POPTYPE* winner = sov->winner;
 	int numPoints = sov->gd->numPoints;

@@ -26,7 +26,7 @@ THINGSTOCLEAN+=${POLYOBJS}
 tiger/makepolys.o:	tiger/record1.h tiger/record2.h tiger/recordA.h tiger/recordI.h
 
 tiger/makepolys:	${POLYOBJS}
-	${CXX} ${CXXFLAGS} ${LDFLAGS} ${POLYOBJS} -o tiger/makepolys
+	${CXX} ${CXXFLAGS} ${POLYOBJS} ${LDFLAGS} -o tiger/makepolys
 
 mprun mpout mperr:	tiger/makepolys
 	tiger/makepolys -o mpout --pngW 828 --pngH 960 --minlon -124.413732 --maxlon -114.13534 --minlat 32.539886 --maxlat 42.007832 data/CA/raw/TGR06083 --maskout mpmask.png > mprun 2> mperr

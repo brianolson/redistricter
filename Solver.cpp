@@ -269,7 +269,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
-			printf("ubid %lld => index %d\n", tubid, edgeData[j*2] );
+			printf("ubid %lu => index %d\n", tubid, edgeData[j*2] );
 			noIndexEdgeDataCount++;
 			continue;
 		}
@@ -277,7 +277,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {
-			printf("ubid %lld => index %d\n", tubid, edgeData[j*2+1] );
+			printf("ubid %lu => index %d\n", tubid, edgeData[j*2+1] );
 			continue;
 		}
 		j++;
@@ -697,7 +697,7 @@ int Solver::loadCsvSolution( const char* filename ) {
 		} 
 		uint32_t index = gd->indexOfUbid(tubid);
 		if (index == INVALID_INDEX) {
-			fprintf(stderr, "bogus ubid %lld\n" , tubid);
+			fprintf(stderr, "bogus ubid %lu\n" , tubid);
 			errcount++;
 			if (errcount > 20) {
 				err = -1;
