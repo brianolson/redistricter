@@ -674,7 +674,7 @@ int Solver::loadCsvSolution( const char* filename ) {
 
 	while (line != NULL) {
 		char* c = line;
-		while ((c != '\0') && (!isdigit(*c))) {
+		while ((*c != '\0') && (!isdigit(*c))) {
 			c++;
 		}
 		char* endp = NULL;
@@ -685,7 +685,7 @@ int Solver::loadCsvSolution( const char* filename ) {
 			break;
 		}
 		c = endp;
-		while ((c != '\0') && (!isdigit(*c))) {
+		while ((*c != '\0') && (!isdigit(*c))) {
 			c++;
 		}
 		endp = NULL;
