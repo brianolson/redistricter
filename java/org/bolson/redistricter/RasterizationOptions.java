@@ -18,7 +18,8 @@ public class RasterizationOptions {
 	String rastOut = null;
 	boolean outline = false;
 	boolean optimizePb = true;
-	
+	private Proj projection;
+
 	public String[] parseOpts(String[] argv) {
 		ArrayList<String> out = new ArrayList<String>();
 		for (int i = 0; i < argv.length; ++i) {
@@ -60,6 +61,7 @@ public class RasterizationOptions {
 		}
 		return out.toArray(new String[out.size()]);
 	}
+
 	public String[] getOpts() {
 		ArrayList<String> out = new ArrayList<String>();
 		if (xpx != -1) {
@@ -87,28 +89,20 @@ public class RasterizationOptions {
 			out.add(Double.toString(maxy));
 		}
 		/*
-		 *  TODO: this is somewhat irregular.
-		 *  Right now I actually only care about the geometry parameters applied, but the design doesn't signify that.
-		if (rastOut != null) {
-			out.add("--rast");
-			out.add(rastOut);
-		}
-		if (maskOutName != null) {
-			out.add("--mask");
-			out.add(maskOutName);
-		}
-		if (outline) {
-			out.add("--outline");
-		}
-		if (!optimizePb) {
-			out.add("--simple-rast");
-		}
+		 * TODO: this is somewhat irregular. Right now I actually only care
+		 * about the geometry parameters applied, but the design doesn't signify
+		 * that. if (rastOut != null) { out.add("--rast"); out.add(rastOut); }
+		 * if (maskOutName != null) { out.add("--mask"); out.add(maskOutName); }
+		 * if (outline) { out.add("--outline"); } if (!optimizePb) {
+		 * out.add("--simple-rast"); }
 		 */
 		return out.toArray(new String[out.size()]);
 	}
+
 	/**
-	 * Doesn't do anything smart about shell escaping.
-	 * Paths with spaces will break it.
+	 * Doesn't do anything smart about shell escaping. Paths with spaces will
+	 * break it.
+	 * 
 	 * @return
 	 */
 	public String getOptString(String sep) {
@@ -123,12 +117,15 @@ public class RasterizationOptions {
 		}
 		return sb.toString();
 	}
-	
+
 	public String toString() {
-		return "RasterizationOptions(" + minx + "<x<" + maxx + ", " + miny + "<y<" + maxy + ", px=(" + xpx + "," + ypx + "))";
+		return "RasterizationOptions(" + minx + "<x<" + maxx + ", " + miny
+				+ "<y<" + maxy + ", px=(" + xpx + "," + ypx + "))";
 	}
+
 	/**
 	 * Bound will become the greater of this and shp.
+	 * 
 	 * @param shp
 	 * @throws IOException
 	 */
@@ -147,28 +144,19 @@ public class RasterizationOptions {
 			maxy = header.ymax;
 		}
 	}
-	
+
 	/*
-	@Deprecated
-	public void setBoundsFromShapefile(Shapefile shp, boolean override) throws IOException {
-		Shapefile.Header header = shp.getHeader();
-		if (override || Double.isNaN(minx)) {
-			minx = header.xmin;
-		}
-		if (override || Double.isNaN(miny)) {
-			miny = header.ymin;
-		}
-		if (override || Double.isNaN(maxx)) {
-			maxx = header.xmax;
-		}
-		if (override || Double.isNaN(maxy)) {
-			maxy = header.ymax;
-		}
-	}
-	*/
-	
+	 * @Deprecated public void setBoundsFromShapefile(Shapefile shp, boolean
+	 * override) throws IOException { Shapefile.Header header = shp.getHeader();
+	 * if (override || Double.isNaN(minx)) { minx = header.xmin; } if (override
+	 * || Double.isNaN(miny)) { miny = header.ymin; } if (override ||
+	 * Double.isNaN(maxx)) { maxx = header.xmax; } if (override ||
+	 * Double.isNaN(maxy)) { maxy = header.ymax; } }
+	 */
+
 	/**
 	 * Set xpx,ypx, up to boundx,boundy.
+	 * 
 	 * @param boundx
 	 * @param boundy
 	 */
@@ -177,19 +165,34 @@ public class RasterizationOptions {
 			return;
 		}
 		double width = maxx - minx;
-		assert(width > 0.0);
+		assert (width > 0.0);
 		double height = maxy - miny;
-		assert(height > 0.0);
-		double w2 = width * Math.cos(Math.abs((maxy + miny) / 2.0) * Math.PI / 180.0);
+		assert (height > 0.0);
+		double w2;
+		if (projection == null) {
+			// do lame projection according to cos of latitude
+			w2 = width * Math.cos(Math.abs((maxy + miny) / 2.0) * Math.PI / 180.0);
+		} else {
+			// projection has already been done, go with it
+			w2 = width;
+		}
 		double ratio = height / w2;
 		double boundRatio = (boundy * 1.0) / boundx;
 		if (ratio > boundRatio) {
 			// state is too tall
 			ypx = boundy;
-			xpx = (int)(ypx / ratio);
+			xpx = (int) (ypx / ratio);
+			assert xpx > 0;
+			assert ypx > 0;
 		} else {
 			xpx = boundx;
-			ypx = (int)(ratio * xpx);
+			ypx = (int) (ratio * xpx);
+			assert xpx > 0;
+			assert ypx > 0;
 		}
+	}
+
+	public void setProjection(Proj projection) {
+		this.projection = projection;
 	}
 }

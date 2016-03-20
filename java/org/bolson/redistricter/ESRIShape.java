@@ -176,4 +176,5 @@ The outer edges of the pixel image will be at the min/max points.
 			}
 		}
 	}
+	public abstract void project(Proj projection);
 }

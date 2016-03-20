@@ -22,11 +22,15 @@ public class RunContext {
 	BufferedImageRasterizer.Options birOpts = new BufferedImageRasterizer.Options();
 	int awidth = 20;
 	int aheight = 20;
+	String projName = null;
+	Proj projection = null;
 	
 	String districtCsvPath = null;
 	String outlineOutPath = null;
 	
 	String stateDataPath = null;
+	
+	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
 	
 	public void main(String[] argv) throws IOException {
 		parseArgv(argv);
@@ -70,7 +74,7 @@ public class RunContext {
 				i++;
 				aheight = Integer.parseInt(argv[i]);
 			} else if (argv[i].equals("--verbose")) {
-				ShapefileBundle.log.setLevel(Level.FINEST);
+				log.setLevel(Level.FINEST);
 				//log.info(log.getLevel().toString());
 			} else if (argv[i].equals("--csvDist")) {
 				i++;
@@ -78,6 +82,9 @@ public class RunContext {
 			} else if (argv[i].equals("--outlineOut")) {
 				i++;
 				outlineOutPath = argv[i];
+			} else if (argv[i].equals("--proj")) {
+				i++;
+				projName = argv[i];
 			} else if (argv[i].equals("-P")) {
 				i++;
 				stateDataPath = argv[i];
@@ -96,10 +103,17 @@ public class RunContext {
 			System.exit(1);
 		}
 		
+		if (projName != null) {
+			projection = new Proj(projName);
+			log.info("using proj " + projName + " -> " + projection);
+			rastOpts.setProjection(projection);
+		}
+		
 		long start = System.currentTimeMillis();
 		ArrayList<ShapefileBundle> bundles = new ArrayList<ShapefileBundle>();
 		for (String path : inputPaths) {
 			ShapefileBundle x = new ShapefileBundle();
+			x.setProjection(projection);
 			try {
 				x.open(path);
 			} catch (IOException e) {
@@ -113,7 +127,7 @@ public class RunContext {
 		
 		// Setup PolygonLinker
 		if (linksOut != null) {
-			ShapefileBundle.log.info("calculating links");
+			log.info("calculating links");
 			PolygonLinker linker = new PolygonLinker(bundles.get(0).shp, linksOut, tree, threads, awidth, aheight);
 			for (int i = 1; i < bundles.size(); ++i) {
 				linker.growForShapefile(bundles.get(i).shp);
@@ -123,16 +137,16 @@ public class RunContext {
 		
 		// Setup PolygonRasterizer
 		if ((rastOpts.rastOut != null) || (rastOpts.maskOutName != null)) {
-			ShapefileBundle.log.info("rasterizing");
+			log.info("rasterizing");
 			rastOpts.increaseBoundsFromShapefile(bundles.get(0).shp);
 			for (int i = 1; i < bundles.size(); ++i) {
-				ShapefileBundle.log.log(Level.FINE, "pre : {0}", rastOpts);
+				log.log(Level.FINE, "pre : {0}", rastOpts);
 				rastOpts.increaseBoundsFromShapefile(bundles.get(i).shp);
-				ShapefileBundle.log.log(Level.FINE, "post: {0}", rastOpts);
+				log.log(Level.FINE, "post: {0}", rastOpts);
 			}
 			rastOpts.updatePixelSize(boundx, boundy);
-			ShapefileBundle.log.info(rastOpts.toString());
-			ShapefileBundle.log.info(rastOpts.getOptString(" "));
+			log.info(rastOpts.toString());
+			log.info(rastOpts.getOptString(" "));
 			if (rastOptOut != null) {
 				FileWriter fw = new FileWriter(rastOptOut);
 				fw.write(rastOpts.getOptString("\n"));
@@ -143,27 +157,27 @@ public class RunContext {
 		
 		// Setup district solution outliner
 		if ((districtCsvPath != null) && (outlineOutPath != null)) {
-			ShapefileBundle.log.info("will emit outline");
+			log.info("will emit outline");
 			pps.add(new DistrictMapOutline(districtCsvPath, outlineOutPath));
 		}
 		
 		long end = System.currentTimeMillis();
-		ShapefileBundle.log.info("setup done in " + ((end - start) / 1000.0) + " seconds");
+		log.info("setup done in " + ((end - start) / 1000.0) + " seconds");
 		start = end;
 		int count = 0;
 		for (ShapefileBundle x : bundles) {
-			ShapefileBundle.log.info("processing " + x.toString());
+			log.info("processing " + x.toString());
 			count += x.read(pps);
 		}
 		end = System.currentTimeMillis();
-		ShapefileBundle.log.info("read " + count + " in " + ((end - start) / 1000.0) + " seconds");
+		log.info("read " + count + " in " + ((end - start) / 1000.0) + " seconds");
 		start = end;
 		for (PolygonProcessor pp : pps) {
 			try {
-				ShapefileBundle.log.log(Level.INFO, "finishing {0}...", pp.name());
+				log.log(Level.INFO, "finishing {0}...", pp.name());
 				pp.finish();
 				end = System.currentTimeMillis();
-				ShapefileBundle.log.info(pp.name() + " finished in " + ((end - start) / 1000.0) + " seconds");
+				log.info(pp.name() + " finished in " + ((end - start) / 1000.0) + " seconds");
 				start = end;
 			} catch (Exception e) {
 				e.printStackTrace();

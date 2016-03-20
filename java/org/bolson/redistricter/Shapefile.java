@@ -8,8 +8,12 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.osgeo.proj4j.ProjCoordinate;
+
 
 class Shapefile {
+	Proj projection = null;
+	
 	static class Header {
 		/*
 		 * 	'fileCode': ShapefileHeaderField(0,4,'>i'),
@@ -54,6 +58,18 @@ class Shapefile {
 			" x=[" + xmin + "," + xmax + "] y=[" + ymin + "," + ymax +
 			"] z=[" + zmin + "," + zmax + "] m=[" + mmin + "," + mmax + "])";
 		}
+		
+		public void project(Proj projection) {
+			if (projection == null) {
+				return;
+			}
+			ProjCoordinate b = projection.project(xmin, ymin);
+			xmin = b.x;
+			ymin = b.y;
+			b = projection.project(xmax, ymax);
+			xmax = b.x;
+			ymax = b.y;
+		}
 	}
 	DataInputStream in;
 	public Header header = null;
@@ -74,14 +90,11 @@ class Shapefile {
 		}
 		header = new Header();
 		header.read(in);
+		header.project(projection);
 		return header;
 	}
 	public ESRIShape next() throws IOException {
-		if (header == null) {
-			header = new Header();
-			header.read(in);
-			System.out.println(header);
-		}
+		getHeader();
 		int recordContentLength;
 		try {
 			in.skipBytes(4);//int recordNumber = in.readInt();
@@ -95,12 +108,19 @@ class Shapefile {
 		in.readFully(recordBuffer, 0, recordContentLength);
 		recordCount++;
 		int type = ShapefileBundle.bytesToIntLE(recordBuffer, 0);
+		ESRIShape out = null;
 		if (type == 5) {
-			return new Polygon(recordBuffer, 0, recordContentLength);
+			out = new Polygon(recordBuffer, 0, recordContentLength);
 		} if (type == 3) {
-			return new PolyLine(recordBuffer, 0, recordContentLength);
+			out = new PolyLine(recordBuffer, 0, recordContentLength);
 		}
-		assert false;
-		return null;
+		out.project(projection);
+		return out;
+	}
+	public void setProjection(Proj projection) {
+		this.projection = projection;
+		if (this.projection != null) {
+			ShapefileBundle.log.info("shp using projection " + this.projection);
+		}
 	}
 }

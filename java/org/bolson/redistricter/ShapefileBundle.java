@@ -151,6 +151,7 @@ public class ShapefileBundle {
 	ZipFile bundle = null;
 	Shapefile shp = null;
 	DBase dbf = null;
+	private Proj projection;
 	
 	public static final long blockidToUbid(byte[] blockid) {
 		if (blockid.length <= 19) {
@@ -221,6 +222,7 @@ public class ShapefileBundle {
 		
 		shp = new Shapefile();
 		shp.setInputStream(shpIs);
+		shp.setProjection(projection);
 		
 		dbf = new DBase();
 		dbf.setInputStream(new DataInputStream(dbfIs));
@@ -443,6 +445,7 @@ public static final String usage =
 "--csvDist path\n" +
 "--outlineOut path\n" +
 "--rastgeom out path\n" +
+"--proj dataset:id" +
 "--verbose\n" +
 "tl_2009_09_tabblock00.zip\n" +
 "\n";
@@ -484,6 +487,13 @@ public static final String usage =
 		}
 	}
 	
+	public void setProjection(Proj projection) {
+		this.projection = projection;
+		if (this.projection != null) {
+			log.info("bundle useing proj " + this.projection);
+		}
+	}
+	
 	/**
 	 * --xpx int
 --ypx int
@@ -503,6 +513,7 @@ public static final String usage =
 --boundy n e.g. 1080
 --awidth buckets
 --aheight buckets
+--proj dataset:id, e.g. "NAD83:2001"
 --verbose
 	 * @param argv
 	 * @throws IOException

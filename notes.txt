@@ -285,7 +285,21 @@ cd proj4
 ./configure --prefix=${PWD}
 make
 
+https://trac.osgeo.org/proj4j/
+https://github.com/Proj4J/proj4j
+git clone https://github.com/Proj4J/proj4j.git proj4j
+cd proj4j/trunk
+mvn install
+#cd proj4j/trunk/src
+#ant
+
+
+
 
 USGS professional paper 1395 (1987) supercedes USGS Bulliten 1532 (1982)
 http://pubs.usgs.gov/pp/1395/report.pdf
 but this appears to all be handilly encoded in PROJ.4
+
+
+ohio (north)
+--proj NAD83:3401

@@ -1,5 +1,7 @@
 package org.bolson.redistricter;
 
+import org.osgeo.proj4j.ProjCoordinate;
+
 
 /**
  * An ESRI Shapefile Polygon (type 5) object.
@@ -301,5 +303,23 @@ class Polygon extends ESRIShape {
 		}
 		out.append("))");
 		return out.toString();
+	}
+	@Override
+	public void project(Proj projection) {
+		if (projection == null) {
+			return;
+		}
+		// TODO Auto-generated method stub
+		ProjCoordinate b = projection.project(xmin, ymin);
+		xmin = b.x;
+		ymin = b.y;
+		b = projection.project(xmax, ymax);
+		xmax = b.x;
+		ymax = b.y;
+		for (int i = 0; i < points.length; i+= 2) {
+			b = projection.project(points[i], points[i+1]);
+			points[i] = b.x;
+			points[i+1] = b.y;
+		}
 	}
 }
