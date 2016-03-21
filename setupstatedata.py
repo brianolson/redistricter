@@ -593,12 +593,17 @@ class StateData(object):
 		masksm_name = os.path.join(dpath, self.stu + 'blocks_sm.png')
 		mppblg_name = os.path.join(dpath, self.stu + '_lg.mppb')
 		masklg_name = os.path.join(dpath, self.stu + 'blocks_lg.png')
+                projname = projectionForPostalCode(self.stu)
+                self.logf('%s proj = %s', self.stu, projname)
 		linksargs = None
 		baseRenderArgs = [
                         '--boundx', '1920', '--boundy', '1080',
-#                        '--boundx', '3840', '--boundy', '2160',
                         '--rastgeom', os.path.join(dpath, 'rastgeom')
                 ]
+                if projname:
+                        projectionArgs = ['--proj', projname]
+                else:
+                        projectionArgs = []
 		renderArgs = []
 		commands = []
 		needlinks = True
@@ -635,7 +640,7 @@ class StateData(object):
 
                 # Build primary command to make links and/or .mppb raster
 		if renderArgs:
-			renderArgs = baseRenderArgs + renderArgs
+			renderArgs = baseRenderArgs + renderArgs + projectionArgs
 			if linksargs:
 				if not facesPaths:
 					command = shapefile.makeCommand(
@@ -671,7 +676,7 @@ class StateData(object):
 			self.logf('need %s', masksm_name)
 			smargs += ['--mask', masksm_name]
 		if smargs:
-			smargs += ['--boundx', '640', '--boundy', '480']
+			smargs += ['--boundx', '640', '--boundy', '480'] + projectionArgs
 			if facesPaths:
 				smargs = smargs + facesPaths
 			else:
@@ -689,7 +694,7 @@ class StateData(object):
 			self.logf('need %s', masklg_name)
 			lgargs += ['--mask', masklg_name]
 		if lgargs:
-			lgargs += ['--boundx', '3840', '--boundy', '2160']
+			lgargs += ['--boundx', '3840', '--boundy', '2160'] + projectionArgs
 			if facesPaths:
 				lgargs = lgargs + facesPaths
 			else:

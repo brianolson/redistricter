@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import csv
 import os
 
 states = [
@@ -179,3 +180,22 @@ def stateConfigToActual(stu, configname):
 		return 'sldu'
 	else:
 		return 'sldl'
+
+
+_projCsvPath = None
+_projMap = None
+
+def projectionForPostalCode(code):
+        global _projCsvPath
+        global _projMap
+        if not _projMap:
+                if not _projCsvPath:
+                        _projCsvPath = os.path.join(os.path.dirname(__file__), 'projections.csv')
+                _projMap = {}
+                with open(_projCsvPath, 'r') as fin:
+                        reader = csv.reader(fin)
+                        for row in reader:
+                                stl, datum_id = row
+                                stl = stl.lower()
+                                _projMap[stl] = datum_id
+        return _projMap.get(code.lower())
