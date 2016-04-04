@@ -20,7 +20,8 @@ import traceback
 import urllib
 import zipfile
 
-import djangotemplates
+#import djangotemplates
+import jinjatemplates as djangotemplates
 from kmppspreadplot import svgplotter
 from newerthan import newerthan, any_newerthan
 import resultspage
@@ -267,7 +268,7 @@ def noSource(sourceName):
   logging.error('missing source %s', sourceName)
 
 
-def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname):
+def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname, mppb_lg_path):
   """process 00_XX_SLDU.txt into intermediate XX.csv, output {XX.png,xx.html,xx_stats.txt}
   return (kmpp, spread, std)
   """
@@ -280,13 +281,15 @@ def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname):
   # output html and png
   htmlout = os.path.join(actualsDir, stl + '.html')
   pngout = os.path.join(actualsDir, stu + '.png')
+  pngLgOut = os.path.join(actualsDir, stu + '_lg.png')
   png500out = os.path.join(actualsDir, stu + '500.png')
   analyzeout = os.path.join(actualsDir, stl + '_stats.txt')
   analyzeText = None
 
-  if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, htmlout, analyzeout), noSourceCallback=noSource):
+  if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, pngLgOut, htmlout, analyzeout), noSourceCallback=noSource):
     if newerthan(csvpath, simplecsvpath):
       csvToSimpleCsv(csvpath, simplecsvpath)
+
     if any_newerthan( (pb, mppb, simplecsvpath), pngout):
       cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
       logging.info('%r', cmd)
@@ -295,6 +298,16 @@ def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname):
       if retcode != 0:
         logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
         sys.exit(1)
+
+    if any_newerthan( (pb, mppb_lg_path, simplecsvpath), pngLgOut):
+      cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
+      logging.info('%r', cmd)
+      p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
+      retcode = p.wait()
+      if retcode != 0:
+        logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+        sys.exit(1)
+
     if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
       analyzeText = measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
       atout = open(analyzeout, 'w')
@@ -344,8 +357,10 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 class SubmissionAnalyzer(object):
 	def __init__(self, options, dbpath=None):
 		self.options = options
-		# map from STU/config-name to configuration objects
+                
+		# map from STU/config-name to runallstates.configuration objects
 		self.config = {}
+                
 		self.dbpath = dbpath
 		# sqlite connection
 		self.db = None
@@ -648,10 +663,12 @@ class SubmissionAnalyzer(object):
 		out.close()
 		self.copyResources()
 	
-	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None):
+	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None):
 		args = dict(self.config[cname].drendargs)
                 args.pop('--loadSolution', None)
 		args['--pngout'] = pngpath
+                if altmppb:
+                        args['--mppb'] = altmppb
 		if dszpath:
 			args['-r'] = dszpath
 		elif solutionDszRaw:
@@ -865,9 +882,16 @@ class SubmissionAnalyzer(object):
 		logging.debug('%s -> %s', cname, sdir)
 		ihpath = os.path.join(sdir, 'index.html')
 		mappath = os.path.join(sdir, 'map.png')
+		mapLgPath = os.path.join(sdir, 'map_lg.png')
+                config = self.config[cname]
+                mppb_lg_path = os.path.join(config.datadir, stu + '_lg.mppb')
+                if not os.path.exists(mppb_lg_path):
+                        logging.debug('missing %s', mppb_lg_path)
+                        mppb_lg_path = None
+                needsLargeMap = (mppb_lg_path is not None) and (not os.path.exists(mapLgPath))
 		needsIndexHtml = self.options.redraw or self.options.rehtml or (not os.path.exists(ihpath))
 		needsDrend = self.options.redraw or (not os.path.exists(mappath))
-		if not (needsIndexHtml or needsDrend):
+		if not (needsIndexHtml or needsDrend or needsLargeMap):
 			logging.debug('nothing to do for %s', cname)
 			return
 		
@@ -921,14 +945,16 @@ class SubmissionAnalyzer(object):
 			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 
+                        if needsLargeMap:
+                                self.doDrend(cname, data, mapLgPath, dszpath=solpath, altmppb=mppb_lg_path)
+
 			# use actual maps if available
 			if self.options.actualdir:
 				# ensure setup
 				actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
-				config = self.config[cname]
 				drendargs = config.drendargs
 				zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
-				(current_kmpp, current_spread, current_std) = processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname)
+				(current_kmpp, current_spread, current_std) = processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path)
 
 				actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
 				actualMap500Path = os.path.join(self.options.actualdir, actualSet, stu + '500.png')
@@ -1004,7 +1030,7 @@ class SubmissionAnalyzer(object):
 		else:
 			out.write(djangotemplates.render('st_index_django.html', context))
 		out.close()
-		for x in ('map.png', 'map500.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
+		for x in ('map.png', 'map500.png', 'map_lg.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
 	
 	def buildBestSoFarDirs(self, configs=None):

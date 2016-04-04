@@ -21,7 +21,7 @@ $.fn.socialSharePrivacy.settings.order = ['facebook', 'gplus', 'twitter', 'tumbl
 $.fn.socialSharePrivacy.settings.path_prefix = '../';
 
 $(document).ready(function () {
-	$('.share').socialSharePrivacy({uri: '{{pageabsurl|escapejs}}');
+	$('.share').socialSharePrivacy({uri: {{pageabsurl|tojson}});
 	//$('#other').socialSharePrivacy({uri: 'http://example.com/'});
 });
 // ]]>
