@@ -32,6 +32,8 @@ const char usage[] =
 "  [--minlon 000.000000 | --minlond delta from maxlon]\n"
 "  [--maxlat 000.000000 | --maxlatd delta from minlat]\n"
 "  [--maxlon 000.000000 | --maxlond delta from minlon]\n"
+"  [--mppb map pixel protobuf file]\n"
+"  [--hubidz ubidz list to highlight][--hrbga highlight RGBA]\n"
 "  [-f command file][-px pixel_map.mpout]\n"
 "  [--colorsIn color file][--colorsOut color file]\n"
 "  [-U file.uf1 | -B file.gbin][-d num districts]\n"
@@ -45,6 +47,8 @@ int main( int argc, const char** argv ) {
 	const char* upxfname = NULL;
 	const char* mppbfname = NULL;
 	const char* popdensityname = NULL;
+	const char* hubidzfname = NULL;
+	const char* highlightRGBAhex = NULL;
 
 	const char* commandFileName = NULL;
 
@@ -63,7 +67,6 @@ int main( int argc, const char** argv ) {
 
 	int argi = 1;
 	while (argi < argc) {
-#if 1
 	    DoubleArg("minlat", &mr.minlat);
 	    DoubleArg("minlatd", &minlatd);
 	    DoubleArg("minlon", &mr.minlon);
@@ -75,6 +78,8 @@ int main( int argc, const char** argv ) {
 	    StringArg("f", &commandFileName);
 	    StringArg("px", &upxfname);
 	    StringArg("mppb", &mppbfname);
+	    StringArg("hubidz", &hubidzfname);
+	    StringArg("hrgba", &highlightRGBAhex);
 	    StringArg("colorsIn", &colorFileIn);
 	    StringArg("colorsOut", &colorFileOut);
 	    StringArg("density", &popdensityname);
@@ -83,54 +88,6 @@ int main( int argc, const char** argv ) {
 	    argv[nargc] = argv[argi];
 	    nargc++;
 	    argi++;
-#else
-		if ( ! strcmp( argv[i], "--minlat" ) ) {
-			i++;
-			mr.minlat = strtod( argv[i], NULL );
-		} else if ( ! strcmp( argv[i], "--minlatd" ) ) {
-			i++;
-			mr.minlat = strtod( argv[i], NULL ) + mr.maxlat;
-		} else if ( ! strcmp( argv[i], "--minlon" ) ) {
-			i++;
-			mr.minlon = strtod( argv[i], NULL );
-		} else if ( ! strcmp( argv[i], "--minlond" ) ) {
-			i++;
-			mr.minlon = strtod( argv[i], NULL ) + mr.maxlon;
-		} else if ( ! strcmp( argv[i], "--maxlon" ) ) {
-			i++;
-			mr.maxlon = strtod( argv[i], NULL );
-		} else if ( ! strcmp( argv[i], "--maxlond" ) ) {
-			i++;
-			mr.maxlon = strtod( argv[i], NULL ) + mr.minlon;
-		} else if ( ! strcmp( argv[i], "--maxlat" ) ) {
-			i++;
-			mr.maxlat = strtod( argv[i], NULL );
-		} else if ( ! strcmp( argv[i], "--maxlatd" ) ) {
-			i++;
-			mr.maxlat = strtod( argv[i], NULL ) + mr.minlat;
-		} else if ( ! strcmp( argv[i], "-f" ) ) {
-			i++;
-			commandFileName = argv[i];
-		} else if ( ! strcmp( argv[i], "-px" ) ) {
-			i++;
-			upxfname = argv[i];
-		} else if ( ! strcmp( argv[i], "--mppb" ) ) {
-			i++;
-			mppbfname = argv[i];
-		} else if ( ! strcmp( argv[i], "--colorsIn" ) ) {
-			i++;
-			colorFileIn = argv[i];
-		} else if ( ! strcmp( argv[i], "--colorsOut" ) ) {
-			i++;
-			colorFileOut = argv[i];
-		} else if ( ! strcmp( argv[i], "--density" ) ) {
-			i++;
-			popdensityname = argv[i];
-		} else {
-			argv[nargc] = argv[i];
-			nargc++;
-		}
-#endif
 	}
 
 	if (!isnan(minlatd)) {
@@ -191,6 +148,13 @@ int main( int argc, const char** argv ) {
 	}
 	if (!ok) {
 		return 1;
+	}
+
+	if ( hubidzfname != NULL ) {
+		mr.loadHighlightUbidz( hubidzfname );
+	}
+	if ( highlightRGBAhex != NULL ) {
+		mr.setRGBAhex(highlightRGBAhex);
 	}
 	
 	// init PNG image data area

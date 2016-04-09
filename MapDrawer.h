@@ -18,6 +18,9 @@ double minlon;
 double maxlat;
 double maxlon;
 int bytesPerPixel;  // defaults to 3 for png output. set to 4 for screen.
+int highlightListLength;
+uint64_t* highlightList; // ubids to highlight
+uint8_t highlightRGBA[4];
 
 MapDrawer();
 
@@ -29,6 +32,8 @@ inline void setSize(int width, int height) {
 	this->width = width;
 	this->height = height;
 }
+bool loadHighlightUbidz( const char* path );
+bool setRGBAhex( const char* hex );
 
 void clearToBlack();
 void clearToBackgroundColor();
@@ -64,6 +69,26 @@ void runDrendCommandFile( Solver& sov, const char* commandFileName );
 		if (bytesPerPixel == 4) {
 			row[x+3] = alpha; // 100% alpha
 		}
+	}
+
+	inline bool ubidIsHighlighted(uint64_t ubid) {
+		if (highlightList == ((uint64_t*)0)) {
+			return false;
+		}
+		int lo = 0;
+		int hi = highlightListLength - 1;
+		int mid = (hi + lo) / 2;
+		while (hi > lo) {
+			if (ubid == highlightList[mid]) {
+				return true;
+			} else if (ubid < highlightList[mid]) {
+				hi = mid - 1;
+			} else {
+				lo = mid + 1;
+			}
+			mid = (hi + lo) / 2;
+		}
+		return false;
 	}
 };
 

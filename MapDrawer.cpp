@@ -15,13 +15,21 @@
 #include <string.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/gzip_stream.h>
+#include <zlib.h>
 
 MapDrawer::MapDrawer()
 : data(NULL), rows(NULL),
 width(-1), height(-1),
 px(NULL),
 minlat(NAN), minlon(NAN), maxlat(NAN), maxlon(NAN),
-bytesPerPixel(4) {}
+bytesPerPixel(4),
+highlightListLength(0),
+highlightList(NULL) {
+	highlightRGBA[0] = 255;
+	highlightRGBA[1] = 255;
+	highlightRGBA[2] = 0;
+	highlightRGBA[3] = 60;
+}
 
 void MapDrawer::maybeClearDataAndRows() {
 	if ( data != NULL ) {
@@ -353,6 +361,46 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 	}
 	return true;
 }
+
+bool MapDrawer::loadHighlightUbidz( const char* path ) {
+	gzFile ubidz = gzopen(path, "rb");
+	if (ubidz == NULL) {
+		int gzerrno = 0;
+		fprintf(stderr, "gzip error \"%s\" on file \"%s\"\n", gzerror(ubidz, &gzerrno), path);
+		return false;
+	}
+
+    int didRead;
+    uint64_t version;
+    uint64_t len;
+
+#define READCHECK(N) if (didRead != (N)) { int gzerrno; fprintf(stderr, "%s: failed reading %s:%d %s\n", path, __FILE__, __LINE__, gzerror(ubidz, &gzerrno)); return false; }
+    didRead = gzread(ubidz, &version, 8);
+    READCHECK(8);
+    didRead = gzread(ubidz, &len, 8);
+    READCHECK(8);
+
+	highlightList = new uint64_t[len];
+	didRead = gzread(ubidz, highlightList, 8*len);
+	READCHECK(8*len);
+
+	gzclose_r(ubidz);
+#undef READCHECK
+
+	highlightListLength = len;
+
+	return true;
+}
+bool MapDrawer::setRGBAhex( const char* hex ) {
+	char* endp;
+	unsigned long x = strtoul(hex, &endp, 16);
+	highlightRGBA[0] = (x >> 24) & 0xff;
+	highlightRGBA[1] = (x >> 16) & 0xff;
+	highlightRGBA[2] = (x >>  8) & 0xff;
+	highlightRGBA[3] = (x      ) & 0xff;
+	return true;
+}
+
 
 inline int mystrmatch( const char* src, const char* key ) {
 	while ( *key != '\0' ) {
@@ -759,6 +807,11 @@ void MapDrawer::paintPixels( Solver* sov ) {
 	double pdrange;
 	// TODO: make a command line flag to turn this off.
 	bool doPopDensityShading = getPopulationDensityRenderParams(sov, &minpd, &pdrange);
+    uint32_t minIndex = 0, maxIndex = 0;
+    uint64_t* ubidLut = NULL;
+	if (highlightList != NULL) {
+		ubidLut = sov->gd->makeUbidLUT(&minIndex, &maxIndex);
+	}
 	
 	for ( int i = 0; i < numPoints; i++ ) {
 		const unsigned char* color;
@@ -773,20 +826,36 @@ void MapDrawer::paintPixels( Solver* sov ) {
 			blocksSkipped++;
 			continue;
 		}
-		double alpha = 1.0;
-		double oma = 0.0;
-		int grey;
+		//double alpha = 1.0;
+		//double oma = 0.0;
+		//int grey;
+		uint8_t r = color[0];
+		uint8_t g = color[1];
+		uint8_t b = color[2];
+
 		if (doPopDensityShading) {
 			double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
-			grey = (int)(255.0 * (tpd - minpd) / pdrange);
+			int grey = (int)(255.0 * (tpd - minpd) / pdrange);
 			if (grey > 255) {
 				grey = 255;
 			} else if (grey < 0) {
 				grey = 0;
 			}
-			alpha = abs(grey - 128) / (3.0 * 255);
-			oma = 1.0 - alpha;
+			double alpha = abs(grey - 128) / (3.0 * 255);
+			double oma = 1.0 - alpha;
 			grey = grey * alpha;
+			r = (r * oma) + grey;
+			g = (g * oma) + grey;
+			b = (b * oma) + grey;
+		}
+		if (highlightList != NULL) {
+			uint64_t ubid = ubidLut[i - minIndex];
+			if (ubidIsHighlighted(ubid)) {
+				unsigned int oma = 255 - highlightRGBA[3];
+				r = ((r * oma) + (highlightRGBA[0] * highlightRGBA[3])) >> 8;
+				g = ((g * oma) + (highlightRGBA[1] * highlightRGBA[3])) >> 8;
+					 b = ((b * oma) + (highlightRGBA[2] * highlightRGBA[3])) >> 8;
+			}
 		}
 		for ( int j = 0; j < cpx->numpx; j++ ) {
 			int x, y;
@@ -800,14 +869,16 @@ void MapDrawer::paintPixels( Solver* sov ) {
 				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", i, y, height );
 				continue;
 			}
+			/*
 			if (doPopDensityShading) {
 				setPoint(x, y,
 					(color[0] * oma) + grey,
 					(color[1] * oma) + grey,
 					(color[2] * oma) + grey);
 			} else {
-				setPoint(x, y, color[0], color[1], color[2]);
-			}
+			*/
+			setPoint(x, y, r, g, b);
+			//}
 		}
 	}
 	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
