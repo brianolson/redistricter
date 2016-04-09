@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 # standard
+import csv
 import gzip
 import logging
 import optparse
@@ -20,6 +21,7 @@ import linksfromedges
 from newerthan import newerthan
 import setupstatedata
 import shapefile
+from makePlaceBlockList import getTopNPlaceCodes, filterPlacesToUbidList
 
 TABBLOCK_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/'
 FACES_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/FACES/'
@@ -284,11 +286,37 @@ def pl94_171_2010_ubid(line):
 	This winds up being a 15 digit decimal number that fits in a 64 bit unsigned int."""
 	return line[27:32] + line[54:60] + line[61:65]
 
+def readPlaceNames(placeNamesPath):
+	placeNames = {}
+	with open(placeNamesPath) as ppin:
+		for line in ppin:
+			if not line:
+				continue
+			line = line.strip()
+			if not line:
+				continue
+			if line[0] == '#':
+				continue
+			parts = line.split('|')
+			place = parts[2] # int(parts[2])
+			name = parts[3]
+			oldname = placeNames.get(place)
+			if (oldname is not None) and (oldname != name):
+				logging.warn('differing names for place %d: %r %r', place, oldname, name)
+			else:
+				placeNames[place] = name
+	logging.debug('read %d names from %r', len(placeNames), placeNamesPath)
+	return placeNames
+
 
 class GeoBlocksPlaces(object):
+	"""
+	Reads 
+	"""
 	ACTIVE_INCORPORATED_PLACE_CODES = ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
 	def __init__(self):
 		self.places = {}
+		self.placePops = {}
 
 	def pl2010line(self, line):
 		"accumulate a line of a PL94-171 (2010) file"
@@ -302,6 +330,8 @@ class GeoBlocksPlaces(object):
 				self.places[place] = placelist
 			else:
 				placelist.append(ubid)
+			pop = int(line[318:327])
+			self.placePops[place] = self.placePops.get(place,0) + pop
 
 	def writePlaceUbidMap(self, out):
 		for place, placelist in self.places.iteritems():
@@ -312,6 +342,8 @@ class GeoBlocksPlaces(object):
 			#out.write('\x1e') # record sep
 
 	def writeUbidPlaceMap(self, out):
+		"""Write (ubid uint64, place uint64) file.
+		Header (version=1 uint64, num records uint64)"""
 		they = []
 		for place, placelist in self.places.iteritems():
 			for place_ubid in placelist:
@@ -324,6 +356,15 @@ class GeoBlocksPlaces(object):
 			# two uint64
 			# uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
 			out.write(struct.pack('=QQ', place_ubid, place))
+
+	def writePlacePops(self, out, placeNamesPath):
+		placeNames = readPlaceNames(placeNamesPath)
+		bypop = [(pop,place) for place,pop in self.placePops.iteritems()]
+		bypop.sort(reverse=True)
+		writer = csv.writer(out)
+		for pop, place in bypop:
+			name = placeNames.get(place, '')
+			writer.writerow([pop, place, name])
 
 
 class StateData(setupstatedata.StateData):
@@ -345,7 +386,7 @@ class StateData(setupstatedata.StateData):
 		plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
 		placespath = geoblockspath + '.places'
-		# TODO: maybe fetch
+		placePopPath = os.path.join(self.dpath, 'placespops.csv')
 		if not os.path.exists(plzip):
 			plzipurl = PL_ZIP_TEMPLATE % (self.name.replace(' ', '_'), self.stl)
 			self.logf('%s -> %s', plzipurl, plzip)
@@ -354,9 +395,12 @@ class StateData(setupstatedata.StateData):
 		assert os.path.exists(plzip), "missing %s" % (plzip,)
 		needsbuild = newerthan(plzip, geoblockspath)
 		needsbuild = needsbuild or newerthan(plzip, placespath)
+		needsbuild = needsbuild or newerthan(plzip, placePopPath)
 		if not needsbuild:
 			return
-		self.logf('%s -> %s , %s', plzip, geoblockspath, placespath)
+
+		# process a file within the zip into a filtered geo info file and two derivitive files about places (cities)
+		self.logf('%s -> %s , %s , %s', plzip, geoblockspath, placespath, placePopPath)
 		if self.options.dryrun:
 			return
 		places = GeoBlocksPlaces()
@@ -370,11 +414,12 @@ class StateData(setupstatedata.StateData):
 				fo.write(line)
 				places.pl2010line(line)
 		fo.close()
-		# with open(placespath, 'wb') as placefile:
-		#	 places.writePlaceUbidMap(placefile)
 		with gzip.open(placespath, 'wb') as placefile:
 			places.writeUbidPlaceMap(placefile)
 			placefile.flush()
+		placesNamesPath = os.path.join(self.dpath, 'st{}_{}_places.txt'.format(self.fips, self.stl))
+		with open(placePopPath, 'w') as pp:
+			places.writePlacePops(pp, placesNamesPath)
 	
 	def compileBinaryData(self):
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
@@ -396,6 +441,33 @@ class StateData(setupstatedata.StateData):
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, self.dpath,'" "'.join(cmd)))
 	
+	def placelist(self):
+		placelistPath = os.path.join(self.dpath, 'highlightPlaces.txt')
+		if not os.path.exists(placelistPath):
+			placePopPath = os.path.join(self.dpath, 'placespops.csv')
+			self.logf('%s -> %s', placePopPath, placelistPath)
+			if self.options.dryrun:
+				return None
+			places = getTopNPlaceCodes(placePopPath)
+			with open(placelistPath, 'w') as fout:
+				fout.write(' '.join(places))
+				fout.write('\n')
+			return map(int, places)
+
+		with open(placelistPath, 'r') as fin:
+			line = next(fin)
+			line = line.strip()
+			return map(int, line.split(' '))
+			
+	def buildHighlightBlocklist(self):
+		places = self.placelist()
+		placesPath = os.path.join(self.dpath, 'geoblocks.places')
+		highlightBlocklistPath = os.path.join(self.dpath, 'highlight.ubidz')
+		self.logf('%s[%r] -> %s', placesPath, places, highlightBlocklistPath)
+		if self.options.dryrun:
+			return
+		filterPlacesToUbidList(placesPath, places, highlightBlocklistPath)
+		
 	def dostate_inner(self):
 		linkspath = self.processShapefile(self.dpath)
 		if not linkspath:
@@ -403,6 +475,7 @@ class StateData(setupstatedata.StateData):
 			return False
 		self.getGeoBlocks()
 		self.compileBinaryData()
+		self.buildHighlightBlocklist()
 		generaterunconfigs.run(
 			datadir=self.options.datadir,
 			stulist=[self.stu],
