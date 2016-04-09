@@ -205,27 +205,27 @@ class Crawler(object):
 		stl = stu.lower()
 		fips = states.fipsForPostalCode(stl)
 		destdir = os.path.join(self.options.datadir, stu)
-		fname = 'st{fips}_{stl}_places.txt'.format(fips=fips, stl=stl)
+		fname = 'st{fips:02d}_{stl}_places.txt'.format(fips=fips, stl=stl)
 		fpath = os.path.join(destdir, fname)
 		if os.path.exists(fpath):
 			self.alreadyCount += 1
 			return
 		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_places.txt
-		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips}_{stl}_places.txt'.format(fips=fips, stl=stl)
+		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips:02d}_{stl}_places.txt'.format(fips=fips, stl=stl)
 		urllib.urlretrieve(url, fpath)
 		self.fetchCount += 1
 
 	def getCountyNames(self, stu):
 		stl = stu.lower()
 		fips = states.fipsForPostalCode(stl)
-		fname = 'st{fips}_{stl}_cou.txt'.format(fips=fips, stl=stl)
+		fname = 'st{fips:02d}_{stl}_cou.txt'.format(fips=fips, stl=stl)
 		destdir = os.path.join(self.options.datadir, stu)
 		fpath = os.path.join(destdir, fname)
 		if os.path.exists(fpath):
 			self.alreadyCount += 1
 			return
 		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_cou.txt
-		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips}_{stl}_cou.txt'.format(fips=fips, stl=stl)
+		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips:02d}_{stl}_cou.txt'.format(fips=fips, stl=stl)
 		urllib.urlretrieve(url, fpath)
 		self.fetchCount += 1
 	
@@ -417,7 +417,7 @@ class StateData(setupstatedata.StateData):
 		with gzip.open(placespath, 'wb') as placefile:
 			places.writeUbidPlaceMap(placefile)
 			placefile.flush()
-		placesNamesPath = os.path.join(self.dpath, 'st{}_{}_places.txt'.format(self.fips, self.stl))
+		placesNamesPath = os.path.join(self.dpath, 'st{fips:02d}_{stl}_places.txt'.format(fips=self.fips, stl=self.stl))
 		with open(placePopPath, 'w') as pp:
 			places.writePlacePops(pp, placesNamesPath)
 	
