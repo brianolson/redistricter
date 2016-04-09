@@ -80,6 +80,8 @@ def getCensusTigerSetList(datadir, url, cachename, regex):
 		for match in regex.finditer(line):
 			path = match.group(0)
 			state_fips = int(match.group(1))
+			if state_fips in states.ignored_fips:
+				continue
 			if match.lastindex == 2:
 				county = int(match.group(2))
 			else:
@@ -175,7 +177,7 @@ class Crawler(object):
 					self.fetchCount += 1
 				else:
 					self.alreadyCount += 1
-	
+
 	def getState(self, stu):
 		"""Get all tabblock, edges, faces and county files for state."""
 		fips = states.fipsForPostalCode(stu)
@@ -193,7 +195,37 @@ class Crawler(object):
 		self._fetchSetForState(fips, self.faces, FACES_URL, destdir)
 		self._fetchSetForState(fips, self.edges, EDGES_URL, destdir)
 		self._fetchSetForState(fips, self.county, COUNTY_URL, destdir)
+		self.getPlaces(stu)
+		self.getCountyNames(stu)
 		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
+
+	def getPlaces(self, stu):
+		stl = stu.lower()
+		fips = states.fipsForPostalCode(stl)
+		destdir = os.path.join(self.options.datadir, stu)
+		fname = 'st{fips}_{stl}_places.txt'.format(fips=fips, stl=stl)
+		fpath = os.path.join(destdir, fname)
+		if os.path.exists(fpath):
+			self.alreadyCount += 1
+			return
+		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_places.txt
+		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips}_{stl}_places.txt'.format(fips=fips, stl=stl)
+		urllib.urlretrieve(url, fpath)
+		self.fetchCount += 1
+
+	def getCountyNames(self, stu):
+		stl = stu.lower()
+		fips = states.fipsForPostalCode(stl)
+		fname = 'st{fips}_{stl}_cou.txt'.format(fips=fips, stl=stl)
+		destdir = os.path.join(self.options.datadir, stu)
+		fpath = os.path.join(destdir, fname)
+		if os.path.exists(fpath):
+			self.alreadyCount += 1
+			return
+		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_cou.txt
+		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips}_{stl}_cou.txt'.format(fips=fips, stl=stl)
+		urllib.urlretrieve(url, fpath)
+		self.fetchCount += 1
 	
 	def _fetchAllSet(self, tset, url):
 		for it in tset:
@@ -220,6 +252,9 @@ class Crawler(object):
 		self._fetchAllSet(self.faces, FACES_URL)
 		self._fetchAllSet(self.edges, EDGES_URL)
 		self._fetchAllSet(self.county, COUNTY_URL)
+		for stu in self.getAllStulist():
+			self.getPlaces(stu)
+			self.getCountyNames(stu)
 		logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
 	
 	def getAllStulist(self):
@@ -227,7 +262,7 @@ class Crawler(object):
 		for it in self.tabblock:
 			stu = states.codeForFips(it.state_fips)
 			assert(stu)
-			if stu == 'DC':
+			if stu == 'DC' or stu == 'PR':
 				continue
 			stulist.append(stu)
 		return stulist
@@ -244,56 +279,51 @@ class ProcessGlobals(setupstatedata.ProcessGlobals):
 
 
 def pl94_171_2010_ubid(line):
-        """From a line of a PL94-171 (2010) file, return the 'unique block id' used by Redistricter system.
-        {state}{county}{tract}{block}
-        This winds up being a 15 digit decimal number that fits in a 64 bit unsigned int."""
-        return line[27:32] + line[54:60] + line[61:65]
+	"""From a line of a PL94-171 (2010) file, return the 'unique block id' used by Redistricter system.
+	{state}{county}{tract}{block}
+	This winds up being a 15 digit decimal number that fits in a 64 bit unsigned int."""
+	return line[27:32] + line[54:60] + line[61:65]
 
 
-# TODO: place names are available from, e.g.
-# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_places.txt
 class GeoBlocksPlaces(object):
-        ACTIVE_INCORPORATED_PLACE_CODES = ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
-        def __init__(self):
-                self.places = {}
+	ACTIVE_INCORPORATED_PLACE_CODES = ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
+	def __init__(self):
+		self.places = {}
 
-        def pl2010line(self, line):
-                "accumulate a line of a PL94-171 (2010) file"
-                placecode = line[50:52]
-                if placecode in self.ACTIVE_INCORPORATED_PLACE_CODES:
-                        place = line[45:50]
-                        ubid = pl94_171_2010_ubid(line)
-                        placelist = self.places.get(place)
-                        if placelist is None:
-                                placelist = [ubid]
-                                self.places[place] = placelist
-                        else:
-                                placelist.append(ubid)
+	def pl2010line(self, line):
+		"accumulate a line of a PL94-171 (2010) file"
+		placecode = line[50:52]
+		if placecode in self.ACTIVE_INCORPORATED_PLACE_CODES:
+			place = line[45:50]
+			ubid = pl94_171_2010_ubid(line)
+			placelist = self.places.get(place)
+			if placelist is None:
+				placelist = [ubid]
+				self.places[place] = placelist
+			else:
+				placelist.append(ubid)
 
-        def writePlaceUbidMap(self, out):
-                for place, placelist in self.places.iteritems():
-                        out.write(place)
-                        out.write('\x1d') # group sep
-                        out.write('\x1c'.join(placelist)) # field sep
-                        out.write('\n') # this will make it easier to `less` the file
-                        #out.write('\x1e') # record sep
+	def writePlaceUbidMap(self, out):
+		for place, placelist in self.places.iteritems():
+			out.write(place)
+			out.write('\x1d') # group sep
+			out.write('\x1c'.join(placelist)) # field sep
+			out.write('\n') # this will make it easier to `less` the file
+			#out.write('\x1e') # record sep
 
-        def writeUbidPlaceMap(self, out):
-                they = []
-                for place, placelist in self.places.iteritems():
-                        for place_ubid in placelist:
-                                they.append( (long(place_ubid), long(place)) )
-                # version, number of records
-                out.write(struct.pack('=QQ', 1, len(they)))
-                # sort so that result can be loaded into a block of memory and binary searched on ubid
-                they.sort()
-                for place_ubid, place in they:
-                        # two uint64
-                        # uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
-                        out.write(struct.pack('=QQ', place_ubid, place))
-
-# TODO: county names
-# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_cou.txt
+	def writeUbidPlaceMap(self, out):
+		they = []
+		for place, placelist in self.places.iteritems():
+			for place_ubid in placelist:
+				they.append( (long(place_ubid), long(place)) )
+		# version, number of records
+		out.write(struct.pack('=QQ', 1, len(they)))
+		# sort so that result can be loaded into a block of memory and binary searched on ubid
+		they.sort()
+		for place_ubid, place in they:
+			# two uint64
+			# uint64 is overkill for the 5-digit-decimal 'place', but it makes the whole thing mmap-able and keeps everything 64 bit aligned nicely.
+			out.write(struct.pack('=QQ', place_ubid, place))
 
 
 class StateData(setupstatedata.StateData):
@@ -314,7 +344,7 @@ class StateData(setupstatedata.StateData):
 		"""From xx2010.pl.zip get block level geo file."""
 		plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
-                placespath = geoblockspath + '.places'
+		placespath = geoblockspath + '.places'
 		# TODO: maybe fetch
 		if not os.path.exists(plzip):
 			plzipurl = PL_ZIP_TEMPLATE % (self.name.replace(' ', '_'), self.stl)
@@ -322,14 +352,14 @@ class StateData(setupstatedata.StateData):
 			if not self.options.dryrun:
 				urllib.urlretrieve(plzipurl, plzip)
 		assert os.path.exists(plzip), "missing %s" % (plzip,)
-                needsbuild = newerthan(plzip, geoblockspath)
-                needsbuild = needsbuild or newerthan(plzip, placespath)
+		needsbuild = newerthan(plzip, geoblockspath)
+		needsbuild = needsbuild or newerthan(plzip, placespath)
 		if not needsbuild:
 			return
 		self.logf('%s -> %s , %s', plzip, geoblockspath, placespath)
 		if self.options.dryrun:
 			return
-                places = GeoBlocksPlaces()
+		places = GeoBlocksPlaces()
 		fo = open(geoblockspath, 'w')
 		zf = zipfile.ZipFile(plzip, 'r')
 		raw = zf.read(self.stl + 'geo2010.pl')
@@ -338,13 +368,13 @@ class StateData(setupstatedata.StateData):
 		for line in raw.splitlines(True):
 			if line.startswith(filter):
 				fo.write(line)
-                                places.pl2010line(line)
+				places.pl2010line(line)
 		fo.close()
-                # with open(placespath, 'wb') as placefile:
-                #         places.writePlaceUbidMap(placefile)
-                with gzip.open(placespath, 'wb') as placefile:
-                        places.writeUbidPlaceMap(placefile)
-                        placefile.flush()
+		# with open(placespath, 'wb') as placefile:
+		#	 places.writePlaceUbidMap(placefile)
+		with gzip.open(placespath, 'wb') as placefile:
+			places.writeUbidPlaceMap(placefile)
+			placefile.flush()
 	
 	def compileBinaryData(self):
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')

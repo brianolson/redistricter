@@ -59,6 +59,13 @@ states = [
 	('Wyoming',	'WY',	56),
 ]
 
+ignored_fips = [
+        60, # American Samoa
+        66, # Guam
+        69, # Northern Mariana Islands
+        78, # Virgin Islands
+]
+
 def nameForPostalCode(code):
 	"""Return proper name for two letter postal code."""
 	code = code.upper()
