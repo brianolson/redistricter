@@ -27,6 +27,12 @@ public class TemporaryBlockHolder implements Comparable<TemporaryBlockHolder> {
 		}
 		setRast(ctx, p);
 	}
+	public int numLandPoints() {
+		if (xy == null) {
+			return 0;
+		}
+		return xy.length / 2;
+	}
 	public void setRast(RasterizationContext ctx, Polygon p) {
 		if (p.isWater) {
 			water = new int[ctx.pxPos];

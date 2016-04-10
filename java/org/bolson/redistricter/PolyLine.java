@@ -23,7 +23,7 @@ public class PolyLine extends ESRIShape {
 	public void init(byte[] data, int offset, int length) {
 		int pos = 0;
 		int type = ShapefileBundle.bytesToIntLE(data, pos); pos += 4;
-		assert(type == 5);
+		assert(type == 3);
 		xmin = ShapefileBundle.bytesToDoubleLE(data, pos); pos += 8;
 		ymin = ShapefileBundle.bytesToDoubleLE(data, pos); pos += 8;
 		xmax = ShapefileBundle.bytesToDoubleLE(data, pos); pos += 8;

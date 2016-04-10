@@ -13,6 +13,7 @@ import com.google.protobuf.ByteString;
 public class MapRasterizationReceiver implements RasterizationReciever {
 	protected Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
 	TreeMap<TemporaryBlockHolder, TemporaryBlockHolder> blocks = null;
+	int pxCount = 0;
 	
 	MapRasterizationReceiver() {
 	}
@@ -58,6 +59,7 @@ public class MapRasterizationReceiver implements RasterizationReciever {
 				for (int i = 0; i < ctx.pxPos; ++i) {
 					bb.addXy(ctx.pixels[i]);
 				}
+				pxCount += ctx.pxPos / 2;
 			}
 			rastb.addBlock(bb);
 		} else {
@@ -76,11 +78,13 @@ public class MapRasterizationReceiver implements RasterizationReciever {
 			while (!blocks.isEmpty()) {
 				TemporaryBlockHolder tb = blocks.firstKey();
 				assert tb != null;
+				pxCount += tb.numLandPoints();
 				rastb.addBlock(tb.build());
 				// To make a temporary free-able, remove it from the map.
 				blocks.remove(tb);
 			}
 		}
+		ShapefileBundle.log.info(pxCount + " land pixels");
 		return rastb.build();
 	}
 }

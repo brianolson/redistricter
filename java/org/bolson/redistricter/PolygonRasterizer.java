@@ -22,6 +22,7 @@ public class PolygonRasterizer implements PolygonProcessor {
 	FileOutputStream fos = null;
 	GZIPOutputStream gos = null;
 	MapRasterizationReceiver mrr = null;
+	BufferedImageRasterizer bir = null;
 	
 	@Override
 	public void process(Polygon p) {
@@ -42,9 +43,8 @@ public class PolygonRasterizer implements PolygonProcessor {
 			ShapefileBundle.log.info("will make mask \"" + rastOpts.maskOutName + "\"");
 			ShapefileBundle.log.info("x=" + rastOpts.xpx + " y=" + rastOpts.ypx);
 			maskImage = new BufferedImage(rastOpts.xpx, rastOpts.ypx, BufferedImage.TYPE_4BYTE_ABGR);
-			BufferedImageRasterizer bir = new BufferedImageRasterizer(maskImage, birOpts);
+			bir = new BufferedImageRasterizer(maskImage, birOpts);
 			outputs.add(bir);
-			maskOutput = new FileOutputStream(rastOpts.maskOutName);
 		}
 		
 		if (rastOpts.rastOut != null) {
@@ -71,6 +71,14 @@ public class PolygonRasterizer implements PolygonProcessor {
 			fos.flush();
 			gos.close();
 			fos.close();
+		}
+		if (bir != null) {
+			if (bir.collisionCount > 0) {
+				ShapefileBundle.log.warning("pixel collisions: " + bir.collisionCount);
+			}
+		}
+		if ((maskOutput == null) && (rastOpts.maskOutName != null)) {
+			maskOutput = new FileOutputStream(rastOpts.maskOutName);
 		}
 		if (maskOutput != null && maskImage != null) {
 			MapCanvas.writeBufferedImageAsPNG(maskOutput, maskImage);

@@ -32,6 +32,26 @@ class Polygon extends ESRIShape {
 	public Polygon(byte[] data, int offset, int length) {
 		init(data, offset, length);
 	}
+	
+	/**
+	 * Testing interface. Points should be a simple loop.
+	 * e.g. double[]{0,1, 1,0, 1,1, 0,1}
+	 * @param points
+	 */
+	public Polygon(double[] points) {
+		this.points = points.clone();
+		this.parts = new int[]{0};
+		xmin = xmax = points[0];
+		ymin = ymax = points[1];
+		for (int i = 2; i < points.length; i += 2) {
+			double x = points[i];
+			double y = points[i+1];
+			if (x > xmax) { xmax = x; }
+			if (x < xmin) { xmin = x; }
+			if (y > ymax) { ymax = y; }
+			if (y < ymin) { ymin = y; }
+		}
+	}
 	/**
 	 * Parse binary data into structure in memory.
 	 * @param data The bytes after the (numer,length) record header.
@@ -140,19 +160,34 @@ class Polygon extends ESRIShape {
 		if (rymax > ctx.maxy){
 			rymax = ctx.maxy;
 		}
+		
+		// max y in source coordinates is min pixel-y.
+		// find the first pixel center that crosses through this shape.
 		int py = pcenterBelow(ymax, ctx.maxy, ctx.pixelHeight);
+		py--; // this 'overscan' does catch some things. huh.
+		boolean firstRow = true;
 		if (py < 0) {
 			py = 0;
+			firstRow = false;
 		}
+		
+		// greatest pixel, inclusive
+		int pymax = posToPixelY(ymin, ctx.maxy, ctx.pixelHeight);
+		pymax++;
+		if (pymax >= ctx.ypx) {
+			pymax = ctx.ypx - 1;
+		}
+		// translate back to source coordinates to get line crossings in that space.
 		double y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
 
-		if (ctx.xIntersectScratch.length < (points.length / 2)) {
+		if (ctx.xIntersectScratch.length < points.length) {
 			// on the crazy outside limit, we intersect with all of the line segments, or something.
-			ctx.xIntersectScratch = new double[points.length / 2];
+			ctx.xIntersectScratch = new double[points.length];
 		}
 
 		// for each scan row that fits within this polygon and the greater context...
-		while ((y >= ymin) && (py < ctx.ypx)) {
+		//while ((y >= ymin) && (py < ctx.ypx)) {
+		while (py <= pymax) {
 			ctx.xIntersects = 0;
 			// Intersect each loop of lines at current scan line.
 			for (int parti = 0; parti < parts.length; ++parti) {
@@ -187,6 +222,8 @@ class Polygon extends ESRIShape {
 			}
 			//assert(ctx.xIntersects > 0);
 			// TODO: fix subtle geometry bugs that cause this, probably involving points hitting scan lines as V or in passing /
+			// Haven't actually seen this error message in a while -- 20160410
+			// This block is all just analysis for a rare error condition, doesn't affect render.
 			if (ctx.xIntersects % 2 != 0) {
 				System.err.println("mismatch in line segments intersecting y=" + y);
 				System.err.println(this.toString());
@@ -221,19 +258,41 @@ class Polygon extends ESRIShape {
 			
 			// For all start-stop pairs, draw pixels from start edge to end edge
 			for (int xi = 0; xi < ctx.xIntersects; xi += 2) {
+				boolean any = false;
+				// Start with the first pixel center enclosed by the left-most line.
 				int px = pcenterRight(ctx.xIntersectScratch[xi], ctx.minx, ctx.pixelWidth);
+				//int px = pcenterLeft(ctx.xIntersectScratch[xi], ctx.minx, ctx.pixelWidth);
+				// maximum pixel, inclusive
+				int pxmax = pcenterLeft(ctx.xIntersectScratch[xi+1], ctx.minx, ctx.pixelWidth);
+				if (pxmax < px) {
+					// a \/ or /\ crosses this y, but not around a pixel center
+					//ShapefileBundle.log.warning("scan ends before it starts fx=" + ctx.xIntersectScratch[xi] + " .. " + ctx.xIntersectScratch[xi+1] + ", px=" + px + " .. " + pxmax);
+					continue;
+				}
 				if (px < 0) {
 					px = 0;
 				}
-				double x = pcenterX(px, ctx.minx, ctx.pixelWidth);
-				// Draw pixels from start edge to end edge
-				while ((x < ctx.xIntersectScratch[xi+1]) && (px < ctx.xpx)) {
+				if (pxmax >= ctx.xpx) {
+					pxmax = ctx.xpx - 1;
+				}
+				while (px <= pxmax) {
 					ctx.addPixel(px, py);
+					any = true;
 					px++;
-					x = pcenterX(px, ctx.minx, ctx.pixelWidth);
+				}
+				if (!any) {
+					ShapefileBundle.log.warning("intercept resulted in no pixels y=" + y + " py=" + py + " x:" + ctx.xIntersectScratch[xi] + "->" + ctx.xIntersectScratch[xi+1] + ", px=" + pcenterRight(ctx.xIntersectScratch[xi], ctx.minx, ctx.pixelWidth) + " -> " + pxmax);
 				}
 			}
 			
+			if (firstRow) {
+				/*if (ctx.xIntersects > 0) {
+					ShapefileBundle.log.warning("found hits on overscan first row " + ctx.xIntersects);
+				}*/
+				firstRow = false;
+			}
+			
+			// iterate, next pixel and the source y it comes from
 			py++;
 			y = pcenterY(py, ctx.maxy, ctx.pixelHeight);
 		}
@@ -322,4 +381,4 @@ class Polygon extends ESRIShape {
 			points[i+1] = b.y;
 		}
 	}
-}
+};

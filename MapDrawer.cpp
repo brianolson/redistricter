@@ -315,6 +315,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 	if (px == NULL) {
 		px = new pxlist[sov->gd->numPoints];
 	}
+	uint64_t pxcount = 0;
 	for (int i = 0; i < map.block_size(); ++i) {
 		const MapRasterization::Block& b = map.block(i);
 		if (!b.has_ubid()) {
@@ -326,8 +327,12 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 		if ( index != (uint32_t)-1 ) {
 			pxlist* cpx;
 			int blockpoints = b.xy_size() / 2;
+			pxcount += blockpoints;
 			cpx = px + index;
 			int nexti = cpx->numpx * 2;
+			if (cpx->numpx != 0) {
+				fprintf(stderr, "index %d already has %d pix, adding %d from ubid %lu", index, cpx->numpx, blockpoints, tubid);
+			}
 			if ( cpx->px != NULL ) {
 				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + blockpoints)*2) );
 				assert( cpx->px != NULL );
@@ -359,6 +364,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 			fprintf(stderr, "%013lu no index!\n", tubid );
 		}
 	}
+	fprintf(stderr, "loaded %lu px from %d blocks into %d solution blocks\n", pxcount, map.block_size(), sov->gd->numPoints);
 	return true;
 }
 

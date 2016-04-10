@@ -41,6 +41,8 @@ public class BufferedImageRasterizer implements RasterizationReciever {
 		public int randColorOffset = 10;
 	}
 	
+	int collisionCount = 0;
+	
 	/**
 	 * @param imageOut where to render to
 	 * @param optsIn may be null
@@ -86,6 +88,11 @@ public class BufferedImageRasterizer implements RasterizationReciever {
 		int miny = ctx.pixels[1];
 		int maxy = ctx.pixels[1];
 		for (int i = 0; i < ctx.pxPos; i += 2) {
+			int oldcolor = mask.getRGB(ctx.pixels[i], ctx.pixels[i+1]);
+			if (oldcolor != 0) {
+				collisionCount++;
+				//ShapefileBundle.log.warning("collinging pixel: " + ctx.pixels[i] +","+ ctx.pixels[i+1]);
+			}
 			mask.setRGB(ctx.pixels[i], ctx.pixels[i+1], argb);
 			if (minx > ctx.pixels[i]) {
 				minx = ctx.pixels[i];

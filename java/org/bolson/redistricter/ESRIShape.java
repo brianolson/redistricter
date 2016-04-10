@@ -19,28 +19,39 @@ every pixel should be in exactly one triangle, based on the center of the pixel.
 The outer edges of the pixel image will be at the min/max points.
 */
 	
-	/** for some y, what is the next pixel center below that? */
-	static final int pcenterBelow(double somey, double maxy, double pixelHeight) {
+	/** for some y, what is the next pixel center below that?
+	 * - py = 0, maxy
+	 *  
+	 *  
+	 *  
+	 * - y = 0, 
+	 *  */
+	public static final int pcenterBelow(double somey, double maxy, double pixelHeight) {
 		return (int)Math.floor( ((maxy - somey) / pixelHeight) + 0.5 );
 	}
-	/** for some x, what is the next pixel center to the right? */
-	static final int pcenterRight(double somex, double minx, double pixelWidth) {
-		return (int)Math.floor( ((somex - minx) / pixelWidth) + 0.5 );
-	}
 	/** for some y, what is the nearest pixel center? */
-	static final int posToPixelY(double somey, double maxy, double pixelHeight) {
-		return (int)Math.round( ((maxy - somey) / pixelHeight) + 0.5 );
-	}
-	/** for some x, what is the nearest pixel center? */
-	static final int posToPixelX(double somex, double minx, double pixelWidth) {
-		return (int)Math.round( ((somex - minx) / pixelWidth) + 0.5 );
+	public static final int posToPixelY(double somey, double maxy, double pixelHeight) {
+		return (int)Math.round( ((maxy - somey) / pixelHeight) - 0.5 );
 	}
 	/** The y coordinate of the center of a pixel */
-	static final double pcenterY( int py, double maxy, double pixelHeight ) {
+	public static final double pcenterY( int py, double maxy, double pixelHeight ) {
 		return maxy - ((py + 0.5) * pixelHeight);
 	}
+	
+	/** for some x, what is the next pixel center to the right? */
+	public static final int pcenterRight(double somex, double minx, double pixelWidth) {
+		return (int)Math.floor( ((somex - minx) / pixelWidth) + 0.5 );
+	}
+	/** for some x, what is the next pixel center to the left? */
+	public static final int pcenterLeft(double somex, double minx, double pixelWidth) {
+		return (int)Math.floor( ((somex - minx) / pixelWidth) - 0.5 );
+	}
+	/** for some x, what is the nearest pixel center? */
+	public static final int posToPixelX(double somex, double minx, double pixelWidth) {
+		return (int)Math.round( ((somex - minx) / pixelWidth) - 0.5 );
+	}
 	/** The x coordinate of the center of a pixel */
-	static final double pcenterX( int px, double minx, double pixelWidth ) {
+	public static final double pcenterX( int px, double minx, double pixelWidth ) {
 		return minx + ((px + 0.5) * pixelWidth);
 	}
 	
@@ -91,6 +102,7 @@ The outer edges of the pixel image will be at the min/max points.
 				// don't double-add a duplicate
 				// TODO: epsilon of 1/2 or 1/4 pixel size?
 				// TODO: if this is a point /\ or \/, drop it.
+				ShapefileBundle.log.warning("double intersect at " + x + ", " + y);
 				return false;
 	    	} else {
 	    		break;
