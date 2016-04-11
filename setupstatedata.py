@@ -593,17 +593,17 @@ class StateData(object):
 		masksm_name = os.path.join(dpath, self.stu + 'blocks_sm.png')
 		mppblg_name = os.path.join(dpath, self.stu + '_lg.mppb')
 		masklg_name = os.path.join(dpath, self.stu + 'blocks_lg.png')
-                projname = projectionForPostalCode(self.stu)
-                self.logf('%s proj = %s', self.stu, projname)
+		projname = projectionForPostalCode(self.stu)
+		self.logf('%s proj = %s', self.stu, projname)
 		linksargs = None
 		baseRenderArgs = [
-                        '--boundx', '1920', '--boundy', '1080',
-                        '--rastgeom', os.path.join(dpath, 'rastgeom')
-                ]
-                if projname:
-                        projectionArgs = ['--proj', projname]
-                else:
-                        projectionArgs = []
+			'--boundx', '1920', '--boundy', '1080',
+			'--rastgeom', os.path.join(dpath, 'rastgeom')
+		]
+		if projname:
+			projectionArgs = ['--proj', projname]
+		else:
+			projectionArgs = []
 		renderArgs = []
 		commands = []
 		needlinks = True
@@ -624,21 +624,21 @@ class StateData(object):
 			self.logf('need %s from %s', linksname, bestzip)
 			linksargs = ['--links', linksname]
 		if facesPaths:
-			if any_newerthan(facesPaths, mppb_name):
+			if any_newerthan(facesPaths, mppb_name) or self.options.redraw:
 				self.logf('need %s from faces', mppb_name)
 				renderArgs += ['--rast', mppb_name]
-			if any_newerthan(facesPaths, mask_name):
+			if any_newerthan(facesPaths, mask_name) or self.options.redraw:
 				self.logf('need %s from faces', mask_name)
 				renderArgs += ['--mask', mask_name]
 		else:
-			if newerthan(bestzip, mppb_name):
+			if newerthan(bestzip, mppb_name) or self.options.redraw:
 				self.logf('need %s from %s', mppb_name, bestzip)
 				renderArgs += ['--rast', mppb_name]
-			if newerthan(bestzip, mask_name):
+			if newerthan(bestzip, mask_name) or self.options.redraw:
 				self.logf('need %s from %s', mask_name, bestzip)
 				renderArgs += ['--mask', mask_name]
 
-                # Build primary command to make links and/or .mppb raster
+		# Build primary command to make links and/or .mppb raster
 		if renderArgs:
 			renderArgs = baseRenderArgs + renderArgs + projectionArgs
 			if linksargs:
@@ -667,12 +667,12 @@ class StateData(object):
 					linksargs + [bestzip], self.options.bindir, self.options.strict)
 				commands.append(command)
 
-                # Maybe make {stu}_sm.mppb
+		# Maybe make {stu}_sm.mppb
 		smargs = []
-		if (facesPaths and any_newerthan(facesPaths, mppbsm_name)) or newerthan(bestzip, mppbsm_name):
+		if (facesPaths and (any_newerthan(facesPaths, mppbsm_name)  or self.options.redraw)) or (newerthan(bestzip, mppbsm_name) or self.options.redraw):
 			self.logf('need %s', mppbsm_name)
 			smargs += ['--rast', mppbsm_name]
-		if (facesPaths and any_newerthan(facesPaths, masksm_name)) or newerthan(bestzip, masksm_name):
+		if (facesPaths and (any_newerthan(facesPaths, masksm_name) or self.options.redraw)) or (newerthan(bestzip, masksm_name) or self.options.redraw):
 			self.logf('need %s', masksm_name)
 			smargs += ['--mask', masksm_name]
 		if smargs:
@@ -685,12 +685,12 @@ class StateData(object):
 				self.options.bindir, self.options.strict)
 			commands.append(command)
 
-                # Maybe make {stu}_lg.mppb
-                lgargs = []
-		if (facesPaths and any_newerthan(facesPaths, mppblg_name)) or newerthan(bestzip, mppblg_name):
+		# Maybe make {stu}_lg.mppb
+		lgargs = []
+		if (facesPaths and (any_newerthan(facesPaths, mppblg_name) or self.options.redraw)) or (newerthan(bestzip, mppblg_name) or self.options.redraw):
 			self.logf('need %s', mppblg_name)
 			lgargs += ['--rast', mppblg_name]
-		if (facesPaths and any_newerthan(facesPaths, masklg_name)) or newerthan(bestzip, masklg_name):
+		if (facesPaths and (any_newerthan(facesPaths, masklg_name) or self.options.redraw)) or (newerthan(bestzip, masklg_name) or self.options.redraw):
 			self.logf('need %s', masklg_name)
 			lgargs += ['--mask', masklg_name]
 		if lgargs:
@@ -703,7 +703,7 @@ class StateData(object):
 				self.options.bindir, self.options.strict)
 			commands.append(command)
 
-                # Run any accumulated commands in processShapefile()
+		# Run any accumulated commands in processShapefile()
 		for command in commands:
 			self.logf('command: %s', ' '.join(command))
 			if not self.options.dryrun:
@@ -978,6 +978,7 @@ def getOptionParser():
 	argp.add_option('--archive-runfiles', dest='archive_runfiles', default=None, help='directory path to store tar archives of run file sets into')
 	argp.add_option('--datasets', dest='archive_runfiles', help='directory path to store tar archives of run file sets into')
 	argp.add_option('--threads', dest='threads', type='int', default=1, help='number of threads to run')
+	argp.add_option('--redraw', action='store_true', default=False, help='do rasterization again')
 	return argp
 
 def getOptions():
@@ -1007,7 +1008,7 @@ class SyncrhonizedIteratorWrapper(object):
 def runloop(states, pg, options):
 	for a in states:
 		start = time.time()
-                sd = None
+		sd = None
 		try:
 			sd = pg.getState(a)
 			sd.dostate()
@@ -1015,8 +1016,8 @@ def runloop(states, pg, options):
 			traceback.print_exc()
 			errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (a, a))
 			sys.stdout.write(errmsg)
-                        if sd is not None:
-			        sd.logf(errmsg)
+			if sd is not None:
+				sd.logf(errmsg)
 		sys.stdout.write('%s took %f seconds\n' % (a, time.time() - start))
 		sys.stdout.flush()
 
