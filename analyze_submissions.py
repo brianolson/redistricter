@@ -199,128 +199,73 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
 
 
 def getStatesCsvSources(actualsDir):
-  """For directory of 00_XX_*.txt return map {stu, source csv filename}"""
-  stDistFiles = {}
-  anyError = False
+	"""For directory of 00_XX_*.txt return map {stu, source csv filename}"""
+	stDistFiles = {}
+	anyError = False
 
-  distdirall = os.listdir(actualsDir)
-  
-  statefileRawRe = re.compile('.._(..)_.*\.txt', re.IGNORECASE)
+	distdirall = os.listdir(actualsDir)
+	
+	statefileRawRe = re.compile('.._(..)_.*\.txt', re.IGNORECASE)
 
-  for fname in distdirall:
-    m = statefileRawRe.match(fname)
-    if m:
-      stu = m.group(1).upper()
-      if states.nameForPostalCode(stu) is not None:
-        # winner
-        old = stDistFiles.get(stu)
-        if old is None:
-          stDistFiles[stu] = fname
-        else:
-          logging.error('collision %s -> %s AND %s', stu, old, fname)
-          anyError = True
-  
-  return stDistFiles, anyError
+	for fname in distdirall:
+		m = statefileRawRe.match(fname)
+		if m:
+			stu = m.group(1).upper()
+			if states.nameForPostalCode(stu) is not None:
+				# winner
+				old = stDistFiles.get(stu)
+				if old is None:
+					stDistFiles[stu] = fname
+				else:
+					logging.error('collision %s -> %s AND %s', stu, old, fname)
+					anyError = True
+	
+	return stDistFiles, anyError
 
 
 def csvToSimpleCsv(csvpath, outpath):
-  """Convert CSV with district 'number' that could be '00A' '01A' 'MISC' to simple numeric district numbers."""
-  fin = open(csvpath, 'rb')
-  reader = csv.reader(fin)
-  row = reader.next()
-  # expect header row either:
-  # BLOCKID,CD113
-  # BLOCKID,DISTRICT,NAME
-  assert row[0] == 'BLOCKID'
-  assert ((row[1] == 'CD113') or (row[1] == 'DISTRICT'))
-  unmapped = []
-  districts = set()
-  for row in reader:
-    unmapped.append( (row[0], row[1]) )
-    districts.add(row[1])
-  fin.close()
-  dl = list(districts)
-  dl.sort()
-  dmap = {}
-  for i, dname in enumerate(dl):
-    dmap[dname] = i + 1  # 1 based csv file district numbering
-  fout = open(outpath, 'wb')
-  writer = csv.writer(fout)
-  for blockid, dname in unmapped:
-    writer.writerow( (blockid, dmap[dname]) )
-  fout.close()
+	"""Convert CSV with district 'number' that could be '00A' '01A' 'MISC' to simple numeric district numbers."""
+	fin = open(csvpath, 'rb')
+	reader = csv.reader(fin)
+	row = reader.next()
+	# expect header row either:
+	# BLOCKID,CD113
+	# BLOCKID,DISTRICT,NAME
+	assert row[0] == 'BLOCKID'
+	assert ((row[1] == 'CD113') or (row[1] == 'DISTRICT'))
+	unmapped = []
+	districts = set()
+	for row in reader:
+		unmapped.append( (row[0], row[1]) )
+		districts.add(row[1])
+	fin.close()
+	dl = list(districts)
+	dl.sort()
+	dmap = {}
+	for i, dname in enumerate(dl):
+		dmap[dname] = i + 1	# 1 based csv file district numbering
+	fout = open(outpath, 'wb')
+	writer = csv.writer(fout)
+	for blockid, dname in unmapped:
+		writer.writerow( (blockid, dmap[dname]) )
+	fout.close()
 
 
 _drendpath = None
 
 
 def drendpath():
-  global _drendpath
-  if _drendpath is None:
-    _drendpath = os.path.join(srcdir_, 'drend')
-    if not os.path.exists(_drendpath):
-      logging.error('no drend binary at %r', drendpath)
-      sys.exit(1)
-  return _drendpath
+	global _drendpath
+	if _drendpath is None:
+		_drendpath = os.path.join(srcdir_, 'drend')
+		if not os.path.exists(_drendpath):
+			logging.error('no drend binary at %r', drendpath)
+			sys.exit(1)
+	return _drendpath
 
 
 def noSource(sourceName):
-  logging.error('missing source %s', sourceName)
-
-
-def processActualsSource(actualsDir, stu, sourceCsvFname, pb, mppb, zipname, mppb_lg_path):
-  """process 00_XX_SLDU.txt into intermediate XX.csv, output {XX.png,xx.html,xx_stats.txt}
-  return (kmpp, spread, std)
-  """
-  stl = stu.lower()
-
-  # actuals block source and intermediate csv
-  csvpath = os.path.join(actualsDir, sourceCsvFname)
-  simplecsvpath = os.path.join(actualsDir, stu + '.csv')
-
-  # output html and png
-  htmlout = os.path.join(actualsDir, stl + '.html')
-  pngout = os.path.join(actualsDir, stu + '.png')
-  pngLgOut = os.path.join(actualsDir, stu + '_lg.png')
-  png500out = os.path.join(actualsDir, stu + '500.png')
-  analyzeout = os.path.join(actualsDir, stl + '_stats.txt')
-  analyzeText = None
-
-  if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, pngLgOut, htmlout, analyzeout), noSourceCallback=noSource):
-    if newerthan(csvpath, simplecsvpath):
-      csvToSimpleCsv(csvpath, simplecsvpath)
-
-    if any_newerthan( (pb, mppb, simplecsvpath), pngout):
-      cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
-      logging.info('%r', cmd)
-      p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
-      retcode = p.wait()
-      if retcode != 0:
-        logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
-        sys.exit(1)
-
-    if any_newerthan( (pb, mppb_lg_path, simplecsvpath), pngLgOut):
-      cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
-      logging.info('%r', cmd)
-      p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
-      retcode = p.wait()
-      if retcode != 0:
-        logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
-        sys.exit(1)
-
-    if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
-      analyzeText = measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
-      atout = open(analyzeout, 'w')
-      atout.write(analyzeText)
-      atout.close()
-    if newerthan(pngout, png500out):
-      subprocess.call(['convert', pngout, '-resize', '500x500', png500out])
-
-  if analyzeText is None:
-    atin = open(analyzeout, 'r')
-    analyzeText = atin.read()
-    atin.close()
-  return parseAnalyzeStats(analyzeText)
+	logging.error('missing source %s', sourceName)
 
 
 def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFilter=None):
@@ -357,10 +302,10 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 class SubmissionAnalyzer(object):
 	def __init__(self, options, dbpath=None):
 		self.options = options
-                
+		
 		# map from STU/config-name to runallstates.configuration objects
 		self.config = {}
-                
+		
 		self.dbpath = dbpath
 		# sqlite connection
 		self.db = None
@@ -374,8 +319,8 @@ class SubmissionAnalyzer(object):
 		# cache for often used self.statenav(None, configs)
 		self._statenav_all = None
 		self._actualsMaps = {}
-                # mode for sharing template
-                self.safeSocialShare = False
+		# mode for sharing template
+		self.safeSocialShare = False
 
 	def actualsSource(self, actualSet, stu):
 		"""Lazy loading accessor to find source CSV files for actualsdir/{set}/??_{stu}_*.txt"""
@@ -417,7 +362,7 @@ class SubmissionAnalyzer(object):
 			pageabsurl=pageabsurl,
 			cgipageabsurl=cgipageabsurl,
 			rooturl=self.options.rooturl,
-                        socialshare=self.safeSocialShare,
+			socialshare=self.safeSocialShare,
 			)
 		#socialTemplate = self.getSocialTemplate()
 		#return socialTemplate.substitute(context)
@@ -459,7 +404,7 @@ class SubmissionAnalyzer(object):
 		cmd = [os.path.join(self.options.bindir, 'analyze'),
 			'-P', datapb,
 			'-d', districtNum,
-                       '-notext',
+		       '-notext',
 			'-r', '-']
 		logging.debug('run %r', cmd)
 		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
@@ -663,12 +608,12 @@ class SubmissionAnalyzer(object):
 		out.close()
 		self.copyResources()
 	
-	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None):
+	def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None, highlight=None):
 		args = dict(self.config[cname].drendargs)
-                args.pop('--loadSolution', None)
+		args.pop('--loadSolution', None)
 		args['--pngout'] = pngpath
-                if altmppb:
-                        args['--mppb'] = altmppb
+		if altmppb:
+			args['--mppb'] = altmppb
 		if dszpath:
 			args['-r'] = dszpath
 		elif solutionDszRaw:
@@ -677,6 +622,8 @@ class SubmissionAnalyzer(object):
 			self.stderr.write('error: need dsz or raw dsz bytes for doDrend\n')
 			return None
 		cmd = [os.path.join(self.options.bindir, 'drend')] + runallstates.dictToArgList(args)
+		if highlight:
+			cmd += ['--hubidz', highlight]
 		logging.debug('run %r', cmd)
 		if solutionDszRaw:
 			p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
@@ -686,7 +633,7 @@ class SubmissionAnalyzer(object):
 			p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
 		retcode = p.wait()
 		if retcode != 0:
-                        self.stderr.write('config args {!r}\n'.format(self.config[cname].drendargs))
+			self.stderr.write('config args {!r}\n'.format(self.config[cname].drendargs))
 			self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
 			return None
 	
@@ -883,12 +830,16 @@ class SubmissionAnalyzer(object):
 		ihpath = os.path.join(sdir, 'index.html')
 		mappath = os.path.join(sdir, 'map.png')
 		mapLgPath = os.path.join(sdir, 'map_lg.png')
-                config = self.config[cname]
-                mppb_lg_path = os.path.join(config.datadir, stu + '_lg.mppb')
-                if not os.path.exists(mppb_lg_path):
-                        logging.debug('missing %s', mppb_lg_path)
-                        mppb_lg_path = None
-                needsLargeMap = (mppb_lg_path is not None) and (not os.path.exists(mapLgPath))
+		config = self.config[cname]
+		mppb_lg_path = os.path.join(config.datadir, stu + '_lg.mppb')
+		if not os.path.exists(mppb_lg_path):
+			logging.debug('missing %s', mppb_lg_path)
+			mppb_lg_path = None
+		highlight_path = os.path.join(config.datadir, 'highlight.ubidz')
+		if not os.path.exists(highlight_path):
+			logging.debug('missing %s', highlight_path)
+			highlight_path = None
+		needsLargeMap = (mppb_lg_path is not None) and (self.options.redraw or not os.path.exists(mapLgPath))
 		needsIndexHtml = self.options.redraw or self.options.rehtml or (not os.path.exists(ihpath))
 		needsDrend = self.options.redraw or (not os.path.exists(mappath))
 		if not (needsIndexHtml or needsDrend or needsLargeMap):
@@ -940,13 +891,13 @@ class SubmissionAnalyzer(object):
 			
 			# Make images map.png and map500.png
 			if needsDrend:
-				self.doDrend(cname, data, mappath, dszpath=solpath)
+				self.doDrend(cname, data, mappath, dszpath=solpath, highlight=highlight_path)
 			map500path = os.path.join(sdir, 'map500.png')
 			if newerthan(mappath, map500path):
 				subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 
-                        if needsLargeMap:
-                                self.doDrend(cname, data, mapLgPath, dszpath=solpath, altmppb=mppb_lg_path)
+			if needsLargeMap:
+				self.doDrend(cname, data, mapLgPath, dszpath=solpath, altmppb=mppb_lg_path, highlight=highlight_path)
 
 			# use actual maps if available
 			if self.options.actualdir:
@@ -954,9 +905,10 @@ class SubmissionAnalyzer(object):
 				actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
 				drendargs = config.drendargs
 				zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
-				(current_kmpp, current_spread, current_std) = processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path)
+				(current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
 
 				actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
+                                actualMapLgPath = os.path.join(self.options.actualdir, actualSet, stu + '_lg.png')
 				actualMap500Path = os.path.join(self.options.actualdir, actualSet, stu + '500.png')
 				actualHtmlPath = os.path.join(self.options.actualdir, actualSet, stl + '.html')
 		else:
@@ -1013,15 +965,17 @@ class SubmissionAnalyzer(object):
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
-                        socialshare=self.safeSocialShare,
+			socialshare=self.safeSocialShare,
 			social=self.getSocial(pageabsurl, cgipageabsurl),
 		)
 		if actualMapPath and actualMap500Path:
 			context['current_large'] = stu + '.png'
 			context['current_small'] = stu + '500.png'
 			atomicLink(actualMapPath, os.path.join(sdir, stu + '.png'))
+			atomicLink(actualMapLgPath, os.path.join(sdir, stu + '_lg.png'))
 			atomicLink(actualMap500Path, os.path.join(sdir, stu + '500.png'))
 			atomicLink(actualMapPath, os.path.join(outdir, cname, stu + '.png'))
+			atomicLink(actualMapLgPath, os.path.join(outdir, cname, stu + '_lg.png'))
 			atomicLink(actualMap500Path, os.path.join(outdir, cname, stu + '500.png'))
 		out = open(ihpath, 'w')
 		if False:
@@ -1032,11 +986,72 @@ class SubmissionAnalyzer(object):
 		out.close()
 		for x in ('map.png', 'map500.png', 'map_lg.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
+
+	def processActualsSource(self, actualsDir, stu, sourceCsvFname, pb, mppb, zipname, mppb_lg_path, highlight=None):
+		"""process 00_XX_SLDU.txt into intermediate XX.csv, output {XX.png,xx.html,xx_stats.txt}
+		return (kmpp, spread, std)
+		"""
+		stl = stu.lower()
+
+		# actuals block source and intermediate csv
+		csvpath = os.path.join(actualsDir, sourceCsvFname)
+		simplecsvpath = os.path.join(actualsDir, stu + '.csv')
+
+		# output html and png
+		htmlout = os.path.join(actualsDir, stl + '.html')
+		pngout = os.path.join(actualsDir, stu + '.png')
+		pngLgOut = os.path.join(actualsDir, stu + '_lg.png')
+		png500out = os.path.join(actualsDir, stu + '500.png')
+		analyzeout = os.path.join(actualsDir, stl + '_stats.txt')
+		analyzeText = None
+
+		#if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, pngLgOut, htmlout, analyzeout), noSourceCallback=noSource):
+                if True:
+			if newerthan(csvpath, simplecsvpath):
+				csvToSimpleCsv(csvpath, simplecsvpath)
+
+			# normal size
+			if self.options.redraw or any_newerthan( (pb, mppb, simplecsvpath), pngout):
+				cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
+				if highlight:
+					cmd += ['--hubidz', highlight]
+				logging.info('%r', cmd)
+				p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
+				retcode = p.wait()
+				if retcode != 0:
+					logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+					sys.exit(1)
+
+			# large image
+			if self.options.redraw or any_newerthan( (pb, mppb_lg_path, simplecsvpath), pngLgOut):
+				cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
+				if highlight:
+					cmd += ['--hubidz', highlight]
+				logging.info('%r', cmd)
+				p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
+				retcode = p.wait()
+				if retcode != 0:
+					logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+					sys.exit(1)
+
+			if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
+				analyzeText = measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
+				atout = open(analyzeout, 'w')
+				atout.write(analyzeText)
+				atout.close()
+			if newerthan(pngout, png500out):
+				subprocess.call(['convert', pngout, '-resize', '500x500', png500out])
+
+		if analyzeText is None:
+			atin = open(analyzeout, 'r')
+			analyzeText = atin.read()
+			atin.close()
+		return parseAnalyzeStats(analyzeText)
 	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
 		With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best.
-                Also build the top level index.html"""
+		Also build the top level index.html"""
 		outdir = self.options.outdir
 		if not os.path.isdir(outdir):
 			os.makedirs(outdir)
@@ -1071,7 +1086,7 @@ class SubmissionAnalyzer(object):
 			nwinnername=newestname,
 			cgipageabsurl=cgipageabsurl,
 			cgiimageurl=cgiimageurl,
-                        configjson=json.dumps(self.availableConfigs(configs)),
+			configjson=json.dumps(self.availableConfigs(configs)),
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
 		))
@@ -1079,16 +1094,16 @@ class SubmissionAnalyzer(object):
 		logging.debug('wrote %s', index_html_path)
 		self.copyResources()
 
-        def availableConfigs(self, configs):
-                # return list [ (nice name, path), ...] for js
-                out = []
+	def availableConfigs(self, configs):
+		# return list [ (nice name, path), ...] for js
+		out = []
 		for cname, data in configs.iteritems():
 			if not data.get('kmpp'):
 				continue
-                        stu, var = cname.split('_', 1)
-                        name = states.nameForPostalCode(stu)
-                        out.append( (name + ' ' + var, cname) )
-                return out
+			stu, var = cname.split('_', 1)
+			name = states.nameForPostalCode(stu)
+			out.append( (name + ' ' + var, cname) )
+		return out
 
 	def copyResources(self):
 		outdir = self.options.outdir

@@ -334,6 +334,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 				fprintf(stderr, "index %d already has %d pix, adding %d from ubid %lu", index, cpx->numpx, blockpoints, tubid);
 			}
 			if ( cpx->px != NULL ) {
+				fprintf(stderr, "reallog cpx->px %d -> %d\n", cpx->numpx, cpx->numpx + blockpoints);
 				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + blockpoints)*2) );
 				assert( cpx->px != NULL );
 				cpx->numpx += blockpoints;
@@ -649,6 +650,7 @@ void MapDrawer::paintPoints( Solver* sov ) {
 	}
 }
 
+// population density
 double _tpd(int pop, unsigned long long area) {
 	double tpd = (1.0 * pop) / area;
 	// could be logarithmic, but linear is working for now.
@@ -832,9 +834,6 @@ void MapDrawer::paintPixels( Solver* sov ) {
 			blocksSkipped++;
 			continue;
 		}
-		//double alpha = 1.0;
-		//double oma = 0.0;
-		//int grey;
 		uint8_t r = color[0];
 		uint8_t g = color[1];
 		uint8_t b = color[2];
@@ -849,6 +848,9 @@ void MapDrawer::paintPixels( Solver* sov ) {
 			}
 			double alpha = abs(grey - 128) / (3.0 * 255);
 			double oma = 1.0 - alpha;
+			if (oma <= 0.01) {
+				fprintf(stderr, "bad alpha %f bad oma %f grey = %d\n", alpha, oma, grey);
+			}
 			grey = grey * alpha;
 			r = (r * oma) + grey;
 			g = (g * oma) + grey;
@@ -875,16 +877,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 				fprintf(stderr,"index %d y (%d) out of bounds (0<=y<=%d)\n", i, y, height );
 				continue;
 			}
-			/*
-			if (doPopDensityShading) {
-				setPoint(x, y,
-					(color[0] * oma) + grey,
-					(color[1] * oma) + grey,
-					(color[2] * oma) + grey);
-			} else {
-			*/
 			setPoint(x, y, r, g, b);
-			//}
 		}
 	}
 	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
