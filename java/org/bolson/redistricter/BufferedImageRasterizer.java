@@ -24,6 +24,8 @@ public class BufferedImageRasterizer implements RasterizationReciever {
 	 * @see mask
 	 */
 	protected Graphics2D g_ = null;
+	int pxCount = 0;
+	int pxWaterCount = 0;
 	
 	/**
 	 * This should be treated as const. Read-only.
@@ -81,6 +83,9 @@ public class BufferedImageRasterizer implements RasterizationReciever {
 		}
 		if (p.isWater) {
 			argb = opts.waterColor;
+			pxWaterCount += (ctx.pxPos / 2);
+		} else {
+			pxCount += (ctx.pxPos / 2);
 		}
 		//log.log(Level.INFO, "poly {0} color {1}", new Object[]{new Integer(polyindex), Integer.toHexString(argb)});
 		int minx = ctx.pixels[0];
@@ -142,5 +147,4 @@ public class BufferedImageRasterizer implements RasterizationReciever {
 		assert(mask.getHeight() >= y);
 		assert(mask.getWidth() >= x);
 	}
-	
 }

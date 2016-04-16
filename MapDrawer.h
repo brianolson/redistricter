@@ -21,6 +21,9 @@ int bytesPerPixel;  // defaults to 3 for png output. set to 4 for screen.
 int highlightListLength;
 uint64_t* highlightList; // ubids to highlight
 uint8_t highlightRGBA[4];
+bool randomBlockDemo;
+int pxCollisionCount;
+int pxCount;
 
 MapDrawer();
 
@@ -52,6 +55,12 @@ void runDrendCommandFile( Solver& sov, const char* commandFileName );
 		uint8_t* row;
 		row = data + (y*width*bytesPerPixel);
 		x *= bytesPerPixel;
+		pxCount++;
+#ifndef NDEBUG
+		if ((row[x] != 0xd0) || (row[x+1] != 0xd0) || (row[x+2] != 0xd0)) {
+			pxCollisionCount++;
+		}
+#endif
 		row[x  ] = red;
 		row[x+1] = green;
 		row[x+2] = blue;

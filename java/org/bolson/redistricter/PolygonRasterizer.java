@@ -76,6 +76,7 @@ public class PolygonRasterizer implements PolygonProcessor {
 			if (bir.collisionCount > 0) {
 				ShapefileBundle.log.warning("pixel collisions: " + bir.collisionCount);
 			}
+			ShapefileBundle.log.info("land pixels to mask image: " + bir.pxCount);
 		}
 		if ((maskOutput == null) && (rastOpts.maskOutName != null)) {
 			maskOutput = new FileOutputStream(rastOpts.maskOutName);

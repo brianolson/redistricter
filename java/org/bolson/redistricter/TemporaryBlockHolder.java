@@ -46,7 +46,7 @@ public class TemporaryBlockHolder implements Comparable<TemporaryBlockHolder> {
 	public static int[] growIntArray(int[] orig, int[] src, int morelen) {
 		if (orig == null) {
 			int[] out = new int[morelen];
-			System.arraycopy(out, 0, src, 0, morelen);
+			System.arraycopy(src, 0, out, 0, morelen);
 			return out;
 		}
 		int[] nxy = new int[orig.length + morelen];

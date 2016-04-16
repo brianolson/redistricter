@@ -83,6 +83,7 @@ int main( int argc, const char** argv ) {
 	    StringArg("colorsIn", &colorFileIn);
 	    StringArg("colorsOut", &colorFileOut);
 	    StringArg("density", &popdensityname);
+	    BoolArg("randomBlockDemo", &mr.randomBlockDemo);
 
 	    // default:
 	    argv[nargc] = argv[argi];
@@ -114,7 +115,7 @@ int main( int argc, const char** argv ) {
 		return 1;
 	}
 	
-	if ( (!sov.hasSolutionToLoad()) && commandFileName == NULL ) {
+	if ( (!sov.hasSolutionToLoad()) && commandFileName == NULL && (!mr.randomBlockDemo) ) {
 		fprintf(stderr,"useless drend, null loadname and null command file name\n");
 		exit(1);
 	}
@@ -186,7 +187,9 @@ void runBasic( Solver& sov, MapDrawer& mr, const char* colorFileIn, const char* 
 	} else {
 		Adjacency ta;
 		sov.calculateAdjacency(&ta);
-		recolorDists( ta.adjacency, ta.adjlen, sov.districts );
+		if (!mr.randomBlockDemo) {
+			recolorDists( ta.adjacency, ta.adjlen, sov.districts );
+		}
 	}
 	mr.doPNG_r( &sov, sov.pngname );
 	

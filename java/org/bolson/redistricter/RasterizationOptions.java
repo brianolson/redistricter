@@ -55,6 +55,8 @@ public class RasterizationOptions {
 				outline = true;
 			} else if (argv[i].equals("--simple-rast")) {
 				optimizePb = false;
+			} else if (argv[i].equals("--optimize-pb")) {
+				optimizePb = true;
 			} else {
 				out.add(argv[i]);
 			}

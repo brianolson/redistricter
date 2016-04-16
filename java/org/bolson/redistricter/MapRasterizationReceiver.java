@@ -12,7 +12,7 @@ import com.google.protobuf.ByteString;
  */
 public class MapRasterizationReceiver implements RasterizationReciever {
 	protected Redata.MapRasterization.Builder rastb = Redata.MapRasterization.newBuilder();
-	TreeMap<TemporaryBlockHolder, TemporaryBlockHolder> blocks = null;
+	TreeMap<Long, TemporaryBlockHolder> blocks = null;
 	int pxCount = 0;
 	
 	MapRasterizationReceiver() {
@@ -25,32 +25,42 @@ public class MapRasterizationReceiver implements RasterizationReciever {
 	 */
 	MapRasterizationReceiver(boolean optimize) {
 		if (optimize) {
-			blocks = new TreeMap<TemporaryBlockHolder, TemporaryBlockHolder>();
+			blocks = new TreeMap<Long, TemporaryBlockHolder>();
 		}
 	}
 	// @Override // one of my Java 1.5 doesn't like this
 	public void setRasterizedPolygon(RasterizationContext ctx, Polygon p) {
 		if (p.blockid != null) {
+			long ubid = ShapefileBundle.blockidToUbid(p.blockid);
+			
 			ShapefileBundle.log.log(Level.FINE, "blockid {0}", new String(p.blockid));
 			if (blocks != null) {
 				// Save for later.
-				TemporaryBlockHolder key = new TemporaryBlockHolder(p);
-				TemporaryBlockHolder tbh = blocks.get(key);
+				pxCount += ctx.pxPos / 2;
+				TemporaryBlockHolder tbh = blocks.get(ubid);
 				if (tbh == null) {
-					key.setRast(ctx, p);
-					blocks.put(key, key);
+					tbh = new TemporaryBlockHolder(ctx, p);
+					blocks.put(ubid, tbh);
 				} else {
 					tbh.add(ctx, p);
 				}
 				return;
 			}
 			Redata.MapRasterization.Block.Builder bb = Redata.MapRasterization.Block.newBuilder();
-			long ubid = ShapefileBundle.blockidToUbid(p.blockid);
+			
 			if (ubid >= 0) {
 				bb.setUbid(ubid);
 			} else {
 				bb.setBlockid(ByteString.copyFrom(p.blockid));
 			}
+			// validate the data about to go out
+			/*
+			for (int i = 2; i < ctx.pxPos; i += 2) {
+				if ((ctx.pixels[i-2] == ctx.pixels[i]) && (ctx.pixels[i-1] == ctx.pixels[i+1])) {
+					ShapefileBundle.log.warning("dup pixels in block " + ubid + " " + p.blockid + " (" + ctx.pixels[i-2] + ", " + ctx.pixels[i-1] + ") == (" + ctx.pixels[i] + ", " + ctx.pixels[i+1] + ")");
+				}
+			}
+			*/
 			if (p.isWater) {
 				for (int i = 0; i < ctx.pxPos; ++i) {
 					bb.addWaterxy(ctx.pixels[i]);
@@ -60,8 +70,21 @@ public class MapRasterizationReceiver implements RasterizationReciever {
 					bb.addXy(ctx.pixels[i]);
 				}
 				pxCount += ctx.pxPos / 2;
+				// validate the outgoing data just set
+				/*
+				for (int i = 2; i < bb.getXyCount(); i += 2) {
+					int xa = bb.getXy(i-2);
+					int xb = bb.getXy(i);
+					int ya = bb.getXy(i-1);
+					int yb = bb.getXy(i+1);
+					if ((xa == xb) && (ya == yb)) {
+						ShapefileBundle.log.warning("dup pixels in block " + ubid + " " + p.blockid + " (" + xa + ", " + ya + ") == (" + xb + ", " + yb + ")");
+					}
+				}
+				*/
 			}
 			rastb.addBlock(bb);
+			bb = null;
 		} else {
 			ShapefileBundle.log.warning("polygon with no blockid");
 		}
@@ -75,16 +98,15 @@ public class MapRasterizationReceiver implements RasterizationReciever {
 	
 	public Redata.MapRasterization getMapRasterization() {
 		if (blocks != null) {
-			while (!blocks.isEmpty()) {
-				TemporaryBlockHolder tb = blocks.firstKey();
-				assert tb != null;
-				pxCount += tb.numLandPoints();
+			int outPxCount = 0;
+			for (TemporaryBlockHolder tb : blocks.values()) {
+				outPxCount += tb.numLandPoints();
 				rastb.addBlock(tb.build());
-				// To make a temporary free-able, remove it from the map.
-				blocks.remove(tb);
 			}
+			ShapefileBundle.log.info(pxCount + " land pixels to in, " + outPxCount + " out to mppb");
+		} else {
+			ShapefileBundle.log.info(pxCount + " land pixels to mppb");
 		}
-		ShapefileBundle.log.info(pxCount + " land pixels");
 		return rastb.build();
 	}
 }

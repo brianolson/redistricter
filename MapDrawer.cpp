@@ -24,7 +24,11 @@ px(NULL),
 minlat(NAN), minlon(NAN), maxlat(NAN), maxlon(NAN),
 bytesPerPixel(4),
 highlightListLength(0),
-highlightList(NULL) {
+highlightList(NULL),
+randomBlockDemo(false),
+  pxCollisionCount(0),
+  pxCount(0)
+{
 	highlightRGBA[0] = 255;
 	highlightRGBA[1] = 255;
 	highlightRGBA[2] = 0;
@@ -46,6 +50,7 @@ void MapDrawer::initDataAndRows() {
 	assert(width > 0);
 	assert(height > 0);
 	data = (unsigned char*)malloc(width*height*bytesPerPixel*sizeof(unsigned char) );
+	memset(data, 0, width*height*bytesPerPixel*sizeof(unsigned char) );
 	rows = (unsigned char**)malloc(height*sizeof(unsigned char*) );
 	assert(data != NULL);
 	assert(rows != NULL);
@@ -315,7 +320,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 	if (px == NULL) {
 		px = new pxlist[sov->gd->numPoints];
 	}
-	uint64_t pxcount = 0;
+	uint64_t mrrPxcount = 0;
 	for (int i = 0; i < map.block_size(); ++i) {
 		const MapRasterization::Block& b = map.block(i);
 		if (!b.has_ubid()) {
@@ -327,7 +332,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 		if ( index != (uint32_t)-1 ) {
 			pxlist* cpx;
 			int blockpoints = b.xy_size() / 2;
-			pxcount += blockpoints;
+			mrrPxcount += blockpoints;
 			cpx = px + index;
 			int nexti = cpx->numpx * 2;
 			if (cpx->numpx != 0) {
@@ -360,12 +365,16 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 			for (int xxxi = 0; xxxi < cpx->numpx; xxxi += 2) {
 				assert(cpx->px[xxxi] <= width);
 				assert(cpx->px[xxxi+1] <= height);
+				if (xxxi > 1) {
+					assert(!((cpx->px[xxxi-2] == cpx->px[xxxi]) &&
+							 (cpx->px[xxxi-1] == cpx->px[xxxi+1])));
+				}
 			}
 		} else {
 			fprintf(stderr, "%013lu no index!\n", tubid );
 		}
 	}
-	fprintf(stderr, "loaded %lu px from %d blocks into %d solution blocks\n", pxcount, map.block_size(), sov->gd->numPoints);
+	fprintf(stderr, "loaded %lu px from %d blocks into %d solution blocks\n", mrrPxcount, map.block_size(), sov->gd->numPoints);
 	return true;
 }
 
@@ -820,25 +829,35 @@ void MapDrawer::paintPixels( Solver* sov ) {
 	if (highlightList != NULL) {
 		ubidLut = sov->gd->makeUbidLUT(&minIndex, &maxIndex);
 	}
+	int mrrPxCount = 0;
 	
 	for ( int i = 0; i < numPoints; i++ ) {
-		const unsigned char* color;
-		if ( winner[i] == NODISTRICT ) {
-			static const unsigned char colorNODISTRICT[3] = { 0,0,0 };
-			color = colorNODISTRICT;
-		} else {
-			color = colors + ((winner[i] % numColors) * 3);
-		}
 		pxlist* cpx = px + i;
 		if ( cpx->numpx <= 0 ) {
 			blocksSkipped++;
 			continue;
 		}
-		uint8_t r = color[0];
-		uint8_t g = color[1];
-		uint8_t b = color[2];
+		mrrPxCount += cpx->numpx;
+		
+		const unsigned char* color;
+		uint8_t r, g, b;
+		if (randomBlockDemo) {
+			r = random() % 256;
+			g = random() % 256;
+			b = random() % 256;
+		} else {
+			if ( winner[i] == NODISTRICT ) {
+				static const unsigned char colorNODISTRICT[3] = { 0,0,0 };
+				color = colorNODISTRICT;
+			} else {
+				color = colors + ((winner[i] % numColors) * 3);
+			}
+			r = color[0];
+			g = color[1];
+			b = color[2];
+		}
 
-		if (doPopDensityShading) {
+		if (doPopDensityShading && !randomBlockDemo) {
 			double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
 			int grey = (int)(255.0 * (tpd - minpd) / pdrange);
 			if (grey > 255) {
@@ -881,6 +900,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 		}
 	}
 	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
+	fprintf(stderr, "processed %d pixels, %d collisions, %d pxCount\n", mrrPxCount, pxCollisionCount, pxCount);
 }
 
 void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green, uint8_t blue) {
