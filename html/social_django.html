@@ -1,14 +1,10 @@
 {% if socialshare %}{# new social share method #}
 {# TODO: move scripts to header? #}
 {# TODO: delete old /social.html #}
-<script type="text/javascript" src="jquery.js"></script> 
-<script type="text/javascript" src="jquery.socialshareprivacy.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function () {
-	$('.share').socialSharePrivacy();
-});
-</script>
-<div class="share" data-uri="{{pageabsurl}}" data-image="{{shareimage}}"></div>
+
+<div data-social-share-privacy='true'></div>
+<script src="/jquery.js"></script> 
+<script type="text/javascript">(function () {var s = document.createElement('script');var t = document.getElementsByTagName('script')[0];s.type = 'text/javascript';s.async = true;s.src = '/ssp/jquery.socialshareprivacy.min.autoload.js';t.parentNode.insertBefore(s, t);})();</script>
 
 {% else %}
 <a href="http://www.reddit.com/submit?url={{cgipageabsurl}}" target="_blank"><img src="{{rooturl}}spreddit7.gif" alt="submit to reddit" border="0" /></a>

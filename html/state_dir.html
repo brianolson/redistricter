@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><title>{{statename}} Redistricting</title>
+<link href="{{rooturl}}report.css" rel="stylesheet" type="text/css" />
+{% if socialshare %}
+<script type="application/x-social-share-privacy-settings">{"path_prefix":"/ssp/","layout":"line","services":{"buffer":{"status":false},"delicious":{"status":false},"disqus":{"status":false},"flattr":{"status":false},"linkedin":{"status":false},"stumbleupon":{"status":false},"xing":{"status":false}}}</script>
+{% else %}
+<style>#custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('{{rooturl}}tweet.ico') 1px center no-repeat;text-decoration:none;}</style>
+{% endif %}{# social share #}
+</head>
+<body bgcolor="#ffffff">
+<div style="float:right;width:20em;">
+
+</div>
+<h1>{{statename}} Redistricting</h1>
+<div class="small">From 2010 data</div>
+<table class="sp"><tr><td>
+<div><a href="/2010/">2010 Redistricting Home</a></div>
+{{statenav|safe}}
+</td><td>
+
+<table id="imt">
+{{bodyrows}}
+</table>
+{{extra}}
+</td></tr></table>
+<hr width="50%" align="center">
+<div id="sociald">{{social|safe}}</div>
+<div><a href="/2000/{{stu}}/">{{statename}} from 2000 Census</a></div>
+
+{{google_analytics|safe}}
+</body></html>

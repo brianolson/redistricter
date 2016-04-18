@@ -50,6 +50,8 @@ def localtime():
 def scandir(path):
 	"""Yield (fpath, innerpath) of .tar.gz submissions."""
 	for root, dirnames, filenames in os.walk(path):
+                if 'Attic' in dirnames:
+                        dirnames.remove('Attic')
 		for fname in filenames:
 			if fname.endswith('.tar.gz'):
 				fpath = os.path.join(root, fname)
@@ -320,7 +322,7 @@ class SubmissionAnalyzer(object):
 		self._statenav_all = None
 		self._actualsMaps = {}
 		# mode for sharing template
-		self.safeSocialShare = False
+		self.safeSocialShare = True
 
 	def actualsSource(self, actualSet, stu):
 		"""Lazy loading accessor to find source CSV files for actualsdir/{set}/??_{stu}_*.txt"""
@@ -330,32 +332,23 @@ class SubmissionAnalyzer(object):
 			self._actualsMaps[actualSet] = maps
 		return maps[stu]
 	
-	def getPageTemplate(self, rootdir=None):
-		if self.pageTemplate is None:
-			if rootdir is None:
-				rootdir = srcdir_
-			f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
-			self.pageTemplate = templateFromFile(f)
-			f.close()
-		return self.pageTemplate
-	
-	def getDirTemplate(self, rootdir=None):
-		if self.dirTemplate is None:
-			if rootdir is None:
-				rootdir = srcdir_
-			f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
-			self.dirTemplate = templateFromFile(f)
-			f.close()
-		return self.dirTemplate
-
-	# def getSocialTemplate(self, rootdir=None):
-	# 	if self.socialTemplate is None:
+	# def getPageTemplate(self, rootdir=None):
+	# 	if self.pageTemplate is None:
 	# 		if rootdir is None:
 	# 			rootdir = srcdir_
-	# 		f = open(os.path.join(rootdir, 'social.html'), 'r')
-	# 		self.socialTemplate = templateFromFile(f)
+	# 		f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
+	# 		self.pageTemplate = templateFromFile(f)
 	# 		f.close()
-	# 	return self.socialTemplate
+	# 	return self.pageTemplate
+	
+	# def getDirTemplate(self, rootdir=None):
+	# 	if self.dirTemplate is None:
+	# 		if rootdir is None:
+	# 			rootdir = srcdir_
+	# 		f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
+	# 		self.dirTemplate = templateFromFile(f)
+	# 		f.close()
+	# 	return self.dirTemplate
 	
 	def getSocial(self, pageabsurl, cgipageabsurl):
 		context = dict(
@@ -364,8 +357,6 @@ class SubmissionAnalyzer(object):
 			rooturl=self.options.rooturl,
 			socialshare=self.safeSocialShare,
 			)
-		#socialTemplate = self.getSocialTemplate()
-		#return socialTemplate.substitute(context)
 		return djangotemplates.render('social_django.html', context)
 
 	def loadDatadir(self, path=None):
@@ -454,8 +445,11 @@ class SubmissionAnalyzer(object):
 			kmppSpread = self.measureSolution(tfparts['solution'], config)
 			if (not kmppSpread) or (kmppSpread[0] is None):
 				logging.warn('failed to analyze solution for %s in "%s"', config, fpath)
+		                c = self.db.cursor()
+		                c.execute('INSERT INTO submissions (vars, unixtime, path, config) VALUES ( ?, ?, ?, ? )',
+			(tfparts['vars'], tf_mtime, innerpath, config))
 				# TODO: set attempt count in 'vars' and retry up to N times
-				return False
+				return True # db was written
 		else:
 			kmppSpread = (None, None)
 		logging.debug(
@@ -719,7 +713,7 @@ class SubmissionAnalyzer(object):
 		outdir = self.options.outdir
 		sdir = os.path.join(outdir, stu)
 		ihtmlpath = os.path.join(sdir, 'index.html')
-		st_template = self.getDirTemplate()
+		#st_template = self.getDirTemplate()
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, stu) + '/'
 		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
@@ -732,7 +726,10 @@ class SubmissionAnalyzer(object):
 			extrahtml = open(extrahtmlpath, 'r').read()
 		
 		out = open(ihtmlpath, 'w')
-		out.write(st_template.substitute(
+		out.write(
+                        djangotemplates.render(
+                                'state_dir.html',
+                                dict(
 			statename=name,
 			stu=stu,
 			statenav=self.statenav(None, configs),
@@ -743,7 +740,8 @@ class SubmissionAnalyzer(object):
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
-		))
+                        socialshare=self.safeSocialShare,
+		)))
 		out.close()
 	
 	def measureRace(self, cname, solution, htmlout, exportpath):
@@ -819,7 +817,7 @@ class SubmissionAnalyzer(object):
 		"""Write report/$config/{index.html,map.png,map500.png,solution.dsz}
 		"""
 		if self.options.configlist and (cname not in self.options.configlist):
-			logging.debug('skipping %s not in configlist', cname)
+			logging.debug('skipping %s not in configlist %r', cname, self.options.configlist)
 			return
 		stl = stu.lower()
 		outdir = self.options.outdir
@@ -978,11 +976,7 @@ class SubmissionAnalyzer(object):
 			atomicLink(actualMapLgPath, os.path.join(outdir, cname, stu + '_lg.png'))
 			atomicLink(actualMap500Path, os.path.join(outdir, cname, stu + '500.png'))
 		out = open(ihpath, 'w')
-		if False:
-			st_template = self.getPageTemplate()
-			out.write(st_template.substitute(**context))
-		else:
-			out.write(djangotemplates.render('st_index_django.html', context))
+		out.write(djangotemplates.render('st_index_django.html', context))
 		out.close()
 		for x in ('map.png', 'map500.png', 'map_lg.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
@@ -1078,7 +1072,8 @@ class SubmissionAnalyzer(object):
 		f.close()
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
-		index_html.write(result_index_html_template.substitute(
+		#index_html.write(result_index_html_template.substitute(
+                index_html.write(djangotemplates.render('root_index.html',dict(
 			statenav=self.statenav(None, configs),
 			rooturl=self.options.rooturl,
 			localtime=localtime(),
@@ -1089,7 +1084,8 @@ class SubmissionAnalyzer(object):
 			configjson=json.dumps(self.availableConfigs(configs)),
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
-		))
+                        socialshare=self.safeSocialShare,
+		)))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)
 		self.copyResources()
@@ -1138,6 +1134,7 @@ def main():
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
+        options.configlist = options.configlist + args
 	x = SubmissionAnalyzer(options, dbpath='.status.sqlite3')
 	logging.debug('loading datadir')
 	x.loadDatadir(options.datadir)

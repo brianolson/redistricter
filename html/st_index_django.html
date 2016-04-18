@@ -1,31 +1,10 @@
 <!DOCTYPE html>
 <html><head><title>{{statename}} Redistricting</title>
 <link href="{{rooturl}}report.css" rel="stylesheet" type="text/css" />
-<style>#custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('{{rooturl}}tweet.ico') 1px center no-repeat;text-decoration:none;}</style>
 {% if socialshare %}
-<meta property="og:image" content="{{dirabsurl}}{{ba_large}}" />
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script type="text/javascript" src="{{rooturl}}socialshareprivacy.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/facebook.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/twitter.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/gplus.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/tumblr.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/reddit.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/pinterest.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/flattr.js"></script>
-<script type="text/javascript" src="{{rooturl}}modules/stumbleupon.js"></script>
-<script type="text/javascript">
-// <![CDATA[
-// define the default order of the buttons:
-$.fn.socialSharePrivacy.settings.order = ['facebook', 'gplus', 'twitter', 'tumblr', 'reddit'];
-$.fn.socialSharePrivacy.settings.path_prefix = '../';
-
-$(document).ready(function () {
-	$('.share').socialSharePrivacy({uri: {{pageabsurl|tojson}});
-	//$('#other').socialSharePrivacy({uri: 'http://example.com/'});
-});
-// ]]>
-</script>
+<script type="application/x-social-share-privacy-settings">{"path_prefix":"/ssp/","layout":"line","services":{"buffer":{"status":false},"delicious":{"status":false},"disqus":{"status":false},"flattr":{"status":false},"linkedin":{"status":false},"stumbleupon":{"status":false},"xing":{"status":false}}}</script>
+{% else %}
+<style>#custom-tweet-button a {padding: 2px 5px 2px 20px;background: url('{{rooturl}}tweet.ico') 1px center no-repeat;text-decoration:none;}</style>
 {% endif %}{# social share #}
 </head>
 <body bgcolor="#ffffff">
@@ -38,7 +17,7 @@ $(document).ready(function () {
 <div><a href="/2010/">2010 Redistricting Home</a></div>
 {{statenav|safe}}
 <hr width="50%" align="center">
-{# <div id="sociald">{{social|safe}}</div> #}
+<div id="sociald">{{social|safe}}</div>
 <div class="share" data-uri="{{pageabsurl}}" data-image="{{dirabsurl}}{{ba_large}}"></div>
 
 </td><td>
