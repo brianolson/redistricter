@@ -332,24 +332,6 @@ class SubmissionAnalyzer(object):
 			self._actualsMaps[actualSet] = maps
 		return maps[stu]
 	
-	# def getPageTemplate(self, rootdir=None):
-	# 	if self.pageTemplate is None:
-	# 		if rootdir is None:
-	# 			rootdir = srcdir_
-	# 		f = open(os.path.join(rootdir, 'new_st_index_pyt.html'), 'r')
-	# 		self.pageTemplate = templateFromFile(f)
-	# 		f.close()
-	# 	return self.pageTemplate
-	
-	# def getDirTemplate(self, rootdir=None):
-	# 	if self.dirTemplate is None:
-	# 		if rootdir is None:
-	# 			rootdir = srcdir_
-	# 		f = open(os.path.join(rootdir, 'stdir_index_pyt.html'), 'r')
-	# 		self.dirTemplate = templateFromFile(f)
-	# 		f.close()
-	# 	return self.dirTemplate
-	
 	def getSocial(self, pageabsurl, cgipageabsurl):
 		context = dict(
 			pageabsurl=pageabsurl,
@@ -1060,19 +1042,15 @@ class SubmissionAnalyzer(object):
 			self.statedir(stu, configs)
 
 		# build top level index.html
-		result_index_html_path = os.path.join(srcdir_, 'result_index_pyt.html')
 		newestconfig = self.newestWinner(configs)['config']
 		newestname = configToName(newestconfig)
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
 		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
-		f = open(result_index_html_path, 'r')
-		result_index_html_template = templateFromFile(f)
 		f.close()
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
-		#index_html.write(result_index_html_template.substitute(
                 index_html.write(djangotemplates.render('root_index.html',dict(
 			statenav=self.statenav(None, configs),
 			rooturl=self.options.rooturl,
