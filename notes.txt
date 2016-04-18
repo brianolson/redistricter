@@ -268,6 +268,26 @@ http://en.wikipedia.org/wiki/Albers_projection
 
 ~/src/redistricter/analyze -P ~/src/redata/2010/OH/oh.pb -d 16 --places ~/src/redata/2010/OH/geoblocks.places --place-names ~/src/redata/2010/OH/st39_oh_places.txt --csv-solution ~/src/redata/2010/2013_actual/cd/OH.csv --text -
 
+
+Pennsylvania constitution on how to draw state legislature districts
+https://en.wikisource.org/wiki/Constitution_of_the_Commonwealth_of_Pennsylvania_1874/Article_2#Section_16:_Senatorial_districts. 
+ 
+Section 16: Senatorial districts.
+The State shall be divided into fifty senatorial districts of compact and contiguous territory, as nearly equal in population as may be, and each district shall be entitled to elect one Senator. Each county containing one or more ratios of population, shall be entitled to one Senator for each ratio, and to an additional Senator for a surplus of population exceeding three-fifths of a ratio, but no county shall form a separate district, unless it shall contain four-fifths of a ratio, except where the adjoining counties are each entitled to one or more Senators, when such county may be assigned a Senator on less than four-fifths and ex
+ceeding one-half of the ratio; and no county shall be divided unless entitled to
+ two or more senators. No city or county shall be entitled to separate represent
+ation exceeding one-sixth of the whole number of Senators. No ward, borough or t
+ownship shall be divided in the formation of a district. The senatorial ratio sh
+all be ascertained by dividing the whole population of the state by the number f
+ifty.
+
+Section 17: Representative districts.
+The members of the House of Representatives shall be apportioned among the several counties, on a ratio obtained by dividing the population of the State as ascertained by the most recent United States census by two hundred. Every county containing less than five ratios shall have one representative for every full ratio, and an additional representative when the surplus exceeds half a ratio; but each county shall have at least one representative. Every county containing five ratios or more shall have one representative for every full ratio. Every city containing a population equal to a ratio, shall elect separately its proportion of the representatives allotted to the county in which it is located. Every city entitled to more than four representatives, and every county having more than one hundred thousand inhabitants shall be divided into districts of compact and contiguous territory, each district to elect its proportion of representatives according to its population, but no district shall elect more than four representatives.  
+
+
+citation in Duke Journal of Constitutional Law & Public Policy, article by Micah Altman and Michael McDonald, http://scholarship.law.duke.edu/djclpp/vol5/iss1/5/ , "The Promise and Perils of Computers in Redistricting", 2010, Vol 5 issue 1
+
+
 2016-02-08 21:03:09 EST (Monday, February 08 09:03:09 PM)
 
 ${HOME}/src/redistricter/shapefile.py \
