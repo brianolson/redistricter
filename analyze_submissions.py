@@ -1048,7 +1048,6 @@ class SubmissionAnalyzer(object):
 		cgipageabsurl = urllib.quote_plus(pageabsurl)
 		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
-		f.close()
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
                 index_html.write(djangotemplates.render('root_index.html',dict(
