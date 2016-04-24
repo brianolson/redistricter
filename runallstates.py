@@ -1,6 +1,11 @@
 #!/usr/bin/python
+# RUN FROM INSIDE run_redistricter.py
+# (probably, could still use it directly for development)
 
 """Run the solver repeatedly, storing results, tracking the best.
+
+RUN FROM INSIDE run_redistricter.py
+(probably, could still use it directly for development)
 
 Uses compiled data setup by the setupstatedata.py script.
 Uses the `districter2` solver binary.
@@ -560,7 +565,7 @@ class runallstates(object):
 		self.bestlog = None  # file
 		self.bests = None  # map<stu, manybest.slog>
 		# used by getNextState and addStopReason
-		self.lock = None
+		self.lock = DummyLock()
 		# used by getNextState and runthread
 		self.qpos = 0
 		# dict from optparse
@@ -581,11 +586,8 @@ class runallstates(object):
 		self.runtimeLoadDataNext = time.time() + 120
 
 	def addStopReason(self, reason):
-		if self.lock:
-			self.lock.acquire()
-		self.stopreason += reason
-		if self.lock:
-			self.lock.release()
+		with self.lock:
+			self.stopreason += reason
 
 	def getNextWeightedRandomState(self):
 		weightedStu = []
@@ -604,10 +606,12 @@ class runallstates(object):
 		raise Excption('internal error, weights shifted.')
 
 	def getNextState(self):
-		if self.options.weighted:
-			return self.getNextWeightedRandomState()
-		if self.lock:
-			self.lock.acquire()
+		with self.lock:
+			if self.options.weighted:
+				return self.getNextWeightedRandomState()
+			return self.getNextStateFromQueue()
+
+	def getNextStateFromQueue(self):
 		origQpos = self.qpos
 		stu = self.states[self.qpos]
 		self.qpos = (self.qpos + 1) % len(self.states)
@@ -616,11 +620,7 @@ class runallstates(object):
 			stu = self.states[self.qpos]
 			self.qpos = (self.qpos + 1) % len(self.states)
 			if self.qpos == origQpos:
-				if self.lock:
-					self.lock.release()
 				raise Exception('there are no enabled states')
-		if self.lock:
-			self.lock.release()
 		return stu
 	
 	def doBestlog(self, stu, mb):
@@ -936,7 +936,7 @@ class runallstates(object):
 		if self.config_override_lastload:
 			if st.st_mtime > self.config_override_lastload:
 				return []
-		print 'reloading configoverride'
+		sys.stderr.write('reloading configoverride\n')
 		self.config_override_lastload = st.st_mtime
 		f = open(self.config_override_path, 'r')
 		out = f.readlines()
@@ -952,12 +952,9 @@ class runallstates(object):
 		lines.extend(self._loadConfigOverrideFile())
 		if not lines:
 			return
-		if self.lock:
-			self.lock.acquire()
-		for line in lines:
-			self.applyConfigOverrideLine(line)
-		if self.lock:
-			self.lock.release()
+		with self.lock:
+			for line in lines:
+				self.applyConfigOverrideLine(line)
 	
 	def shouldstop(self):
 		if self.softfail:
@@ -977,7 +974,7 @@ class runallstates(object):
 	
 	def maybe_mkdir(self, path):
 		if self.dry_run or self.verbose:
-			print "mkdir %s" % path
+			sys.stderr.write("mkdir {}\n".format(path))
 		if not self.dry_run:
 			os.mkdir(path)
 	
@@ -1019,7 +1016,8 @@ class runallstates(object):
 		"""This is the primary sequence of actions to run the solver on a state."""
 		if not os.path.exists(stu):
 			self.maybe_mkdir(stu)
-		ctd = os.path.join(stu, start_timestamp)
+		# append random suffix so that collisions at the same time are extremely unlikely
+		ctd = os.path.join(stu, '{}_{:x}'.format(start_timestamp, random.randint(0,0xffffff)))
 		if label:
 			self.currentOps[label] = ctd
 		self.maybe_mkdir(ctd)
@@ -1043,7 +1041,7 @@ class runallstates(object):
 		if self.options.solutionlog:
 			args['--sLog'] = 'g/'
 		cmd = niceArgs + self.exe + dictToArgList(args)
-		print "(cd %s && \\\n%s )" % (ctd, ' '.join(cmd))
+		sys.stderr.write("(cd {} && \\\n{})\n".format(ctd, ' '.join(cmd)))
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,
 				stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -1104,8 +1102,8 @@ class runallstates(object):
 			fout.close()
 			fin.close()
 		if self.dry_run or self.verbose:
-			print "grep ^# %s > %s" % (statlog, statsum)
-			print "gzip %s" % statlog
+			sys.stderr.write("grep ^# {} > {}\n".format(statlog, statsum))
+			sys.stderr.write("gzip {}\n".format(statlog))
 		if not self.dry_run:
 			# TODO: don't call out, do it in python
 			ret = subprocess.call(["gzip", statlog])
@@ -1117,7 +1115,7 @@ class runallstates(object):
 		if self.options.solutionlog:
 			cmd = ["tar", "jcf", "g.tar.bz2", "g"]
 			if self.dry_run or self.verbose:
-				print "(cd %s && %s)" % (ctd, " ".join(cmd))
+				sys.stderr.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
 			if not self.dry_run:
 				g_tar = tarfile.open(os.path.join(ctd, 'g.tar.bz2'), 'w|bz2')
 				g_tar.add(os.path.join(ctd, 'g'), arcname='g')
@@ -1125,14 +1123,14 @@ class runallstates(object):
 			# TODO: use python standard library recursive remove
 			cmd = ["rm", "-rf", "g"]
 			if self.dry_run or self.verbose:
-				print "(cd %s && %s)" % (ctd, " ".join(cmd))
+				sys.stderr.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
 			if not self.dry_run:
 				subprocess.Popen(cmd, cwd=ctd).wait()
 				# don't care if rm-rf failed? it wouldn't report anyway?
 		didSend = None
 		if self.client and self.config[stu].sendAnything:
 			if self.dry_run:
-				print 'would send dir "%s" to server' % (ctd, )
+				sys.stderr.write('would send dir {!r} to server\n'.format(ctd))
 			else:
 				self.client.sendResultDir(ctd, {'config': stu}, sendAnything=True)
 			didSend = ctd
@@ -1166,7 +1164,7 @@ class runallstates(object):
 			 (mb.they[0].spread is None) or
 			 (mb.they[0].spread <= sconf.spreadSendThreshold))):
 			if self.dry_run:
-				print 'would send best dir "%s" if it has not already been sent' % (mb.they[0], )
+				sys.stderr.write('would send best dir {!r} if it has not already been sent\n'.format(mb.they[0]))
 			else:
 				self.client.sendResultDir(bestPath, {'config': stu})
 		return True
@@ -1180,7 +1178,7 @@ class runallstates(object):
 			return
 		cmd = [os.path.join(self.bindir, "drend")] + dictToArgList(self.config[stu].drendargs)
 		cmdstr = "(cd %s && %s)" % (stu, ' '.join(cmd))
-		print cmdstr
+		sys.stderr.write(cmdstr + '\n')
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, cwd=stu)
 			timeout = time.time() + 60
@@ -1204,11 +1202,11 @@ class runallstates(object):
 			return
 		ba_png = os.path.join("link1", stu + "_ba.png")
 		cmd = ["convert", start_png, final2_png, "+append", ba_png]
-		print "(cd %s && %s)" % (stu, " ".join(cmd))
+		sys.stderr.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=stu).wait()
 		cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
-		print "(cd %s && %s)" % (stu, " ".join(cmd))
+		sys.stderr.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=stu).wait()
 	
@@ -1277,13 +1275,10 @@ class runallstates(object):
 		"""Part of runthread, occasionally load more data."""
 		if not self.client:
 			return
-		if self.lock:
-			self.lock.acquire()
-		doit = self.runtimeLoadDataNext < time.time()
-		if doit:
-			self.runtimeLoadDataNext = time.time() + 20000
-		if self.lock:
-			self.lock.release()
+		with self.lock:
+			doit = self.runtimeLoadDataNext < time.time()
+			if doit:
+				self.runtimeLoadDataNext = time.time() + 20000
 		if not doit:
 			return
 		self.loadDataFromServer()
@@ -1301,11 +1296,11 @@ class runallstates(object):
 			sys.exit(1)
 		if self.verbose:
 			for c in self.config.itervalues():
-				print c
+				sys.stderr.write('{}\n'.format(c))
 		
 		self.states = self.config.keys()
 		self.states.sort()
-		print " ".join(self.states)
+		sys.stderr.write(" ".join(self.states) + '\n')
 		
 		# run in a different order each time in case we do partial runs, spread the work
 		random.shuffle(self.states)
@@ -1330,15 +1325,15 @@ class runallstates(object):
 			resultserver.TouchAction(os.path.join(rootdir, 'reload'), 'Reload After Stop', 'reload').setDict(actions)
 			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu, actions=actions)
 			if serverthread is not None:
-				print "serving status at\nhttp://localhost:%d/" % self.options.port
+				sys.stderr.write("serving status at\nhttp://localhost:{:d}/\n".format(self.options.port))
 			else:
-				print "status serving failed to start"
+				sys.stderr.write("status serving failed to start\n")
 
 		if self.numthreads <= 1:
-			print "running one thread"
+			sys.stderr.write("running one thread\n")
 			self.runthread()
 		else:
-			print "running %d threads" % self.numthreads
+			sys.stderr.write("running {:d} threads\n".format(self.numthreads))
 			self.lock = threading.Lock()
 			threads = []
 			for x in xrange(0, self.numthreads):
@@ -1353,9 +1348,19 @@ class runallstates(object):
 
 		if not self.dry_run:
 			if self.stopreason:
-				print self.stopreason
+				sys.stderr.write(self.stopreason + '\n')
 			if os.path.exists(self.stoppath):
 				os.remove(self.stoppath)
+
+
+class DummyLock(object):
+	def __init__(self):
+		pass
+	def __enter__(self):
+		return self
+	def __exit__(a, b, c):
+		pass
+
 
 class RunThread(object):
 	allthreads = []
@@ -1380,13 +1385,14 @@ class RunThread(object):
 		stu = None
 		while stu is None:
 			stu = self.runner.getNextState()
-			RunThread.lock.acquire()
-			for ot in RunThread.allthreads:
-				if ot.stu == stu:
-					stu = None
-					break
+			# old code prevented multiple threads from running same STU, but let's try allowing it now...
+			# RunThread.lock.acquire()
+			# for ot in RunThread.allthreads:
+			# 	if ot.stu == stu:
+			# 		stu = None
+			# 		break
 			self.stu = stu
-			RunThread.lock.release()
+			# RunThread.lock.release()
 			if stu is None:
 				# don't busy spin trying to get state
 				time.sleep(2)
