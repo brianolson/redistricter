@@ -62,7 +62,7 @@ def main():
 	'--runlog=runlog',
 	'--d2',
 	'--fr=4/9',
-	'--server=http://bdistricting.com/rd_datasets/',
+	'--server=http://bots.bdistricting.net/rd_datasets/',
 	'--port=%d' % (options.port,),
 	'--threads=%d' % (options.threads,),
 	'--datadir=' + datadir,
