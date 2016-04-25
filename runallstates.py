@@ -163,17 +163,17 @@ def poll_run(p, stu):
 			if p.stdout.fileno() == fd:
 				line = p.stdout.readline()
 				if line:
-					sys.stdout.write("O " + stu + ": " + line)
+					sys.stdout.write("O {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastolines, 10, line)
 			elif p.stderr.fileno() == fd:
 				line = p.stderr.readline()
 				if line:
-					sys.stdout.write("E " + stu + ": " + line)
+					sys.stdout.write("E {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%d\n" % (stu, fd))
 		pollx = p.poll()
-	sys.stderr.write('ended with %r\n' % (pollx,))
+	sys.stderr.write('{} ended with {!r}\n'.format(p.pid, pollx))
 	return (lastolines, lastelines)
 
 def select_run(p, stu):
@@ -188,17 +188,17 @@ def select_run(p, stu):
 			if (p.stdout.fileno() == fd) or (fd == p.stdout):
 				line = p.stdout.readline()
 				if line:
-					sys.stdout.write("O " + stu + ": " + line)
+					sys.stdout.write("O {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastolines, 10, line)
 			elif (p.stderr.fileno() == fd) or (fd == p.stderr):
 				line = p.stderr.readline()
 				if line:
-					sys.stdout.write("E " + stu + ": " + line)
+					sys.stdout.write("E {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastelines, 10, line)
 			else:
 				sys.stdout.write("? %s fd=%s\n" % (stu, fd))
 		pollx = p.poll()
-	sys.stderr.write('ended with %r\n' % (pollx,))
+	sys.stderr.write('{} ended with {!r}\n'.format(p.pid, pollx))
 	return (lastolines, lastelines)
 
 HAS_PARAM_ = {
@@ -783,7 +783,8 @@ class runallstates(object):
 		self.runSuccessHistory.append(succeede)
 		while len(self.runSuccessHistory) > self.errorSample:
 			self.runSuccessHistory.pop(0)
-		return sum(self.runSuccessHistory) < (self.errorSample - self.errorRate)
+		shouldQuit = sum(self.runSuccessHistory) < (self.errorSample - self.errorRate)
+		return shouldQuit
 	
 	def checkSetup(self):
 		if self.exe is None:
@@ -974,7 +975,7 @@ class runallstates(object):
 	
 	def maybe_mkdir(self, path):
 		if self.dry_run or self.verbose:
-			sys.stderr.write("mkdir {}\n".format(path))
+			sys.stdout.write("mkdir {}\n".format(path))
 		if not self.dry_run:
 			os.mkdir(path)
 	
@@ -1030,7 +1031,7 @@ class runallstates(object):
 			fout = open(statlog, "w")
 			if not fout:
 				self.addStopReason("could not open \"%s\"" % statlog)
-				sys.stderr.write(self.stopreason + "\n")
+				sys.stderr.write('stopreason: ' + self.stopreason + "\n")
 				self.softfail = True
 				return False
 			fout.close()
@@ -1041,10 +1042,11 @@ class runallstates(object):
 		if self.options.solutionlog:
 			args['--sLog'] = 'g/'
 		cmd = niceArgs + self.exe + dictToArgList(args)
-		sys.stderr.write("(cd {} && \\\n{})\n".format(ctd, ' '.join(cmd)))
+		sys.stdout.write("(cd {} && \\\n{})\n".format(ctd, ' '.join(cmd)))
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, bufsize=4000, cwd=ctd,
 				stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			sys.stdout.write('started pid {} in {}\n'.format(p.pid, ctd))
 			errorlines = []
 			outlines = []
 			if has_poll:
@@ -1053,23 +1055,24 @@ class runallstates(object):
 				(outlines, errorlines) = select_run(p, stu)
 			else:
 				self.addStopReason('has neither poll nor select\n')
-				sys.stderr.write(self.stopreason + "\n")
+				sys.stderr.write('stopreason: ' + self.stopreason + "\n")
 				self.softfail = True
 				return False
 			try:
 				for line in p.stdin:
 					if line:
-						sys.stdout.write("O " + stu + ": " + line)
+						sys.stdout.write("O {} {}: ".format(p.pid, stu) + line)
 						lastlines(outlines, 10, line)
 			except:
 				pass
 			try:
 				for line in p.stderr:
 					if line:
-						sys.stdout.write("E " + stu + ": " + line)
+						sys.stdout.write("E {} {}: ".format(p.pid, stu) + line)
 						lastlines(errorlines, 10, line)
 			except:
 				pass
+			sys.stdout.write('pid {} ended with {} in {}\n'.format(p.pid, p.returncode, ctd))
 			if p.returncode != 0:
 				# logCompletion mechanism allows for deferred script quit, 
 				# possibly after many intermittent failures which will all
@@ -1077,20 +1080,22 @@ class runallstates(object):
 				# TODO: present failures to web result server.
 				statusString = "solver exited with status %d" % p.returncode
 				self.addStopReason(statusString)
-				statlog = open(os.path.join(ctd, 'statlog'), 'a')
-				statlog.write(statusString)
-				statlog.write('\n')
-				if errorlines:
-					self.addStopReason('\n' + '\n'.join(errorlines))
-					statlog.write('# last lines of stderr:\n')
-					for eline in errorlines:
-						statlog.write('#' + eline + '\n')
-				if outlines:
-					statlog.write('# last lines of stdout:\n')
-					for eline in outlines:
-						statlog.write('#' + eline + '\n')
-				statlog.close()
-				sys.stderr.write(self.stopreason + '\n')
+				statlog_path = os.path.join(ctd, 'statlog')
+				if os.path.exists(statlog_path):
+					statlog = open(statlog_path, 'a')
+					statlog.write(statusString)
+					statlog.write('\n')
+					if errorlines:
+						self.addStopReason('\n' + '\n'.join(errorlines))
+						statlog.write('# last lines of stderr:\n')
+						for eline in errorlines:
+							statlog.write('#' + eline + '\n')
+					if outlines:
+						statlog.write('# last lines of stdout:\n')
+						for eline in outlines:
+							statlog.write('#' + eline + '\n')
+					statlog.close()
+				sys.stderr.write('stopreason: ' + self.stopreason + '\n')
 				self.softfail = self.logCompletion(0)
 				return False
 			self.logCompletion(1)
@@ -1102,20 +1107,20 @@ class runallstates(object):
 			fout.close()
 			fin.close()
 		if self.dry_run or self.verbose:
-			sys.stderr.write("grep ^# {} > {}\n".format(statlog, statsum))
-			sys.stderr.write("gzip {}\n".format(statlog))
+			sys.stdout.write("grep ^# {} > {}\n".format(statlog, statsum))
+			sys.stdout.write("gzip {}\n".format(statlog))
 		if not self.dry_run:
 			# TODO: don't call out, do it in python
 			ret = subprocess.call(["gzip", statlog])
 			if ret != 0:
 				self.addStopReason("gzip statlog failed %d" % ret)
-				sys.stderr.write(self.stopreason + '\n')
+				sys.stderr.write('stopreason: ' + self.stopreason + '\n')
 				self.softfail = True
 				return False
 		if self.options.solutionlog:
 			cmd = ["tar", "jcf", "g.tar.bz2", "g"]
 			if self.dry_run or self.verbose:
-				sys.stderr.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
+				sys.stdout.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
 			if not self.dry_run:
 				g_tar = tarfile.open(os.path.join(ctd, 'g.tar.bz2'), 'w|bz2')
 				g_tar.add(os.path.join(ctd, 'g'), arcname='g')
@@ -1123,14 +1128,14 @@ class runallstates(object):
 			# TODO: use python standard library recursive remove
 			cmd = ["rm", "-rf", "g"]
 			if self.dry_run or self.verbose:
-				sys.stderr.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
+				sys.stdout.write("(cd {} && {})\n".format(ctd, " ".join(cmd)))
 			if not self.dry_run:
 				subprocess.Popen(cmd, cwd=ctd).wait()
 				# don't care if rm-rf failed? it wouldn't report anyway?
 		didSend = None
 		if self.client and self.config[stu].sendAnything:
 			if self.dry_run:
-				sys.stderr.write('would send dir {!r} to server\n'.format(ctd))
+				sys.stdout.write('would send dir {!r} to server\n'.format(ctd))
 			else:
 				self.client.sendResultDir(ctd, {'config': stu}, sendAnything=True)
 			didSend = ctd
@@ -1164,7 +1169,7 @@ class runallstates(object):
 			 (mb.they[0].spread is None) or
 			 (mb.they[0].spread <= sconf.spreadSendThreshold))):
 			if self.dry_run:
-				sys.stderr.write('would send best dir {!r} if it has not already been sent\n'.format(mb.they[0]))
+				sys.stdout.write('would send best dir {!r} if it has not already been sent\n'.format(mb.they[0]))
 			else:
 				self.client.sendResultDir(bestPath, {'config': stu})
 		return True
@@ -1178,7 +1183,7 @@ class runallstates(object):
 			return
 		cmd = [os.path.join(self.bindir, "drend")] + dictToArgList(self.config[stu].drendargs)
 		cmdstr = "(cd %s && %s)" % (stu, ' '.join(cmd))
-		sys.stderr.write(cmdstr + '\n')
+		sys.stdout.write(cmdstr + '\n')
 		if not self.dry_run:
 			p = subprocess.Popen(cmd, shell=False, cwd=stu)
 			timeout = time.time() + 60
@@ -1193,7 +1198,7 @@ class runallstates(object):
 				ret = p.poll()
 			if ret != 0:
 				self.addStopReason("drend failed (%s): %s\n" % (ret, cmdstr))
-				sys.stderr.write(self.stopreason + '\n')
+				sys.stderr.write('stopreason: ' + self.stopreason + '\n')
 				self.softfail = True
 				return False
 		start_png = os.path.join(self.datadir, stu, stu + "_start.png")
@@ -1202,11 +1207,11 @@ class runallstates(object):
 			return
 		ba_png = os.path.join("link1", stu + "_ba.png")
 		cmd = ["convert", start_png, final2_png, "+append", ba_png]
-		sys.stderr.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
+		sys.stdout.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=stu).wait()
 		cmd = ["convert", ba_png, "-resize", "500x500", os.path.join("link1", stu + "_ba_500.png")]
-		sys.stderr.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
+		sys.stdout.write("(cd {} && {})\n".format(stu, " ".join(cmd)))
 		if not self.dry_run:
 			subprocess.Popen(cmd, cwd=stu).wait()
 	
@@ -1296,11 +1301,11 @@ class runallstates(object):
 			sys.exit(1)
 		if self.verbose:
 			for c in self.config.itervalues():
-				sys.stderr.write('{}\n'.format(c))
+				sys.stdout.write('{}\n'.format(c))
 		
 		self.states = self.config.keys()
 		self.states.sort()
-		sys.stderr.write(" ".join(self.states) + '\n')
+		sys.stdout.write(" ".join(self.states) + '\n')
 		
 		# run in a different order each time in case we do partial runs, spread the work
 		random.shuffle(self.states)
@@ -1325,15 +1330,15 @@ class runallstates(object):
 			resultserver.TouchAction(os.path.join(rootdir, 'reload'), 'Reload After Stop', 'reload').setDict(actions)
 			serverthread = resultserver.startServer(self.options.port, extensions=extensionFu, actions=actions)
 			if serverthread is not None:
-				sys.stderr.write("serving status at\nhttp://localhost:{:d}/\n".format(self.options.port))
+				sys.stdout.write("serving status at\nhttp://localhost:{:d}/\n".format(self.options.port))
 			else:
-				sys.stderr.write("status serving failed to start\n")
+				sys.stdout.write("status serving failed to start\n")
 
 		if self.numthreads <= 1:
-			sys.stderr.write("running one thread\n")
+			sys.stdout.write("running one thread\n")
 			self.runthread()
 		else:
-			sys.stderr.write("running {:d} threads\n".format(self.numthreads))
+			sys.stdout.write("running {:d} threads\n".format(self.numthreads))
 			self.lock = threading.Lock()
 			threads = []
 			for x in xrange(0, self.numthreads):
@@ -1348,7 +1353,7 @@ class runallstates(object):
 
 		if not self.dry_run:
 			if self.stopreason:
-				sys.stderr.write(self.stopreason + '\n')
+				sys.stdout.write('stopreason: ' + self.stopreason + '\n')
 			if os.path.exists(self.stoppath):
 				os.remove(self.stoppath)
 
