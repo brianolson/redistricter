@@ -323,3 +323,20 @@ but this appears to all be handilly encoded in PROJ.4
 
 ohio (north)
 --proj NAD83:3401
+
+2016-05-09 13:35:04 EDT (Monday, May 09 01:35:04 PM)
+
+['x', 'x', 'x', 'o', 'o',
+ 'x', 'x', 'x', 'x', 'o',
+ 'x', 'x', 'o', 'o', 'x',
+ 'x', 'o', 'o', 'o', 'x',
+ 'x', 'o', 'x', 'o', 'x']
+[('o', 4), ('x', 1)] # split horizontal
+[('o', 3), ('x', 2)] # split vertical
+[('o', 2), ('x', 3)] # split tetris
+
+xxxxx
+oooxo
+oxoxx
+oxxoo
+xoxxx
