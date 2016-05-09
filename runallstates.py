@@ -781,9 +781,15 @@ class runallstates(object):
 	def logCompletion(self, succeede):
 		"""Log a result, return if we should quit."""
 		self.runSuccessHistory.append(succeede)
+		if len(self.runSuccessHistory) < self.errorSample:
+			return false # don't quit before we have a full sample
 		while len(self.runSuccessHistory) > self.errorSample:
 			self.runSuccessHistory.pop(0)
 		shouldQuit = sum(self.runSuccessHistory) < (self.errorSample - self.errorRate)
+		if shouldQuit:
+			msg = 'quitting, successes {} < (error sample {} - errorRate {})'.format(self.runSuccessHistory, self.errorSample, self.errorRate)
+			self.addStopReason(msg)
+			logging.error(msg)
 		return shouldQuit
 	
 	def checkSetup(self):
