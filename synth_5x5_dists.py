@@ -7,6 +7,7 @@
 
 import random
 import re
+import sys
 
 
 # five horizontal line districts
@@ -64,7 +65,7 @@ def count(pop, map):
     winners = {}
     for dist, distp in distcount.iteritems():
         ec = elem_count(distp)
-        print('{}\t{}'.format(dist, ec))
+        #print('{}\t{}'.format(dist, ec))
         wincount, winner = ec[0]
         winners[winner] = winners.get(winner, 0) + 1
     return winners
@@ -80,6 +81,66 @@ def trial():
         wc = sorted(winners.items())
         print(wc)
 
+def svg(popstr, out=None, lines=True):
+    r = 80
+    inset = 400
+    minx = inset
+    maxx = 2160-inset
+    miny = inset
+    maxy = 2160-inset
+    dx = (maxx-minx)/4.0
+    dy = (maxy-miny)/4.0
+    colors = {'x': '#009000', 'o': '#900090'}
+    parts = ['''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+   width="3840"
+   height="2160"
+   id="svg2"
+   xmlns="http://www.w3.org/2000/svg" version="1.1">''']
+    parts.append('<!-- {} -->'.format(popstr))
+    parts.append('''<rect x="0" y="0" width="3840" height="2160" fill="#000000"/>''')
+    x = 0
+    y = 0
+    for c in popstr:
+        color = colors[c]
+        cx = minx + (dx * x)
+        cy = miny + (dy * y)
+        parts.append('<circle cx="{}" cy="{}" r="{}" style="fill:{}"/>'.format(cx, cy, r, color))
+        x += 1
+        if x == 5:
+            y += 1
+            x = 0
+    if lines:
+        hx = dx / 2.0
+        hy = dy / 2.0
+        parts.append('<g stroke="#ffffff" stroke-width="9">')
+        for x in xrange(0, 5):
+            for y in xrange(0, 5):
+                cx = minx + (dx * x)
+                cy = miny + (dy * y)
+                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
+                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
+            y = 5
+            cx = minx + (dx * x)
+            cy = miny + (dy * y)
+            parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
+            #parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
+
+        x = 5
+        cx = minx + (dx * x)
+        for y in xrange(0, 5):
+            cy = miny + (dy * y)
+            #parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
+            parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
+
+        parts.append('</g>')
+    parts.append('</svg>')
+    if out is None:
+        out = sys.stdout
+    out.write('\n'.join(parts))
+
 if __name__ == '__main__':
-    trial()
+    svg('ooxoxoxoxoxxxxxxooxoxxxxo',open('/var/www/html/b/a.svg','w'))
+    #trial()
 

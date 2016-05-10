@@ -340,3 +340,12 @@ oooxo
 oxoxx
 oxxoo
 xoxxx
+
+
+
+ooxox
+oxoxo
+xxxxx
+xooxo
+xxxxo
+
