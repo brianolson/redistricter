@@ -70,18 +70,34 @@ def count(pop, map):
         winners[winner] = winners.get(winner, 0) + 1
     return winners
 
-def trial():
+def randomPopulation():
     population = ['x']*15
     population += ['o']*10
 
     random.shuffle(population)
+    return population
+
+def trial():
+    population = randomPopulation()
     print(''.join(population))
     for map in maps:
         winners = count(population, map)
         wc = sorted(winners.items())
         print(wc)
 
-def svg(popstr, out=None, lines=True):
+def map_show_vertical_line(map, lx, ly):
+    # the vertical line at (lx,ly) is between (lx-1,y) and (lx,ly)
+    if not map:
+        return False
+    return map[(ly * 5) + lx] != map[(ly * 5) + lx - 1]
+
+def map_show_horizontal_line(map, lx, ly):
+    # the horizontal line at (lx,ly) is between (lx,y) and (lx,ly-1)
+    if not map:
+        return False
+    return map[(ly * 5) + lx] != map[((ly - 1) * 5) + lx]
+
+def svg(popstr, out=None, lines=True, map=None):
     r = 80
     inset = 400
     minx = inset
@@ -90,6 +106,7 @@ def svg(popstr, out=None, lines=True):
     maxy = 2160-inset
     dx = (maxx-minx)/4.0
     dy = (maxy-miny)/4.0
+    # map = maps[2]
     colors = {'x': '#009000', 'o': '#900090'}
     parts = ['''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -112,35 +129,63 @@ def svg(popstr, out=None, lines=True):
             y += 1
             x = 0
     if lines:
+        ls = 1
         hx = dx / 2.0
         hy = dy / 2.0
         parts.append('<g stroke="#ffffff" stroke-width="9">')
-        for x in xrange(0, 5):
+        parts.append('<rect x="{}" y="{}" width="{}" height="{}" fill-opacity="0"/>'.format(minx - hx, miny - hy, dx * 5, dy * 5))
+        for x in xrange(1, 5):
             for y in xrange(0, 5):
+                if not map_show_vertical_line(map, x, y):
+                    continue
                 cx = minx + (dx * x)
                 cy = miny + (dy * y)
-                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
-                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
-            y = 5
-            cx = minx + (dx * x)
-            cy = miny + (dy * y)
-            parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
-            #parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
-
-        x = 5
-        cx = minx + (dx * x)
-        for y in xrange(0, 5):
-            cy = miny + (dy * y)
-            #parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy))
-            parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy))
+                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}" id="lsv{}_{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy, x, y))
+                ls += 1
+        for y in xrange(1, 5):
+            for x in range(0, 5):
+                if not map_show_horizontal_line(map, x, y):
+                    continue
+                cx = minx + (dx * x)
+                cy = miny + (dy * y)
+                parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}" id="lsh{}_{}"/>'.format(cx-hx, cx+hx, cy-hy, cy-hy, x, y))
+                ls += 1
 
         parts.append('</g>')
+    if map:
+        winners = sorted(count(popstr, map).items())
+    else:
+        winners = {}
+        for c in popstr:
+            winners[c] = winners.get(c, 0) + 1
+        winners = sorted(winners.items())
+        winners = [(c, '{} ({}%)'.format(cc, (100 * cc) / len(popstr))) for c, cc in winners]
+    if winners:
+        oy = 1
+        for c, cc in winners:
+            color = colors[c]
+            cx = minx + (dx * 6.2)
+            cy = miny + (dy * oy)
+            parts.append('<circle cx="{}" cy="{}" r="{}" style="fill:{}"/>'.format(cx, cy, r, color))
+            parts.append('<text x="{}" y="{}" stroke="#ffffff" fill="#ffffff" font-size="{}" alignment-baseline="middle">{}</text>'.format(minx + (dx * 6.7), cy, r * 2, cc))
+            oy += 1
     parts.append('</svg>')
     if out is None:
         out = sys.stdout
     out.write('\n'.join(parts))
 
 if __name__ == '__main__':
-    svg('ooxoxoxoxoxxxxxxooxoxxxxo',open('/var/www/html/b/a.svg','w'))
+    #popstr = 'ooxoxoxoxoxxxxxxooxoxxxxo'
+    # oooxoxxxxxoxoxoxoxoxxxxxo
+    # oooxoxxxxxxxxooxxoxoxxoox
+    if len(sys.argv) > 1:
+        popstr = sys.argv[1]
+    else:
+        popstr = randomPopulation()
+    print(''.join(popstr))
+    
+    svg(popstr, open('/tmp/a.svg','w'))
+    for mi, map in enumerate(maps):
+        svg(popstr, open('/tmp/m{}.svg'.format(mi),'w'), map=map)
     #trial()
 
