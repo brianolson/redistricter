@@ -1030,11 +1030,11 @@ class runallstates(object):
 		self.maybe_mkdir(ctd)
 		if self.options.solutionlog:
 			self.maybe_mkdir(os.path.join(ctd,"g"))
-		statlog = os.path.join(ctd, "statlog")
+		statlog_path = os.path.join(ctd, "statlog")
 		statsum = os.path.join(ctd, "statsum")
 		if not self.dry_run:
 			self.config[stu].rereadIfUpdated()
-			fout = open(statlog, "w")
+			fout = open(statlog_path, "w")
 			if not fout:
 				self.addStopReason("could not open \"%s\"" % statlog)
 				sys.stderr.write('stopreason: ' + self.stopreason + "\n")
@@ -1086,7 +1086,7 @@ class runallstates(object):
 				# TODO: present failures to web result server.
 				statusString = "solver exited with status %d" % p.returncode
 				self.addStopReason(statusString)
-				statlog_path = os.path.join(ctd, 'statlog')
+				#statlog_path = os.path.join(ctd, 'statlog')
 				if os.path.exists(statlog_path):
 					statlog = open(statlog_path, 'a')
 					statlog.write(statusString)
@@ -1105,7 +1105,7 @@ class runallstates(object):
 				self.softfail = self.logCompletion(0)
 				return False
 			self.logCompletion(1)
-			fin = open(statlog, "r")
+			fin = open(statlog_path, "r")
 			fout = open(statsum, "w")
 			for line in fin:
 				if line[0] == "#":
@@ -1113,11 +1113,11 @@ class runallstates(object):
 			fout.close()
 			fin.close()
 		if self.dry_run or self.verbose:
-			sys.stdout.write("grep ^# {} > {}\n".format(statlog, statsum))
-			sys.stdout.write("gzip {}\n".format(statlog))
+			sys.stdout.write("grep ^# {} > {}\n".format(statlog_path, statsum))
+			sys.stdout.write("gzip {}\n".format(statlog_path))
 		if not self.dry_run:
 			# TODO: don't call out, do it in python
-			ret = subprocess.call(["gzip", statlog])
+			ret = subprocess.call(["gzip", statlog_path])
 			if ret != 0:
 				self.addStopReason("gzip statlog failed %d" % ret)
 				sys.stderr.write('stopreason: ' + self.stopreason + '\n')
