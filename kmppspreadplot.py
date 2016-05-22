@@ -70,7 +70,7 @@ def walk_statsums(out, startpath, useStatlogGz=True):
   for root, dirs, files in os.walk(startpath):
     gotData = False
     if 'statsum' in files:
-      gotData = plotStatsum(os.path.join(root, 'statsum'))
+      gotData = plotStatsum(out, os.path.join(root, 'statsum'))
     if (not gotData) and useStatlogGz and ('statlog.gz' in files):
       plotStatlogGz(out, os.path.join(root, 'statlog.gz'))
 

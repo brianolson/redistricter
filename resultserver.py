@@ -309,6 +309,12 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.wfile.write("""</body></html>\n""")
 	
 	def GET_kmppspreadplot(self, path, fpath):
+                try:
+                        self.GET_kmppspreadplot_inner(path, fpath)
+                except Exception as e:
+                        e.printStackTrace()
+
+	def GET_kmppspreadplot_inner(self, path, fpath):
 		self.send_response(200)
 		self.send_header('Content-Type', 'image/svg+xml')
 		self.end_headers()
