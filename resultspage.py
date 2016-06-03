@@ -93,6 +93,8 @@ def parse_startstats(raw, desthash=None):
 
 
 def parse_statsum(statsum, desthash=None):
+	if not statsum:
+		return (None, None, None)
 	m = statsum_pat.search(statsum)
 	if not m:
 		return (None, None, None)
