@@ -1396,12 +1396,6 @@ class RunThread(object):
 		stu = None
 		while stu is None:
 			stu = self.runner.getNextState()
-			# old code prevented multiple threads from running same STU, but let's try allowing it now...
-			# RunThread.lock.acquire()
-			# for ot in RunThread.allthreads:
-			# 	if ot.stu == stu:
-			# 		stu = None
-			# 		break
 			self.stu = stu
 			# RunThread.lock.release()
 			if stu is None:
