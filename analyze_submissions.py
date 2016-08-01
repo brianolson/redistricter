@@ -50,8 +50,8 @@ def localtime():
 def scandir(path):
 	"""Yield (fpath, innerpath) of .tar.gz submissions."""
 	for root, dirnames, filenames in os.walk(path):
-                if 'Attic' in dirnames:
-                        dirnames.remove('Attic')
+		if 'Attic' in dirnames:
+			dirnames.remove('Attic')
 		for fname in filenames:
 			if fname.endswith('.tar.gz'):
 				fpath = os.path.join(root, fname)
@@ -75,6 +75,8 @@ def elementAfter(haystack, needle):
 def extractSome(fpath, names):
 	"""From .tar.gz at fpath, get members in list names.
 	Return {name; value}."""
+	if not fpath:
+		return {}
 	out = {}
 	try:
 		tf = tarfile.open(fpath, 'r:gz')
@@ -176,8 +178,13 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
 	if not os.path.exists(zipname):
 		logging.error('could not measure race without %s', zipname)
 		return
-	zf = zipfile.ZipFile(zipname, 'r')
 	part1name = stl + '000012010.pl'
+	try:
+		with zipfile.ZipFile(zipname, 'r') as zf:
+			part1data = zf.read(part1name)
+	except:
+		logging.error('could not measure race, failed reading %r/%r', zipname, part1name, exc_info=True)
+		return None
 	if bindir is None:
 		bindir = srcdir_
 
@@ -192,12 +199,16 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
 
 	if printcmd:
 		printcmd(cmd)
-	p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-	p.stdin.write(zf.read(part1name))
-	p.stdin.close()
-	p.wait()
-	analyze_text = p.stdout.read()
-	return analyze_text
+	try:
+		p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+		p.stdin.write(part1data)
+		p.stdin.close()
+		p.wait()
+		analyze_text = p.stdout.read()
+		return analyze_text
+	except:
+		logging.error('failed analyzing race in subprocess %r', cmd, exc_info=True)
+	return None
 
 
 def getStatesCsvSources(actualsDir):
@@ -427,8 +438,8 @@ class SubmissionAnalyzer(object):
 			kmppSpread = self.measureSolution(tfparts['solution'], config)
 			if (not kmppSpread) or (kmppSpread[0] is None):
 				logging.warn('failed to analyze solution for %s in "%s"', config, fpath)
-		                c = self.db.cursor()
-		                c.execute('INSERT INTO submissions (vars, unixtime, path, config) VALUES ( ?, ?, ?, ? )',
+				c = self.db.cursor()
+				c.execute('INSERT INTO submissions (vars, unixtime, path, config) VALUES ( ?, ?, ?, ? )',
 			(tfparts['vars'], tf_mtime, innerpath, config))
 				# TODO: set attempt count in 'vars' and retry up to N times
 				return True # db was written
@@ -478,9 +489,15 @@ class SubmissionAnalyzer(object):
 	def getBestSolutionInfo(self, cname, data):
 		"""Set fields in dict 'data' for the best solution to configuration 'cname'."""
 		c = self.db.cursor()
-		rows = c.execute('SELECT kmpp, spread, id, path FROM submissions WHERE config = ? ORDER BY kmpp DESC LIMIT 1', (cname,))
+		rows = c.execute('SELECT kmpp, spread, id, path FROM submissions WHERE config = ? AND kmpp IS NOT NULL ORDER BY kmpp ASC LIMIT 1', (cname,))
 		rowlist = list(rows)
-		assert len(rowlist) == 1
+		if not rowlist:
+			data['kmpp'] = None
+			data['spread'] = None
+			data['id'] = None
+			data['path'] = None
+			return
+		assert len(rowlist) == 1, '{!r} {!r}'.format(rowlist, cname)
 		row = rowlist[0]
 		data['kmpp'] = row[0]
 		data['spread'] = row[1]
@@ -511,7 +528,7 @@ class SubmissionAnalyzer(object):
 			sendAnything = False
 			if cname not in bestconfigs:
 				sendAnything = True
-			elif bestconfigs[cname]['kmpp'] is None:
+			elif bestconfigs[cname].get('kmpp') is None:
 				sendAnything = True
 			if sendAnything:
 				out.write('%s:sendAnything\n' % (cname,))
@@ -542,7 +559,9 @@ class SubmissionAnalyzer(object):
 	def newestWinner(self, configs):
 		newestconfig = None
 		for cname, data in configs.iteritems():
-			if data['kmpp'] and ((newestconfig is None) or (data['id'] > newestconfig['id'])):
+			if not data.get('kmpp'):
+				continue
+			if (newestconfig is None) or (data['id'] > newestconfig['id']):
 				newestconfig = data
 		return newestconfig
 	
@@ -564,7 +583,7 @@ class SubmissionAnalyzer(object):
 		clist.sort()
 		for cname in clist:
 			data = configs[cname]
-			if not data['kmpp']:
+			if not data.get('kmpp'):
 				if firstNoSolution:
 					firstNoSolution = False
 					out.write("""<h2>no solution</h2>\n<table>""")
@@ -575,7 +594,7 @@ class SubmissionAnalyzer(object):
 		out.write('<table><tr><th>config name</th><th>num<br>solutions<br>reported</th><th>best kmpp</th><th>spread</th><th>id</th><th>path</th></tr>\n')
 		for cname in clist:
 			data = configs[cname]
-			if not data['kmpp']:
+			if not data.get('kmpp'):
 				continue
 			out.write('<tr><td><a href="%s/">%s</a></td><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n' % (
 				cname, cname, data['count'], data['kmpp'], data['spread'], data['id'], data['path']))
@@ -709,9 +728,9 @@ class SubmissionAnalyzer(object):
 		
 		out = open(ihtmlpath, 'w')
 		out.write(
-                        djangotemplates.render(
-                                'state_dir.html',
-                                dict(
+			djangotemplates.render(
+				'state_dir.html',
+				dict(
 			statename=name,
 			stu=stu,
 			statenav=self.statenav(None, configs),
@@ -722,7 +741,7 @@ class SubmissionAnalyzer(object):
 			cgiimageurl=cgiimageurl,
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
-                        socialshare=self.safeSocialShare,
+			socialshare=self.safeSocialShare,
 		)))
 		out.close()
 	
@@ -790,6 +809,8 @@ class SubmissionAnalyzer(object):
 		return kmpppath
 	
 	def cleanupSolutionPath(self, tpath):
+		if not tpath:
+			return None
 		if tpath[0] == os.sep:
 			tpath = tpath[len(os.sep):]
 		tpath = os.path.join(self.options.soldir, tpath)
@@ -888,7 +909,7 @@ class SubmissionAnalyzer(object):
 				(current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
 
 				actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
-                                actualMapLgPath = os.path.join(self.options.actualdir, actualSet, stu + '_lg.png')
+				actualMapLgPath = os.path.join(self.options.actualdir, actualSet, stu + '_lg.png')
 				actualMap500Path = os.path.join(self.options.actualdir, actualSet, stu + '500.png')
 				actualHtmlPath = os.path.join(self.options.actualdir, actualSet, stl + '.html')
 		else:
@@ -896,7 +917,7 @@ class SubmissionAnalyzer(object):
 			self.processFailedSubmissions(configs, cname)
 		
 		# index.html
-		(kmpp, spread, std) = resultspage.parse_statsum(tfparts['statsum'])
+		(kmpp, spread, std) = resultspage.parse_statsum(tfparts.get('statsum'))
 		if (kmpp is None) or (spread is None) or (std is None):
 			logging.error('bad statsum for %s', cname)
 			return
@@ -982,7 +1003,7 @@ class SubmissionAnalyzer(object):
 		analyzeText = None
 
 		#if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, pngLgOut, htmlout, analyzeout), noSourceCallback=noSource):
-                if True:
+		if True:
 			if newerthan(csvpath, simplecsvpath):
 				csvToSimpleCsv(csvpath, simplecsvpath)
 
@@ -1050,7 +1071,7 @@ class SubmissionAnalyzer(object):
 		
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
-                index_html.write(djangotemplates.render('root_index.html',dict(
+		index_html.write(djangotemplates.render('root_index.html',dict(
 			statenav=self.statenav(None, configs),
 			rooturl=self.options.rooturl,
 			localtime=localtime(),
@@ -1061,7 +1082,7 @@ class SubmissionAnalyzer(object):
 			configjson=json.dumps(self.availableConfigs(configs)),
 			google_analytics=_google_analytics(),
 			social=self.getSocial(pageabsurl, cgipageabsurl),
-                        socialshare=self.safeSocialShare,
+			socialshare=self.safeSocialShare,
 		)))
 		index_html.close()
 		logging.debug('wrote %s', index_html_path)
@@ -1111,7 +1132,7 @@ def main():
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
-        options.configlist = options.configlist + args
+	options.configlist = options.configlist + args
 	x = SubmissionAnalyzer(options, dbpath='.status.sqlite3')
 	logging.debug('loading datadir')
 	x.loadDatadir(options.datadir)
