@@ -1,0 +1,127 @@
+source https://www.legislature.ohio.gov/laws/ohio-constitution
+
+Persons responsible for apportionment of state for members of general assembly.
+§1
+	(A) The Ohio redistricting commission shall be responsible for the redistricting of this state for the general assembly. The commission shall consist of the following seven members:
+		(1) The governor;
+		(2) The auditor of state;
+		(3) The secretary of state;
+		(4) One person appointed by the speaker of the house of representatives;
+		(5) One person appointed by the legislative leader of the largest political party in the house of representatives of which the speaker of the house of representatives is not a member;
+		(6) One person appointed by the president of the senate; and
+		(7) One person appointed by the legislative leader of the largest political party in the senate of which the president of the senate is not a member.
+
+	(B)(1) The legislative leaders in the senate and the house of representatives of each of the two largest political parties represented in the general assembly, acting jointly by political party, shall appoint a member of the commission to serve as a co-chairperson of the commission.
+	(2)(a) Except as otherwise provided in division (B)(2)(b) of this section, a majority vote of the members of the commission, including at least one member of the commission who is a member of each of the two largest political parties represented in the general assembly, shall be required to do any of the following:
+		(i) Adopt rules of the commission;
+		(ii) Hire staff for the commission;
+		(iii) Expend funds.
+	   (b) If the commission is unable to agree, by the vote required under division (B) (2)(a) of this section, on the manner in which funds should be expended, each co-chairperson of the commission shall have the authority to expend one-half of the funds that have been appropriated to the commission.
+	(3) The affirmative vote of four members of the commission, including at least two members of the commission who represent each of the two largest political parties represented in the general assembly shall be required to adopt any general assembly district plan. For the purpose of this division, a member of the commission shall be considered to represent a political party if the member was appointed to the commission by a member of that political party or if, in the case of the governor, the auditor of state, or the secretary of state, the member is a member of that political party.
+	(C) At the first meeting of the commission, which the governor shall convene only in a year ending in the numeral one, except as provided in Sections 8 and 9 of this article, the commission shall set a schedule for the adoption of procedural rules for the operation of the commission.
+
+The commission shall release to the public a proposed general assembly district plan for the boundaries for each of the ninety-nine house of representatives districts and the thirty-three senate districts. The commission shall draft the proposed plan in the manner prescribed in this article. Before adopting, but after introducing, a proposed plan, the commission shall conduct a minimum of three public hearings across the state to present the proposed plan and shall seek public input regarding the proposed plan. All meetings of the commission shall be open to the public. Meetings shall be broadcast by electronic means of transmission using a medium readily accessible by the general public.
+
+The commission shall adopt a final general assembly district plan not later than the first day of September of a year ending in the numeral one. After the commission adopts a final plan, the commission shall promptly file the plan with the secretary of state. Upon filing with the secretary of state, the plan shall become effective.
+Four weeks after the adoption of a general assembly district plan, the commission shall be automatically dissolved.
+	(D) The general assembly shall be responsible for making the appropriations it determines necessary in order for the commission to perform its duties under this article.
+(1967, am. 2015)
+
+Ratio of Representation In House and Senate.
+§2
+Each house of representatives district shall be entitled to a single representative in each general assembly. Each senate district shall be entitled to a single senator in each general assembly.
+(1967, am. 2015)
+Population of Each House of Representatives District.
+§3
+(A) The whole population of the state, as determined by the federal decennial census or, if such is unavailable, such other basis as the general assembly may direct, shall be divided by the number “ninety-nine” and by the number “thirty-three” and the quotients shall be the ratio of representation in the house of representatives and in the senate, respectively, for ten years next succeeding such redistricting.
+(B) A general assembly district plan shall comply with all of the requirements of division (B) of this section.
+	(1) The population of each house of representatives district shall be substantially equal to the ratio of representation in the house of representatives, and the population of each senate district shall be substantially equal to the ratio of representation in the senate, as provided in division (A) of this section. In no event shall any district contain a population of less than ninetyve per cent nor more than one hundred  ve per cent of the applicable ratio of representation.
+	(2) Any general assembly district plan adopted by the commission shall comply with all applicable provisions of the constitutions of Ohio and the United States and of federal law.
+	(3) Every general assembly district shall be composed of contiguous territory, and the boundary of each district shall be a single nonintersecting continuous line.
+(C) House of representatives districts shall be created and numbered in the following order of priority, to the extent that such order is consistent with the foregoing standards:
+	(1) Proceeding in succession from the largest to the smallest, each county containing population greater than one hundred five per cent of the ratio of representation in the house of representatives shall be divided into as many house of representatives districts as it has whole ratios of representation. Any fraction of the population in excess of a whole ratio shall be a part of only one adjoining house of representatives district.
+	(2) Each county containing population of not less than ninetyve per cent of the ratio of representation in the house of representatives nor more than one hundred  ve per cent of the ratio shall be designated a representative district.
+	(3) The remaining territory of the state shall be divided into representative districts by combining the areas of counties, municipal corporations, and townships. Where feasible, no county shall be split more than once.
+(D)
+	(1)
+		(a) Except as otherwise provided in divisions (D)(1)(b) and (c) of this section, a county, municipal corporation, or township is considered to be split if any contiguous portion of its territory is not contained entirely within one district.
+		(b) If a municipal corporation or township has territory in more than one county, the contiguous portion of that municipal corporation or township that lies in each county shall be considered to be a separate municipal corporation or township for the purposes of this section.
+		(c) If a municipal corporation or township that is located in a county that contains a municipal corporation or township that has a population of more than one ratio of representation is split for the purpose of complying with division (E)(1)(a) or (b) of this section, each portion of that municipal corporation or township shall be considered to be a separate municipal corporation or township for the purposes of this section.
+	(2) Representative districts shall be drawn so as to split the smallest possible number of municipal corporations and townships whose contiguous portions contain a population of more than fifty per cent, but less than one hundred per cent, of one ratio of representation.
+	(3) Where the requirements of divisions (B), (C), and (D) of this section cannot feasibly be attained by forming a representative district from whole municipal corporations and townships, not more than one municipal corporation or township may be split per representative district.
+(E)
+	(1) If it is not possible for the commission to comply with all of the re-quirements of divisions (B), (C), and (D) of this section in drawing a particular representative district, the commission shall take the first action listed below that makes it possible for the commission to draw that district:
+		(a) Notwithstanding division (D)(3) of this section, the commission shall create the district by splitting two municipal corporations or townships whose contiguous portions do not contain a population of more than fifty per cent, but less than one hundred per cent, of one ratio of representation.
+		(b) Notwithstanding division (D)(2) of this section, the commission shall create the district by splitting a municipal corporation or township whose contiguous portions contain a population of more than fifty per cent, but less than one hundred per cent, of one ratio of representation.
+		(c) Notwithstanding division (C)(2) of this section, the commission shall create the district by splitting, once, a single county that contains a population of not less than ninetyfive per cent of the ratio of representation, but not more than one hundred  ve per cent of the ratio of representation.
+		(d) Notwithstanding division (C)(1) of this section, the commission shall create the district by including in two districts portions of the territory that remains after a county that contains a population of more than one hundred  ve per cent of the ratio of representation has been divided into as many house of representatives districts as it has whole ratios of representation.
+	(2) If the commission takes an action under division (E)(1) of this section, the
+commission shall include in the general assembly district plan a statement explaining which action the commission took under that division and the reason the commission took that action.
+	(3) If the commission complies with divisions (E)(1) and (2) of this section in drawing a district, the commission shall not be considered to have violated division (C)(1), (C)(2), (D)(2), or (D)(3) of this section, as applicable, in drawing that district, for the purpose of an analysis under division (D) of Section 9 of this article.
+(1967, am. 2015)
+Population of Each Senate District.
+§4
+(A) Senate districts shall be composed of three contiguous house of representatives districts.
+(B)
+	(1) A county having at least one whole senate ratio of representation shall have as many senate districts wholly within the boundaries of the county as it has whole senate ratios of representation. Any fraction of the population in excess of a whole ratio shall be a part of only one adjoining senate district.
+	(2) Counties having less than one senate ratio of representation, but at least one house of representatives ratio of representation, shall be part of only one senate district.
+	(3) If it is not possible for the commission to draw representative districts that comply with all of the requirements of this article and that make it possible for the commission to comply with all of the requirements of divisions (B)(1) and (2) of this section, the commission shall draw senate districts so as to commit the fewest possible violations of those divisions. If the commission complies with this division in drawing senate districts, the commission shall not be considered to have violated division (B)(1) or (2) of this section, as applicable, in drawing those districts, for the purpose of an analysis under division (D) of Section 9 of this article.
+(C) The number of whole ratios of representation for a county shall be determined by dividing the population of the county by the ratio of representation in the senate determined under division (A) of Section 3 of this article.
+(D) Senate districts shall be numbered from one through thirty-three and as provided in Section 5 of this article.
+(1967, am. 2015)
+
+RepresentatIon for Each House and Senate District.
+§5 At any time the boundaries of senate districts are changed in any general assembly district plan made pursuant to any provision of this article, a senator whose term will not expire within two years of the time the plan becomes effective shall represent, for the remainder of the term for which the senator was elected, the senate district that contains the largest portion of the population of the district from which the senator was elected, and the district shall be given the number of the district from which the senator was elected. If more than one senator whose term will not so expire would represent the same district by following the provisions of this section, the plan shall designate which senator shall represent the district and shall designate which district the other
+senator or senators shall represent for the balance of their term or terms.
+(1967, am. 2015)
+
+Creation of district boundaries; change at end of decennial period.
+§6
+The Ohio redistricting commission shall attempt to draw a general assembly district plan that meets all of the following standards:
+(A) No general assembly district plan shall be drawn primarily to favor or disfavor a political party.
+(B) The statewide proportion of districts whose voters, based on statewide state and federal partisan general election results during the last ten years, favor each political party shall correspond closely to the statewide preferences of the voters of Ohio.
+(C) General assembly districts shall be compact.
+Nothing in this section permits the commission to violate the district standards described in Section 2, 3, 4, 5, or 7 of this article.
+(1967, am. 2015)
+
+REPEALED. provIded addItIonal senators for dIstrIcts wIth a ratIo of representatIon greater than one.
+§6a
+(1956, rep. 1967)
+boundary lInes of house of representatIves dIstrIcts.
+§7 Notwithstanding the fact that boundaries of counties, municipal corporations, and townships within a district may be changed, district boundaries shall be created by using the boundaries of counties, municipal corporations, and townships as they exist at the time of the federal decennial census on which the redistricting is based, or, if unavailable, on such other basis as the general assembly has directed.
+(1967, am. 2015)
+
+determInatIon of number of house of representatIves dIstrIcts wIthIn each county.
+§8
+(A)
+	(1) If the Ohio redistricting commission fails to adopt a finnal general assembly district plan not later than the first day of September of a year ending in the numeral one, in accordance with Section 1 of this article, the commission shall introduce a proposed general assembly district plan by a simple majority vote of the commission.
+	(2) After introducing a proposed general assembly district plan under division (A)(1) of this section, the commission shall hold a public hearing concerning the proposed plan, at which the public may offer testimony and at which the commission may adopt amendments to the proposed plan. Members of the commission should attend the hearing; however, only a quorum of the members of the commission is required to conduct the hearing.
+	(3) After the hearing described in division (A)(2) of this section is held, and not later than the fifteenth day of September of a year ending in the numeral one, the commission shall adopt a final general assembly district plan, either by the vote required to adopt a plan under division (B)(3) of Section 1 of this article or by a simple majority vote of the commission.
+(B) If the commission adopts a final general assembly district plan in accordance with division (A)(3) of this section by the vote required to adopt a plan under division (B)(3) of Section 1 of this article, the plan shall take effect upon filing with the secretary of state and shall remain effective until the next year ending in the numeral one, except as provided in Section 9 of this article.
+(C)
+	(1)
+		(a) Except as otherwise provided in division (C)(1)(b) of this section, if the commission adopts a final general assembly district plan in accordance with division (A)(3) of this section by a simple majority vote of the commission, and not by the vote required to adopt a plan under division (B)(3) of Section 1 of this article, the plan shall take effect upon filing with the secretary of state and shall remain effective until two general elections for the house of representatives have occurred under the plan.
+		(b) If the commission adopts a final general assembly district plan in accordance with division (A)(3) of this section by a simple majority vote of the commission, and not by the vote required to adopt a plan under division (B) of Section 1 of this article, and that plan is adopted to replace a plan that ceased to be effective under division (C)(1)(a) of this section before a year ending in the numeral one, the plan adopted under this division shall take effect upon  ling with the secretary of state and shall remain effective until a year ending in the numeral one, except as provided in Section 9 of this article.
+	(2) A final general assembly district plan adopted under division (C)(1)(a) or (b) of this section shall include a statement explaining what the commission determined to be the statewide preferences of the voters of Ohio and the manner in which the statewide proportion of districts in the plan whose voters, based on statewide state and federal partisan general election results during the last ten years, favor each political party corresponds closely to those preferences, as described in division (B) of Section 6 of this article. At the time the plan is adopted, a member of the commission who does not vote in favor of the plan may submit a declaration of the member’s opinion concerning the statement included with the plan.
+(D) After a general assembly district plan adopted under division (C)(1)(a) of this section ceases to be effective, and not earlier than the first day of July of the year following the year in which the plan ceased to be effective, the commission shall be reconstituted as provided in Section 1 of this article, convene, and adopt a new general assembly district plan in accordance with this article, to be used until the next time for redistricting under this article. The commission shall draw the new general assembly district plan using the same population and county, municipal corporation, and township boundary data as were used to draw the previous plan adopted under division (C) of this section.
+(1967, am. 2015)
+
+when populatIon of county Is fractIon of ratIo of representatIon.
+§9
+(A) The supreme court of Ohio shall have exclusive, original jurisdiction in all cases arising under this article.
+(B) In the event that any section of this constitution relating to redistricting, any general assembly district plan made by the Ohio redistricting commission, or any district is determined to be invalid by an unappealed final order of a court of competent jurisdiction then, notwithstanding any other provisions of this constitution, the commission shall be reconstituted as provided in Section 1 of this article, convene, and ascertain and determine a general assembly district plan in conformity with such provisions of this constitution as are then valid, including establishing terms of office and election of members of the general assembly from districts designated in the plan, to be used until the next time for redistricting under this article in conformity with such provisions of this constitution as are then valid.
+(C) Notwithstanding any provision of this constitution or any law regarding the residence of senators and representatives, a general assembly district plan made pursuant to this section shall allow thirty days for persons to change residence in order to be eligible for election.
+(D)
+	(1) No court shall order, in any circumstance, the implementation or enforcement of any general assembly district plan that has not been approved by the commission in the manner prescribed by this article.
+	(2) No court shall order the commission to adopt a particular general assembly district plan or to draw a particular district.
+	(3) If the supreme court of Ohio determines that a general assembly district plan adopted by the commission does not comply with the requirements of Section 2, 3, 4, 5, or 7 of this article, the available remedies shall be as follows:
+		(a) If the court finds that the plan contains one or more isolated violations of those requirements, the court shall order the commission to amend the plan to correct the violation.
+		(b) If the court finds that it is necessary to amend not fewer than six house of representatives districts to correct violations of those requirements, to amend not fewer than two senate districts to correct violations of those requirements, or both, the court shall declare the plan invalid and shall order the commission to adopt a new general assembly district plan in accordance with this article.
+		(c) If, in considering a plan adopted under division (C) of Section 8 of this article, the court determines that both of the following are true, the court shall order the commission to adopt a new general assembly district plan in accordance with this article:
+			(i) The plan significantly violates those requirements in a manner that materially affects the ability of the plan to contain districts whose voters favor political parties in an overall proportion that corresponds closely to the statewide political party preferences of the voters of Ohio, as described in division (B) of Section 6 of this article.
+			(ii) The statewide proportion of districts in the plan whose voters, based on statewide state and federal partisan general election results during the last ten years, favor each political party does not correspond closely to the statewide preferences of the voters of Ohio.
+(1967, am. 2015)
+
+severabIlIty provIsIon.
+§10 The various provisions of this article are intended to be severable, and the invalidity of one or more of such provisions shall not affect the validity of the remaining provisions.
+(1967, am. 2015)

@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><title>Ohio Redistricting Algorithm</title><meta charset="utf-8" /></head><body>
+	<h1>Ohio Redistricting Algorithm</h1>
+	<p><a href="https://www.legislature.ohio.gov/laws/ohio-constitution">The Ohio State Constitution</a>, Article XI, specifies redistricting for that state.
+	  Here I restate it with an aim to writing a computer program to implement it.</p>
+
+	<p>§3 <b>House District Algorithm</b></p>
+	<p>§3.A. The ideal population of a house district is ((state population)/99) and the ideal population of a senate district is ((state population)/33).</p>
+	<p>§3.B.3. "Every general assembly district shall be composed of contiguous territory, and the boundary of each district shall be a single nonintersecting continuous line."</p>
+	<p>§3.C.2. Counties with 95%-105% of a district population shall be a district.</p>
+	<p>§3.C.1. For each county with more than 105% of a district population, whole districts shall be formed within that county. The remainder shall be one district that bridges to other counties.</p>
+	<p>§3.C.3. Smaller counties and large county remainder population becomes the rest of the districts. "Where feasible, no county shall be split more than once."</p>
+	<p>§3.D.1.<br>
+	  "(a) Except as otherwise provided in divisions (D)(1)(b) and (c) of this section, a county, municipal corporation, or township is considered to be split if any contiguous portion of its territory is not contained entirely within one district.<br>
+	  (b) If a municipal corporation or township has territory in more than one county, the contiguous portion of that municipal corporation or township that lies in each county shall be considered to be a separate municipal corporation or township for the purposes of this section.<br>
+	  (c) If a municipal corporation or township that is located in a county that contains a municipal corporation or township that has a population of more than one ratio of representation is split for the purpose of complying with division (E)(1)(a) or (b) of this section, each portion of that municipal corporation or township shall be considered to be a separate municipal corporation or township for the purposes of this section."</p>
+	<p>§3.D.2. minimize splits of cities population 50%-100% of district population.</p>
+	<p>§3.D.3. <b>if</b> §3.{B,C,D.1,D.2} fail <b>then</b> split at most one city per district.</p>
+	<p>§3.E.1. <b>if</b> §3.{B,C,D} fail <b>then</b><br>
+	  try splitting two cities (not in the 50-100% of district population set)<br>
+	  <b>else</b><br>
+	  try splitting a city in the 50-100% district population set<br>
+	  <b>else</b><br>
+	  try splitting a county in the 95-105% district population set<br>
+	  <b>else</b><br>
+	  try splitting the remainder of a large county into two districts</p>
+	<p>§3.E.2. §3.E.1. actions shall be logged and explained</p>
+
+	<p>§4 <b>Senate District Algorithm</b></p>
+	<p>§4.A. "Senate districts shall be composed of three contiguous house of representatives districts."</p>
+	<p>§4.B.1. "A county having at least one whole senate ratio of representation shall have as many senate districts wholly within the boundaries of the county as it has whole senate ratios of representation. Any fraction of the population in excess of a whole ratio shall be a part of only one adjoining senate district."</p>
+	<p>§4.B.2. "Counties having less than one senate ratio of representation, but at least one house of representatives ratio of representation, shall be part of only one senate district."</p>
+	<p>§4.B.3. the number of §4.B.{1,2} violations shall be minimized (preferrably zero, but maybe that's not possible)</p>
+
+	<p>§6 <b>'nice to have' qualities</b></p>
+	<p>§6.A. districts shall not be drawn with partisan bias</p>
+	<p>§6.B. proportional representation by gerrymandering (<em>this is BS and I won't do it</em>)</p>
+	<p>§6.C. "General assembly districts shall be compact."</p>
+
+	<p>§8.A.1. Deadline YYY1-09-01 (September 1 of a year following a Census)</p>
+
+</body></html>
