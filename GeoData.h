@@ -21,6 +21,7 @@ public:
 	int congressionalDistricts;
 #endif
 
+	// (x,y) meters or (lon,lat) integer microdegrees
 	int32_t* pos;
 	int minx, maxx, miny, maxy;
 
@@ -54,6 +55,7 @@ public:
 		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
 	}
 
+	// square meters
 	uint64_t* area;
 
 	int32_t* pop;

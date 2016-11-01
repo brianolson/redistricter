@@ -42,7 +42,13 @@ map5 = '''1 1 1 2 2
 3 3 5 4 4
 5 5 5 5 4'''
 
-maps_sources = [map1, map2, map3, map4, map5]
+map6 = '''1 1 1 2 3
+4 4 1 2 3
+4 4 1 2 3
+4 5 2 2 3
+5 5 5 5 3'''
+
+maps_sources = [map1, map2, map3, map4, map5, map6]
 
 maps_source_splitter = re.compile(r'[ \n]+')
 
@@ -178,6 +184,7 @@ if __name__ == '__main__':
     #popstr = 'ooxoxoxoxoxxxxxxooxoxxxxo'
     # oooxoxxxxxoxoxoxoxoxxxxxo
     # oooxoxxxxxxxxooxxoxoxxoox
+    # ooxxooxxoooxxxxxxoxxooxxx
     if len(sys.argv) > 1:
         popstr = sys.argv[1]
     else:

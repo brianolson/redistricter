@@ -530,6 +530,10 @@ http://www.census.gov/prod/cen2000/doc/sf1.pdf
 55,61	cenus tract
 61,62	block group
 62,66	block
+310,318	lat
+319,330	lon
+172,185	area
+292,300	population
 len=402
  */
 int Uf1::load() {

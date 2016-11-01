@@ -343,3 +343,13 @@ xxxxo
 2016-08-03 18:29:43 EDT (Wednesday, August 03 06:29:43 PM)
 
 https://www.legislature.ohio.gov/laws/ohio-constitution
+
+2016-11-01 15:37:51 EDT (Tuesday, November 01 03:37:51 PM)
+
+make linkfixup&&./linkfixup --plgeo data/AK/geoblocks -p data/AK/ak_base.pb
+./drend -P data/AK/ak_base.pb -pngout ak_base.png -loadSolution data/2010/solutions/report/AK_Senate/688/solution.dsz -d 20
+
+
+make linkfixup&&./linkfixup --plgeo data/AK/geoblocks -p data/AK/ak_laea.pb --proj&&./drend -P data/AK/ak_laea.pb -pngout ak_laea.png -loadSolution data/2010/solutions/report/AK_Senate/688/solution.dsz -d 20
+
+make linkfixup&&./linkfixup --plgeo data/AK/geoblocks -p data/AK/ak_aeqd.pb --proj&&./drend -P data/AK/ak_aeqd.pb -pngout ak_aeqd.png -loadSolution data/2010/solutions/report/AK_Senate/688/solution.dsz -d 20

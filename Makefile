@@ -3,6 +3,8 @@ UNAME:=$(shell uname)
 -include makeopts/${UNAME}.pre
 -include localvars.make
 
+ROOTDIR=${PWD}
+
 all:	districter2 linkfixup drend rta2dsz analyze dumpBinLog
 jall:	java/org/bolson/redistricter/Redata.java tools.jar
 
@@ -24,7 +26,7 @@ OG?=-g
 # can't have -ansi -pedantic because C++ standard as implemented in GCC I've
 # tried (up to 4.0.1) throw a bunch of warnings on draft 64 bit stuff.
 #CCOMMONFLAGS:=-Wall -Itiger -MMD -ansi -pedantic
-CCOMMONFLAGS+=-Wall -Itiger -DHAVE_PROTOBUF
+CCOMMONFLAGS+=-Wall -Itiger -DHAVE_PROTOBUF -Iinclude
 # -MMD is incompatible with some Apple compile modes
 #CCOMMONFLAGS+=-Wall -Itiger -MMD
 #CCOMMONFLAGS+=-MMD
@@ -37,9 +39,9 @@ JAVAC?=javac
 
 
 #TODO: this is getting rediculous, might be time for autoconf. ew. autoconf.
-LDPNG?=-lpng12
+LDPNG?=-lpng16
 STATICPNG?=${LDPNG}
-LDFLAGS+=${LDPNG} -lz -lprotobuf
+LDFLAGS+=${LDPNG} -Llib -L/usr/local/lib -lz -lprotobuf
 
 COREOBJS:=fileio.o Bitmap.o tiger/mmaped.o Solver.o District2.o
 COREOBJS+=PreThread.o renderDistricts.o LinearInterpolate.o
@@ -95,7 +97,7 @@ LFUOBJS:=${COREOBJS} linkfixup.o
 THINGSTOCLEAN+=${LFUOBJS}
 
 linkfixup:	$(LFUOBJS)
-	$(CXX) ${CXXFLAGS} $(LFUOBJS) $(LDFLAGS) -o linkfixup
+	$(CXX) ${CXXFLAGS} $(LFUOBJS) $(LDFLAGS) -lproj -o linkfixup
 
 DRENDOBJS:=${COREOBJS} drendmain.o MapDrawer.o
 
@@ -144,6 +146,19 @@ xcode:
 clientdist:	.FORCE districter2_staticproto drend_static
 	./makedist.py
 
+proj:
+	git clone https://github.com/OSGeo/proj.4.git proj
+
+proj/configure:	proj
+	cd proj && /bin/sh autogen.sh
+
+proj/Makefile:	proj/configure
+	cd proj && ./configure --prefix=${ROOTDIR}
+
+lib/libproj.a:	proj/Makefile
+	cd proj && make && make install
+
+
 .FORCE:
 
 include tiger/tiger.make
@@ -160,8 +175,10 @@ include tiger/tiger.make
 java/org/bolson/redistricter/Redata.java:	redata.proto
 	protoc $< --java_out=java
 
-tools.jar:
+jcompile:
 	mvn package
+
+tools.jar:	jcompile
 	ln -s `ls -t target/redistricter*.jar | head -1` tools.jar
 
 THINGSTOCLEAN+=java/org/bolson/redistricter/Redata.java tools.jar
