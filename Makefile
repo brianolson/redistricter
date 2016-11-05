@@ -39,7 +39,7 @@ JAVAC?=javac
 
 
 #TODO: this is getting rediculous, might be time for autoconf. ew. autoconf.
-LDPNG?=-lpng16
+LDPNG?=-lpng
 STATICPNG?=${LDPNG}
 LDFLAGS+=${LDPNG} -Llib -L/usr/local/lib -lz -lprotobuf
 
@@ -146,10 +146,8 @@ xcode:
 clientdist:	.FORCE districter2_staticproto drend_static
 	./makedist.py
 
-proj:
+proj/configure:
 	git clone https://github.com/OSGeo/proj.4.git proj
-
-proj/configure:	proj
 	cd proj && /bin/sh autogen.sh
 
 proj/Makefile:	proj/configure
