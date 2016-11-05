@@ -155,7 +155,7 @@ proj/configure:	proj
 proj/Makefile:	proj/configure
 	cd proj && ./configure --prefix=${ROOTDIR}
 
-lib/libproj.a:	proj/Makefile
+lib/libproj.a include/proj_api.h:	proj/Makefile
 	cd proj && make && make install
 
 
@@ -189,3 +189,4 @@ clean:
 
 protoio.o:	redata.pb.h
 PBPointOutput.o:	redata.pb.h
+linkfixup.o:	include/proj_api.h
