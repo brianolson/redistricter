@@ -108,7 +108,7 @@ drend_static:	${DRENDOBJS}
 	$(CXX) ${CXXFLAGS} $(DRENDOBJS) $(STATICPNG) -lpthread -lz /usr/local/lib/libprotobuf.a -o drend_static
 	strip drend_static
 
-ANALYZEOBJS:=${COREOBJS} analyze.o placefile.o
+ANALYZEOBJS:=${COREOBJS} analyze.o placefile.o popSSD.o
 
 analyze:	${ANALYZEOBJS}
 	$(CXX) ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
