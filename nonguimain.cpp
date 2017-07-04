@@ -16,7 +16,7 @@
 #include <sys/resource.h>
 
 #include "Solver.h"
-#include "tiger/mmaped.h"
+#include "mmaped.h"
 
 
 

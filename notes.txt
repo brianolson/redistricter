@@ -354,3 +354,15 @@ make linkfixup&&./linkfixup --plgeo ${AK}/geoblocks -p ${AK}/ak_base.pb
 make linkfixup&&./linkfixup --plgeo ${AK}/geoblocks -p ${AK}/ak_laea.pb --proj&&./drend -P ${AK}/ak_laea.pb -pngout ak_laea.png -loadSolution data/2010/solutions/report/AK_Senate/688/solution.dsz -d 20
 
 make linkfixup&&./linkfixup --plgeo ${AK}/geoblocks -p ${AK}/ak_aeqd.pb --proj&&./drend -P ${AK}/ak_aeqd.pb -pngout ak_aeqd.png -loadSolution ${HOME}/src/redata/2010/solutions/report/AK_Senate/688/solution.dsz -d 20
+
+2017-06-11 13:32:00 EDT (Sunday, June 11 01:32:00 PM)
+
+A test of 'spherical cows on frictionless planes' of gerrymandering science...
+
+Given randomly distributed people of two groups and random but perfect (contiguous, zero inequality) district spatial groupings, what is the distribution of outcomes of districts which prefer one group or the other?
+
+Vary the group population split from 50-50 to 70-30.
+Vary districts from 2-15.
+Try 'clumpy' non-uniform distributions. (e.g. the urban self-packing group)
+
+What's the chance of a MA 9-0 outcome given the MA statewide party registration ratio?

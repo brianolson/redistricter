@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -215,15 +216,33 @@ public class ShapefileBundle {
 		String nameroot = filename.substring(lastSlash+1, filename.length() - 4);
 		
 		bundle = new ZipFile(filename);
+		openFinish(nameroot);
+	}
+
+	/**
+	 * Open shapefile bundle from foo.zip
+	 * Leaves things ready to read headers, but body not processed.
+	 * @param filename
+	 * @throws IOException
+	 */
+	public void open(Path filename) throws IOException {
+		String nameroot = filename.getFileName().toString();
+		assert(nameroot.endsWith(".zip"));
+		nameroot = nameroot.substring(0, nameroot.length() - 4);
+		bundle = new ZipFile(filename.toFile());
+		openFinish(nameroot);
+	}
+
+	private void openFinish(String nameroot) throws IOException {
 		ZipEntry shpEntry = bundle.getEntry(nameroot + ".shp");
 		assert(shpEntry != null);
 		InputStream shpIs = bundle.getInputStream(shpEntry);
 		InputStream dbfIs = bundle.getInputStream(bundle.getEntry(nameroot + ".dbf"));
-		
+
 		shp = new Shapefile();
 		shp.setInputStream(shpIs);
 		shp.setProjection(projection);
-		
+
 		dbf = new DBase();
 		dbf.setInputStream(new DataInputStream(dbfIs));
 	}

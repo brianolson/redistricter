@@ -20,3 +20,11 @@ proj4
 proj4j
 data
 proj
+Attic
+*.bak
+*.orig
+news
+share
+target
+lib
+include

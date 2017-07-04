@@ -14,6 +14,10 @@ import org.bolson.redistricter.ShapefileBundle.BlockIdComparator;
 import org.bolson.redistricter.ShapefileBundle.CompositeDBaseField;
 import org.bolson.redistricter.ShapefileBundle.MapSetLinkWrapper;
 
+/**
+ * Read 'faces' files to get 'tfid' face id records mapped to the rest of redistricter's 'ubid' block id.
+ * Read 'edges' files because they trivially connect tfid-tfid pairs as adjacent.
+ */
 public class LinksFromEdges {
 	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
 	
@@ -128,7 +132,7 @@ public class LinksFromEdges {
 	/**
 	 * Read .zip bundles of shapefile data (edges and faces from Census data).
 	 * Write 'geoblocks.links' file with pairwise link information between loaded Census blocks.
-	 * @param args
+	 * @param argv
 	 * @throws IOException 
 	 */
 	public static void main(String[] argv) throws IOException {

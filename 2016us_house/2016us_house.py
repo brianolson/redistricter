@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # pip install odfpy
+#
+# emits:
+# '2016_us_house_seats.csv'
+#  broken down by each state, how many votes and seats per party
+# '2016_us_house_all.csv'
+#  row for each race, votes per party
 
 import csv
 import io
@@ -89,7 +95,7 @@ def wat():
     return None
 
 
-doc = load('/Users/bolson/Documents/20161108 election results data/2016 US House.ods')
+doc = load('20161108 election results data/2016 US House.ods')
 
 sheets = list(filter(lambda x: x.tagName == 'table:table', doc.spreadsheet.childNodes))
 

@@ -19,7 +19,7 @@
 
 #include "arghandler.h"
 #include "Solver.h"
-#include "tiger/mmaped.h"
+#include "mmaped.h"
 #include "MapDrawer.h"
 #include "renderDistricts.h"
 

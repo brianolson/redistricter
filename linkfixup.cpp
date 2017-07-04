@@ -7,7 +7,7 @@
 #include "Bitmap.h"
 #include "Node.h"
 #include "GeoData.h"
-#include "tiger/mmaped.h"
+#include "mmaped.h"
 #include <proj_api.h>
 
 static const char usage[] =

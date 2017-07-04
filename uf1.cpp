@@ -1,6 +1,6 @@
 #include "GeoData.h"
 #include "uf1.h"
-#include "tiger/mmaped.h"
+#include "mmaped.h"
 
 #include <assert.h>
 #include <errno.h>
