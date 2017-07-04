@@ -56,6 +56,7 @@ import tarfile
 import threading
 import time
 import traceback
+import pdb
 
 # local imports
 import client
@@ -419,8 +420,10 @@ class configuration(object):
 		elif line.startswith('sendAnything'):
 			self.sendAnything = line.lower() != 'sendanything: false'
 		elif line == 'enable' or line == 'enabled':
+                        logging.info("%s enabled by config", self.name)
 			self.enabled = True
 		elif line == 'disable' or line == 'disabled':
+                        logging.info("%s disabled by config", self.name)
 			self.enabled = False
 		else:
 			raise ParseError('bogus config line: "%s"\n' % line)
@@ -467,6 +470,7 @@ class configuration(object):
 		statecode = m.group(1)
 		stl = statecode.lower()
 		if os.path.exists(os.path.join(self.datadir, 'norun')):
+                        logging.info('%s disabled because of %s', self.name, os.path.join(self.datadir, 'norun'))
 			self.enabled = False
 		
 		# set some basic args based on any datadir
@@ -598,12 +602,14 @@ class runallstates(object):
 				weight = conf.weight
 				weightedStu.append( (weight, stu) )
 				totalweight += weight
+                if totalweight <= 0 or not weightedStu:
+                        pdb.set_trace()
 		pick = random.random() * totalweight
 		for weight, stu in weightedStu:
 			pick -= weight
 			if pick <= 0:
 				return stu
-		raise Excption('internal error, weights shifted.')
+		raise Exception('internal error, weights shifted. weights:{}, sum={}'.format(weightedStu, totalweight))
 
 	def getNextState(self):
 		with self.lock:

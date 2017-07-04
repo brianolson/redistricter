@@ -355,6 +355,48 @@ make linkfixup&&./linkfixup --plgeo ${AK}/geoblocks -p ${AK}/ak_laea.pb --proj&&
 
 make linkfixup&&./linkfixup --plgeo ${AK}/geoblocks -p ${AK}/ak_aeqd.pb --proj&&./drend -P ${AK}/ak_aeqd.pb -pngout ak_aeqd.png -loadSolution ${HOME}/src/redata/2010/solutions/report/AK_Senate/688/solution.dsz -d 20
 
+
+2017-03-02 12:28:46 EST (Thursday, March 02 12:28:46 PM)
+
+TODO: try computing a "Fryer & Holden" sum of squared distances - per district measure. sum across districts ( sum of squared distances between all pairs of persons in a district )
+
+algorithmic redistricting papers? Fifield et al. 2015, Holden 2015
+Fifield B, Higgins M, Imai K, Tarr A. 2015. "A new automated redistricting simulator using Markov chain Monte Carlo." Work. Pap., Princeton Univ., Princeton, NJ
+http://imai.princeton.edu/research/files/redist.pdf
+
+lots of citations of prior work in algorithmic redistricting.
+'graph cut' problem. MCMC.
+Somewhat more interested in getting a representative sample of possible district maps than generating one good one.
+
+
+
+
+
+Fryer, R. and Holden, R. (2011). "Measuring the compactness of political districting plans." Journal of Law and Economics 54, 3, 493–535
+http://scholar.harvard.edu/fryer/publications/measuring-compactness-political-districting-plans
+http://scholar.harvard.edu/files/fryer/files/measuring_the_compactness_of_political_districting_plans.pdf
+
+according to Fitfield,Giggins,Imai,Tarr(2015) "develops an approximate algorithm to efficiently compute the minimum of the sum of squared distances"
+
+acknowledges distribution within districts, not just shape geometry!
+tract-level data, not block
+
+sum across districts ( sum of squared distances between all pairs of persons in a district )
+they use that as a numerator with a power diagram (Voronoi) solution they assert is optimal as the denominator.
+
+
+
+
+Holden R. 2015. "A process for non-partisan redistricting." Work Pap., Univ. New South Wales, Sydney, Aust.
+
+
+Harvard Election Data Archive
+http://projects.iq.harvard.edu/eda/home
+https://dataverse.harvard.edu/dataverse/eda
+
+
+https://sites.stanford.edu/sssl/stanford-election-atlas
+
 2017-06-11 13:32:00 EDT (Sunday, June 11 01:32:00 PM)
 
 A test of 'spherical cows on frictionless planes' of gerrymandering science...

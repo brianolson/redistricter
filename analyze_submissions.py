@@ -252,15 +252,19 @@ def csvToSimpleCsv(csvpath, outpath):
 		unmapped.append( (row[0], row[1]) )
 		districts.add(row[1])
 	fin.close()
+        districts.discard('ZZZ')
 	dl = list(districts)
 	dl.sort()
 	dmap = {}
 	for i, dname in enumerate(dl):
 		dmap[dname] = i + 1	# 1 based csv file district numbering
+        logging.debug('%s has districts %r', csvpath, sorted([(i,v) for v,i in dmap.items()]))
 	fout = open(outpath, 'wb')
 	writer = csv.writer(fout)
 	for blockid, dname in unmapped:
-		writer.writerow( (blockid, dmap[dname]) )
+                districtNumber = dmap.get(dname)
+                if districtNumber is not None:
+		        writer.writerow( (blockid, districtNumber) )
 	fout.close()
 
 
@@ -334,6 +338,9 @@ class SubmissionAnalyzer(object):
 		self._actualsMaps = {}
 		# mode for sharing template
 		self.safeSocialShare = True
+
+                self.summaryCsvFile = None
+                self.summaryCsvWriter = None
 
 	def actualsSource(self, actualSet, stu):
 		"""Lazy loading accessor to find source CSV files for actualsdir/{set}/??_{stu}_*.txt"""
@@ -906,7 +913,7 @@ class SubmissionAnalyzer(object):
 				actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
 				drendargs = config.drendargs
 				zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
-				(current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
+				(current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), cname, stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
 
 				actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
 				actualMapLgPath = os.path.join(self.options.actualdir, actualSet, stu + '_lg.png')
@@ -921,6 +928,9 @@ class SubmissionAnalyzer(object):
 		if (kmpp is None) or (spread is None) or (std is None):
 			logging.error('bad statsum for %s', cname)
 			return
+                kmpp = float(kmpp)
+                spread = int(float(spread))
+                std = float(std)
 		# TODO: permalink
 		permalink = os.path.join(self.options.rooturl, cname, str(data['id'])) + '/'
 		racedata = ''
@@ -940,6 +950,7 @@ class SubmissionAnalyzer(object):
 			ahin = open(actualHtmlPath, 'rb')
 			actualHtmlData = ahin.read()
 			ahin.close
+                self.summaryCsv(stu, statename, kmpp, spread, std, current_kmpp, current_spread, current_std)
 		
 		context = dict(
 			statename=statename,
@@ -955,9 +966,9 @@ class SubmissionAnalyzer(object):
 			current_kmpp=current_kmpp,
 			current_spread=current_spread,
 			current_std=current_std,
-			my_kmpp=str(kmpp),
-			my_spread=str(int(float(spread))),
-			my_std=str(std),
+			my_kmpp=kmpp,
+			my_spread=spread,
+			my_std=std,
 			extra=extrahtml,
 			racedata=racedata,
 			rooturl=self.options.rooturl,
@@ -984,7 +995,7 @@ class SubmissionAnalyzer(object):
 		for x in ('map.png', 'map500.png', 'map_lg.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
 			atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
 
-	def processActualsSource(self, actualsDir, stu, sourceCsvFname, pb, mppb, zipname, mppb_lg_path, highlight=None):
+	def processActualsSource(self, actualsDir, cname, stu, sourceCsvFname, pb, mppb, zipname, mppb_lg_path, highlight=None):
 		"""process 00_XX_SLDU.txt into intermediate XX.csv, output {XX.png,xx.html,xx_stats.txt}
 		return (kmpp, spread, std)
 		"""
@@ -1001,6 +1012,7 @@ class SubmissionAnalyzer(object):
 		png500out = os.path.join(actualsDir, stu + '500.png')
 		analyzeout = os.path.join(actualsDir, stl + '_stats.txt')
 		analyzeText = None
+                districts = self.config[cname].args['-d']
 
 		#if any_newerthan( (pb, mppb, csvpath, zipname), (pngout, png500out, pngLgOut, htmlout, analyzeout), noSourceCallback=noSource):
 		if True:
@@ -1009,7 +1021,7 @@ class SubmissionAnalyzer(object):
 
 			# normal size
 			if self.options.redraw or any_newerthan( (pb, mppb, simplecsvpath), pngout):
-				cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
+				cmd = [drendpath(), '-d', districts, '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
 				if highlight:
 					cmd += ['--hubidz', highlight]
 				logging.info('%r', cmd)
@@ -1021,7 +1033,7 @@ class SubmissionAnalyzer(object):
 
 			# large image
 			if self.options.redraw or any_newerthan( (pb, mppb_lg_path, simplecsvpath), pngLgOut):
-				cmd = [drendpath(), '-d=-1', '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
+				cmd = [drendpath(), '-d', districts, '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
 				if highlight:
 					cmd += ['--hubidz', highlight]
 				logging.info('%r', cmd)
@@ -1032,7 +1044,7 @@ class SubmissionAnalyzer(object):
 					sys.exit(1)
 
 			if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
-				analyzeText = measure_race(stl, '-1', pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
+				analyzeText = measure_race(stl, districts, pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
 				atout = open(analyzeout, 'w')
 				atout.write(analyzeText)
 				atout.close()
@@ -1043,7 +1055,10 @@ class SubmissionAnalyzer(object):
 			atin = open(analyzeout, 'r')
 			analyzeText = atin.read()
 			atin.close()
-		return parseAnalyzeStats(analyzeText)
+                current_kmpp, current_spread, current_std = parseAnalyzeStats(analyzeText)
+                if (current_kmpp is None) or (current_spread is None) or (current_std is None):
+                        logging.warn('failed to get current stats for %s from %s', stl, analyzeout)
+                return current_kmpp, current_spread, current_std
 	
 	def buildBestSoFarDirs(self, configs=None):
 		"""$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
@@ -1108,6 +1123,10 @@ class SubmissionAnalyzer(object):
 				logging.debug('%s -> %s', resourceSource, resourceDest)
 				shutil.copy2(resourceSource, resourceDest)
 
+        def summaryCsv(self, stu, statename, my_kmpp, my_spread, my_std, current_kmpp, current_spread, current_std):
+                if self.summaryCsvWriter is None:
+                        return
+                self.summaryCsvWriter.writerow([stu, statename, my_kmpp, my_spread, my_std, current_kmpp, current_spread, current_std])
 
 def main():
 	import optparse
@@ -1129,11 +1148,16 @@ def main():
 	argp.add_option('--rehtml', dest='rehtml', action='store_true', default=False)
 	argp.add_option('--config', dest='configlist', action='append', default=[])
 	argp.add_option('--actuals', dest='actualdir', default=None, help='contains /{cd,sldu,sldl}')
+        argp.add_option('--summary', dest='summarypath', default=None, help='path to summary.csv')
 	(options, args) = argp.parse_args()
 	if options.verbose:
 		logging.getLogger().setLevel(logging.DEBUG)
 	options.configlist = options.configlist + args
 	x = SubmissionAnalyzer(options, dbpath='.status.sqlite3')
+        if options.summarypath:
+                x.summaryCsvFile = open(options.summarypath, 'wt')
+                x.summaryCsvWriter = csv.writer(x.summaryCsvFile)
+                x.summaryCsvWriter.writerow(['stu', 'state and delegation', 'my kmpp', 'my spread', 'my std', 'current kmpp', 'current spread', 'current std'])
 	logging.debug('loading datadir')
 	x.loadDatadir(options.datadir)
 	logging.debug('done loading datadir')

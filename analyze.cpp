@@ -12,6 +12,7 @@
 #include "uf1.h"
 #include "GeoData.h"
 #include "placefile.h"
+#include "popSSD.h"
 
 #include <vector>
 #include <map>
@@ -428,6 +429,8 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 			sov.getDistrictStats(statstr, 10000);
 			fputs(statstr, stdout);
 			delete statstr;
+			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
+			fprintf(stdout, "pop FH-ssd: %g\n", ssd);
 		}
 	}
 	

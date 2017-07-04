@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html><head><title>{{statename}} Redistricting</title>
 <link href="{{rooturl}}report.css" rel="stylesheet" type="text/css" />
+<style>td.myon{text-align:right;padding-right:0.5em;}
+td.myow{text-align:right;font-weight:bold;}
+td.myoh{text-align:right;}
+#rhs div{text-align:center;}
+td.better{background-color:#e0ffe0;}
+td.demobox table td{text-align:right;padding-left:0.3em;}</style>
 {% if socialshare %}
 <script type="application/x-social-share-privacy-settings">{"path_prefix":"/ssp/","layout":"line","services":{"buffer":{"status":false},"delicious":{"status":false},"disqus":{"status":false},"flattr":{"status":false},"linkedin":{"status":false},"stumbleupon":{"status":false},"xing":{"status":false}}}</script>
 {% else %}
@@ -20,12 +26,23 @@
 <div id="sociald">{{social|safe}}</div>
 <div class="share" data-uri="{{pageabsurl}}" data-image="{{dirabsurl}}{{ba_large}}"></div>
 
-</td><td>
+</td><td id="rhs">
 
-<table id="imt"><tr><td align="center"><a href="{{ba_large}}"><img src="{{ba_small}}" title="{{statename}} congressional district map, current and my way" alt="{{statename}} congressional district map, current and my way"></a></td>{% if current_small %}<td align="center"><a href="{{current_large}}"><img src="{{current_small}}"></a></td>{% endif %}</tr>
-<tr><td align="center">{{statename}} possible district map from my solver.<br /><a href="{{ba_large}}" title="{{statename}} congressional district map, current and my way">Larger {{statename}} map</a></td>{% if current_small %}<td align="center">{{statename}} current district map<br /><a href="{{current_large}}">Larger {{statename}} map</a></td>{% endif %}</tr>
+<table id="imt" align="center">
+<tr><th>My Way</th><th>Current</th></tr>
+<tr><td align="center"><a href="{{ba_large}}"><img src="{{ba_small}}" title="{{statename}} congressional district map, my way" alt="{{statename}} congressional district map, current"></a></td>{% if current_small %}<td align="center"><a href="{{current_large}}"><img src="{{current_small}}"></a></td>{% endif %}</tr>
+<tr><td align="center">{{statename}} possible district map from my solver.<br /><a href="{{ba_large}}" title="{{statename}} congressional district map, my way">Larger {{statename}} map</a></td>{% if current_small %}<td align="center">{{statename}} current district map<br /><a href="{{current_large}}">Larger {{statename}} map</a></td>{% endif %}</tr>
 </table>
-<table
+
+<table border="1" style="margin-top:1em;margin-bottom:1em;" align="center">
+<tr><td></td><td class="myow">My Way</td><td class="myow">Current</td></tr>
+<tr><td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myon{% if my_kmpp < current_kmpp %} better{% endif %}">{{my_kmpp|pprint}}</td><td class="myon{% if my_kmpp > current_kmpp %} better{% endif %}">{{current_kmpp|pprint}}</td></tr>
+<tr><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about )--></td><td class="myon{% if my_spread < current_spread %} better{% endif %}">{{my_spread}}</td><td class="myon{% if my_spread > current_spread %} better{% endif %}">{{current_spread}}</td></tr>
+<tr><td class="myoh">standard deviation of<br />district populations</td><td class="myon{% if my_std < current_std %} better{% endif %}">{{my_std}}</td><td class="myon{% if my_std > current_std %} better{% endif %}">{{current_std}}</td></tr>
+</table>
+
+{#
+<table border="1" style="margin-top:1em;margin-bottom:1em;display:none;">
 <tr>
 {% if current_kmpp %}<td></td>{% endif %}
 <td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about {{avgpop}})--></td><td class="myoh">standard deviation of<br />district populations</td></tr>
@@ -33,9 +50,11 @@
 <tr><td class="myow">Current&nbsp;map</td><td class="myon">{{current_kmpp}}</td><td class="myon">{{current_spread}}</td><td class="myon">{{current_std}}</td></tr>
 {% endif %}
 <tr>{% if current_kmpp %}<td class="myow">My&nbsp;map</td>{% endif %}<td class="myon">{{my_kmpp}}</td><td class="myon">{{my_spread}}</td><td class="myon">{{my_std}}</td></tr></table>
+#}
+
 {{extra|safe}}
 {% if current_demographics %}
-<table><tr><th colspan="2">Demographics</th><tr>
+<table align="center"><tr><th colspan="2">Demographics</th><tr>
 <tr>
 <th>My Way</th>
 <th>Current</th>
