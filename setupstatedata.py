@@ -34,7 +34,6 @@ import zipfile
 # local
 import generaterunconfigs
 import linksfromedges
-import makelinks
 from newerthan import newerthan, any_newerthan
 import shapefile
 import solution
@@ -114,34 +113,6 @@ ${dpath}/${stu}_start.png:	${bindir}/drend ${dpath}/${stu}.mppb ${dpath}/${stu}c
 ${dpath}/${stu}_start_sm.png:	${bindir}/drend ${dpath}/${stu}_sm.mppb ${dpath}/${stu}current.dsz
 	${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stu}current.dsz
 """
-
-
-# we don't need these when building from shapefile
-old_makepolys_rules_ = ("""
-${dpath}/${stu}.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stu}.mpout $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stu}mask.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_sm.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stu}_sm.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stu}mask_sm.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_large.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stu}_large.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stu}mask_large.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_huge.mpout:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys -o ${dpath}/${stu}_huge.mpout $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}.mppb $${${stu}LONLAT} $${${stu}PNGSIZE} --maskout ${dpath}/${stu}mask.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_sm.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_sm.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_SM} --maskout ${dpath}/${stu}mask_sm.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_large.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_large.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_LARGE} --maskout ${dpath}/${stu}mask_large.png ${dpath}/raw/*.RT1
-
-${dpath}/${stu}_huge.mppb:	tiger/makepolys ${dpath}/raw/*.RT1
-	time ./tiger/makepolys --protobuf -o ${dpath}/${stu}_huge.mppb $${${stu}LONLAT} $${${stu}PNGSIZE_HUGE} --maskout ${dpath}/${stu}mask_huge.png ${dpath}/raw/*.RT1
-""")
 
 makefile_fragment_template = string.Template(basic_make_rules_)
 
@@ -242,27 +213,6 @@ class ProcessGlobals(object):
 			raise Exception('found no tiger editions at "%s"' % tigerbase)
 		self.bestYear = bestyear
 		return '%sTIGER%04d/' % (tigerbase, bestyear)
-
-	def getTigerLatestLineEdition(self, raw):
-		"""Older census-special ascii line-file releases have this pattern."""
-		editions = re.compile(r'href="tiger(\d\d\d\d)(.)e/')
-		bestyear = None
-		bested = None
-		edmap = { 'f': 1, 's': 2, 't': 3 }
-		for m in editions.finditer(raw):
-			year = int(m.group(1))
-			ed = m.group(2)
-			if (bestyear is None) or (year > bestyear):
-				bestyear = year
-				bested = ed
-			elif (year == bestyear) and (edmap[ed] > edmap[bested]):
-				bested = ed
-		if bestyear is None:
-			raise Exception('found no tiger editions at "%s"' % tigerbase)
-		self.bestYear = bestyear
-		self.bestYearEdition = bested
-		# reconstruct absolute url to edition
-		return '%stiger%s%se/' % (tigerbase, bestyear, bested)
 	
 	def getTigerLatest(self):
 		"""For either shapefile or old line-file, return latest base URL."""
@@ -278,7 +228,7 @@ class ProcessGlobals(object):
 		if self.options.shapefile:
 			self.tigerlatest = self.getTigerLatestShapefileEdition(raw)
 		else:
-			self.tigerlatest = self.getTigerLatestLineEdition(raw)
+                        raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 		return self.tigerlatest
 	
 	def getState(self, name):
@@ -435,7 +385,7 @@ class StateData(object):
 					tigerlatest, self.fips,
 					nameForPostalCode(self.stu).upper().replace(' ', '_'))
 			else:
-				turl = tigerlatest + self.stu + '/'
+                                raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 			self.logf('guessing tiger data source "%s", if this is wrong, edit "%s"', turl, turlpath)
 			if self.options.dryrun:
 				return turl
@@ -488,8 +438,7 @@ class StateData(object):
 			for m in re.finditer(r'href="([^"]*tabblock00[^"]*.zip)"', raw, re.IGNORECASE):
 				self.ziplist.append(m.group(1))
 		else:
-			for m in re.finditer(r'href="([^"]+.zip)"', raw, re.IGNORECASE):
-				self.ziplist.append(m.group(1))
+                        raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 		return self.ziplist
 	
 	def getCountyPaths(self):
@@ -716,39 +665,7 @@ class StateData(object):
 		"""Deprecated. Use shapefile bundle."""
 		if self.options.shapefile:
 			return self.processShapefile(dpath)
-		logging.warning('Deprecated. Use shapefile bundle.')
-		linkspath = os.path.join(dpath, self.stl + '101.uf1.links')
-		zipspath = self.zipspath(dpath)
-		rawpath = os.path.join(dpath, 'raw')
-		ziplist = self.downloadTigerZips(dpath)
-		needlinks = False
-		if not os.path.isfile(linkspath):
-			self.logf('no %s', linkspath)
-			needlinks = True
-		if (not needlinks) and newerthan(makelinks.__file__, linkspath):
-			self.logf('%s > %s', makelinks.__file__, linkspath)
-			needlinks = True
-		if not needlinks:
-			for z in ziplist:
-				zp = os.path.join(zipspath, z)
-				if newerthan(zp, linkspath):
-					self.logf('%s > %s', zp, linkspath)
-					needlinks = True
-					break
-		if needlinks:
-			self.logf('%s/{%s} -> %s', zipspath, ','.join(ziplist), linkspath)
-			if self.options.dryrun:
-				return linkspath
-			start = time.time()
-			linker = makelinks.linker()
-			for z in ziplist:
-				zp = os.path.join(zipspath, z)
-				linker.processZipFilename(zp)
-			f = open(linkspath, 'wb')
-			linker.writeText(f)
-			f.close()
-			self.logf('makelinks took %f seconds', time.time() - start)
-		return linkspath
+                raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 	
 	def compileBinaryData(self, dpath=None):
 		if dpath is None:
@@ -1030,8 +947,7 @@ def main(argv):
 		raise Exception('data dir "%s" does not exist' % options.datadir)
 	
 	if not options.shapefile:
-		makefile_fragment_template = string.Template(
-			basic_make_rules_ + old_makepolys_rules_)
+                raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 	pg = ProcessGlobals(options)
 	runMaybeThreaded(args, pg, options)
 

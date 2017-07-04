@@ -23,7 +23,8 @@ import setupstatedata
 import shapefile
 from makePlaceBlockList import getTopNPlaceCodes, filterPlacesToUbidList
 
-TABBLOCK_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/'
+#TABBLOCK_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/'
+TABBLOCK_URL = 'https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/'
 FACES_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/FACES/'
 EDGES_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/EDGES/'
 COUNTY_URL = 'http://www2.census.gov/geo/tiger/TIGER2010/COUNTY/2010/'
