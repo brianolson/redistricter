@@ -25,7 +25,7 @@ def makeCommand(extra_args, bindir=None, enableassertions=False):
 
 def main(argv):
 	command = makeCommand(argv[1:], enableassertions=True)
-	print ' '.join(command)
+	print(' '.join(command))
 	p = subprocess.Popen(command, shell=False, stdin=None)
 	p.wait()
 

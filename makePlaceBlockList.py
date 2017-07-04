@@ -25,7 +25,7 @@ def readPlacePops(path):
 
 
 def getTopNPlaceCodes(placePopsPath, N=5):
-    return map(lambda x: x[1], readPlacePops(placePopsPath)[:N])
+    return [x[1] for x in readPlacePops(placePopsPath)[:N]]
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
         #args.place = map(lambda x: x[1], readPlacePops(args.placepops)[:5])
         args.place = getTopNPlaceCodes(args.placepops, args.n)
         #logger.debug('places: %r', args.place)
-    places = map(int, args.place)
+    places = list(map(int, args.place))
     logger.debug('places: %r', places)
 
     count = filterPlacesToUbidList(args.places, places, args.out)
@@ -72,7 +72,7 @@ def getPlacesUbids(placesPath, places):
     with gzip.open(placesPath, 'rb') as fin:
         header = fin.read(16)
         version, length = struct.unpack('=QQ', header)
-        for _ in xrange(length):
+        for _ in range(length):
             buf = fin.read(16)
             place_ubid, place = struct.unpack('=QQ', buf)
             if place in places:

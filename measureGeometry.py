@@ -67,9 +67,9 @@ class geom(object):
 	
 	def checkR2(self, raw):
 		r2 = record2(raw)
-		for i in xrange(r2.numRecords()):
+		for i in range(r2.numRecords()):
 			line = r2.record(i)
-			for x in xrange(0, 10):
+			for x in range(0, 10):
 				lonstart = 18 + (19 * x)
 				lonend = lonstart + 10
 				latend = lonend + 9
@@ -80,7 +80,7 @@ class geom(object):
 	
 	def checkR1(self, raw):
 		r1 = record1(raw)
-		for i in xrange(r1.numRecords()):
+		for i in range(r1.numRecords()):
 			lat = r1.FRLAT_int(i)
 			lon = r1.FRLONG_int(i)
 			self.checkpt(lat, lon)
@@ -90,7 +90,7 @@ class geom(object):
 	
 	def checkRA(self, raw):
 		ra = recordA(raw)
-		for i in xrange(ra.numRecords()):
+		for i in range(ra.numRecords()):
 			self.checkcd(ra.CDCU(i))
 	
 	def numCDs(self):

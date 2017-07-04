@@ -22,7 +22,7 @@ def _mystat_one(x):
 	try:
 		st = os.stat(x)
 		return False, st.st_mtime
-	except OSError, oe:
+	except OSError as oe:
 		return True, None
 
 
@@ -30,7 +30,7 @@ def get_oldest_mtime(b):
 	"""Return (any_missing, oldest_mtime)"""
 	any_missing = False
 	oldest_mtime = None
-	if isinstance(b, basestring):
+	if isinstance(b, str):
 		return _mystat_one(b)
 	try:
 		for x in b:
@@ -38,9 +38,9 @@ def get_oldest_mtime(b):
 				st = os.stat(x)
 				if (oldest_mtime is None) or (st.st_mtime < oldest_mtime):
 					oldest_mtime = st.st_mtime
-			except OSError, oe:
+			except OSError as oe:
 				any_missing = True
-	except TypeError, te:
+	except TypeError as te:
 		# x is not iterable
 		return _mystat_one(b)
 	return any_missing, oldest_mtime

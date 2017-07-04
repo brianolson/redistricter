@@ -17,7 +17,7 @@ http://www.clicketyclick.dk/databases/xbase/format/dbf.html#DBF_STRUCT
 __author__ = "Brian Olson"
 
 
-import StringIO
+import io
 import struct
 import sys
 import time
@@ -179,9 +179,9 @@ class Shapefile(object):
 
 	def parseFile(self, f):
 		self.header = ShapefileHeader(f.read(100))
-		for i in FILE_HEADER_.iterkeys():
-			print i, self.header.__getattr__(i)
-		print 'ShapeType: ' + SHAPE_TYPE_NAMES[self.header.shapeType]
+		for i in FILE_HEADER_.keys():
+			print(i, self.header.__getattr__(i))
+		print('ShapeType: ' + SHAPE_TYPE_NAMES[self.header.shapeType])
 		while True:
 			num_p = ReadRecord(f)
 			if num_p is None:
@@ -291,12 +291,12 @@ class CensusDBaseFile(object):
 		startpos = 0
 		year += 1900
 		self.specDate = '%04d-%02d-%02d' % (year, month, day)
-		print str(self)
+		print(str(self))
 		x = f.read(1)
 		while x != '\x0d':
 			xb = f.read(field_descriptor_b_size)
 			newfield = DBaseFieldDescriptor(rawbytes=x+xb)
-			print newfield
+			print(newfield)
 			newfield.start = startpos
 			startpos += newfield.length
 			newfield.end = startpos
@@ -328,9 +328,9 @@ def readDbf(fname):
 		pass
 	f.close()
 	stop = time.time()
-	print 'read %d records in %f seconds' % (
-	    dbf.recordCount, (stop - start))
-	print dbf.getRow(100)
+	print('read %d records in %f seconds' % (
+	    dbf.recordCount, (stop - start)))
+	print(dbf.getRow(100))
 	return dbf
 
 def readShapefile(fname):
@@ -339,17 +339,17 @@ def readShapefile(fname):
 	s = Shapefile()
 	s.parseFile(f)
 	stop = time.time()
-	print 'read %d records in %f seconds' % (s.count, (stop - start))
-	part_counts = part_count_hist_.keys()
+	print('read %d records in %f seconds' % (s.count, (stop - start)))
+	part_counts = list(part_count_hist_.keys())
 	part_counts.sort()
-	print 'part counts:'
+	print('part counts:')
 	for i in part_counts:
-		print '%d\t%d' % (i, part_count_hist_[i])
-	point_counts = point_count_hist_.keys()
+		print('%d\t%d' % (i, part_count_hist_[i]))
+	point_counts = list(point_count_hist_.keys())
 	point_counts.sort()
-	print 'point counts:'
+	print('point counts:')
 	for i in point_counts:
-		print '%d\t%d' % (i, point_count_hist_[i])
+		print('%d\t%d' % (i, point_count_hist_[i]))
 
 def readZipfile(fname):
 	zf = zipfile.ZipFile(fname)
@@ -360,11 +360,11 @@ def readZipfile(fname):
 	for arg in zf.namelist():
 		if arg.endswith('.dbf'):
 			dbf = CensusDBaseFile()
-			for rec in dbf.readFile(StringIO.StringIO(zf.read(arg))):
+			for rec in dbf.readFile(io.StringIO(zf.read(arg))):
 				dbrecords.append(rec)
 		elif arg.endswith('.shp'):
 			shp = Shapefile()
-			for rec in shp.parseFile(StringIO.StringIO(zf.read(arg))):
+			for rec in shp.parseFile(io.StringIO(zf.read(arg))):
 				polys.append(rec)
 	assert len(dbrecords) == len(polys)
 	return (dbf,shp,dbrecords,polys)
@@ -376,7 +376,7 @@ def main(argv):
 		elif arg.endswith('.dbf'):
 			readDbf(arg)
 		else:
-			print 'bogus arg "%s"' % arg
+			print('bogus arg "%s"' % arg)
 			sys.exit(1)
 
 

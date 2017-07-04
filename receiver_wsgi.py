@@ -4,7 +4,7 @@
 
 import cgi
 import cgitb
-from cStringIO import StringIO
+from io import StringIO
 import os
 import random
 import sys
@@ -102,7 +102,7 @@ class outTarfileSet(object):
 		ti = tarfile.TarInfo()
 		ti.name = name
 		ti.size = len(value)
-		ti.mode = 0444
+		ti.mode = 0o444
 		# TODO: set mtime from Last-Modified if present
 		ti.mtime = time.time()
 		ti.type = tarfile.REGTYPE
@@ -180,9 +180,8 @@ def application(environ, start_response):
 		outl.append('statlog_gz: ' + falseOrLen(statlog_gz) + '\n')
 		outl.append('binlog: ' + falseOrLen(binlog) + '\n')
 		outl.append('statsum: ' + falseOrLen(statsum) + '\n')
-		outl.append('keys: ' + repr(form.keys()) + '\n')
-		keys = form.keys()
-		keys.sort()
+		outl.append('keys: ' + repr(list(form.keys())) + '\n')
+		keys = sorted(form.keys())
 		for k in keys:
 			v = form[k].value
 			if len(v) > 50:
@@ -190,8 +189,7 @@ def application(environ, start_response):
 			else:
 				vs = repr(v)
 			outl.append('form[\'%s\'] = %s\n' % (k, vs))
-		keys = environ.keys()
-		keys.sort()
+		keys = sorted(environ.keys())
 		for k in keys:
 			outl.append('environ[\'%s\'] = %r\n' % (k, environ[k]))
 		#outl.append('os.environ: ' + repr(environ))

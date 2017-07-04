@@ -11,7 +11,7 @@ which can be fetched by 'setupstatedata.py --getextra=00001
 import measureGeometry
 import optparse
 import os
-import cPickle as pickle
+import pickle
 from setupstatedata import newerthan
 import string
 import subprocess
@@ -42,7 +42,7 @@ def make_cmd(stl, bindir, datadir, datafile, pbfile, numd, solution, htmlout):
 
 
 def get_html_table(cmd):
-	print cmd
+	print(cmd)
 	p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 	p.wait()
 	return p.stdout.read()

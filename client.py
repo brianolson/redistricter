@@ -9,26 +9,23 @@ Data files should be linked to with links matching
 '<a class="data" href="([^"]+)">([^<]+)</a>'
 """
 
-import anydbm
-import ConfigParser
+import dbm
+import configparser
 #import email.message  # doesn't really work for posting multipart/form-data
-import httplib
+import http.client
 import logging
 import os
 import random
 import re
-try:
-	import cStringIO as StringIO
-except:
-	import StringIO
+import io
 import random
 import sys
 import tarfile
 import time
 import traceback
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 from newerthan import newerthan
 
@@ -47,9 +44,9 @@ def yeildHrefFromData(raw):
 def makeUrlAbsolute(url, base):
 	"""Return absolute version of url, which may be relative to base."""
 	# (scheme, machine, path, query, tag)
-	pu = list(urlparse.urlsplit(url))
+	pu = list(urllib.parse.urlsplit(url))
 	puUpdated = False
-	pb = urlparse.urlsplit(base)
+	pb = urllib.parse.urlsplit(base)
 	# scheme: http/https
 	if not pu[0]:
 		pu[0] = pb[0]
@@ -68,21 +65,21 @@ def makeUrlAbsolute(url, base):
 		pu[2] = basepath + pu[2]
 		puUpdated = True
 	if puUpdated:
-		return urlparse.urlunsplit(pu)
+		return urllib.parse.urlunsplit(pu)
 	# no change, return as was
 	return url
 
 def getIfNewer(url, path, lastModifiedString):
 	try:
-		req = urllib2.Request(url, data=None, headers={'If-Modified-Since': lastModifiedString})
-		uf = urllib2.urlopen(req)
+		req = urllib.request.Request(url, data=None, headers={'If-Modified-Since': lastModifiedString})
+		uf = urllib.request.urlopen(req)
 		raw = uf.read()
 		info = uf.info()
 		fout = open(path, 'wb')
 		fout.write(raw)
 		fout.close()
 		return (info['last-modified'], raw)
-	except urllib2.HTTPError, he:
+	except urllib.error.HTTPError as he:
 		if he.code == 304:
 			return (lastModifiedString, None)
 		raise
@@ -115,11 +112,11 @@ class Client(object):
 		self.knownDatasets = {}
 		# 'last-modified' headers for downloaded files.
 		# Sent back in 'if-modified-since' GETs
-		self.lastmods = anydbm.open(os.path.join(self.options.datadir, '.lastmod.db'), 'c')
+		self.lastmods = dbm.open(os.path.join(self.options.datadir, '.lastmod.db'), 'c')
 		# Data to be parsed by runallstates.py runallstates.applyConfigOverrideLine
 		self.runoptsraw = None
 		
-		self.config = ConfigParser.SafeConfigParser(CLIENT_DEFAULTS_)
+		self.config = configparser.SafeConfigParser(CLIENT_DEFAULTS_)
 		self.config.add_section('config')
 		self.loadConfiguration()
 	
@@ -164,7 +161,7 @@ class Client(object):
 				if (cstat.st_mtime + self.config.getint('config', 'configCacheSeconds')) < time.time():
 					configCacheExpired = True
 					needsConfigFetch = True
-			except Exception, e:
+			except Exception as e:
 				logging.info('stat("%s") failed: %s\ntraceback:\n%s', cpath, e, traceback.format_exc())
 				configCacheMissing = True
 				needsConfigFetch = True
@@ -192,15 +189,15 @@ class Client(object):
 		lastModified = None
 		raw = None
 		try:
-			req = urllib2.Request(configurl, data=None, headers=GET_headers)
-			f = urllib2.urlopen(req)
+			req = urllib.request.Request(configurl, data=None, headers=GET_headers)
+			f = urllib.request.urlopen(req)
 			raw = f.read()
 			info = f.info()
 			assert (not hasattr(info, 'code')) or info.code == 200
 			lastModified = info['last-modified']
 			f.close()
 			didFetch = True
-		except urllib2.HTTPError, he:
+		except urllib.error.HTTPError as he:
 			if he.code == 304:
 				# Not modified. Load cached copy.
 				f = open(cpath, 'rb')
@@ -208,7 +205,7 @@ class Client(object):
 				f.close()
 			else:
 				raise
-		except urllib2.URLError, ue:
+		except urllib.error.URLError as ue:
 			logging.warn('URLError %r', ue)
 			if not configCacheMissing:
 				logging.warn('fetch "%s" failed (%s), using cache', configurl, ue)
@@ -235,7 +232,7 @@ class Client(object):
 			logging.debug('client config dataset "%s"', name)
 		m = CONFIG_BLOCK_.search(raw)
 		if m:
-			sf = StringIO.StringIO(m.group(1))
+			sf = io.StringIO(m.group(1))
 			logging.debug('got config block')
 			self.config.readfp(sf)
 		m = RUNOPTS_BLOCK_.search(raw)
@@ -255,8 +252,8 @@ class Client(object):
 			GET_headers['If-Modified-Since'] = lastmod
 		try:
 			logging.info('fetch "%s" to "%s"', remoteurl, localpath)
-			req = urllib2.Request(remoteurl, data=None, headers=GET_headers)
-			uf = urllib2.urlopen(req)
+			req = urllib.request.Request(remoteurl, data=None, headers=GET_headers)
+			uf = urllib.request.urlopen(req)
 			raw = uf.read()
 			info = uf.info()
 			assert (not hasattr(info, 'code')) or info.code == 200
@@ -268,13 +265,13 @@ class Client(object):
 				self.lastmods[dataset] = lastModified
 				if hasattr(self.lastmods, 'sync'):
 					self.lastmods.sync()
-		except urllib2.HTTPError, he:
+		except urllib.error.HTTPError as he:
 			if he.code == 304:
 				# Not modified.
 				pass
 			else:
 				raise
-		except urllib2.URLError, ue:
+		except urllib.error.URLError as ue:
 			# if the file exists, just go with it
 			if os.path.exists(localpath):
 				return localpath
@@ -317,13 +314,13 @@ class Client(object):
 		if archivename in self.knownDatasets:
 			return self.unpackArchive(archivename, self.knownDatasets[archivename])
 		else:
-			sys.stderr.write('dataset "%s" not known on server (known=%r)\n' % (archivename, self.knownDatasets.keys()))
+			sys.stderr.write('dataset "%s" not known on server (known=%r)\n' % (archivename, list(self.knownDatasets.keys())))
 		return None
 	
 	def randomDatasetName(self):
 		"""Called to pick a random dataset known to the server to download and work on."""
 		# TODO: find out what the server would prefer us to work on.
-		return random.choice(self.knownDatasets.keys())
+		return random.choice(list(self.knownDatasets.keys()))
 	
 	def sendResultDir(self, resultdir, vars=None, sendAnything=False):
 		# It kinda sucks that I have to reimplement MIME composition here
@@ -358,10 +355,10 @@ class Client(object):
 		partMsg(outer, os.path.join(resultdir, 'binlog'), 'application/octet-stream', 'binlog')
 		partMsg(outer, os.path.join(resultdir, 'statsum'), 'text/plain', 'statsum')
 		if vars:
-			outer.append(MyMimePart(name='vars', mtype='text/plain', value=urllib.urlencode(vars)))
+			outer.append(MyMimePart(name='vars', mtype='text/plain', value=urllib.parse.urlencode(vars)))
 		boundary = '===============%d%d==' % (
 			rand.randint(1000000000,2000000000), rand.randint(1000000000,2000000000))
-		body = StringIO.StringIO()
+		body = io.StringIO()
 		ddboundary = '--' + boundary
 		ddbcrlf = ddboundary + '\r\n'
 		for part in outer:
@@ -373,20 +370,20 @@ class Client(object):
 		GET_headers = self.defaultGETHeaders()
 		GET_headers['Content-Type'] = 'multipart/form-data; charset="utf-8"; boundary=' + boundary
 		GET_headers['Content-Length'] = str(len(sbody))
-		print 'sending to ' + submiturl
-		req = urllib2.Request(submiturl, data=sbody, headers=GET_headers)
+		print('sending to ' + submiturl)
+		req = urllib.request.Request(submiturl, data=sbody, headers=GET_headers)
 		try:
-			uf = urllib2.urlopen(req)
+			uf = urllib.request.urlopen(req)
 			retval = uf.read()
-			print retval
+			print(retval)
 			# mark dir as sent so we don't re-send it
 			if retval.startswith('ok'):
 				tf = open(sentmarker, 'w')
 				tf.write(time.ctime() + '\n')
 				tf.close()
-		except Exception, e:
-			print 'send result failed for %s due to %r' % (resultdir, e)
-		print 'Done'
+		except Exception as e:
+			print('send result failed for %s due to %r' % (resultdir, e))
+		print('Done')
 
 
 class MyMimePart(object):
@@ -431,7 +428,7 @@ def main():
 	if options.send:
 		c.sendResultDir(options.send, {'localpath':options.send})
 		return
-	for arch, url in c.knownDatasets.iteritems():
+	for arch, url in c.knownDatasets.items():
 		c.unpackArchive(arch, url)
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ import struct
 import subprocess
 import sys
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
@@ -38,7 +38,7 @@ def cachedIndexNeedsFetch(path):
 		if (time.time() - st.st_mtime) < INDEX_CACHE_SECONDS:
 			# exists and is new enough
 			return False
-	except OSError, e:
+	except OSError as e:
 		# Doesn't exist, ok, we'll fetch it.
 		pass
 	return True
@@ -66,7 +66,7 @@ class CensusTigerBundle(object):
 		return 'CensusTigerBundle(%s, %s, %s)' % (self.path, self.state_fips, self.county)
 	
 	def __unicode__(self):
-		return u'CensusTigerBundle(%s, %s, %s)' % (self.path, self.state_fips, self.county)
+		return 'CensusTigerBundle(%s, %s, %s)' % (self.path, self.state_fips, self.county)
 
 
 def getCensusTigerSetList(datadir, url, cachename, regex):
@@ -74,7 +74,7 @@ def getCensusTigerSetList(datadir, url, cachename, regex):
 	needs_fetch = cachedIndexNeedsFetch(cache_path)
 	if needs_fetch:
 		logging.debug('%s -> %s', url, cache_path)
-		urllib.urlretrieve(url, cache_path)
+		urllib.request.urlretrieve(url, cache_path)
 	else:
 		logging.debug('%s is new enough', cache_path)
 	tigerSet = set()
@@ -176,7 +176,7 @@ class Crawler(object):
 				if not os.path.exists(dpath):
 					logging.info('%s -> %s', url + it.path, dpath)
 					if not self.options.dryrun:
-						urllib.urlretrieve(url + it.path, dpath)
+						urllib.request.urlretrieve(url + it.path, dpath)
 					self.fetchCount += 1
 				else:
 					self.alreadyCount += 1
@@ -213,7 +213,7 @@ class Crawler(object):
 			return
 		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_places.txt
 		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips:02d}_{stl}_places.txt'.format(fips=fips, stl=stl)
-		urllib.urlretrieve(url, fpath)
+		urllib.request.urlretrieve(url, fpath)
 		self.fetchCount += 1
 
 	def getCountyNames(self, stu):
@@ -227,7 +227,7 @@ class Crawler(object):
 			return
 		# http://www2.census.gov/geo/docs/reference/codes/files/st39_oh_cou.txt
 		url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips:02d}_{stl}_cou.txt'.format(fips=fips, stl=stl)
-		urllib.urlretrieve(url, fpath)
+		urllib.request.urlretrieve(url, fpath)
 		self.fetchCount += 1
 	
 	def _fetchAllSet(self, tset, url):
@@ -243,7 +243,7 @@ class Crawler(object):
 			if not os.path.exists(dpath):
 				logging.info('%s -> %s', url + it.path, dpath)
 				if not self.options.dryrun:
-					urllib.urlretrieve(url + it.path, dpath)
+					urllib.request.urlretrieve(url + it.path, dpath)
 				self.fetchCount += 1
 			else:
 				self.alreadyCount += 1
@@ -335,7 +335,7 @@ class GeoBlocksPlaces(object):
 			self.placePops[place] = self.placePops.get(place,0) + pop
 
 	def writePlaceUbidMap(self, out):
-		for place, placelist in self.places.iteritems():
+		for place, placelist in self.places.items():
 			out.write(place)
 			out.write('\x1d') # group sep
 			out.write('\x1c'.join(placelist)) # field sep
@@ -346,9 +346,9 @@ class GeoBlocksPlaces(object):
 		"""Write (ubid uint64, place uint64) file.
 		Header (version=1 uint64, num records uint64)"""
 		they = []
-		for place, placelist in self.places.iteritems():
+		for place, placelist in self.places.items():
 			for place_ubid in placelist:
-				they.append( (long(place_ubid), long(place)) )
+				they.append( (int(place_ubid), int(place)) )
 		# version, number of records
 		out.write(struct.pack('=QQ', 1, len(they)))
 		# sort so that result can be loaded into a block of memory and binary searched on ubid
@@ -360,7 +360,7 @@ class GeoBlocksPlaces(object):
 
 	def writePlacePops(self, out, placeNamesPath):
 		placeNames = readPlaceNames(placeNamesPath)
-		bypop = [(pop,place) for place,pop in self.placePops.iteritems()]
+		bypop = [(pop,place) for place,pop in self.placePops.items()]
 		bypop.sort(reverse=True)
 		writer = csv.writer(out)
 		for pop, place in bypop:
@@ -392,7 +392,7 @@ class StateData(setupstatedata.StateData):
 			plzipurl = PL_ZIP_TEMPLATE % (self.name.replace(' ', '_'), self.stl)
 			self.logf('%s -> %s', plzipurl, plzip)
 			if not self.options.dryrun:
-				urllib.urlretrieve(plzipurl, plzip)
+				urllib.request.urlretrieve(plzipurl, plzip)
 		assert os.path.exists(plzip), "missing %s" % (plzip,)
 		needsbuild = newerthan(plzip, geoblockspath)
 		needsbuild = needsbuild or newerthan(plzip, placespath)
@@ -453,12 +453,12 @@ class StateData(setupstatedata.StateData):
 			with open(placelistPath, 'w') as fout:
 				fout.write(' '.join(places))
 				fout.write('\n')
-			return map(int, places)
+			return list(map(int, places))
 
 		with open(placelistPath, 'r') as fin:
 			line = next(fin)
 			line = line.strip()
-			return map(int, line.split(' '))
+			return list(map(int, line.split(' ')))
 			
 	def buildHighlightBlocklist(self):
 		places = self.placelist()

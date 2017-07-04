@@ -14,7 +14,7 @@ from states import codeForState
 
 def run(datadir='data', stulist=None, dryrun=False, newerthan=None):
 	congress_total = 0
-	f = open(legpath_, 'rb')
+	f = open(legpath_, 'rt')
 	fc = csv.reader(f)
 	for row in fc:
 		stu = codeForState(row[0])
@@ -29,10 +29,10 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None):
 		outname = os.path.join(configdir, name_part)
 		if newerthan and not newerthan(legpath_, outname):
 			if dryrun:
-				print '"%s" up to date' % (outname)
+				print('"%s" up to date' % (outname))
 			continue
 		if dryrun:
-			print 'would write "%s"' % (outname)
+			print('would write "%s"' % (outname))
 		else:
 			out = open(outname, 'w')
 			out.write("""datadir: $DATA/%s\ncommon: -d %s\n""" % (stu, row[2]))
@@ -43,4 +43,4 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None):
 
 if __name__ == '__main__':
 	congress_total = run(dryrun=True)
-	print 'congress_total == %s, should be 435' % congress_total
+	print('congress_total == %s, should be 435' % congress_total)

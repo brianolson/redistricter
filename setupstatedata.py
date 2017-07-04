@@ -19,7 +19,7 @@ import glob
 import logging
 import optparse
 import os
-import cPickle as pickle
+import pickle
 import re
 import string
 import subprocess
@@ -28,7 +28,7 @@ import tarfile
 import threading
 import time
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
@@ -131,7 +131,7 @@ class ProcessGlobals(object):
 			if self.options.dryrun:
 				logging.info('should fetch "%s"', sf1url)
 				return ''
-			uf = urllib.urlopen(sf1url)
+			uf = urllib.request.urlopen(sf1url)
 			sf1data = uf.read()
 			uf.close()
 			fo = open(sf1ipath, 'w')
@@ -165,7 +165,7 @@ class ProcessGlobals(object):
 					subdir = m.group(1)
 					surl = sf1url + subdir
 					logging.info('surl=%s', surl)
-					uf = urllib.urlopen(surl)
+					uf = urllib.request.urlopen(surl)
 					ud = uf.read()
 					uf.close()
 					gum = geouf1pat.search(ud)
@@ -222,7 +222,7 @@ class ProcessGlobals(object):
 			logging.info('would fetch "%s"', tigerbase)
 			raw = ''
 		else:
-			uf = urllib.urlopen(tigerbase)
+			uf = urllib.request.urlopen(tigerbase)
 			raw = uf.read()
 			uf.close()
 		if self.options.shapefile:
@@ -252,7 +252,7 @@ def checkZipFile(path):
 		nl = zf.namelist()
 		zf.close()
 		return bool(nl)
-	except zipfile.BadZipfile, e:
+	except zipfile.BadZipfile as e:
 		return False
 
 
@@ -295,7 +295,7 @@ class StateData(object):
 			self.logf('would fetch "%s" -> "%s"', url, localpath)
 			return localpath
 		logging.info('fetch "%s" -> "%s"', url, localpath)
-		(filename, info) = urllib.urlretrieve(url, localpath)
+		(filename, info) = urllib.request.urlretrieve(url, localpath)
 		logging.debug('%s info: %s', url, info)
 		if (contenttype is not None) and (info['content-type'] != contenttype):
 			logging.error('%s came back with wrong content-type %s, wanted %s. if content is OK:\nmv %s_bad %s\nOR skip with:touch %s\n',
@@ -355,7 +355,7 @@ class StateData(object):
 					cdvals[x] = 1
 			self.logf(
 				'found congressional districts from %dth congress: %s',
-				congress_number, repr(cdvals.keys()))
+				congress_number, repr(list(cdvals.keys())))
 			cnDsz = os.path.join(dpath, '%s%d.dsz' % (self.stu, congress_number))
 			currentSolution = open(cnDsz, 'wb')
 			currentSolution.write(solution.makeDsz(cds))
@@ -412,7 +412,7 @@ class StateData(object):
 		if not os.path.isfile(indexpath):
 			self.mkdir(zipspath, self.options)
 			turl = self.getTigerBase(dpath)
-			uf = urllib.urlopen(turl)
+			uf = urllib.request.urlopen(turl)
 			raw = uf.read()
 			uf.close()
 			if self.options.dryrun:
@@ -665,7 +665,7 @@ class StateData(object):
 		"""Deprecated. Use shapefile bundle."""
 		if self.options.shapefile:
 			return self.processShapefile(dpath)
-                raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
+		raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 	
 	def compileBinaryData(self, dpath=None):
 		if dpath is None:
@@ -911,10 +911,10 @@ class SyncrhonizedIteratorWrapper(object):
 	def __iter__(self):
 		return self
 	
-	def next(self):
+	def __next__(self):
 		self.lock.acquire()
 		try:
-			out = self.it.next()
+			out = next(self.it)
 		except:
 			self.lock.release()
 			raise
@@ -958,7 +958,7 @@ def runMaybeThreaded(stulist, pg, options):
 	else:
 		tlist = []
 		statelist = SyncrhonizedIteratorWrapper(stulist)
-		for x in xrange(0, options.threads):
+		for x in range(0, options.threads):
 			threadLabel = 't%d' % x
 			tlist.append(threading.Thread(target=runloop, args=(statelist, pg, options), name=threadLabel))
 		for x in tlist:

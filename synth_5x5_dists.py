@@ -53,9 +53,9 @@ maps_sources = [map1, map2, map3, map4, map5, map6]
 maps_source_splitter = re.compile(r'[ \n]+')
 
 def compile_map(mapstr):
-    return map(int, maps_source_splitter.split(mapstr))
+    return list(map(int, maps_source_splitter.split(mapstr)))
 
-maps = map(compile_map, maps_sources)
+maps = list(map(compile_map, maps_sources))
 
 def elem_count(they):
     out = {}
@@ -69,7 +69,7 @@ def count(pop, map):
     for party, dist in zip(pop, map):
         distcount[dist] = distcount.get(dist, []) + [party]
     winners = {}
-    for dist, distp in distcount.iteritems():
+    for dist, distp in distcount.items():
         ec = elem_count(distp)
         #print('{}\t{}'.format(dist, ec))
         wincount, winner = ec[0]
@@ -140,15 +140,15 @@ def svg(popstr, out=None, lines=True, map=None):
         hy = dy / 2.0
         parts.append('<g stroke="#ffffff" stroke-width="9">')
         parts.append('<rect x="{}" y="{}" width="{}" height="{}" fill-opacity="0"/>'.format(minx - hx, miny - hy, dx * 5, dy * 5))
-        for x in xrange(1, 5):
-            for y in xrange(0, 5):
+        for x in range(1, 5):
+            for y in range(0, 5):
                 if not map_show_vertical_line(map, x, y):
                     continue
                 cx = minx + (dx * x)
                 cy = miny + (dy * y)
                 parts.append('<line x1="{}" x2="{}" y1="{}" y2="{}" id="lsv{}_{}"/>'.format(cx-hx, cx-hx, cy-hy, cy+hy, x, y))
                 ls += 1
-        for y in xrange(1, 5):
+        for y in range(1, 5):
             for x in range(0, 5):
                 if not map_show_horizontal_line(map, x, y):
                     continue

@@ -51,9 +51,9 @@ EXAMPLE_RUNOPTS_ = """NH_House:disable
 def dictDictToConfig(sections):
 	"""Take a dict() of dict() and return a string parsable by ConfigParser."""
 	chunks = []
-	for secname, secpairs in sections.iteritems():
+	for secname, secpairs in sections.items():
 		chunks.append('[%s]\n' % secname)
-		for k, v in secpairs.iteritems():
+		for k, v in secpairs.items():
 			chunks.append('%s:%s\n' % (k, v))
 	return ''.join(chunks)
 
@@ -105,7 +105,7 @@ def makeHTMLBodyForDirectory(dirpath='.', datasets=''):
 			fout = open(ccpath, 'w')
 			fout.write(EXAMPLE_CONFIG_)
 			fout.close()
-		except Exception, e:
+		except Exception as e:
 			sys.stderr.write(
 				'tried to write basic client config to "%s" but failed: %s' % (ccpath, e))
 	else:
@@ -117,7 +117,7 @@ def makeHTMLBodyForDirectory(dirpath='.', datasets=''):
 			fout = open(ropath, 'w')
 			fout.write(EXAMPLE_RUNOPTS_)
 			fout.close()
-		except Exception, e:
+		except Exception as e:
 			sys.stderr.write(
 				'tried to write basic run options to "%s" but failed: %s' % (ropath, e))
 	else:
@@ -163,6 +163,6 @@ if __name__ == '__main__':
 			datasets = datasetListForDirectory(options.dir)
 		out.write(makeHTMLBodyForDirectory(options.dir, datasets))
 		out.close()
-		print 'wrote: %s' % outpath
+		print('wrote: %s' % outpath)
 	else:
-		print 'no update needed'
+		print('no update needed')

@@ -33,9 +33,9 @@ def main(argv):
         if stattext and len(stattext):
           badlines.append(stattext)
           if badcount > 4:
-            print "\n".join(badlines)
+            print("\n".join(badlines))
             return
-  print ("total %f seconds (%f days) from %d runs (%d failed parse)"
+  print("total %f seconds (%f days) from %d runs (%d failed parse)"
           % (total, total / (3600.0 * 24.0), count, badcount))
 
 if __name__ == '__main__':

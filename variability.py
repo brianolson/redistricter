@@ -29,8 +29,8 @@ class ExponentialHistogram(object):
 		# N buckets means N-1 split points
 		kmax = max / min
 		factor = math.pow(kmax, 1.0 / buckets)
-		self.splits = [min + (min * (factor**k)) for k in xrange(1,buckets)]
-		self.buckets = [0 for x in xrange(0,buckets)]
+		self.splits = [min + (min * (factor**k)) for k in range(1,buckets)]
+		self.buckets = [0 for x in range(0,buckets)]
 	
 	def add(self, value):
 		i = 0
@@ -48,7 +48,7 @@ class ExponentialHistogram(object):
 	def __str__(self):
 		lines = []
 		lines.append('       - %6g: %d' % (self.splits[0], self.buckets[0]))
-		for i in xrange(1, len(self.splits)):
+		for i in range(1, len(self.splits)):
 			lines.append('%6g - %6g: %d' % (self.splits[i-1], self.splits[i], self.buckets[i]))
 		lines.append('%6g -       : %d' % (self.splits[-1], self.buckets[-1]))
 		return '\n'.join(lines)
@@ -98,7 +98,7 @@ def gatherValues(path='.'):
 				f = gzip.open(fpath, 'rb')
 				processLines(f)
 				f.close()
-	print 'found %d kmpp values, %d spread values' % (len(kmppValues), len(spreadValues))
+	print('found %d kmpp values, %d spread values' % (len(kmppValues), len(spreadValues)))
 	
 
 def main():
@@ -106,17 +106,17 @@ def main():
 	gatherValues('.')
 	minKmppv = min(kmppValues)
 	maxKmppv = max(kmppValues)
-	print '%f < kmpp-v < %f' % (minKmppv, maxKmppv)
+	print('%f < kmpp-v < %f' % (minKmppv, maxKmppv))
 	kmppvhist = ExponentialHistogram(minKmppv, maxKmppv, 20)
 	kmppvhist.addAll(kmppValues)
-	print kmppvhist
+	print(kmppvhist)
 	
 	minSpreadv = min(spreadValues)
 	maxSpreadv = max(spreadValues)
-	print '%f < spread-v < %f' % (minSpreadv, maxSpreadv)
+	print('%f < spread-v < %f' % (minSpreadv, maxSpreadv))
 	spreadvhist = ExponentialHistogram(minSpreadv, maxSpreadv, 20)
 	spreadvhist.addAll(spreadValues)
-	print kmppvhist
+	print(kmppvhist)
 
 
 if __name__ == '__main__':

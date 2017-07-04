@@ -16,11 +16,11 @@ def processOneCsv(fin, outfiles, prefix='c'):
 	reader = csv.reader(fin)
 	for row in reader:
 		if len(outfiles) == 0:
-			for i in xrange(len(row)):
+			for i in range(len(row)):
 				outname = prefix + str(i) + '.gz'
 				outfiles.append(gzip.open(outname, 'w'))
 		assert len(row) == len(outfiles)
-		for i in xrange(len(row)):
+		for i in range(len(row)):
 			outfiles[i].write(row[i] + '\n')
 
 
@@ -60,7 +60,7 @@ def main(argv):
 			zf = zipfile.ZipFile(arg, 'r')
 			for name in zf.namelist():
 				if name.endswith('.uf1'):
-					print arg + '/' + name
+					print(arg + '/' + name)
 					raw = zf.read(name)
 					processOneCsv(
 					    raw.splitlines(),

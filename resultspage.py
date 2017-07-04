@@ -192,7 +192,7 @@ def main(argv):
 	navall.write(navlist(None, stulist, options.rooturl))
 	navall.close()
 	if options.putlist:
-		print "rsync -a -v --rsh=ssh --files-from=%s . bolson\@bolson.org:/www/dist/n/" % options.putlist;
+		print("rsync -a -v --rsh=ssh --files-from=%s . bolson\@bolson.org:/www/dist/n/" % options.putlist);
 
 if __name__ == '__main__':
 	main(sys.argv)

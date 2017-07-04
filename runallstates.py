@@ -40,7 +40,7 @@ __author__ = "Brian Olson"
 # For now, there's the web interface, and it may stay that way.
 # There should probably be a doubleclickable Mac runner.
 
-import cPickle as pickle
+import pickle
 import datetime
 import glob
 import logging
@@ -263,7 +263,7 @@ def parseArgs(x):
 
 def dictToArgList(x):
 	out = []
-	for arg, value in x.iteritems():
+	for arg, value in x.items():
 		out.append(arg)
 		if value is not None:
 			out.append(value)
@@ -347,10 +347,10 @@ class configuration(object):
 	
 	def setRootDatadir(self, root):
 		"""Replace $DATA with root in all args."""
-		for arg, value in self.args.iteritems():
+		for arg, value in self.args.items():
 			if value:
 				self.args[arg] = value.replace('$DATA', root)
-		for arg, value in self.drendargs.iteritems():
+		for arg, value in self.drendargs.items():
 			if value:
 				self.drendargs[arg] = value.replace('$DATA', root)
 		if self.datadir:
@@ -435,7 +435,7 @@ class configuration(object):
 		config line formats.
 		empty lines and lines starting with '#' are ignored.
 		"""
-		if isinstance(x, basestring):
+		if isinstance(x, str):
 			self.path = x
 			self.readtime = time.time()
 			x = open(x, 'r')
@@ -675,7 +675,7 @@ class runallstates(object):
 					srpead = None
 				x = manybest.slog("", float(a[1]), spread, "", "")
 				bests[stu] = x
-			except Exception, e:
+			except Exception as e:
 				sys.stderr.write("readBestLog error: %s\n" % e)
 		rbestlog.close()
 		return bests
@@ -684,7 +684,7 @@ class runallstates(object):
 		"""Open a bestlog. Read in state, then append."""
 		try:
 			self.bests = self.readBestLog(path)
-		except Exception, e:
+		except Exception as e:
 			sys.stderr.write("readBestLog failed: %s\n" % e)
 		if self.bests is None:
 			self.bests = {}
@@ -782,7 +782,7 @@ class runallstates(object):
 			(f,s) = options.failureRate.split('/')
 			self.errorRate = int(f)
 			self.errorSample = self.errorRate + int(s)
-			self.runSuccessHistory = [1 for x in xrange(self.errorSample)]
+			self.runSuccessHistory = [1 for x in range(self.errorSample)]
 	
 	def logCompletion(self, succeede):
 		"""Log a result, return if we should quit."""
@@ -931,7 +931,7 @@ class runallstates(object):
 		(cname, cline) = line.split(':', 1)
 		cname = cname.strip()
 		if cname == 'all':
-			for cfg in self.config.itervalues():
+			for cfg in self.config.values():
 				cfg.applyConfigLine(cline)
 			return
 		if cname in self.config:
@@ -943,7 +943,7 @@ class runallstates(object):
 			return []
 		try:
 			st = os.stat(self.config_override_path)
-		except OSError, e:
+		except OSError as e:
 			# doesn't exist, whatever.
 			return []
 		if self.config_override_lastload:
@@ -1006,7 +1006,7 @@ class runallstates(object):
 		start_timestamp = timestamp()
 		try:
 			ok = self.runstate_inner(stu, start_timestamp, label)
-		except Exception, e:
+		except Exception as e:
 			ok = False
 			e_str = 'runstate_inner(%s,) failed with: %s' % (stu, traceback.format_exc())
 			sys.stderr.write(e_str + '\n')
@@ -1245,8 +1245,7 @@ class runallstates(object):
 				'<h2>options</h2><p style="font-family:monospace;">%s</p>' %
 				(htmlEscape(repr(self.options)),))
 			handler.wfile.write('<h2>configurations</h2><table>')
-			configkeys = self.config.keys()
-			configkeys.sort()
+			configkeys = sorted(self.config.keys())
 			for cname in configkeys:
 				c = self.config[cname]
 				handler.wfile.write('<tr><td>%s</td><td>%s</td></tr>\n' % (cname, c))
@@ -1312,11 +1311,10 @@ class runallstates(object):
 			sys.stderr.write('error: no configurations\n')
 			sys.exit(1)
 		if self.verbose:
-			for c in self.config.itervalues():
+			for c in self.config.values():
 				sys.stdout.write('{}\n'.format(c))
 		
-		self.states = self.config.keys()
-		self.states.sort()
+		self.states = sorted(self.config.keys())
 		sys.stdout.write(" ".join(self.states) + '\n')
 		
 		# run in a different order each time in case we do partial runs, spread the work
@@ -1353,7 +1351,7 @@ class runallstates(object):
 			sys.stdout.write("running {:d} threads\n".format(self.numthreads))
 			self.lock = threading.Lock()
 			threads = []
-			for x in xrange(0, self.numthreads):
+			for x in range(0, self.numthreads):
 				threadLabel = 't%d' % x
 				threads.append(RunThread(self, threadLabel))
 				#threads.append(threading.Thread(target=runallstates.runthread, args=(self,threadLabel), name=threadLabel))

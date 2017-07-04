@@ -50,8 +50,8 @@ def main():
 		arcname = os.path.join(outprefix, arcname)
 		tf.add(fname, arcname=arcname)
 	tf.close()
-	print 'wrote:'
-	print outname
+	print('wrote:')
+	print(outname)
 
 if __name__ == '__main__':
 	main()

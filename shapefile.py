@@ -40,11 +40,11 @@ def betterShapefileZip(a, b, prefer00=False):
 	ma = BUNDLE_NAME_RE_.match(a)
 	mb = BUNDLE_NAME_RE_.match(b)
 	if ma is None:
-		raise Exception, '"%s" is not understood bundle name' % a
+		raise Exception('"%s" is not understood bundle name' % a)
 	if mb is None:
-		raise Exception, '"%s" is not understood bundle name' % b
+		raise Exception('"%s" is not understood bundle name' % b)
 	if ma.group(2) != mb.group(2):
-		raise Exception, 'trying to compare different states, %s and %s' % (ma.group(2), mb.group(2))
+		raise Exception('trying to compare different states, %s and %s' % (ma.group(2), mb.group(2)))
 	# newer year is better
 	if int(ma.group(1)) > int(mb.group(1)):
 		return True
@@ -80,7 +80,7 @@ def processDatadir(datadir, stu, bindir=None, dryrun=True):
 	if args1:
 		command = makeCommand(args1, bindir)
 		if dryrun:
-			print ' '.join(command)
+			print(' '.join(command))
 		else:
 			subprocess.Popen(command, shell=False, stdin=None)
 	if not os.path.exists(mppbsm_name):
@@ -90,7 +90,7 @@ def processDatadir(datadir, stu, bindir=None, dryrun=True):
 def main(argv):
 	command = makeCommand(argv[1:], enableassertions=True)
 	#command = makeCommand(argv[1:], enableassertions=False)
-	print ' '.join(command)
+	print(' '.join(command))
 	p = subprocess.Popen(command, shell=False, stdin=None)
 	p.wait()
 

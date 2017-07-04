@@ -117,7 +117,7 @@ class manybest(object):
 			elif arg == "-bad":
 				self.badkmpp = argv.pop(0)
 			elif (arg == "-h") or (arg == "--help"):
-				print usage
+				print(usage)
 				sys.exit(0)
 			elif arg == "-rmbad":
 				self.rmbad = True
@@ -372,7 +372,7 @@ class manybest(object):
 
 		badlist = self.getBadlist(they)
 		if badlist:
-			print "badlist: " + " ".join(badlist)
+			print("badlist: " + " ".join(badlist))
 			if self.rmbad:
 				self.rmBadlistStepdata(badlist)
 			if self.mvbad:

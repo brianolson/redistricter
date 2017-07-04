@@ -22,5 +22,5 @@ def render(templateName, contextDict):
 	context = django.template.Context(contextDict)
 	renderout = tt.render(context)
 	## TODO: unicode instead of str, better wsgi containers fix this?
-	ustr = unicode(renderout)
+	ustr = str(renderout)
 	return ustr.encode('utf-8')

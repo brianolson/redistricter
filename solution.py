@@ -35,7 +35,7 @@ class solution(object):
 		for c in self.map:
 			if c != -1:
 				cds[c] = 1
-		print cds
+		print(cds)
 		return len(cds)
 
 def makeDsz(intlist):
@@ -54,7 +54,7 @@ def main(argv):
 	for x in argv[1:]:
 		s = solution()
 		s.read_dsz(x)
-		print '%s\t%d' % (x, s.countDistricts())
+		print('%s\t%d' % (x, s.countDistricts()))
 
 if __name__ == '__main__':
 	main(sys.argv)

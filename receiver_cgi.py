@@ -121,19 +121,17 @@ def main(input, environ, out=printOut):
 	if debug:
 		if html:
 			out('<pre>\n')
-		out('keys: ' + repr(form.keys()) + '\n')
+		out('keys: ' + repr(list(form.keys())) + '\n')
 		out('eventid: ' + eventid + '\n')
 		out('solution: ' + falseOrLen(solution) + '\n')
 		out('user: ' + falseOrLen(user) + '\n')
 		out('statlog_gz: ' + falseOrLen(statlog_gz) + '\n')
 		out('binlog: ' + falseOrLen(binlog) + '\n')
 		out('statsum: ' + falseOrLen(statsum) + '\n')
-		keys = form.keys()
-		keys.sort()
+		keys = sorted(form.keys())
 		for k in keys:
 			out('form[\'%s\'] = %s\n' % (k, form[k]))
-		keys = environ.keys()
-		keys.sort()
+		keys = sorted(environ.keys())
 		for k in keys:
 			out('environ[\'%s\'] = %s\n' % (k, environ[k]))
 		#out('os.environ: ' + repr(environ))

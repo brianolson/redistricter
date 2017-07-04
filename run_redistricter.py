@@ -70,8 +70,8 @@ def main():
 
 	proc = subprocess.Popen(cmd, cwd=workdir, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	
-	print 'status should be available on'
-	print 'http://localhost:%d/' % (options.port,)
+	print('status should be available on')
+	print('http://localhost:%d/' % (options.port,))
 	
 	log = None
 	if options.logname:

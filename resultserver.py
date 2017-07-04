@@ -5,12 +5,12 @@
 __author__ = "Brian Olson"
 
 
-import BaseHTTPServer
+import http.server
 import base64
 import cgi
 import os
 import re
-import SimpleHTTPServer
+import http.server
 import threading
 import traceback
 import time
@@ -250,7 +250,7 @@ if (window.redistricter_statlog['nodist']) {
 </script>""")
 
 
-class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 	def __init__(self, request, client_address, server, extensions=None, actions=None):
 		self.extensions = extensions
 		self.dirExtra = None
@@ -270,12 +270,12 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			'.bz2': 'application/bzip2',
 #			'': '',
 })
-		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+		http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 	
 	def GET_dir(self, path, fpath):
 		they = os.listdir(fpath)
 		if 'index.html' in they:
-			SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+			http.server.SimpleHTTPRequestHandler.do_GET(self)
 			return
 		they.sort()  # TODO: case-insensitive sort? dirs-first?
 		self.send_response(200)
@@ -301,7 +301,7 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(self.dirExtra)
 		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
 		if path == '':
-			for action in self.actions.itervalues():
+			for action in self.actions.values():
 				self.wfile.write(action.html)
 			self.wfile.write(htmlRootDirListing('', fpath, they, self.query.get('count') != None))
 		else:
@@ -358,7 +358,7 @@ class ResultServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		if os.path.isdir(fpath):
 			self.GET_dir(path, fpath)
 			return
-		SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+		http.server.SimpleHTTPRequestHandler.do_GET(self)
 	
 	def do_POST(self):
 		pathQuery = self.path.split('?', 1)
@@ -426,7 +426,7 @@ class RuntimeExtensibleHandler(object):
 
 def runServer(port=8080):
 	reh = RuntimeExtensibleHandler(None)
-	httpd = BaseHTTPServer.HTTPServer( ('',port), reh )
+	httpd = http.server.HTTPServer( ('',port), reh )
 	httpd.serve_forever()
 
 
@@ -434,7 +434,7 @@ def startServer(port=8080, exitIfLastThread=True, extensions=None, actions=None)
 	"""extensions should be callable and take an argument of
 	SimpleHTTPServer.SimpleHTTPRequestHandler"""
 	reh = RuntimeExtensibleHandler(extensions, actions)
-	httpd = BaseHTTPServer.HTTPServer( ('',port), reh )
+	httpd = http.server.HTTPServer( ('',port), reh )
 	t = threading.Thread(target=httpd.serve_forever, args=())
 	t.setDaemon(exitIfLastThread)
 	t.start()

@@ -34,8 +34,8 @@ def main():
   if anyError:
     sys.exit(1)
 
-  for stu, sourceCsvFname in stDistFiles.iteritems():
-    print stu
+  for stu, sourceCsvFname in stDistFiles.items():
+    print(stu)
     stl = stu.lower()
 
     # common datadir inputs

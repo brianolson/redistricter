@@ -17,7 +17,7 @@ import subprocess
 import tarfile
 import time
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 #import djangotemplates
@@ -240,7 +240,7 @@ def csvToSimpleCsv(csvpath, outpath):
 	"""Convert CSV with district 'number' that could be '00A' '01A' 'MISC' to simple numeric district numbers."""
 	fin = open(csvpath, 'rb')
 	reader = csv.reader(fin)
-	row = reader.next()
+	row = next(reader)
 	# expect header row either:
 	# BLOCKID,CD113
 	# BLOCKID,DISTRICT,NAME
@@ -434,7 +434,7 @@ class SubmissionAnalyzer(object):
 		if (not config) and ('localpath' in vars):
 			remotepath = vars['path'][0]
 			logging.debug('remotepath=%s', remotepath)
-			for stu in self.config.iterkeys():
+			for stu in self.config.keys():
 				if stu in remotepath:
 					config = stu
 					break
@@ -474,7 +474,7 @@ class SubmissionAnalyzer(object):
 				ok = self.setFromPath(fpath, innerpath)
 				setAny = setAny or ok
 				logging.info('added %s', innerpath)
-			except Exception, e:
+			except Exception as e:
 				traceback.print_exc()
 				logging.warn('failed to process "%s": %r', fpath, e)
 				if not self.options.keepgoing:
@@ -513,7 +513,7 @@ class SubmissionAnalyzer(object):
 	
 	def getBestConfigs(self):
 		configs = self.getConfigCounts()
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			self.getBestSolutionInfo(cname, data)
 		return configs
 	
@@ -521,7 +521,7 @@ class SubmissionAnalyzer(object):
 		out = open(outpath, 'w')
 		bestconfigs = self.getBestConfigs()
 		counts = []
-		for cname, data in bestconfigs.iteritems():
+		for cname, data in bestconfigs.items():
 			counts.append(data['count'])
 		totalruncount = sum(counts)
 		mincount = min(counts)
@@ -529,8 +529,7 @@ class SubmissionAnalyzer(object):
 		maxweight = 10.0
 		def rweight(count):
 			return maxweight - ((maxweight - 1.0) * (count - mincount) / (maxcount - mincount))
-		cnames = self.config.keys()
-		cnames.sort()
+		cnames = sorted(self.config.keys())
 		for cname in cnames:
 			sendAnything = False
 			if cname not in bestconfigs:
@@ -565,7 +564,7 @@ class SubmissionAnalyzer(object):
 	
 	def newestWinner(self, configs):
 		newestconfig = None
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			if not data.get('kmpp'):
 				continue
 			if (newestconfig is None) or (data['id'] > newestconfig['id']):
@@ -586,8 +585,7 @@ class SubmissionAnalyzer(object):
 		out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
 
 		firstNoSolution = True
-		clist = configs.keys()
-		clist.sort()
+		clist = sorted(configs.keys())
 		for cname in clist:
 			data = configs[cname]
 			if not data.get('kmpp'):
@@ -643,7 +641,7 @@ class SubmissionAnalyzer(object):
 		if (current is None) and self._statenav_all:
 			return self._statenav_all
 		statevars = {}
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			if not data.get('kmpp'):
 				continue
 			(st, variation) = cname.split('_', 1)
@@ -689,7 +687,7 @@ class SubmissionAnalyzer(object):
 			logging.error('no name for postal code %s', stu)
 			return
 		variations = []
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			if not data.get('kmpp'):
 				continue
 			(st, variation) = cname.split('_', 1)
@@ -723,8 +721,8 @@ class SubmissionAnalyzer(object):
 		ihtmlpath = os.path.join(sdir, 'index.html')
 		#st_template = self.getDirTemplate()
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, stu) + '/'
-		cgipageabsurl = urllib.quote_plus(pageabsurl)
-		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
+		cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
+		cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
 		
 		if not os.path.isdir(sdir):
 			os.makedirs(sdir)
@@ -889,7 +887,7 @@ class SubmissionAnalyzer(object):
 					oz = zipfile.ZipFile(solutionzip, 'w', zipfile.ZIP_DEFLATED)
 					oz.writestr(zcsvname, solutioncsv)
 					oz.close()
-				except Exception, e:
+				except Exception as e:
 					logging.error('failed %r -> %r: %s', solutioncsvgz, solutionzip, traceback.format_exc())
 					if os.path.exists(solutionzip):
 						try:
@@ -943,8 +941,8 @@ class SubmissionAnalyzer(object):
 			extrahtml = open(extrapath, 'r').read()
 		statename = configToName(cname)
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, cname) + '/'
-		cgipageabsurl = urllib.quote_plus(pageabsurl)
-		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
+		cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
+		cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
 		actualHtmlData = None
 		if actualHtmlPath:
 			ahin = open(actualHtmlPath, 'rb')
@@ -1070,7 +1068,7 @@ class SubmissionAnalyzer(object):
 		if configs is None:
 			configs = self.getBestConfigs()
 		stutodo = set()
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			(stu, rest) = cname.split('_', 1)
 			self.buildReportDirForConfig(configs, cname, data, stu)
 			stutodo.add(stu)
@@ -1081,8 +1079,8 @@ class SubmissionAnalyzer(object):
 		newestconfig = self.newestWinner(configs)['config']
 		newestname = configToName(newestconfig)
 		pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
-		cgipageabsurl = urllib.quote_plus(pageabsurl)
-		cgiimageurl = urllib.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
+		cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
+		cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
 		
 		index_html_path = os.path.join(outdir, 'index.html')
 		index_html = open(index_html_path, 'w')
@@ -1106,7 +1104,7 @@ class SubmissionAnalyzer(object):
 	def availableConfigs(self, configs):
 		# return list [ (nice name, path), ...] for js
 		out = []
-		for cname, data in configs.iteritems():
+		for cname, data in configs.items():
 			if not data.get('kmpp'):
 				continue
 			stu, var = cname.split('_', 1)

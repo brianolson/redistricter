@@ -10,7 +10,7 @@ class FFCounter(object):
 
   def _genCounters(self, cols):
     self._counters = []
-    for i in xrange(0, cols):
+    for i in range(0, cols):
       self._counters.append(dict())
 
   def countFeildFreq(self, fin, fields=None):
@@ -38,8 +38,7 @@ class FFCounter(object):
       if not d:
         continue
       outl.append('%s:' % (i,))
-      dk = d.keys()
-      dk.sort()
+      dk = sorted(d.keys())
       for k in dk:
         dv = d[k]
         outl.append('\t%s: %s' % (k, dv))
@@ -67,6 +66,6 @@ if __name__ == '__main__':
   end = time.time()
   sys.stderr.write('%s records in %s seconds\n' % (c.reccount, end - start))
 
-  print c
+  print(c)
 
 

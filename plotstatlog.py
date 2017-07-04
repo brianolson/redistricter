@@ -127,9 +127,7 @@ plot '-' title 'no dist'
 				out.write("%0.15g\n" % xy[1])
 
 	def xCommaYComma(self, xytuples, minGeneration):
-		return ','.join(['%g,%0.15g' % (xy[0], xy[1]) for xy in filter(
-			lambda x: (minGeneration is None) or (x[0] > minGeneration),
-			xytuples)])
+		return ','.join(['%g,%0.15g' % (xy[0], xy[1]) for xy in [x for x in xytuples if (minGeneration is None) or (x[0] > minGeneration)]])
 		
 
 	def writeJson(self, out):
