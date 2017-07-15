@@ -91,6 +91,9 @@ public:
 		assert(index < ((uint32_t)numPoints));
 		return recnos[index];
 	}
+
+	// uint32_t[numPoints] {0:None, else place id}
+	uint32_t* place;
 	
 	GeoData();
 	int open( const char* inputname );

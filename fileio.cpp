@@ -379,6 +379,8 @@ http://www.census.gov/prod/cen2010/pl94-171.pdf
 18,25	logical record number
 27,29	state (fips)
 29,32	county
+50,52   place code, city/town: ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
+45,50   place id (\d\d\d\d\d)
 54,60	cenus tract
 60,61	block group
 61,65	block
@@ -416,6 +418,7 @@ int PlGeo::load() {
 	ubids = new UST[numPoints];
 	recno_map = new RecnoNode[numPoints];
 	recnos = new uint32_t[numPoints];
+	place = new uint32_t[numPoints];
 	for ( i = 0; i < numPoints; i++ ) {
 		char* line = reinterpret_cast<char*>(
 			reinterpret_cast<uintptr_t>(data) + (i * sizeof_pl_line));
@@ -493,6 +496,21 @@ int PlGeo::load() {
 		recno_map[i].recno = strtoul( buf, NULL, 10 );
 		recno_map[i].index = i;
 		recnos[i] = recno_map[i].recno;
+
+		// place
+		copyPlGeoField( buf, data, i, 50, 52 ); // place code
+		if (buf[0] == 'C' && (buf[1] == '1' || buf[1] == '2' || buf[1] == '5' || buf[1] == '6' || buf[1] == '7' || buf[1] == '8')) {
+			copyPlGeoField( buf, data, i, 45, 50 ); // place
+			char* endp;
+			place[i] = strtoul( buf, &endp, 10 );
+			if (endp == buf) {
+				place[i] = 0;
+			} else {
+				assert(place[i] != 0);
+			}
+		} else {
+			place[i] = 0;
+		}
 	}
 
 	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );

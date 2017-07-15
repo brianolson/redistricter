@@ -10,7 +10,7 @@ message RedistricterData {
 	repeated double fpoints = 2;  // lon,lat pairs, degrees
 	repeated int32 population = 3;
 	repeated uint64 area = 4;  // square meters
-	repeated uint64 ubids = 5;  // universal block identifier (my internal number)
+	repeated uint64 ubids = 5;  // universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs
 	
@@ -25,6 +25,9 @@ message RedistricterData {
 		// It was probably imported from Sf1 .uf1 files based on logrecno.
 		repeated int32 odata = 11;
 	}
+
+    // per-block place id (originally 5 digit non-zero decimal int)
+    repeated uint32 place = 12;
 }
 
 // For each block, a list of pixels (x,y coords) to draw.

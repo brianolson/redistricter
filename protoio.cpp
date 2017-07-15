@@ -6,6 +6,7 @@
 #include <google/protobuf/io/gzip_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 using google::protobuf::int32;
+using google::protobuf::uint32;
 using google::protobuf::int64;
 using google::protobuf::uint64;
 
@@ -75,6 +76,12 @@ int writeToProtoFile(Solver* sov, const char* filename) {
 	for (unsigned int i = 0; i < sov->numEdges; ++i) {
 		edges->Add(sov->edgeData[i*2]);
 		edges->Add(sov->edgeData[i*2 + 1]);
+	}
+	if (gd->place != NULL) {
+		google::protobuf::RepeatedField<uint32>* place = rd.mutable_place();
+		for (int i = 0; i < gd->numPoints; ++i) {
+			place->Add(gd->place[i]);
+		}
 	}
 	
 	bool ok = true;
@@ -203,6 +210,13 @@ int readFromProtoFile(Solver* sov, const char* filename) {
 			gd->recno_map[i].index = i;
 		}
 		qsort( gd->recno_map, gd->numPoints, sizeof(Uf1::RecnoNode), recnoSortF );
+	}
+	if (rd.place_size() > 0) {
+		assert(rd.place_size() == gd->numPoints);
+		gd->place = new uint32_t[gd->numPoints];
+		for (int i = 0; i < gd->numPoints; ++i) {
+			gd->place[i] = rd.place(i);
+		}
 	}
 	sov->numEdges = rd.edges_size() / 2;
 	sov->edgeData = new int32_t[rd.edges_size()];
