@@ -6,7 +6,7 @@
 #include <vector>
 
 /*
- * file of bigendian (uint64,uint64) mapping ubid to place number.
+ * file of bigendian (uint64,uint64) mapping ubid to place number. built by crawl2010.py GeoBlocksPlaces
  */
 class PlaceMap {
     public:

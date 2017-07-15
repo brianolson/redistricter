@@ -102,7 +102,6 @@ class AnalyzeApp {
     FILE* csvout;
     FILE* htmlout;
 
-    PlaceMap* places;
     PlaceNames* placenames;
 };
 
@@ -304,24 +303,19 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 
 	const char* textOutName = NULL;
 	bool notext = false;
-	//FILE* textout = stdout;
 
 	const char* csvOutName = NULL;
 	bool nocsv = false;
-	//FILE* csvout = NULL;
 
 	const char* htmlOutName = NULL;
 	bool nohtml = false;
-	//FILE* htmlout = NULL;
 
-	//int dsort = -1;
 	const char* exportPath = NULL;
 	
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
 
-        const char* placemapPath = NULL;
-        const char* placenamePath = NULL;
+	const char* placenamePath = NULL;
 
 	nargc = 1;
 	sov.districtSetFactory = District2SetFactory;
@@ -341,7 +335,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    BoolArg("distcol", &distcol);
 	    StringArg("export", &exportPath);
 
-	    StringArg("places", &placemapPath);
 	    StringArg("place-names", &placenamePath);
 
 	    // default:
@@ -360,10 +353,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		return 1;
 	}
 
-        if (placemapPath != NULL) {
-            places = PlaceMap::load(placemapPath);
-        }
-        if ((places != NULL) && (placenamePath != NULL)) {
+        if ((sov.gd->place != NULL) && (placenamePath != NULL)) {
             placenames = PlaceNames::load(placenamePath);
         }
 
@@ -428,7 +418,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 			char* statstr = new char[10000];
 			sov.getDistrictStats(statstr, 10000);
 			fputs(statstr, stdout);
-			delete statstr;
+			delete [] statstr;
 			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
 			fprintf(stdout, "pop FH-ssd: %g\n", ssd);
 		}
@@ -442,7 +432,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
             }
 	}
 
-        if (places != NULL) {
+        if (sov.gd->place != NULL) {
             placeSplits();
         }
 
@@ -473,9 +463,8 @@ int AnalyzeApp::placeSplits() {
     dfptype districtsForPlaces;
     std::map<uint64_t, uint64_t> placePopulations;
     for (int i = 0; i < sov.gd->numPoints; ++i) {
-        uint64_t ubid = sov.gd->ubids[i].ubid;
-        uint64_t place = places->placeForUbid(ubid);
-        if (place == PlaceMap::INVALID_PLACE) {
+        uint64_t place = sov.gd->place[i];
+        if (place == PlaceMap::INVALID_PLACE || place == 0) {
             continue;
         }
         POPTYPE d = sov.winner[i];
