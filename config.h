@@ -29,9 +29,4 @@
 #endif
 #endif
 
-// see GeoData.h for the usage of the next batch of defines
-#ifndef COUNT_DISTRICTS
-#define COUNT_DISTRICTS 1
-#endif
-
 #endif /* CONFIG_H */

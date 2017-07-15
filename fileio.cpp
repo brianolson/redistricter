@@ -556,10 +556,8 @@ int Uf1::load() {
 	totalpop = 0;
 	maxpop = 0;
 	ubids = new UST[numPoints];
-#if COUNT_DISTRICTS
 	char* dsts[MAX_DISTRICTS];
 	congressionalDistricts = 0;
-#endif
 	if (true) {
 		recno_map = new RecnoNode[numPoints];
 		recnos = new uint32_t[numPoints];
@@ -613,9 +611,7 @@ int Uf1::load() {
 			recno_map[i].index = i;
 			recnos[i] = recno_map[i].recno;
 		}
-#if COUNT_DISTRICTS
 		congressionalDistricts = countADistrict(data, i, dsts, congressionalDistricts);
-#endif
 	}
 	qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
 	for ( i = 0; i < 10; i++ ) {
@@ -700,11 +696,7 @@ GeoData* openPlGeo( const char* inputname ) {
 }
 
 int GeoData::numDistricts() {
-#if COUNT_DISTRICTS
 	return congressionalDistricts;
-#else
-	return -1;
-#endif
 }
 
 uint32_t GeoData::indexOfUbid( uint64_t u ) {
@@ -799,9 +791,5 @@ int Uf1::countDistricts() {
 }
 
 int Uf1::numDistricts() {
-#if COUNT_DISTRICTS
 	return congressionalDistricts;
-#else
-	return countDistricts();
-#endif
 }

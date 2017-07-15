@@ -312,7 +312,10 @@ def readPlaceNames(placeNamesPath):
 
 class GeoBlocksPlaces(object):
 	"""
-	Reads 
+	Receives lines from {stl}2010.pl.zip/{stl}geo2010.pl filtered at '750' summary level.
+        Gather place:block-ubid mappings.
+        Write to binary or text format.
+        Also collect place:population summary; write to csv.
 	"""
 	ACTIVE_INCORPORATED_PLACE_CODES = ('C1', 'C2', 'C5', 'C6', 'C7', 'C8')
 	def __init__(self):
@@ -320,7 +323,9 @@ class GeoBlocksPlaces(object):
 		self.placePops = {}
 
 	def pl2010line(self, line):
-		"accumulate a line of a PL94-171 (2010) file"
+		"""accumulate a line of a PL94-171 (2010) file
+                should have been filtered to summary level 750 which has
+                one record for each block"""
 		placecode = line[50:52]
 		if placecode in self.ACTIVE_INCORPORATED_PLACE_CODES:
 			place = line[45:50]
@@ -335,6 +340,7 @@ class GeoBlocksPlaces(object):
 			self.placePops[place] = self.placePops.get(place,0) + pop
 
 	def writePlaceUbidMap(self, out):
+                # TODO: unused
 		for place, placelist in self.places.items():
 			out.write(place)
 			out.write('\x1d') # group sep
@@ -383,7 +389,10 @@ class StateData(setupstatedata.StateData):
 		return out
 	
 	def getGeoBlocks(self):
-		"""From xx2010.pl.zip get block level geo file."""
+		"""From xx2010.pl.zip get block level geo file.
+                -> geoblocks filtered file of per-block data
+                -> geoblocks.places binary ubid:block map
+                -> placespops.csv summary placeid:pop csv"""
 		plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
 		geoblockspath = os.path.join(self.dpath, 'geoblocks')
 		placespath = geoblockspath + '.places'
@@ -443,6 +452,8 @@ class StateData(setupstatedata.StateData):
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, self.dpath,'" "'.join(cmd)))
 	
 	def placelist(self):
+                """placespops.csv -> highlightPlaces.txt short list of place ids
+                """
 		placelistPath = os.path.join(self.dpath, 'highlightPlaces.txt')
 		if not os.path.exists(placelistPath):
 			placePopPath = os.path.join(self.dpath, 'placespops.csv')
@@ -461,6 +472,7 @@ class StateData(setupstatedata.StateData):
 			return list(map(int, line.split(' ')))
 			
 	def buildHighlightBlocklist(self):
+                """highlightPlaces.txt + geoblocks.places -> highlight.ubidz binary ubid list"""
 		places = self.placelist()
 		placesPath = os.path.join(self.dpath, 'geoblocks.places')
 		highlightBlocklistPath = os.path.join(self.dpath, 'highlight.ubidz')

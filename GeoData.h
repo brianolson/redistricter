@@ -17,9 +17,7 @@ public:
 	size_t mmapsize;
 
 	int32_t numPoints;
-#if COUNT_DISTRICTS
 	int congressionalDistricts;
-#endif
 
 	// (x,y) meters or (lon,lat) integer microdegrees
 	int32_t* pos;

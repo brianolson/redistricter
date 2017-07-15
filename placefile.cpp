@@ -1,5 +1,5 @@
 /*
- * place map: file of bigendian (uint64,uint64) mapping ubid to place number.
+ * place map: file of bigendian (uint64,uint64) mapping ubid to place number. built by crawl2010.py GeoBlocksPlaces
  * place names: '|' separated text lines, e.g.
  * OH|39|00464|Adena village|Incorporated Place|A|Harrison County, Jefferson County^M
  * {state}|{state fips number}|{place number}|{place name}|{place type text}|{place type code}|{place counties, comma separated}\r\n
