@@ -5,6 +5,7 @@
 #include "GrabIntermediateStorage.h"
 #include "Solver.h"
 #include "GeoData.h"
+#include "District2.h"
 
 GrabIntermediateStorage::GrabIntermediateStorage(Solver* sovIn)
 	: sov(sovIn),

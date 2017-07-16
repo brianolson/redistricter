@@ -3,14 +3,16 @@
 
 #include <stdio.h>
 #include "LinearInterpolate.h"
+#include "DistrictSet.h"
+#include "AbstractDistrict.h"
 
 class Adjacency;
-class DistrictSet;
 class GeoData;
 class GrabIntermediateStorage;
 class Node;
 template<class T> class LastNMinMax;
 class BinaryStatLogger;
+class SolverStats;
 
 // TODO separate application state and solution state!
 class Solver {
@@ -169,11 +171,7 @@ public:
 	void zoomAll();
 	void centerOnPoint( int index );
 	int main( int argc, const char** argv );
-		
-	inline int setDist( POPTYPE d, int i ) {
-		return (*getDistricts())[(d)].add( this, (i), (d) );
-	}
-	
+
 	int debugDistrictNumber;
 
 	double maxSpreadFraction;

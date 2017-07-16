@@ -242,7 +242,8 @@ void District2Set::initNewRandomStart() {
 				nii = n->neighbors[ni];
 				if ( winner[nii] == NODISTRICT ) {
 					//notdone = true;
-					sov->setDist( d, nii );
+					dists[d].add(sov, nii, d);
+					//sov->setDist( d, nii );
 					break;
 				}
 			}
@@ -992,7 +993,8 @@ int District2::grab( District2Set* d2set, POPTYPE d ) {
 				return err;
 			}
 		}
-		err = sov->setDist( d, mi );
+		//err = sov->setDist( d, mi );
+		err = dists[d].add(sov, mi, d);
 		if ( err < 0 ) {
 			return err;
 		}

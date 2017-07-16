@@ -104,7 +104,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     java.util.List<java.lang.Long> getUbidsList();
@@ -112,7 +112,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     int getUbidsCount();
@@ -120,7 +120,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     long getUbids(int index);
@@ -207,6 +207,31 @@ public final class Redata {
      * <code>repeated group Other = 9 { ... }</code>
      */
     int getOtherCount();
+
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    java.util.List<java.lang.Integer> getPlaceList();
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    int getPlaceCount();
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    int getPlace(int index);
   }
   /**
    * Protobuf type {@code RedistricterData}
@@ -423,6 +448,27 @@ public final class Redata {
                   extensionRegistry));
               break;
             }
+            case 96: {
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+                place_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              place_.add(input.readUInt32());
+              break;
+            }
+            case 98: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
+                place_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                place_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -454,6 +500,9 @@ public final class Redata {
         }
         if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
           other_ = java.util.Collections.unmodifiableList(other_);
+        }
+        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+          place_ = java.util.Collections.unmodifiableList(place_);
         }
         try {
           unknownFieldsCodedOutput.flush();
@@ -1318,7 +1367,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     public java.util.List<java.lang.Long>
@@ -1329,7 +1378,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     public int getUbidsCount() {
@@ -1339,7 +1388,7 @@ public final class Redata {
      * <code>repeated uint64 ubids = 5;</code>
      *
      * <pre>
-     * universal block identifier (my internal number)
+     * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
      */
     public long getUbids(int index) {
@@ -1474,6 +1523,40 @@ public final class Redata {
       return other_.get(index);
     }
 
+    public static final int PLACE_FIELD_NUMBER = 12;
+    private java.util.List<java.lang.Integer> place_;
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    public java.util.List<java.lang.Integer>
+        getPlaceList() {
+      return place_;
+    }
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    public int getPlaceCount() {
+      return place_.size();
+    }
+    /**
+     * <code>repeated uint32 place = 12;</code>
+     *
+     * <pre>
+     * per-block place id (originally 5 digit non-zero decimal int)
+     * </pre>
+     */
+    public int getPlace(int index) {
+      return place_.get(index);
+    }
+
     private void initFields() {
       intpoints_ = java.util.Collections.emptyList();
       fpoints_ = java.util.Collections.emptyList();
@@ -1484,6 +1567,7 @@ public final class Redata {
       edges_ = java.util.Collections.emptyList();
       numDistricts_ = 0;
       other_ = java.util.Collections.emptyList();
+      place_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1530,6 +1614,9 @@ public final class Redata {
       }
       for (int i = 0; i < other_.size(); i++) {
         output.writeGroup(9, other_.get(i));
+      }
+      for (int i = 0; i < place_.size(); i++) {
+        output.writeUInt32(12, place_.get(i));
       }
       output.writeRawBytes(unknownFields);
     }
@@ -1607,6 +1694,15 @@ public final class Redata {
       for (int i = 0; i < other_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeGroupSize(9, other_.get(i));
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < place_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(place_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getPlaceList().size();
       }
       size += unknownFields.size();
       memoizedSerializedSize = size;
@@ -1724,6 +1820,8 @@ public final class Redata {
         bitField0_ = (bitField0_ & ~0x00000080);
         other_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000100);
+        place_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -1791,6 +1889,11 @@ public final class Redata {
           bitField0_ = (bitField0_ & ~0x00000100);
         }
         result.other_ = other_;
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          place_ = java.util.Collections.unmodifiableList(place_);
+          bitField0_ = (bitField0_ & ~0x00000200);
+        }
+        result.place_ = place_;
         result.bitField0_ = to_bitField0_;
         return result;
       }
@@ -1877,6 +1980,16 @@ public final class Redata {
           } else {
             ensureOtherIsMutable();
             other_.addAll(other.other_);
+          }
+          
+        }
+        if (!other.place_.isEmpty()) {
+          if (place_.isEmpty()) {
+            place_ = other.place_;
+            bitField0_ = (bitField0_ & ~0x00000200);
+          } else {
+            ensurePlaceIsMutable();
+            place_.addAll(other.place_);
           }
           
         }
@@ -2273,7 +2386,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public java.util.List<java.lang.Long>
@@ -2284,7 +2397,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public int getUbidsCount() {
@@ -2294,7 +2407,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public long getUbids(int index) {
@@ -2304,7 +2417,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public Builder setUbids(
@@ -2318,7 +2431,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public Builder addUbids(long value) {
@@ -2331,7 +2444,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public Builder addAllUbids(
@@ -2346,7 +2459,7 @@ public final class Redata {
        * <code>repeated uint64 ubids = 5;</code>
        *
        * <pre>
-       * universal block identifier (my internal number)
+       * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
        */
       public Builder clearUbids() {
@@ -2718,6 +2831,100 @@ public final class Redata {
         ensureOtherIsMutable();
         other_.remove(index);
 
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> place_ = java.util.Collections.emptyList();
+      private void ensurePlaceIsMutable() {
+        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
+          place_ = new java.util.ArrayList<java.lang.Integer>(place_);
+          bitField0_ |= 0x00000200;
+         }
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public java.util.List<java.lang.Integer>
+          getPlaceList() {
+        return java.util.Collections.unmodifiableList(place_);
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public int getPlaceCount() {
+        return place_.size();
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public int getPlace(int index) {
+        return place_.get(index);
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public Builder setPlace(
+          int index, int value) {
+        ensurePlaceIsMutable();
+        place_.set(index, value);
+        
+        return this;
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public Builder addPlace(int value) {
+        ensurePlaceIsMutable();
+        place_.add(value);
+        
+        return this;
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public Builder addAllPlace(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensurePlaceIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, place_);
+        
+        return this;
+      }
+      /**
+       * <code>repeated uint32 place = 12;</code>
+       *
+       * <pre>
+       * per-block place id (originally 5 digit non-zero decimal int)
+       * </pre>
+       */
+      public Builder clearPlace() {
+        place_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000200);
+        
         return this;
       }
 
