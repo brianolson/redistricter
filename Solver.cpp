@@ -21,6 +21,8 @@
 
 #include "arghandler.h"
 #include "BinaryStatLogger.h"
+#include "CountyCityDistricter.h"
+#include "District2.h"
 #include "Solver.h"
 #include "LinearInterpolate.h"
 #include "GrabIntermediateStorage.h"
@@ -54,6 +56,9 @@ DistrictSet* NearestNeighborDistrictSetFactory(Solver* sov) {
 DistrictSet* District2SetFactory(Solver* sov) {
 	return new District2Set(sov);
 }
+DistrictSet* CountyCityDistrictFactory(Solver* sov) {
+	return new CountyCityDistricterSet(sov);
+}
 
 struct DistrictSetFactory {
 	DistrictSet* (*factory)(Solver*);
@@ -61,8 +66,9 @@ struct DistrictSetFactory {
 };
 
 DistrictSetFactory districtSetFactories[] = {
-{ District2SetFactory, "Grab Solver" },
+	{ District2SetFactory, "Grab Solver" },
 	{ NearestNeighborDistrictSetFactory, "Nearest Neighbor" },
+	{ CountyCityDistrictFactory, "County-City Solver" },
 	{ NULL, NULL },
 };
 
@@ -1040,6 +1046,7 @@ int Solver::handleArgs( int argc, const char** argv ) {
 	const char* popRatioFactorPointString = NULL;
 	bool nearestNeighbor = false;
 	bool d2mode = false;
+	bool ccmode = false;
 	while (argi < argc) {
 		StringArg("i", &inputname);  // deprecated
 		StringArg("U", &uf1InputName);  // only for linkfixup
@@ -1071,6 +1078,7 @@ int Solver::handleArgs( int argc, const char** argv ) {
 		StringArg("popRatioFactorPoints", &popRatioFactorPointString);  // tuning for d2 solver
 		BoolArg("nearest-neighbor", &nearestNeighbor);
 		BoolArg("d2", &d2mode);
+		BoolArg("cc", &ccmode);
 		DoubleArg("maxSpreadFraction", &maxSpreadFraction);
 		DoubleArg("maxSpreadAbsolute", &maxSpreadAbsolute);
 		IntArg("giveupSteps", &giveupSteps);
@@ -1134,6 +1142,9 @@ int Solver::handleArgs( int argc, const char** argv ) {
 	}
 	if (d2mode) {
 		districtSetFactory = District2SetFactory;
+	}
+	if (ccmode) {
+		districtSetFactory = CountyCityDistrictFactory;
 	}
 	if (giveupSteps > 0) {
 		recentKmpp = new LastNMinMax<double>(giveupSteps);
