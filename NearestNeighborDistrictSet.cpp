@@ -37,9 +37,6 @@ public:
 		distx = xin;
 		disty = yin;
 	}
-	virtual int add( Solver* sov, int n, POPTYPE dist ) { assert(0); return 0; };
-	virtual int remove( Solver* sov, int n, POPTYPE dist,
-		double x, double y, double npop ) { assert(0); return 0; };
 	virtual double centerX() { return distx; };
 	virtual double centerY() { return disty; };
 };
