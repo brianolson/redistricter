@@ -1,7 +1,7 @@
 DEPENDENCIES:
-	C++ compiler
-	Java 2.5+
-	Python 2.4+
+	C++ compiler (GCC or CLANG)
+	Java 2.7+
+	Python 3+
 	png library
 	zlib compression library
 	google protocol buffers
@@ -14,7 +14,7 @@ There's no ./configure because autoconf is hard. :-(
 Instead, Makefile includes makeopts/`uname`.pre early on to set variables. See the Darwin and Linux examples.
 
 So, if you're lucky, all you have to do is:
-	make
+	make all jall
 
 There is no `make install` because this is a tool for an experimenter. The binaries just live here where they're compiled.
 
@@ -27,17 +27,21 @@ makeopts/Darwin.pre
 RUNNING:
 
 Make a directory, which I traditionally call "data", to hold the Census data.
-./setupstatedata.py ga
+
+mkdir data
+./crawl2010.py ct
 
 The 'runallstates.py' script can be used to repeatedly run one or more states.
+
 ./runallstates.py --port=8080 ga
 
 The --port argument is optional, but runs a handy HTTP server on that port (e.g. http://localhost:8080/ ) which nicely displays status and results.
 
-Lots of other options are available on both ./setupstatedata.py and ./runallstates.py and there is --help available for them.
+Lots of other options are available on both ./crawl2010.py and ./runallstates.py and there is --help available for them.
 
 ---
 * Setting up protobuf
+# Requires protobuf 2.6.1; has not been updated for protobuf 3.0
 # Here's the cheat sheet for building this quickly.
 # On Mac, one of these (bash syntax):
 CXXFLAGS='-arch ppc -arch ppc64 -arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
