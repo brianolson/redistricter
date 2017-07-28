@@ -1,13 +1,13 @@
 #include "CountyCityDistricter.h"
 
 #include <assert.h>
+#include <unistd.h>
 
 CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
 	: DistrictSet(sovIn) {
 }
 
 CountyCityDistricterSet::~CountyCityDistricterSet() {
-	DistrictSet::~DistrictSet();
 }
 
 void CountyCityDistricterSet::alloc(int size) {
@@ -68,7 +68,6 @@ CountyCityDistrict::CountyCityDistrict()
 	: AbstractDistrict() {
 }
 CountyCityDistrict::~CountyCityDistrict() {
-	AbstractDistrict::~AbstractDistrict();
 }
 int CountyCityDistrict::add( Solver* sov, int n, POPTYPE dist ) {
 	// TODO: unused?
