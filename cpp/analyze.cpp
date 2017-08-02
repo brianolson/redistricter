@@ -353,11 +353,12 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		return 1;
 	}
 
-        if ((sov.gd->place != NULL) && (placenamePath != NULL)) {
-            placenames = PlaceNames::load(placenamePath);
-        }
+	sov.load();
+	if ((sov.gd->place != NULL) && (placenamePath != NULL)) {
+		placenames = PlaceNames::load(placenamePath);
+	}
 
-        // Open various output files so they can be appended to while looping through things to compare.
+	// Open various output files so they can be appended to while looping through things to compare.
 
 	if (notext) {
 	    textout = NULL;
@@ -404,7 +405,6 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    }
 	}
 
-	sov.load();
 	sov.initNodes();
 	sov.allocSolution();
 	if (sov.hasSolutionToLoad()) {
