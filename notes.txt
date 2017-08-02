@@ -408,3 +408,20 @@ Vary districts from 2-15.
 Try 'clumpy' non-uniform distributions. (e.g. the urban self-packing group)
 
 What's the chance of a MA 9-0 outcome given the MA statewide party registration ratio?
+
+
+Google hilbert curve quad tree sphere spatial indexing
+https://code.google.com/archive/p/s2-geometry-library/source/default/source
+https://github.com/golang/geo
+https://docs.google.com/presentation/d/1Hl4KapfAENAOf4gv-pSngKwvS_jwNVHRPZTTDzXXn6Q/view#slide=id.i148
+http://blog.christianperone.com/2015/08/googles-s2-geometry-on-the-sphere-cells-and-hilbert-curve/
+
+
+2017-07-12 12:25:48 EDT (Wednesday, July 12 12:25:48 PM)
+
+https://www.vox.com/the-big-idea/2017/7/11/15949750/research-gerrymandering-wisconsin-supreme-court-partisanship
+
+wasted vote: either above what was necessary to win, or what was cast for a loser
+efficiency gap: (party a wasted) - (party b wasted) / (all votes)
+
+https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2457468

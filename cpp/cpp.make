@@ -41,20 +41,20 @@ D2OBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(D2SOURCES)))
 cppall:	districter2 linkfixup drend analyze dumpBinLog
 
 districter2:	${D2OBJS}
-	$(CXX) -static ${CXXFLAGS} $(D2OBJS) $(LDFLAGS) -o districter2
+	$(CXX)  ${CXXFLAGS} $(D2OBJS) $(LDFLAGS) -o districter2
 
 LFUSRCS:=${CORESRCS} ${SRCDIR}/linkfixup.cpp
 LFUOBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(LFUSRCS)))
 
-linkfixup:	$(LFUOBJS)
-	$(CXX) -static ${CXXFLAGS} $(LFUOBJS) ${SRCDIR}/lib/libproj.a $(LDFLAGS) -o linkfixup
-#	$(CXX) -static ${CXXFLAGS} $(LFUOBJS) $(LDFLAGS) -lproj -o linkfixup
+linkfixup:	$(LFUOBJS) ${SRCDIR}/lib/libproj.a
+	$(CXX)  ${CXXFLAGS} $(LFUOBJS) ${SRCDIR}/lib/libproj.a $(LDFLAGS) -o linkfixup
+#	$(CXX)  ${CXXFLAGS} $(LFUOBJS) $(LDFLAGS) -lproj -o linkfixup
 
 DRENDSRCS:=${CORESRCS} ${SRCDIR}/drendmain.cpp ${SRCDIR}/MapDrawer.cpp
 DRENDOBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(DRENDSRCS)))
 
 drend:	${DRENDOBJS}
-	$(CXX) -static ${CXXFLAGS} $(DRENDOBJS) $(LDFLAGS) -o drend
+	$(CXX)  ${CXXFLAGS} $(DRENDOBJS) $(LDFLAGS) -o drend
 
 
 ANALYZESRCS:=${CORESRCS}
@@ -64,20 +64,22 @@ ANALYZESRCS+=${SRCDIR}/popSSD.cpp
 ANALYZEOBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(ANALYZESRCS)))
 
 analyze:	${ANALYZEOBJS}
-	$(CXX) -static ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
+	$(CXX)  ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
 
 DBLSRCS:=${SRCDIR}/dumpBinLog.cpp ${SRCDIR}/redata.pb.cc
 
 dumpBinLog:	${DBLSRCS}
-	$(CXX) -static ${CXXFLAGS} ${DBLSRCS} -lz -lprotobuf -lpthread $(LDFLAGS) -o dumpBinLog
+	$(CXX)  ${CXXFLAGS} ${DBLSRCS} -lz -lprotobuf -lpthread $(LDFLAGS) -o dumpBinLog
 
 
 ${SRCDIR}/%.pb.cc ${SRCDIR}/%.pb.h : ${ROOTDIR}/%.proto
 	protoc --proto_path=${ROOTDIR} $< --cpp_out=${SRCDIR}
 
 # Download and build `proj` geographic projection library
-${SRCDIR}/proj/configure:
+${SRCDIR}/proj/autogen.sh:
 	git clone https://github.com/OSGeo/proj.4.git ${SRCDIR}/proj
+
+${SRCDIR}/proj/configure:	${SRCDIR}/proj/autogen.sh
 	cd ${SRCDIR}/proj && /bin/sh autogen.sh
 
 ${SRCDIR}/proj/Makefile:	${SRCDIR}/proj/configure
@@ -88,7 +90,7 @@ ${SRCDIR}/lib/libproj.a ${SRCDIR}/include/proj_api.h:	${SRCDIR}/proj/Makefile
 
 
 clean:
-	rm -f ${SRCDIR}/*.o ${SRCDIR}/*.pb.cc ${SRCDIR}/*.pb.h ${SRCDIR}/*.d districter2 linkfixup drend analyze dumpBinLog
+	rm -f ${SRCDIR}/*.o ${SRCDIR}/*.pb.cc ${SRCDIR}/*.pb.h ${SRCDIR}/*.d districter2 linkfixup drend analyze dumpBinLog ${SRCDIR}/proj/configure ${SRCDIR}/proj/Makefile ${SRCDIR}/lib/libproj.a ${SRCDIR}/include/proj_api.h
 
 ${SRCDIR}/protoio.o:	${SRCDIR}/redata.pb.h
 ${SRCDIR}/linkfixup.o:	${SRCDIR}/include/proj_api.h

@@ -1,1 +1,1 @@
-LDFLAGS=-lpthread
+LDFLAGS=-lpthread -static

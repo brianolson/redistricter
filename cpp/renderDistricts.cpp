@@ -42,6 +42,7 @@ int numColors = numStdColors;
 #if WITH_PNG
 
 #include <png.h>
+#include <zlib.h>
 
 png_voidp user_error_ptr = 0;
 void user_error_fn( png_structp png_ptr, const char* str ) {
