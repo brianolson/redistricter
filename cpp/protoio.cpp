@@ -1,5 +1,3 @@
-#if HAVE_PROTOBUF
-
 // TODO: change to use only 'lite' version of APIs so that static linking
 // makes smaller binaries to distribute.
 #include <google/protobuf/io/coded_stream.h>
@@ -330,10 +328,3 @@ bool PBStatLogger::log(
 	out->WriteVarint32(lesize);
 	return le.SerializeToCodedStream(out);
 }
-
-#else
-// static
-BinaryStatLogger* BinaryStatLogger::open(const char* name) {
-	return NULL;
-}
-#endif

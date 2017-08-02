@@ -354,7 +354,7 @@ class manybest(object):
 		self.skimLogs(self.log_paths)
 		if not self.they:
 			raise NoRunsException("no good runs found\n")
-		self.they.sort(cmp=lambda a, b: cmp(a.kmpp, b.kmpp))
+		self.they.sort(key=lambda x: x.kmpp)
 		they = self.they
 		empties = self.empties
 		if self.odir:

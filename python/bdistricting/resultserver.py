@@ -16,8 +16,8 @@ import traceback
 import time
 import zlib
 
-import kmppspreadplot
-import plotstatlog
+from . import kmppspreadplot
+from . import plotstatlog
 
 
 plotlib = None
@@ -271,6 +271,14 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 #			'': '',
 })
 		http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+
+	def write(self, x):
+		if isinstance(x, str):
+			self.wfile.write(x.encode('utf-8'))
+		elif hasattr(x, '__str__'):
+			self.wfile.write(str(x).encode('utf-8'))
+		else:
+			self.wfile.write(x)
 	
 	def GET_dir(self, path, fpath):
 		they = os.listdir(fpath)
@@ -281,7 +289,7 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 		self.send_response(200)
 		self.send_header('Content-Type', 'text/html')
 		self.end_headers()
-		self.wfile.write("""<!doctype html>\n<html><head><title>%s</title><style>%s</style></head><body><h1>%s</h1>""" % (self.path, listing_css, self.path))
+		self.write("""<!doctype html>\n<html><head><title>%s</title><style>%s</style></head><body><h1>%s</h1>""" % (self.path, listing_css, self.path))
 		for sf in ['runlog', 'bestlog', 'statlog', 'statsum']:
 			if not sf in they:
 				continue
@@ -291,28 +299,28 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 					sfStuff = linkifyBestlog(sfStuff)
 				if sf == 'runlog':
 					sfStuff = linkifyRunlog(sfStuff)
-				self.wfile.write(sfStuff)
+				self.write(sfStuff)
 		for x in they:
 			if x[-4:].lower() == '.png':
-				self.wfile.write(imgCallout(x, x))
+				self.write(imgCallout(x, x))
 			if x[:7].lower() == 'statlog':
 				writeStatlogDisplay(fpath, x, self.wfile)
 		if self.dirExtra:
-			self.wfile.write(self.dirExtra)
-		self.wfile.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
+			self.write(self.dirExtra)
+		self.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")
 		if path == '':
 			for action in self.actions.values():
-				self.wfile.write(action.html)
-			self.wfile.write(htmlRootDirListing('', fpath, they, self.query.get('count') != None))
+				self.write(action.html)
+			self.write(htmlRootDirListing('', fpath, they, self.query.get('count') != None))
 		else:
-			self.wfile.write(htmlDirListing('', fpath, they))
-		self.wfile.write("""</body></html>\n""")
+			self.write(htmlDirListing('', fpath, they))
+		self.write("""</body></html>\n""")
 	
 	def GET_kmppspreadplot(self, path, fpath):
-                try:
-                        self.GET_kmppspreadplot_inner(path, fpath)
-                except Exception as e:
-                        e.printStackTrace()
+		try:
+			self.GET_kmppspreadplot_inner(path, fpath)
+		except Exception as e:
+			e.printStackTrace()
 
 	def GET_kmppspreadplot_inner(self, path, fpath):
 		self.send_response(200)
@@ -344,7 +352,7 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 		if self.path == '/favicon.ico':
 			self.send_response(200)
 			self.end_headers()
-			self.wfile.write(getFavicon())
+			self.write(getFavicon())
 			return
 		path = self.path.lstrip('/')
 		cwd = os.path.abspath(os.getcwd())
@@ -378,12 +386,12 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 				except:
 					self.send_response(500)
 					self.end_headers()
-					self.wfile.write(traceback.format_exc())
+					self.write(traceback.format_exc())
 					return
 		else:
 			self.send_response(400)
 			self.end_headers()
-			self.wfile.write('bogus action "%s"\n' % (self.path,))
+			self.write('bogus action "%s"\n' % (self.path,))
 			return
 		self.send_response(303)
 		self.send_header('Location', dest)

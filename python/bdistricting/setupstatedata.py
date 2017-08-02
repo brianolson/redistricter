@@ -32,13 +32,13 @@ import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
-import generaterunconfigs
-import linksfromedges
-from newerthan import newerthan, any_newerthan
-import shapefile
-import solution
+from . import generaterunconfigs
+from . import linksfromedges
+from .newerthan import newerthan, any_newerthan
+from . import shapefile
+from . import solution
 
-from states import *
+from .states import *
 
 sf1IndexName = 'SF1index.html'
 sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
@@ -560,7 +560,8 @@ class StateData(object):
 		#if (not useFaces) and newerthan(tabblockPath, linksname):
 		if newerthan(tabblockPath, linksname):
 			commands.append(shapefile.makeCommand(
-				[tabblockPath, '--links', linksname]))
+				[tabblockPath, '--links', linksname],
+                                self.options.bindir, self.options.strict))
 			needlinks = False
 		if needlinks and edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
 			self.logf('need %s from edges+faces', linksname)
@@ -870,10 +871,10 @@ class StateData(object):
 def getOptionParser():
 	default_bindir = os.environ.get('REDISTRICTER_BIN')
 	if default_bindir is None:
-		default_bindir = os.path.dirname(os.path.abspath(__file__))
+		default_bindir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 	default_datadir = os.environ.get('REDISTRICTER_DATA')
 	if default_datadir is None:
-		default_datadir = os.path.join(default_bindir, 'data')
+		default_datadir = os.path.abspath(os.path.join(os.getcwd(), 'data'))
 	argp = optparse.OptionParser()
 # commented out options aren't actually used.
 #	argp.add_option('-m', '--make', action='store_true', dest='domaake', default=False)

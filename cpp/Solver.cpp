@@ -169,18 +169,15 @@ GeoData* protobufGeoDataTag( const char* inputname ) {
 	return NULL;
 }
 
-#if HAVE_PROTOBUF
 int writeToProtoFile(Solver* sov, const char* filename);
 int readFromProtoFile(Solver* sov, const char* filename);
 
 int Solver::writeProtobuf( const char* fname ) {
 	return writeToProtoFile(this, fname);
 }
-#endif
 
 void Solver::load() {
 	int err = -1;
-#if HAVE_PROTOBUF
 	if ( err >= 0 ) {
 		// success. done.
 	} else if ( geoFact == protobufGeoDataTag ) {
@@ -189,7 +186,6 @@ void Solver::load() {
 			return;
 		}
 	} else
-#endif
 	{
 		gd = geoFact( inputname );
 		err = gd->load();

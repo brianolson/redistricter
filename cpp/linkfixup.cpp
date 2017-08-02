@@ -12,16 +12,10 @@
 
 static const char usage[] =
 "usage: linkfixup [-o file][-p file][--have-protobuf][Solver args]\n"
-#if HAVE_PROTOBUF
 "  -p file   write out new protobuf file\n"
-#endif
 "  -o file   write out old '.gbin' format file\n"
 "  --have-protobuf exit success if -p available, failure otherwise.\n"
-#if HAVE_PROTOBUF
 "\nthis linkfixup was compiled with protobuf support\n"
-#else
-"\nno protobuf support.\n"
-#endif
 ;
 
 int _aei( const char** argv, int argc, int i, const char* n ) {
@@ -202,11 +196,7 @@ int main( int argc, const char** argv ) {
 	Solver sov;
 	int i, nargc;
 	const char* foname = NULL;
-#if HAVE_PROTOBUF
 	const char* poname = NULL;
-#else
-#define poname NULL
-#endif
 	int maxNewEdgeCount = 100;
 	bool doProj = false;
 	
@@ -216,16 +206,11 @@ int main( int argc, const char** argv ) {
 		if ( ! strcmp( argv[i], "-o" ) ) {
 			i++;
 			foname = argv[i];
-#if HAVE_PROTOBUF
 		} else if ( ! strcmp( argv[i], "-p" ) ) {
 			i++;
 			poname = argv[i];
 		} else if ( ! strcmp( argv[i], "--have-protobuf" ) ) {
 			exit(0);
-#else
-		} else if ( ! strcmp( argv[i], "--have-protobuf" ) ) {
-			exit(1);
-#endif
 		} else if ( ! strcmp( argv[i], "--proj" ) ) {
 			doProj = true;
 		} else if ( (!strcmp( argv[i], "--help" )) ||
@@ -248,11 +233,7 @@ int main( int argc, const char** argv ) {
 		return 1;
 	}
 
-#if HAVE_PROTOBUF
 	if (( foname == NULL ) && ( poname == NULL ))
-#else
-	if ( foname == NULL )
-#endif
 	{
 		fprintf(stderr,"useless linkfixup, null foname\n");
 		exit(1);
@@ -377,11 +358,9 @@ int main( int argc, const char** argv ) {
 	if ( foname != NULL ) {
 		sov.writeBin(foname);
 	}
-#if HAVE_PROTOBUF
 	if ( poname != NULL ) {
 		sov.writeProtobuf(poname);
 	}
-#endif	
 
 	delete [] bfsearchq;
 

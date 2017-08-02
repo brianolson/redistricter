@@ -41,7 +41,7 @@ class solution(object):
 def makeDsz(intlist):
 	version = 4
 	points = len(intlist)
-	bytes = ''
+	bytes = b''
 	for x in intlist:
 		bytes += struct.pack('b', x)
 	assert len(bytes) == points

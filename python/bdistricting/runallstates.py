@@ -59,8 +59,8 @@ import traceback
 import pdb
 
 # local imports
-import client
-import manybest
+from . import client
+from . import manybest
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
@@ -164,11 +164,13 @@ def poll_run(p, stu):
 			if p.stdout.fileno() == fd:
 				line = p.stdout.readline()
 				if line:
+					line = line.decode('utf-8')
 					sys.stdout.write("O {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastolines, 10, line)
 			elif p.stderr.fileno() == fd:
 				line = p.stderr.readline()
 				if line:
+					line = line.decode('utf-8')
 					sys.stdout.write("E {} {}: ".format(p.pid, stu) + line)
 					lastlines(lastelines, 10, line)
 			else:
@@ -420,10 +422,10 @@ class configuration(object):
 		elif line.startswith('sendAnything'):
 			self.sendAnything = line.lower() != 'sendanything: false'
 		elif line == 'enable' or line == 'enabled':
-                        logging.info("%s enabled by config", self.name)
+			logging.info("%s enabled by config", self.name)
 			self.enabled = True
 		elif line == 'disable' or line == 'disabled':
-                        logging.info("%s disabled by config", self.name)
+			logging.info("%s disabled by config", self.name)
 			self.enabled = False
 		else:
 			raise ParseError('bogus config line: "%s"\n' % line)
@@ -470,7 +472,7 @@ class configuration(object):
 		statecode = m.group(1)
 		stl = statecode.lower()
 		if os.path.exists(os.path.join(self.datadir, 'norun')):
-                        logging.info('%s disabled because of %s', self.name, os.path.join(self.datadir, 'norun'))
+			logging.info('%s disabled because of %s', self.name, os.path.join(self.datadir, 'norun'))
 			self.enabled = False
 		
 		# set some basic args based on any datadir
@@ -497,7 +499,7 @@ def ignoreFile(cname):
 def getDefaultBindir():
 	bindir = os.environ.get('REDISTRICTER_BIN')
 	if bindir is None:
-		bindir = os.path.dirname(os.path.abspath(__file__))
+		bindir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 	return bindir
 
 
@@ -506,7 +508,7 @@ def getDefaultDatadir(bindir=None):
 	if datadir is None:
 		if bindir is None:
 			bindir = getDefaultBindir()
-		datadir = os.path.join(bindir, "data")
+		datadir = os.path.join(os.getcwd(), "data")
 	return datadir
 
 
@@ -602,8 +604,8 @@ class runallstates(object):
 				weight = conf.weight
 				weightedStu.append( (weight, stu) )
 				totalweight += weight
-                if totalweight <= 0 or not weightedStu:
-                        pdb.set_trace()
+		if totalweight <= 0 or not weightedStu:
+			pdb.set_trace()
 		pick = random.random() * totalweight
 		for weight, stu in weightedStu:
 			pick -= weight
@@ -1331,7 +1333,7 @@ class runallstates(object):
 		
 		severthread = None
 		if self.options.port > 0:
-			import resultserver
+			from . import resultserver
 			def extensionFu(handler):
 				return self.setCurrentRunningHtml(handler)
 			actions = {}

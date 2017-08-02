@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+bindir = os.path.dirname(os.path.abspath(__file__))
+rootdir = os.path.dirname(bindir)
+srcdir = os.path.join(rootdir, 'python')
+
+sys.path.append(srcdir)
+
+from bdistricting.runallstates import runallstates
+
+it = runallstates()
+it.main(sys.argv)
