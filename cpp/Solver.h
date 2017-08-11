@@ -198,6 +198,7 @@ class SolverStats {
 public:
 	int generation;
 	double avgPopDistToCenterOfDistKm;
+	double kmppp; // km per person to population center of their district
 	double poptotal;
 	double popavg;
 	double popstd;
@@ -212,8 +213,6 @@ public:
 	SolverStats* next;
 
 	SolverStats();
-	SolverStats( int geni, double pd, double pa, double ps, double pmi, double pma, double pme,
-		int mid, int mad, int med, int noDist, double noDistPop, SolverStats* n = NULL );
 
 	int toString( char* str, int len );
 };

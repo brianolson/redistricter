@@ -854,7 +854,7 @@ int SolverStats::toString( char* str, int len ) {
 	} else {
 		snprintf( cstr, clen, "generation %d:", generation ); CCUP;
 	}
-	snprintf( cstr, clen, " %0.11lg Km/person\npopulation avg=%.0lf std=%0.9g\n", avgPopDistToCenterOfDistKm, popavg, popstd ); CCUP;
+	snprintf( cstr, clen, " %0.11lg Km/person to pop center %0.11lg Km/person to land center\npopulation avg=%.0lf std=%0.9g\n", kmppp, avgPopDistToCenterOfDistKm, popavg, popstd ); CCUP;
 	snprintf( cstr, clen, "max=%.0lf (dist# %d)  ", popmax, maxdist + 1 ); CCUP;
 	snprintf( cstr, clen, "min=%.0lf (dist# %d)  ", popmin, mindist + 1 ); CCUP;
 	snprintf( cstr, clen, "median=%.0lf (dist# %d)\n", popmed, meddist + 1 ); CCUP;
@@ -1711,19 +1711,11 @@ void Solver::nullRenumber() {
 }
 
 SolverStats::SolverStats()
-	: generation( -1 ), avgPopDistToCenterOfDistKm( 0.0 ),
+	: generation( -1 ), avgPopDistToCenterOfDistKm( 0.0 ), kmppp( 0.0 ),
 	popavg( 0.0 ), popstd( 0.0 ), popmin( HUGE_VAL ), popmax( -HUGE_VAL ), popmed( 0.0 ),
 	mindist( -1 ), maxdist( -1 ), meddist( -1 ),
 	nod( 0 ), nodpop( 0 ),
 	next( NULL )
-{}
-SolverStats::SolverStats( int geni, double pd, double pa, double ps, double pmi, double pma, double pme,
-			   int mid, int mad, int med, int noDist, double noDistPop, SolverStats* n )
-	: generation( geni ), avgPopDistToCenterOfDistKm( pd ),
-	popavg( pa ), popstd( ps ), popmin( pmi ), popmax( pma ), popmed( pme ),
-	mindist( mid ), maxdist( mad ), meddist( med ),
-	nod( noDist ), nodpop( noDistPop ),
-	next( n )
 {}
 
 // Reads file with arguments split by any whitespace according to isspace().

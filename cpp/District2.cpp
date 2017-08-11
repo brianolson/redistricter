@@ -151,6 +151,7 @@ void District2Set::getStats(SolverStats* stats) {
 	double nodpop = 0.0;
 	int nod = 0;
 	double moment = 0.0;
+	double popMoment = 0.0;
 	POPTYPE* winner = sov->winner;
 	const GeoData* gd = sov->gd;
 	for ( int i = 0; i < gd->numPoints; i++ ) {
@@ -168,6 +169,10 @@ void District2Set::getStats(SolverStats* stats) {
 			dx = cd->cx() - gd->pos[i*2  ];
 			dy = cd->cy() - gd->pos[i*2+1];
 			moment += sqrt(dx * dx + dy * dy) * gd->pop[i];
+
+			dx = (cd->popCenterX / cd->pop) - gd->pos[i*2];
+			dy = (cd->popCenterY / cd->pop) - gd->pos[i*2+1];
+			popMoment += sqrt(dx * dx + dy * dy) * gd->pop[i];
 		}
 	}
 	// earthradius_equatorial  6378136.49 m * 2 * Pi = 40075013.481 m earth circumfrence at equator
@@ -179,6 +184,7 @@ void District2Set::getStats(SolverStats* stats) {
 	stats->nod = nod;
 	stats->nodpop = nodpop;
 	stats->avgPopDistToCenterOfDistKm = avgPopDistToCenterOfDistKm;
+	stats->kmppp = ((popMoment / stats->poptotal) / 360000000.0) * 40075.013481;
 }
 
 void District2Set::alloc(int size) {

@@ -23,36 +23,6 @@ public:
 	int32_t* pos;
 	int minx, maxx, miny, maxy;
 
-	inline void allocPoints() {
-		pos = new int32_t[numPoints*2];
-	}
-	inline int32_t lon(int x) {
-		return pos[(x*2)];
-	}
-	inline int32_t lat(int x) {
-		return pos[(x*2) + 1];
-	}
-	inline void set_lon(int x, int32_t microdegrees) {
-		pos[(x*2)] = microdegrees;
-		if (pos[(x*2)] < minx) minx = pos[(x*2)];
-		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
-	}
-	inline void set_lon(int x, double degrees) {
-		pos[(x*2)] = degrees * 1000000.0;
-		if (pos[(x*2)] < minx) minx = pos[(x*2)];
-		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
-	}
-	inline void set_lat(int x, int32_t microdegrees) {
-		pos[(x*2) + 1] = microdegrees;
-		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
-		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
-	}
-	inline void set_lat(int x, double degrees) {
-		pos[(x*2) + 1] = degrees * 1000000.0;
-		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
-		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
-	}
-
 	// square meters
 	uint64_t* area;
 
@@ -86,13 +56,14 @@ public:
 	/* binary search, fastish. ((uint32_t)-1) on failure. */
 	uint32_t indexOfRecno( uint32_t u );
 	/* lookup table, fast! ((uint32_t)-1) on failure. */
-	uint32_t recnoOfIndex( uint32_t index ) {
+	inline uint32_t recnoOfIndex( uint32_t index ) const {
 		assert(index >= 0);
 		assert(index < ((uint32_t)numPoints));
 		return recnos[index];
 	}
 
 	// uint32_t[numPoints] {0:None, else place id}
+	// Census 'place', filtered to be towns/cities/municipalities
 	uint32_t* place;
 	
 	GeoData();
@@ -122,6 +93,36 @@ public:
 	int readBin( const char* fname );
 	int close();
 	virtual ~GeoData();
+
+	inline void allocPoints() {
+		pos = new int32_t[numPoints*2];
+	}
+	inline int32_t lon(int x) const {
+		return pos[(x*2)];
+	}
+	inline int32_t lat(int x) const {
+		return pos[(x*2) + 1];
+	}
+	inline void set_lon(int x, int32_t microdegrees) {
+		pos[(x*2)] = microdegrees;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lon(int x, double degrees) {
+		pos[(x*2)] = degrees * 1000000.0;
+		if (pos[(x*2)] < minx) minx = pos[(x*2)];
+		if (pos[(x*2)] > maxx) maxx = pos[(x*2)];
+	}
+	inline void set_lat(int x, int32_t microdegrees) {
+		pos[(x*2) + 1] = microdegrees;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
+	inline void set_lat(int x, double degrees) {
+		pos[(x*2) + 1] = degrees * 1000000.0;
+		if (pos[(x*2) + 1] < miny) miny = pos[(x*2) + 1];
+		if (pos[(x*2) + 1] > maxy) maxy = pos[(x*2) + 1];
+	}
 };
 
 static const uint32_t INVALID_INDEX = ((uint32_t)-1);

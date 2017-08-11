@@ -261,6 +261,7 @@ https://www.mapbox.com/tilemill/
 http://mapnik.org/
 http://en.wikipedia.org/wiki/Albers_projection
 "Albers Equal-Area Conic"
+https://github.com/mapbox/mercantile
 
 2016-01-14 10:23:26 EST (Thursday, January 14 10:23:26 AM)
 
@@ -425,3 +426,16 @@ wasted vote: either above what was necessary to win, or what was cast for a lose
 efficiency gap: (party a wasted) - (party b wasted) / (all votes)
 
 https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2457468
+
+2017-08-07 20:35:42 EDT (Monday, August 07 08:35:42 PM)
+
+TODO: 'data load with filter' mode; e.g. filter to just include one city or county and make city council or county council districts
+
+17000 core hours in 2011 on 2010 intel core-i7 970
+17000 core hours in 2017 on google compute preemptible high-cpu instances: $130
+
+2017-08-11 14:56:51 EDT (Friday, August 11 02:56:51 PM)
+
+why I should quit population distance to land-area-center: land area is less precise than population counts!
+(see arguments about why 'polsby popper' perimeter-vs-area measure is bogus due to varying level of detail on geographic data)
+
