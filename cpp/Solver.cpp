@@ -854,7 +854,7 @@ int SolverStats::toString( char* str, int len ) {
 	} else {
 		snprintf( cstr, clen, "generation %d:", generation ); CCUP;
 	}
-	snprintf( cstr, clen, " %0.11lg Km/person to pop center %0.11lg Km/person to land center\npopulation avg=%.0lf std=%0.9g\n", kmppp, avgPopDistToCenterOfDistKm, popavg, popstd ); CCUP;
+	snprintf( cstr, clen, " %0.11lg Km/person to pop center; %0.11lg Km/person to land center\npopulation avg=%.0lf std=%0.9g\n", kmppp, avgPopDistToCenterOfDistKm, popavg, popstd ); CCUP;
 	snprintf( cstr, clen, "max=%.0lf (dist# %d)  ", popmax, maxdist + 1 ); CCUP;
 	snprintf( cstr, clen, "min=%.0lf (dist# %d)  ", popmin, mindist + 1 ); CCUP;
 	snprintf( cstr, clen, "median=%.0lf (dist# %d)\n", popmed, meddist + 1 ); CCUP;

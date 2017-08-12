@@ -1414,7 +1414,6 @@ void District2Set::fixupDistrictContiguity() {
 void District2Set::recalc() {
 	const GeoData* gd = sov->gd;
 	POPTYPE* winner = sov->winner;
-	//int numPoints = gd->numPoints;
 	for ( POPTYPE d = 0; d < districts; ++d ) {
 		dists[d].pop = 0.0;
 		dists[d].area = 0.0;
@@ -1445,7 +1444,7 @@ void District2Set::recalc() {
 		dists[d].landCenterX += narea * x;
 		dists[d].landCenterY += narea * y;
 		dists[d].popCenterX += npop * x;
-		dists[d].popCenterX += npop * y;
+		dists[d].popCenterY += npop * y;
 		
 		tn = sov->nodes + n;
 		for ( int i = 0; i < tn->numneighbors; i++ ) {
