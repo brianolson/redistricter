@@ -471,6 +471,7 @@ class SubmissionAnalyzer(object):
 				#logging.debug('already have %s', innerpath)
 				continue
 			try:
+                                # TODO: start thread to run setFromPath asynchronously and run several of the measureSolution() subprocesses in parallel? This has not been an actual performance inconvenience, but only might become so when using a cluster to generate many-many solutions in a short amount of time, increasing load on the coordinator node that verifies the quality of the solutions. If we trust the compute nodes to honestly measure solutions we don't actually need that. This was designed as a hedge against @home-style potentially untrusted client enviornments, but now we'd probably just run a cluster of cheap aws-spot/google-interruptable VMs.
 				ok = self.setFromPath(fpath, innerpath)
 				setAny = setAny or ok
 				logging.info('added %s', innerpath)

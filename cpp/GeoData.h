@@ -8,6 +8,24 @@
 
 #include "config.h"
 
+inline uint32_t ubidBlock(uint64_t ubid) {
+    //  SSCCCTTTTTTBBBB
+    //             9999
+    return ubid % 10000;
+}
+inline uint32_t ubidTract(uint64_t ubid) {
+    //  SSCCCTTTTTTBBBB
+    //       999999
+    return (ubid / 10000) % 1000000;
+}
+inline uint32_t ubidCounty(uint64_t ubid) {
+    return (ubid / 10000000000) % 1000;
+}
+inline uint32_t ubidState(uint64_t ubid) {
+    return (ubid / 10000000000000) % 100;
+}
+
+
 // TODO: cleanup all the unused options and remove #if around the used ones.
 class GeoData {
 public:
@@ -42,6 +60,10 @@ public:
 	uint64_t ubidOfIndex( uint32_t index );
 	/* allocate new uint64_t[] look-up-table, fill it, pass-out min and max index for it. */
 	uint64_t* makeUbidLUT(uint32_t* minIndex, uint32_t* maxIndex);
+
+	inline uint32_t countyOfIndex( uint32_t index) {
+		return ubidCounty(ubidOfIndex(index));
+	}
 
 	// Map "Logical Record Number" to internal index so that we can map in 
 	// other Census data files.
@@ -180,23 +202,6 @@ public:
 	POPTYPE oldDist( int index );
 };
 
-
-inline uint32_t ubidBlock(uint64_t ubid) {
-    //  SSCCCTTTTTTBBBB
-    //             9999
-    return ubid % 10000;
-}
-inline uint32_t ubidTract(uint64_t ubid) {
-    //  SSCCCTTTTTTBBBB
-    //       999999
-    return (ubid / 10000) % 1000000;
-}
-inline uint32_t ubidCounty(uint64_t ubid) {
-    return (ubid / 10000000000) % 1000;
-}
-inline uint32_t ubidState(uint64_t ubid) {
-    return (ubid / 10000000000000) % 100;
-}
 
 //GeoData* openZCTA( const char* inputname );
 GeoData* openUf1( const char* inputname );

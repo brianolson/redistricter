@@ -11,7 +11,7 @@ public:
 	DistrictSet(Solver* sovIn) : districts(-1), they((AbstractDistrict**)0), sov(sovIn) {}
 	virtual ~DistrictSet();
 	
-	virtual void alloc(int size) = 0;
+	virtual void alloc(int numDistricts) = 0;
 	virtual void initNewRandomStart() = 0;
 	virtual void initFromLoadedSolution() = 0;
 	virtual int step() = 0;
@@ -45,6 +45,8 @@ public:
 
 	// Every DistrictSet is associated with some Solver
 	Solver* sov;
+
+	int popTarget() const;
 };
 
 #endif /* DISTRICT_SET_H */

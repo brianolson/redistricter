@@ -1019,6 +1019,7 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
 "-q                  quiet, less status printed\n"
 "-nearest-neighbor   use NearestNeighbor solver\n"
 "-d2                 use District2 solver\n"
+"-cc                 use CountyCity solver\n"
 "-maxSpreadFraction  ignore results if district populations ((max - min)/avg) greater than this\n"
 "-maxSpreadAbsolute  ignore results if district populations (max - min) greater than this\n"
 "-runDutySeconds     run for this many seconds, then sleep (10)\n"

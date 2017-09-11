@@ -31,6 +31,7 @@ CORESRCS+=${SRCDIR}/logging.cpp
 CORESRCS+=${SRCDIR}/redata.pb.cc
 CORESRCS+=${SRCDIR}/BinaryStatLogger.cpp
 CORESRCS+=${SRCDIR}/CountyCityDistricter.cpp
+CORESRCS+=${SRCDIR}/placefile.cpp
 
 D2SOURCES:=${CORESRCS}
 D2SOURCES+=${SRCDIR}/nonguimain.cpp
@@ -59,7 +60,6 @@ drend:	${DRENDOBJS}
 
 ANALYZESRCS:=${CORESRCS}
 ANALYZESRCS+=${SRCDIR}/analyze.cpp
-ANALYZESRCS+=${SRCDIR}/placefile.cpp
 ANALYZESRCS+=${SRCDIR}/popSSD.cpp
 ANALYZEOBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(ANALYZESRCS)))
 

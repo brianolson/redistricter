@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "DistrictSet.h"
 #include "AbstractDistrict.h"
+#include "Solver.h"
+#include "GeoData.h"
 
 DistrictSet::~DistrictSet() {
 	if ( they != NULL ) {
@@ -17,4 +19,8 @@ void DistrictSet::alloc(int size) {
 
 void DistrictSet::print(const char* filename) {
 	fprintf(stderr,"FIXME WRITEME DistrictSet::print(\"%s\")\n", filename);
+}
+
+int DistrictSet::popTarget() const {
+	return sov->gd->totalpop / districts;
 }
