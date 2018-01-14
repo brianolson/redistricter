@@ -439,3 +439,139 @@ TODO: 'data load with filter' mode; e.g. filter to just include one city or coun
 why I should quit population distance to land-area-center: land area is less precise than population counts!
 (see arguments about why 'polsby popper' perimeter-vs-area measure is bogus due to varying level of detail on geographic data)
 
+2017-10-17 10:40:35 EDT (Tuesday, October 17 10:40:35 AM)
+
+Radiolab "More Perfect" podcast 2017-10-03
+http://www.wnyc.org/story/whos-gerry-and-why-he-so-bad-drawing-maps/
+
+2017-12-06 16:17:27 EST (Wednesday, December 06 04:17:27 PM)
+
+SCOTUS Gill v Whitford (Wisconsin case) notes
+
+p.16 lines 10-19, SOTOMAYOR: "... they created three or four different maps, they
+weren't partisan enough.  They created three or
+four more maps, they weren't partisan enough.
+And they finally got to the final map,
+after maybe 10 different tries of making it
+more partisan, and they achieved a map that was
+the most partisan on the S-curve.
+         And it worked.  It worked better than
+they even expected, so the estimate wasn't
+wrong.  The estimate was pretty right."
+
+p.17 l22-23 Teytlin for WI: "... there was no constitutional requirement " to use non-gerrymandered maps
+
+p.18 l12-13 "Legislatures can very much rest on conjecture
+whereas courts cannot."
+
+p 23 Gorsuch asks if there are measure thresholds for when gerrymandering is too bad. A softball question for WI to say: no, it's too messy, there will never be any reasonable standard.
+
+p 24-25. RBG "I would like to ask
+you what's really behind all of this.  The
+precious right to vote, if you can stack a
+legislature in this way, what incentive is
+there for a voter to exercise his vote?
+Whether it's a Democratic district or a
+Republican district, the result -- using this
+map, the result is preordained in most of the
+districts.
+Isn't that -- what becomes of the
+precious right to vote?  Would we have that
+result when the individual citizen says:  I
+have no choice, I'm in this district, and we
+know how this district is going to come out?  I
+mean that's something that this society should
+be concerned about."
+
+p.27 Murphy for WI admits that a state law propping up one party through Gerrymandering would be unconstitutional.
+
+p.28 SOTOMAYOR trolls it out "Could you tell me
+what the value is to democracy from political
+gerrymandering?  How -- how does that help our
+system of government?"
+ 
+p.30 ROBERTS want to ask the appealees (vs WI) about standing. :-/
+Is any one person harmed by systemic gerrymandering?
+Do parties matter? Why do people vote? What is democracy?
+
+p.34 Smith vs WI "Their party has been punished by the law of the State of Wisconsin."
+
+p.37 ROBERTS "if the claim
+ 2    is allowed to proceed, there will naturally be
+ 3    a lot of these claims raised around the
+ 4    country."
+... and every one of those cases will have to go to SCOTUS.
+
+ROBERTS is allergic to math and assumes Americans are:
+"And if you're the intelligent man on
+14    the street and the Court issues a decision, and
+15    let's say, okay, the Democrats win, and that
+16    person will say:  "Well, why did the Democrats
+17    win?"  And the answer is going to be because EG
+18    was greater than 7 percent, where EG is the
+19    sigma of party X wasted votes minus the sigma
+20    of party Y wasted votes over the sigma of party
+21    X votes plus party Y votes.
+22             And the intelligent man on the street
+23    is going to say that's a bunch of baloney.  It
+24    must be because the Supreme Court preferred the
+25    Democrats over the Republicans."
+
+...
+p.38 "And that is going to cause very
+ 4    serious harm to the status and integrity of the
+ 5    decisions of this Court in the eyes of the
+6 country."
+
+
+p.40 ROBERTS math innumeracy:
+"the whole point is you're
+ 5    taking these issues away from democracy and
+ 6    you're throwing them into the courts pursuant
+ 7    to, and it may be simply my educational
+ 8    background, but I can only describe as
+ 9    sociological gobbledygook."
+
+p.40-41 BREYER brings it back in:
+"if party A wins a majority of votes,
+20    party A controls the legislature.  That seems
+21 fair.
+22             And if party A loses a majority of
+23    votes, it still controls the legislature.  That
+24    doesn't seem fair.  And can we say that without
+25    going into what I agree is pretty good
+gobbledygook?"
+
+p.41
+"3             CHIEF JUSTICE ROBERTS:  And if you
+ 4    need a convenient label for that approach, you
+ 5    can call it proportional representation, which
+ 6    has never been accepted as a political
+ 7    principle in the history of this country."
+
+"partisan symmetry" vs "proportional representation"
+
+Smith "... if
+23    party A at 54 percent gets 58 percent of the
+24    seats, party B when it gets 54 percent ought to
+25    get 58 percent of the seats.  That's symmetry."
+
+p.42 ALITO "... gerrymandering is distasteful."
+but he wants a rigorous rule
+
+and he's suspicious that 'efficiency gap' has only been around since 2014, too new.
+
+p.46 KAGAN wants a threshold too
+
+Smith proposes 'almost certain one party rule for a decade' as the threshold.
+
+p.54 ALITO "... protection
+ 5    of incumbents, which has been said to be a
+ 6    legitimate factor"
+ sad
+
+p.63... closing arguments FUD for WI
+
+end 11:03 am; started at 10:04 am; and so the fate of our country is decided in a one hour block.
+
+
