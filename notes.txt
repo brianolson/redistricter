@@ -439,6 +439,32 @@ TODO: 'data load with filter' mode; e.g. filter to just include one city or coun
 why I should quit population distance to land-area-center: land area is less precise than population counts!
 (see arguments about why 'polsby popper' perimeter-vs-area measure is bogus due to varying level of detail on geographic data)
 
+2017-09-23 11:20:58 EDT (Saturday, September 23 11:20:58 AM)
+
+TODO: trim presentation down to 0.001 km
+
+2017-10-06 08:29:11 EDT (Friday, October 06 08:29:11 AM)
+
+Gill v Whitford (Wisconsin case) oral arguments
+https://www.supremecourt.gov/oral_arguments/argument_transcripts/2017/16-1161_kjfm.pdf
+
+
+Roberts, p5 l 18-17, '... right of association with other people elsewhere in the state'
+Any citizen of a state has an interest in the district map of that state; and my bias says to look to at large proportional representation to best associate with people elsewhere in the state.
+
+p15-18; "Legislatures can very much rest on conjecture whereas courts cannot" - Misha Tseytlin, arguing for WI before SCOTUS
+The justices seem to go along with this. A gerrymander can merely 'probably' work whereas apparently a court needs to be 100% sure that a thing is a bad gerrymander before it can be thrown out.
+
+
+
+
+Sotomayor argues the absurdity of the pro-gerrymander side.
+"Could you tell me what the value is to democracy from political gerrymandering?
+How -- how does that help our system of government?"
+...
+". it's okay to stack the decks so that for 10 years or an indefinite period of time one party, even though it gets a minority of votes, can't get a minor -- gets a minority of votes, can get the majority of seats?"
+ -- Justice Sonia Sotomayor
+
 2017-10-17 10:40:35 EDT (Tuesday, October 17 10:40:35 AM)
 
 Radiolab "More Perfect" podcast 2017-10-03
@@ -575,3 +601,12 @@ p.63... closing arguments FUD for WI
 end 11:03 am; started at 10:04 am; and so the fate of our country is decided in a one hour block.
 
 
+2017-12-22 10:51:09 EST (Friday, December 22 10:51:09 AM)
+
+We want to represent _who_ people are at least as much as _where_ people are.
+Are we representing people or places?
+Are we representing people or a line on the map?
+Identifying a person only with the place they live is serfdom.
+
+
+# xeof end of file search target
