@@ -17,6 +17,8 @@
 #include <google/protobuf/io/gzip_stream.h>
 #include <zlib.h>
 
+using std::isnan;
+
 MapDrawer::MapDrawer()
 : data(NULL), rows(NULL),
 width(-1), height(-1),
