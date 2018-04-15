@@ -214,25 +214,7 @@ void District2Set::initNewRandomStart() {
 		} while ( winner[i] != NODISTRICT );
 		//setDist( d , i );
 		dists[d].addFirst( sov, i, d );
-#if 0
-		dists[d].calcMoment( nodes, winner, tin.pointlist, tin.pointattributelist, d );
-		if ( dists[d].moment < minMoment ) {
-			minMoment = dists[d].moment;
-		}
-		if ( dists[d].moment > maxMoment ) {
-			maxMoment = dists[d].moment;
-		}
-		double pe;
-		pe = fabs( dists[d].pop - districtPopTarget );
-		if ( pe < minPoperr ) {
-			minPoperr = pe;
-		}
-		if ( pe > maxPoperr ) {
-			maxPoperr = pe;
-		}
-#endif
 	}
-#if 01
 	// Kickstart the growth process.
 	// Add every neighbor of an initial node not claimed by some other district.
 	bool notdone = true;
@@ -255,7 +237,6 @@ void District2Set::initNewRandomStart() {
 			}
 		}
 	}
-#endif
 }
 
 void District2Set::initFromLoadedSolution() {
@@ -321,15 +302,11 @@ int District2Set::step() {
 			}
 		}
 	}
-#if 01
 	for ( int i = 0; i < sov->gd->numPoints; i++ ) {
 		if ( lock[i] != 0 ) {
 			lock[i]--;
 		}
 	}
-#else
-	memset( lock, 0, sizeof(*lock) * gd->numPoints );
-#endif
 	// grab for whichever district has the lowest population
 	for ( int i = 0; i < runl; i++ ) {
 		POPTYPE d;
@@ -523,46 +500,12 @@ int District2::add( Solver* sov, int n, POPTYPE dist ) {
 	return 0;
 }
 
-#if 0
-class BreadthFirstNode {
-public:
-	int nodeIndex;
-	BreadthFirstNode* next;
-	BreadthFirstNode* prev;
-	BreadthFirstNode( int nin ) : nodeIndex( nin ), next( NULL ), prev( NULL ) {}
-	BreadthFirstNode( int nin, BreadthFirstNode* pin ) : nodeIndex( nin ), next( NULL ), prev( pin ) {}
-	void deleteList() {
-		BreadthFirstNode* tn;
-		while ( next != NULL ) {
-			tn = next->next;
-			next->next = NULL;
-			delete next;
-			next = tn;
-		}
-		delete this;
-	}
-};
-#endif
-
 void District2::addEdge( int n ) {
 	validate();
 	if ( edgelistLen == edgelistCap ) {
 		int nelc = edgelistCap * 2 + 7;
-#if 0
-		int* tel = (int*)malloc( sizeof(int) * nelc );
-		assert(tel != NULL);
-		for ( int i = 0; i < edgelistLen; ++i ) {
-			tel[i] = edgelist[i];
-		}
-		printf("expand edgelist, %d -> %d, %p -> %p\n",
-			edgelistCap, nelc,
-			edgelist, tel);
-		free(edgelist);
-		edgelist = tel;
-#else
 		edgelist = (int*)realloc( edgelist, sizeof(int) * nelc );
 		assert(edgelist != NULL);
-#endif
 		edgelistCap = nelc;
 	}
 	validate();
@@ -597,10 +540,6 @@ int District2::remove( /*Node* nodes, POPTYPE* pit, */Solver* sov, int n, POPTYP
 	}
 	Node* nit = nodes + n;
 	removeEdge( n );
-	// decrease order of ex-neighbors
-	//BreadthFirstNode* bfhead;
-	//BreadthFirstNode* bftail;
-	//BreadthFirstNode* path;
 
 	//printf("removing node %6d from dist %d\n", n, dist );
 	for ( i = 0; i < nit->numneighbors; i++ ) {
@@ -751,17 +690,12 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 			}
 			return HUGE_VAL;
 		} else {
-#if 01
 			if ( pop > od->pop ) {
 				// more strongly discourage taking from smaller districts
 				popRatio = 3 * (pop - od->pop) / od->pop;
 			} else {
 				popRatio = (pop - od->pop) / od->pop;
 			}
-#else
-			popRatio = (pop - od->pop) / od->pop;
-#endif
-			//popRatio -= 1.0;
 		}
 		int thisn, othern;
 		thisn = 0;
@@ -778,16 +712,6 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 		neighborRatio = othern - thisn;
 		neighborRatio /= on->numneighbors;
 	}
-#ifndef FIELD_VS_AVG_POP
-#define FIELD_VS_AVG_POP 0
-#endif
-#if FIELD_VS_AVG_POP
-	double avgDistPop = 0;
-	for ( POPTYPE di = 0; di < sov->districts; di++ ) {
-		avgDistPop += dists->pop;
-	}
-	avgDistPop /= sov->districts;
-#endif
 	double popField = 0.0;
 	for ( POPTYPE di = 0; di < sov->districts; di++ ) {
 		double rs;
@@ -796,11 +720,7 @@ double District2::grabScore( District2Set* d2set, POPTYPE d, int nein
 		dx = bx - od->cx();
 		dy = by - od->cy();
 		rs = (dx * dx) + (dy * dy);
-#if FIELD_VS_AVG_POP
-		popField += (avgDistPop - od->pop) / rs;
-#else
 		popField += (sov->districtPopTarget - od->pop) / rs;
-#endif
 	}
 	nextPopFieldSum += popField;
 	numPopFieldsSummed++;
@@ -1121,100 +1041,6 @@ void bfSearchDistrict(int* bfsearchq, POPTYPE d, Node* nodes,
 		}
 	}
 }
-
-#if 0
-// parallelized breadth-first-search attempts dropped in favor of parallelizing runallstates.pl
-#include <pthread.h>
-class BFSearch {
-public:
-	Bitmap& hit;
-	POPTYPE* winner;
-	Node* nodes;
-	POPTYPE d;
-	int* bfsearchq;
-	int bfin;
-	int bfout;
-	int searchers;
-	int numPoints;
-	ContiguousGroup* cur;
-	
-	pthread_mutex_t lock;
-	
-	BFSearch(Bitmap& b) : hit(b) {
-		pthread_mutex_init(&lock, NULL);
-	}
-	~BFSearch() {
-		pthread_mutex_destroy(&lock);
-	}
-	
-	void searchThread() {
-		Node* n;
-		bool iAmSearching = true;
-		pthread_mutex_lock(&lock);
-		searchers++;
-		pthread_mutex_unlock(&lock);
-		while ( true ) {
-			pthread_mutex_lock(&lock);
-			if ( bfin == bfout ) {
-				if ( iAmSearching ) {
-					searchers--;
-					iAmSearching = false;
-				}
-				if ( searchers == 0 ) {
-					pthread_mutex_unlock(&lock);
-					return;
-				} else {
-					pthread_mutex_unlock(&lock);
-					continue;
-				}
-			}
-			if ( ! iAmSearching ) {
-				searchers++;
-			}
-			n = nodes + bfsearchq[bfout];
-			bfout = (bfout + 1) % numPoints;
-			pthread_mutex_unlock(&lock);
-			for ( int ni = 0; ni < n->numneighbors; ++ni ) {
-				int nin;
-				nin = n->neighbors[ni];
-				if ( winner[nin] == d ) {
-					pthread_mutex_lock(&lock);
-					if ( ! hit.test(nin) ) {
-						bfsearchq[bfin] = nin;
-						bfin = (bfin + 1) % numPoints;
-						hit.set(nin);
-						cur->count++;
-					}
-					pthread_mutex_unlock(&lock);
-				}
-			}
-		}
-	}
-};
-void* BFSearch_searchThread(void* it) {
-	static_cast<BFSearch*>(it)->searchThread();
-	return NULL;
-}
-static void bfSearchDistrictThreaded(int* bfsearchq, POPTYPE d, Node* nodes,
-		POPTYPE* winner, Bitmap& hit, ContiguousGroup* cur, int numPoints) {
-	int bfin = 1;
-	int bfout = 0;
-	while ( bfin != bfout ) {
-		Node* n = nodes + bfsearchq[bfout];
-		bfout = (bfout + 1) % numPoints;
-		for ( int ni = 0; ni < n->numneighbors; ++ni ) {
-			int nin;
-			nin = n->neighbors[ni];
-			if ( (winner[nin] == d) && (! hit.test(nin)) ) {
-				bfsearchq[bfin] = nin;
-				bfin = (bfin + 1) % numPoints;
-				hit.set(nin);
-				cur->count++;
-			}
-		}
-	}
-}
-#endif
 
 // Returns: true if need to continue
 bool findContiguousGroups(Solver* sov, Bitmap& hit, ContiguousGroup* groups, int* bfsearchq, Bitmap* notContiguous) {
