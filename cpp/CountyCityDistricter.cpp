@@ -11,10 +11,6 @@
 
 using std::map;
 
-class CCDistrict {
- public:
-};
-
 CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     : DistrictSet(sovIn) {
   if (sov->gd->place == NULL) {
@@ -25,8 +21,8 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
   uint32_t minIndex = 0, maxIndex = 0;
   uint64_t* ubidLut = sov->gd->makeUbidLUT(&minIndex, &maxIndex);
 #define countyOfIndex(i) ubidCounty(ubidLut[(i) - minIndex])
-  countyBlockIndexes = new uint32_t[numPoints];
-  cityBlockIndexes = new uint32_t[numPoints];
+
+  // Gather the Counties (from county id in primary data) and Cities (from 'place' data) and count the number of blocks in each.
   map<uint32_t, uint32_t> cityIdBlockCount;
   map<uint32_t, uint32_t> countyIdBlockCount;
   for(int i = 0; i < numPoints; i++) {
@@ -37,11 +33,14 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     }
     cityIdBlockCount[place] += 1;
   }
-
-  fprintf(stderr, "CC %zd counties %zd cities\n", countyIdBlockCount.size(), cityIdBlockCount.size());
   numCounties = countyIdBlockCount.size();
+  numCities = cityIdBlockCount.size();
+  fprintf(stderr, "CC %u counties %u cities\n", numCounties, numCities);
+
+  // Allocate county block list, set pointer in each county
   counties = new CountyCity[numCounties];
   int ci = 0;
+  countyBlockIndexes = new uint32_t[numPoints];
   uint32_t* cbip = countyBlockIndexes;
   for (map<uint32_t, uint32_t>::const_iterator it = countyIdBlockCount.begin(); it != countyIdBlockCount.end(); ++it) {
     uint32_t countyId = it->first;
@@ -53,9 +52,10 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     ci++;
   }
 
-  numCities = cityIdBlockCount.size();
+  // Allocate city block list, set pointer in each city
   cities = new CountyCity[numCities];
   ci = 0;
+  cityBlockIndexes = new uint32_t[numPoints];
   cbip = cityBlockIndexes;
   for (map<uint32_t, uint32_t>::const_iterator it = cityIdBlockCount.begin(); it != cityIdBlockCount.end(); ++it) {
     uint32_t id = it->first;
@@ -67,17 +67,23 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     ci++;
   }
 
+  // for each block, append it to appropriate county and city block list
   for(int i = 0; i < numPoints; i++) {
     uint32_t county = countyOfIndex(i);
     int ci = countyIdToIndex[county];
     counties[ci].blockIndexes[counties[ci].numBlocks] = i;
     counties[ci].numBlocks++;
     counties[ci].pop += sov->gd->pop[i];
+
     uint32_t place = sov->gd->place[i];
     if (place == PlaceMap::INVALID_PLACE || place == 0) {
       continue;
     }
-    cityIdBlockCount[place] += 1;
+    ci = cityIdToIndex[place];
+    CountyCity* city = &(cities[ci]);
+    city->blockIndexes[city->numBlocks] = i;
+    city->numBlocks++;
+    city->pop += sov->gd->pop[i];
   }
 
   delete [] ubidLut;
@@ -115,14 +121,14 @@ void CountyCityDistricterSet::alloc(int numDistricts) {
 void CountyCityDistricterSet::initNewRandomStart() {
   int dpop = popTarget();
   POPTYPE di = 0;
-  int minCountyDistrictPop = dpop * (1.0 - countyCloseEnoughPopulationFraction);
-  int maxCountyDistrictPop = dpop * (1.0 + countyCloseEnoughPopulationFraction);
-  for (int ci = 0; ci < numCounties; ci++) {
+  unsigned int minCountyDistrictPop = dpop * (1.0 - countyCloseEnoughPopulationFraction);
+  unsigned int maxCountyDistrictPop = dpop * (1.0 + countyCloseEnoughPopulationFraction);
+  for (unsigned int ci = 0; ci < numCounties; ci++) {
     if (counties[ci].pop > minCountyDistrictPop && counties[ci].pop < maxCountyDistrictPop) {
       assert(di < districts);
       fprintf(stderr, "set district %d to county %d\n", di, counties[ci].id);
       counties[ci].districtLock = di;
-      for (int bi = 0; bi < counties[ci].numBlocks; bi++) {
+      for (unsigned int bi = 0; bi < counties[ci].numBlocks; bi++) {
         auto b = counties[ci].blockIndexes[bi];
         lock[b] = COUNTY_LOCK;
         solution[b] = di;
@@ -140,7 +146,7 @@ void CountyCityDistricterSet::initNewRandomStart() {
         continue;
       }
       bool cityOk = true;
-      for (int bi = 0; bi < cities[xc].numBlocks; bi++) {
+      for (unsigned int bi = 0; bi < cities[xc].numBlocks; bi++) {
         if (solution[cities[xc].blockIndexes[bi]] != NODISTRICT) {
           cityOk = false;
           break;
@@ -150,7 +156,7 @@ void CountyCityDistricterSet::initNewRandomStart() {
         runawayLimit--; continue;
       }
       cities[xc].districtLock = di;
-      for (int bi = 0; bi < cities[xc].numBlocks; bi++) {
+      for (unsigned int bi = 0; bi < cities[xc].numBlocks; bi++) {
         auto b = cities[xc].blockIndexes[bi];
         lock[b] = CITY_LOCK;
         solution[b] = di;

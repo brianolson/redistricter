@@ -28,3 +28,5 @@ target
 lib
 include
 .hg
+cpp/bin
+cpp/dumpBinLog
