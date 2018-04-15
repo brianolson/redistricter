@@ -28,7 +28,11 @@ DistrictSet(Solver* sovIn) : districts(-1), they((AbstractDistrict**)0), sov(sov
   AbstractDistrict& operator[](int index) {
     return *(they[index]);
   }
-	
+
+  // *Parameter* functions here are part of a general purpose
+  // configurability feature that was part of a MacOS native GUI that
+  // has bitrotted away. Maybe bring it back some day as part of
+  // command line or automated solution space exploration.
   virtual int numParameters() = 0;
   // Return NULL if index too high or too low.
   virtual const char* getParameterLabelByIndex(int index) = 0;
@@ -48,6 +52,7 @@ DistrictSet(Solver* sovIn) : districts(-1), they((AbstractDistrict**)0), sov(sov
   // Every DistrictSet is associated with some Solver
   Solver* sov;
 
+  // not inline because it digs into Solver and GeoData
   int popTarget() const;
 };
 
