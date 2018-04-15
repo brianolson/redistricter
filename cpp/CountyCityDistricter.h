@@ -38,8 +38,6 @@ public:
   virtual void getStats(SolverStats* stats);
   virtual void print(const char* filename);
 
-  virtual void fixupDistrictContiguity();
-
   virtual int numParameters();
   // Return NULL if index too high or too low.
   virtual const char* getParameterLabelByIndex(int index);

@@ -6,10 +6,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <map>
+#include <memory>
 
 using std::map;
+using std::unique_ptr;
 
 CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     : DistrictSet(sovIn) {
@@ -19,7 +22,7 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
   }
   auto numPoints = sov->gd->numPoints;
   uint32_t minIndex = 0, maxIndex = 0;
-  uint64_t* ubidLut = sov->gd->makeUbidLUT(&minIndex, &maxIndex);
+  unique_ptr<uint64_t[]> ubidLut(sov->gd->makeUbidLUT(&minIndex, &maxIndex));
 #define countyOfIndex(i) ubidCounty(ubidLut[(i) - minIndex])
 
   // Gather the Counties (from county id in primary data) and Cities (from 'place' data) and count the number of blocks in each.
@@ -86,15 +89,10 @@ CountyCityDistricterSet::CountyCityDistricterSet(Solver* sovIn)
     city->pop += sov->gd->pop[i];
   }
 
-  delete [] ubidLut;
-
   lock = new uint8_t[numPoints];
+  memset(lock, 0, sizeof(uint8_t[numPoints]));
   solution = new POPTYPE[numPoints];
-  for (int i = 0; i < numPoints; i++) {
-    lock[i] = 0;
-    solution[i] = NODISTRICT;
-  }
-  //memset(solution, NODISTRICT, sizeof(POPTYPE[numPoints]));
+  memset(solution, NODISTRICT, sizeof(POPTYPE[numPoints]));
 }
 
 CountyCityDistricterSet::~CountyCityDistricterSet() {
@@ -198,10 +196,6 @@ void CountyCityDistricterSet::getStats(SolverStats* stats) {
   assert(false); // TODO: WRITEME
 }
 void CountyCityDistricterSet::print(const char* filename) {
-  assert(false); // TODO: WRITEME
-}
-
-void CountyCityDistricterSet::fixupDistrictContiguity() {
   assert(false); // TODO: WRITEME
 }
 

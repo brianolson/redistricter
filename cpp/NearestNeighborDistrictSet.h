@@ -32,7 +32,6 @@ public:
 	void* setWinnersThread(SetWinnersThreadArgs* args);
 #endif
 	
-	void fixupDistrictContiguity();
 	void resumDistrictCenters();
 
 	virtual int numParameters();
@@ -57,6 +56,7 @@ public:
 	double jitterPeriod;
 private:
 	NearestNeighborDistrict* dists;
+	void fixupDistrictContiguity();
 };
 
 #endif /* NEAREST_NEIGHBOR_DISTRICT_SET_H */

@@ -115,7 +115,6 @@ public:
 
 	virtual void getStats(SolverStats* stats);
 
-	virtual void fixupDistrictContiguity();
 	void assignReposessedNodes(int* bfsearchq, int pointsRepod);
 
 	virtual int numParameters();
@@ -141,6 +140,9 @@ public:
 	double currentRandomFactor;
 
 	Bitmap* notContiguous;
+
+private:
+	void fixupDistrictContiguity();
 };
 
 #endif

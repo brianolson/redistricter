@@ -187,8 +187,8 @@ void District2Set::getStats(SolverStats* stats) {
 	stats->kmppp = ((popMoment / stats->poptotal) / 360000000.0) * 40075.013481;
 }
 
-void District2Set::alloc(int size) {
-	DistrictSet::alloc(size);
+void District2Set::alloc(int numDistricts) {
+	DistrictSet::alloc(numDistricts);
 	lock = new unsigned char[sov->gd->numPoints];
 	assert(lock != NULL);
 	sorti = new POPTYPE[districts];
