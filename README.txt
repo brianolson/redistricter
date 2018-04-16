@@ -1,3 +1,12 @@
+This is Open Source software to create impartial optimally compact district maps for US State Legislatures and Congressional districts.
+
+Results can be seen here:
+http://bdistricting.com/2010/
+
+And with analysis of partisan outcomes models here:
+https://projects.fivethirtyeight.com/redistricting-maps/#algorithmic-compact
+
+
 DEPENDENCIES:
 	C++ compiler (GCC or CLANG)
 	Java 2.7+
