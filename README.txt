@@ -9,12 +9,11 @@ https://projects.fivethirtyeight.com/redistricting-maps/#algorithmic-compact
 
 DEPENDENCIES:
 	C++ compiler (GCC or CLANG)
-	Java 2.7+
-	Python 3+
+	Java 1.8+
+	Python 3.6+
 	png library
 	zlib compression library
-	google protocol buffers
-	http://code.google.com/p/protobuf/ *
+	google protocol buffers http://code.google.com/p/protobuf/
 
 BUILDING:	
 
@@ -36,7 +35,7 @@ RUNNING:
 Setup a python environment:
 
 # your Python version may vary, run `python3 --version` to check
-pyvenv-3.6 ve
+python3 -m venv ve
 # this assumes bash or sh-like shell, to source a script into your session
 . ve/bin/activate
 pip install -r python/requirements.txt
@@ -57,12 +56,7 @@ Lots of other options are available on both ./setupstatedata and ./run_devmode a
 
 ---
 * Setting up protobuf
-# Requires protobuf 2.6.1; has not been updated for protobuf 3.0
 # Here's the cheat sheet for building this quickly.
-# On Mac, if you want fancy multi-platform binaries, one of these (bash syntax):
-CXXFLAGS='-arch ppc -arch ppc64 -arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
-CXXFLAGS='-arch i386 -arch x86_64' ./configure --enable-dependency-tracking=no
-# Otherwise just:
 ./configure
 
 # then build C and optionally python
@@ -70,6 +64,7 @@ make
 make check
 sudo make install
 
+# while Python virtual environment setup above is active:
 cd ../python
 python setup.py test
 python setup.py install
