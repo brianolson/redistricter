@@ -68,6 +68,9 @@ private:
   POPTYPE* solution;
 
   CountyCityDistrict* ccdstorage;
+
+  POPTYPE grabWholeCounties(POPTYPE di=0);
+  POPTYPE grabWholeCities(POPTYPE di=0);
 };
 
 class CountyCityDistrict : public AbstractDistrict {

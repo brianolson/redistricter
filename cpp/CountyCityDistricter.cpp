@@ -1,3 +1,16 @@
+/*
+ * Automatic disticting that tries to produce compact solutions while
+ * keeping cities and counties whole as much as possible.
+ *
+ * Should be capable of producing plans compatible with 2015 Ohio law
+ * about drawing state legislature districts.
+ *
+ * 1. allocate counties within 5% of ideal district population and lock them in (required by OH)
+ * 2a. allocate cities within 5% of ideal district population and lock them in (not required by OH, but makes sense to me)
+ * 2b. allocate cities with less than district population as 'super blocks', do block-allocation style optimization at this level for a few ticks
+ * 3. allocate non-city blocks and optimize for equal population and compactness, run a bunch of ticks
+ * 4. (if equal-population goal not met) break some cities and counties and continue to optimizie for equal population and compactness.
+ */
 #include "CountyCityDistricter.h"
 #include "GeoData.h"
 #include "Solver.h"
@@ -118,13 +131,12 @@ void CountyCityDistricterSet::alloc(int numDistricts) {
     they[i] = ccdstorage + i;
   }
 }
-void CountyCityDistricterSet::initNewRandomStart() {
+
+// search counties for whole counties close enough to target population
+POPTYPE CountyCityDistricterSet::grabWholeCounties(POPTYPE di) {
   int dpop = popTarget();
-  POPTYPE di = 0;
   unsigned int minCountyDistrictPop = dpop * (1.0 - countyCloseEnoughPopulationFraction);
   unsigned int maxCountyDistrictPop = dpop * (1.0 + countyCloseEnoughPopulationFraction);
-
-  // search counties for whole counties close enough to target population
   for (unsigned int ci = 0; ci < numCounties; ci++) {
     if (counties[ci].pop > minCountyDistrictPop && counties[ci].pop < maxCountyDistrictPop) {
       assert(di < districts);
@@ -138,9 +150,15 @@ void CountyCityDistricterSet::initNewRandomStart() {
       di++;
     }
   }
+  return di;
+}
 
+POPTYPE CountyCityDistricterSet::grabWholeCities(POPTYPE di) {
   // search cities which match district population and lock-allocate them
   // TODO: make this so it can be disabled, or randomized so it only happens to some of the eligible cities.
+  int dpop = popTarget();
+  unsigned int minCountyDistrictPop = dpop * (1.0 - countyCloseEnoughPopulationFraction);
+  unsigned int maxCountyDistrictPop = dpop * (1.0 + countyCloseEnoughPopulationFraction);
   for (unsigned int ci = 0; ci < numCities; ci++) {
     if (cities[ci].pop > minCountyDistrictPop && cities[ci].pop < maxCountyDistrictPop) {
       assert(di < districts);
@@ -166,26 +184,36 @@ void CountyCityDistricterSet::initNewRandomStart() {
       di++;
     }
  nextcity:
+    ;
   }
+  return di;
+}
+
+void CountyCityDistricterSet::initNewRandomStart() {
+  // next district id to assign to
+  POPTYPE di = 0;
+
+  di = grabWholeCounties(di);
+
+  di = grabWholeCities(di);
 
   // start remaining districts seeded with some core random city
   while (di < districts) {
     int runawayLimit = 1000;
+ try_a_city:
     while (runawayLimit > 0) {
       auto xc = random() % numCities;
       if (cities[xc].districtLock != NODISTRICT) {
+        // random city already taken, try again
         runawayLimit--;
         continue;
       }
-      bool cityOk = true;
       for (unsigned int bi = 0; bi < cities[xc].numBlocks; bi++) {
         if (solution[cities[xc].blockIndexes[bi]] != NODISTRICT) {
-          cityOk = false;
-          break;
+          // random city partially taken, try again
+          runawayLimit--;
+          goto try_a_city;
         }
-      }
-      if (!cityOk) {
-        runawayLimit--; continue;
       }
       cities[xc].districtLock = di;
       for (unsigned int bi = 0; bi < cities[xc].numBlocks; bi++) {
@@ -193,12 +221,13 @@ void CountyCityDistricterSet::initNewRandomStart() {
         lock[b] = CITY_LOCK;
         solution[b] = di;
       }
-      break;
+      goto initialized_city;
     }
     if (runawayLimit <= 0) {
       fprintf(stderr, "could not find a city for district %d\n", di);
       exit(1);
     }
+ initialized_city:
     di++;
   }
 }
