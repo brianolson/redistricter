@@ -16,8 +16,8 @@ import traceback
 import time
 import zlib
 
-from . import kmppspreadplot
-from . import plotstatlog
+import kmppspreadplot
+import plotstatlog
 
 
 plotlib = None
@@ -26,18 +26,20 @@ plotlibModifiedTime = None
 def getPlotlibJs():
 	global plotlib
 	global plotlibModifiedTime
-	bindir = os.path.dirname(__file__)
-	for name in ['plotlib_compiled.js', 'plotlib.js']:
-		path = os.path.join(bindir, name)
-		if os.path.exists(path):
-			plstat = os.stat(path)
-			if (plotlib is not None) and (plotlibModifiedTime is not None) and (plotlibModifiedTime >= plstat.st_mtime):
+	if plotlib:
+		return plotlib
+	for bindir in (os.path.dirname(__file__), os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'html')):
+		for name in ['plotlib_compiled.js', 'plotlib.js']:
+			path = os.path.join(bindir, name)
+			if os.path.exists(path):
+				plstat = os.stat(path)
+				if (plotlib is not None) and (plotlibModifiedTime is not None) and (plotlibModifiedTime >= plstat.st_mtime):
+					return plotlib
+				f = open(path, 'r')
+				plotlib = f.read()
+				f.close()
+				plotlibModifiedTime = plstat.st_mtime
 				return plotlib
-			f = open(path, 'r')
-			plotlib = f.read()
-			f.close()
-			plotlibModifiedTime = plstat.st_mtime
-			return plotlib
 	return None
 
 
@@ -304,7 +306,7 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
 			if x[-4:].lower() == '.png':
 				self.write(imgCallout(x, x))
 			if x[:7].lower() == 'statlog':
-				writeStatlogDisplay(fpath, x, self.wfile)
+				writeStatlogDisplay(fpath, x, self)
 		if self.dirExtra:
 			self.write(self.dirExtra)
 		self.write("""<div><a href="kmpp_spread.svg">kmpp_spread.svg</a></div>""")

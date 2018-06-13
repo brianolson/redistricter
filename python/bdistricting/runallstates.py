@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # RUN FROM INSIDE run_redistricter.py
 # (probably, could still use it directly for development)
 
@@ -59,8 +59,8 @@ import traceback
 import pdb
 
 # local imports
-from . import client
-from . import manybest
+import client
+import manybest
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
@@ -623,7 +623,7 @@ class runallstates(object):
 		origQpos = self.qpos
 		stu = self.states[self.qpos]
 		self.qpos = (self.qpos + 1) % len(self.states)
-		# check isEnabled at this time instead of setup so that it can be gotten dynamically from configoverrides
+		# check isEnabled at this time instead of setup so that it can be gotten dynamically from configoverride
 		while not self.config[stu].isEnabled():
 			stu = self.states[self.qpos]
 			self.qpos = (self.qpos + 1) % len(self.states)
@@ -731,7 +731,9 @@ class runallstates(object):
 		(options, args) = argp.parse_args()
 		self.options = options
 		if options.verbose:
-			logging.getLogger().setLevel(logging.DEBUG)
+			logging.basicConfig(level=logging.DEBUG)
+		else:
+			logging.basicConfig(level=logging.INFO)
 		if options.diskQuota:
 			self.diskQuota = sizeStringToInt(
 				options.diskQuota, self.diskQuota)
@@ -1333,7 +1335,7 @@ class runallstates(object):
 		
 		severthread = None
 		if self.options.port > 0:
-			from . import resultserver
+			import resultserver
 			def extensionFu(handler):
 				return self.setCurrentRunningHtml(handler)
 			actions = {}
