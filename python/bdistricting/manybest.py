@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 usage = (
 """usage: $0 [-n ngood][-bad badthresh][-d out-dir]
@@ -38,14 +39,14 @@ class NoRunsException(Exception):
 
 class slog(object):
     """A log summary object"""
-    
+
     def __init__(self, root, kmpp, spread, png, text):
         self.root = root
         self.kmpp = kmpp
         self.spread = spread
         self.png = png
         self.text = text
-    
+
     def __repr__(self):
         return """slog("%s", "%s", %d, "%s", %d chars of text)""" % (self.root, self.kmpp, self.spread, self.png, len(self.text))
 
@@ -103,7 +104,7 @@ class manybest(object):
             if os.path.isdir(fpath) and not os.path.islink(fpath):
                 self.maybeAddSlogDir(fpath)
         self.odir = os.path.join(self.root, self.odir)
-    
+
     def parseOpts(self, argv):
         argv = argv[1:]
         while len(argv) > 0:
@@ -167,6 +168,7 @@ class manybest(object):
         """return (slog[] they, string[] empties)"""
         they = []
         empties = []
+        hourAgo = time.time() - (2 * 3600.0)
         if loglist is None:
             loglist = self.log_paths
         for fn in loglist:
@@ -188,6 +190,10 @@ class manybest(object):
             kmpp, spread, lines = self.parseLog(fin)
             fin.close()
             if kmpp is None:
+                fst = os.stat(fn)
+                if fst.st_mtime > hourAgo:
+                    # may still be in progress
+                    continue
                 empties.append(root)
                 continue
             if self.root:
@@ -219,7 +225,7 @@ class manybest(object):
             if not self.dry_run:
                 shutil.copyfile(t.png, destpngpath)
             i += 1
-    
+
     def writeBestsTable(self, they, fpart):
         fpart.write("""<table border="1">""")
         i = 1
@@ -322,7 +328,7 @@ class manybest(object):
                 self.verbose.write("mv %s %s\n" % (bpath, oldsub))
             if not self.dry_run:
                 shutil.move(bpath, oldsub)
-    
+
     def handleEmpties(self, empties):
         if empties:
             # don't delete the last one, in case it's still active
@@ -335,7 +341,7 @@ class manybest(object):
                     eroot = os.path.join(self.root, eroot)
                 if not self.dry_run:
                     shutil.rmtree(eroot)
-        
+
     def main(self, argv):
         self.parseOpts(argv)
         self.run()

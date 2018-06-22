@@ -933,10 +933,10 @@ extern const unsigned char* colors;
 extern int numColors;
 
 #if WITH_PNG
-void Solver::doPNG() {
-  doPNG(winner, pngname);
+int Solver::doPNG() {
+  return doPNG(winner, pngname);
 }
-void Solver::doPNG(POPTYPE* soln, const char* outname) {
+int Solver::doPNG(POPTYPE* soln, const char* outname) {
   // TODO: default scale width by 1/cos(mean latitude)
   double ratioError = (((maxy - miny * 1.0) / (maxx - minx)) / ((1.0 * pngHeight) / pngWidth));
   if (ratioError > 1.05) {
@@ -993,9 +993,10 @@ void Solver::doPNG(POPTYPE* soln, const char* outname) {
     row[x+3] = 0xff; // 100% alpha
   }
 
-  myDoPNG( outname, rows, pngHeight, pngWidth );
+  int err = myDoPNG( outname, rows, pngHeight, pngWidth );
   free( rows );
   free( data );
+  return err;
 }
 #endif
 

@@ -18,17 +18,17 @@ class SolverStats;
 class Solver {
 public:
 	int districts;
-	
+
 	double totalpop;
 	double districtPopTarget;
-	
+
 	Node* nodes;
 	int* allneigh;
 	POPTYPE* winner;
 	DistrictSet* (*districtSetFactory)(Solver*);
 	DistrictSet* _dists;
 	DistrictSet* getDistricts(); // lazy allocating caching accessor
-	
+
 	const char* inputname;
 	int generations;
 	char* dumpname;
@@ -36,49 +36,49 @@ public:
 		initWithNewDistricts = 1,
 		initWithOldDistricts
 	} initMode;
-	
+
 	char* solutionLogPrefix;
 	int solutionLogInterval;
 	int solutionLogCountdown;
-	
+
 #if WITH_PNG
 	char* pngLogPrefix;
 	int pngLogInterval;
 	int pngLogCountdown;
 #endif
-	
+
 	FILE* statLog;
 	int statLogInterval;
 	int statLogCountdown;
 	BinaryStatLogger* pbStatLog;
-	
+
 	char* distfname;
 	char* coordfname;
-	
+
 #if WITH_PNG
 	char* pngname;
 	int pngWidth, pngHeight;
 #endif
-	
+
 	GeoData* gd;
 	GeoData* (*geoFact)(const char*);
-	
+
 	uint32_t numEdges;
 	int32_t* edgeData;
-	
+
 	//POPTYPE* sorti;
-	
+
 #define POS_TYPE int
 	POS_TYPE minx, miny, maxx, maxy;
 	double viewportRatio;
-	
+
 	int gencount;
 
 	FILE* blaf;
-	
+
 	int runDutySeconds;
 	int sleepDutySeconds;
-	
+
 	LastNMinMax<double>* recentKmpp;
 	LastNMinMax<double>* recentSpread;
 	int giveupSteps;
@@ -88,7 +88,7 @@ public:
 
 	Solver();
 	~Solver();
-	
+
 	int handleArgs( int argc, const char** argv );
 	void load();
 	// If filename is null, add ".links" to inputname
@@ -119,8 +119,8 @@ public:
 	int megaInit();
 	int step();
 #if WITH_PNG
-	void doPNG();
-	void doPNG(POPTYPE* soln, const char* outname);
+	int doPNG();
+	int doPNG(POPTYPE* soln, const char* outname);
 	//void doPNG_r( unsigned char* data, unsigned char** rows, int pngWidth, int pngHeight, const char* pngname );
 #endif /* WITH_PNG */
 
@@ -130,7 +130,7 @@ public:
 	}
 	/* to dumpname */
 	int saveSolution();
-	
+
 	/* draw stuff */
 	double dcx, dcy;
 	double zoom;
@@ -157,7 +157,7 @@ public:
 	double fps;
 	int drawHistoryPos;
 	void recordDrawTime();
-	
+
 	void initGL();
 	void drawGL();
 	void nudgeLeft();
@@ -174,10 +174,10 @@ public:
 
 	double maxSpreadFraction;
 	double maxSpreadAbsolute;
-	
+
 	SolverStats* getDistrictStats();
 	int getDistrictStats( char* str, int len );
-	
+
 	static const char* argHelp;
 
     private:
@@ -226,7 +226,7 @@ public:
 	int adjlen;
 	// size of allocation in nuber of pairs
 	int adjcap;
-	
+
 	Adjacency();
 	~Adjacency();
 };

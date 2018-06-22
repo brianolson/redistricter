@@ -154,8 +154,8 @@ class PipeReader(threading.Thread):
             lastlines(self.lastlines, self.limit, line)
 
 def thread_reader_run(proc, out):
-    outreader = PipeReader(proc.stdout, out, prefix='O: ')
-    errreader = PipeReader(proc.stderr, out, prefix='E: ')
+    outreader = PipeReader(proc.stdout, out, prefix='o ')
+    errreader = PipeReader(proc.stderr, out, prefix='e ')
     outreader.start()
     errreader.start()
     retcode = proc.wait()

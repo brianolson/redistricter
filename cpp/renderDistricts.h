@@ -3,7 +3,7 @@
 
 //#include "config.h"
 //#if WITH_PNG
-void myDoPNG( const char* outname, unsigned char** rows, int height, int width ) __attribute__ (( weak ));
+int myDoPNG( const char* outname, unsigned char** rows, int height, int width ) __attribute__ (( weak ));
 #pragma weak myDoPNG
 void recolorDists( POPTYPE* adjacency, int adjlen, int numd, POPTYPE* renumber = NULL ) __attribute__ (( weak ));
 #pragma weak recolorDists

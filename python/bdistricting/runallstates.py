@@ -105,6 +105,9 @@ def timestamp():
     return "%04d%02d%02d_%02d%02d%02d" % (now.year, now.month, now.day,
         now.hour, now.minute, now.second)
 
+def logstamp():
+    return datetime.datetime.now().strftime('%H:%M:%S.%f')
+
 SIZE_STRING_RE_ = re.compile(r'([0-9]+)([kmg]?b?)', re.IGNORECASE)
 
 def sizeStringToInt(x, default=None):
@@ -149,6 +152,31 @@ def lastlines(arr, limit, line):
         arr = arr[start:]
     arr.append(line)
     return arr
+
+class PipeReader(threading.Thread):
+    def __init__(self, fin, out, limit=10, prefix=''):
+        threading.Thread.__init__(self)
+        self.fin = fin
+        self.out = out
+        self.lastlines = []
+        self.limit = limit
+        self.prefix = prefix
+    def run(self):
+        for line in self.fin:
+            if isinstance(line, bytes):
+                line = line.decode()
+            self.out.write(self.prefix + logstamp() + ' ' + line)
+            lastlines(self.lastlines, self.limit, line)
+
+def thread_reader_run(proc, stu, out=sys.stdout):
+    outreader = PipeReader(proc.stdout, out, prefix='O {} {} '.format(proc.pid, stu))
+    errreader = PipeReader(proc.stderr, out, prefix='E {} {} '.format(proc.pid, stu))
+    outreader.start()
+    errreader.start()
+    retcode = proc.wait()
+    outreader.join()
+    errreader.join()
+    return outreader.lastlines, errreader.lastlines
 
 def poll_run(p, stu):
     """Read err and out from a process, copying to sys.stdout.
@@ -1068,29 +1096,7 @@ class runallstates(object):
             sys.stdout.write('started pid {} in {}\n'.format(p.pid, ctd))
             errorlines = []
             outlines = []
-            if has_poll:
-                (outlines, errorlines) = poll_run(p, stu)
-            elif has_select:
-                (outlines, errorlines) = select_run(p, stu)
-            else:
-                self.addStopReason('has neither poll nor select\n')
-                sys.stderr.write('stopreason: ' + self.stopreason + "\n")
-                self.softfail = True
-                return False
-            try:
-                for line in p.stdin:
-                    if line:
-                        sys.stdout.write("O {} {}: ".format(p.pid, stu) + line)
-                        lastlines(outlines, 10, line)
-            except:
-                pass
-            try:
-                for line in p.stderr:
-                    if line:
-                        sys.stdout.write("E {} {}: ".format(p.pid, stu) + line)
-                        lastlines(errorlines, 10, line)
-            except:
-                pass
+            thread_reader_run(p, stu)
             sys.stdout.write('pid {} ended with {} in {}\n'.format(p.pid, p.returncode, ctd))
             if p.returncode != 0:
                 # logCompletion mechanism allows for deferred script quit,
@@ -1118,13 +1124,15 @@ class runallstates(object):
                 self.softfail = self.logCompletion(0)
                 return False
             self.logCompletion(1)
-            fin = open(statlog_path, "r")
-            fout = open(statsum, "w")
-            for line in fin:
-                if line[0] == "#":
-                    fout.write(line)
-            fout.close()
-            fin.close()
+            try:
+                with open(statlog_path, "r") as fin:
+                    with open(statsum, "w") as fout:
+                        for line in fin:
+                            if line[0] == "#":
+                                fout.write(line)
+            except Exception as e:
+                sys.stderr.write('E {} {}: {}\n'.format(p.pid, start_timestamp, e))
+                traceback.print_exc()
         if self.dry_run or self.verbose:
             sys.stdout.write("grep ^# {} > {}\n".format(statlog_path, statsum))
             sys.stdout.write("gzip {}\n".format(statlog_path))
@@ -1390,7 +1398,7 @@ class RunThread(object):
 
     def __init__(self, runner, label):
         self.runner = runner
-        self.thread = threading.Thread(target=self.run, name=label)
+        self.thread = threading.Thread(target=self.tryrun, name=label)
         self.label = label
         self.stu = None
         RunThread.lock.acquire()
@@ -1413,9 +1421,16 @@ class RunThread(object):
                 # don't busy spin trying to get state
                 time.sleep(2)
 
+    def tryrun(self):
+        try:
+            self.run()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            raise
+
     def run(self):
-        # TODO: better exception logging
-        # See also runthread() above
+        # This is for running many threads.
+        # For a single thread see runthread() above
         while not self.runner.shouldstop():
             # sleep 1 is a small price to pay to prevent stupid runaway loops
             time.sleep(1)

@@ -52,33 +52,34 @@ void user_warning_fn( png_structp png_ptr, const char* str ) {
   fprintf( stderr, "warning: %s", str );
 }
 
-void myDoPNG( const char* outname, unsigned char** rows, int height, int width ) {
+int myDoPNG( const char* outname, unsigned char** rows, int height, int width ) {
   FILE* fout;
 
   fout = fopen( outname, "wb");
   if ( fout == NULL ) {
+    fprintf(stderr, "error trying to do png \"%s\"\n", outname);
     perror( outname );
-    exit(1);
+    return 1;
   }
 
   png_structp png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING,
                                                  (png_voidp)user_error_ptr, user_error_fn, user_warning_fn );
   if (!png_ptr) {
     fclose(fout);
-    exit( 2 );
+    return 2;
   }
 
   png_infop info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr) {
     png_destroy_write_struct( &png_ptr, (png_infopp)NULL );
     fclose(fout);
-    exit( 2 );
+    return 2;
   }
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fout);
-    exit( 2 );
+    return 2;
   }
 
   png_init_io(png_ptr, fout);
@@ -99,6 +100,7 @@ void myDoPNG( const char* outname, unsigned char** rows, int height, int width )
   png_write_end(png_ptr, info_ptr);
   png_destroy_write_struct(&png_ptr, &info_ptr);
   fclose( fout );
+  return 0;
 }
 
 static int recolorFixup( POPTYPE* adjacency, int adjlen, POPTYPE* ci, int numd, int index, POPTYPE* fixupOrderArray ) {
