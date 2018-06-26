@@ -8,9 +8,11 @@ __author__ = "Brian Olson"
 import http.server
 import base64
 import cgi
+import io
 import os
 import re
 import http.server
+import logging
 import threading
 import traceback
 import time
@@ -19,6 +21,7 @@ import zlib
 import kmppspreadplot
 import plotstatlog
 
+logger = logging.getLogger(__name__)
 
 plotlib = None
 plotlibModifiedTime = None
@@ -322,13 +325,13 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
         try:
             self.GET_kmppspreadplot_inner(path, fpath)
         except Exception as e:
-            e.printStackTrace()
+            logger.error('failed building kmpp_spread.svg', exc_info=True)
 
     def GET_kmppspreadplot_inner(self, path, fpath):
         self.send_response(200)
         self.send_header('Content-Type', 'image/svg+xml')
         self.end_headers()
-        svgout = kmppspreadplot.svgplotter('kmppspreadplot.svg', self.wfile)
+        svgout = kmppspreadplot.svgplotter('kmppspreadplot.svg', io.TextIOWrapper(self.wfile))
         kmppspreadplot.walk_statsums(svgout, fpath, True)
         svgout.close()
 
@@ -457,4 +460,5 @@ if __name__ == '__main__':
     argp.add_option('--port', dest='port', type='int', default=8080, help='port to serve stats on via HTTP')
     argp.add_option('--count-runs', '--count', dest='countRuns', action='store_true', default=False, help='count statsum results under result dirs and display them in root result display. can be slow.')
     (options, args) = argp.parse_args()
+    logging.basicConfig(level=logging.INFO)
     runServer(options.port)
