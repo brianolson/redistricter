@@ -14,7 +14,7 @@ _jinja_env = None
 def _env():
     global _jinja_env
     if _jinja_env is None:
-        templatedir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'html'))
+        templatedir = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'html'))
         loader = FileSystemLoader(templatedir)
         _jinja_env = Environment(loader=loader)
         _jinja_env.filters['tojson'] = tojson

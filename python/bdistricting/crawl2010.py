@@ -52,19 +52,19 @@ class CensusTigerBundle(object):
       self.county = None
     else:
       self.county = int(county)
-  
+
   def __eq__(self, it):
     return (self.path == it.path) and (self.state_fips == it.state_fips) and (self.county == it.county)
-  
+
   def __hash__(self):
     return hash(self.path) ^ hash(self.state_fips) ^ hash(self.county)
-  
+
   def __repr__(self):
     return str(self)
-  
+
   def __str__(self):
     return 'CensusTigerBundle(%s, %s, %s)' % (self.path, self.state_fips, self.county)
-  
+
   def __unicode__(self):
     return 'CensusTigerBundle(%s, %s, %s)' % (self.path, self.state_fips, self.county)
 
@@ -144,31 +144,31 @@ class Crawler(object):
     self._county = None
     self.fetchCount = 0
     self.alreadyCount = 0
-  
+
   @property
   def faces(self):
     if self._faces is None:
       self._faces = getFacesSet(self.options.datadir)
     return self._faces
-  
+
   @property
   def edges(self):
     if self._edges is None:
       self._edges = getEdgesSet(self.options.datadir)
     return self._edges
-  
+
   @property
   def tabblock(self):
     if self._tabblock is None:
       self._tabblock = getTabblockSet(self.options.datadir)
     return self._tabblock
-  
+
   @property
   def county(self):
     if self._county is None:
       self._county = getCountySet(self.options.datadir)
     return self._county
-  
+
   def _fetchSetForState(self, fips, tset, url, destdir):
     for it in tset:
       if it.state_fips == fips:
@@ -229,7 +229,7 @@ class Crawler(object):
     url = 'http://www2.census.gov/geo/docs/reference/codes/files/st{fips:02d}_{stl}_cou.txt'.format(fips=fips, stl=stl)
     urllib.request.urlretrieve(url, fpath)
     self.fetchCount += 1
-  
+
   def _fetchAllSet(self, tset, url):
     for it in tset:
       stu = states.codeForFips(it.state_fips)
@@ -247,7 +247,7 @@ class Crawler(object):
         self.fetchCount += 1
       else:
         self.alreadyCount += 1
-  
+
   def getAllStates(self):
     self.fetchCount = 0
     self.alreadyCount = 0
@@ -259,7 +259,7 @@ class Crawler(object):
       self.getPlaces(stu)
       self.getCountyNames(stu)
     logging.info('fetched %d and already had %d elements', self.fetchCount, self.alreadyCount)
-  
+
   def getAllStulist(self):
     stulist = []
     for it in self.tabblock:
@@ -276,7 +276,7 @@ class ProcessGlobals(setupstatedata.ProcessGlobals):
     super(ProcessGlobals, self).__init__(options)
     self.crawley = crawley
     self.tigerlatest = 'http://www2.census.gov/geo/tiger/TIGER2010/'
-  
+
   def getState(self, name):
     return StateData(self, name, self.options)
 
@@ -379,7 +379,7 @@ class GeoBlocksPlaces(object):
 class StateData(setupstatedata.StateData):
   def __init__(self, pg, st, options):
     super(StateData, self).__init__(pg, st, options)
-  
+
   def downloadTigerZips(self, dpath):
     """Return a list of tabblock*zip files."""
     out = []
@@ -389,7 +389,7 @@ class StateData(setupstatedata.StateData):
     if not out:
       sys.stderr.write('%s (%d) not in: %r' % (self.stu, self.fips, self.pg.crawley.tabblock))
     return out
-  
+
   def getGeoBlocks(self):
     """From xx2010.pl.zip get block level geo file.
         -> geoblocks filtered file of per-block data
@@ -432,15 +432,15 @@ class StateData(setupstatedata.StateData):
     placesNamesPath = os.path.join(self.dpath, 'st{fips:02d}_{stl}_places.txt'.format(fips=self.fips, stl=self.stl))
     with open(placePopPath, 'w') as pp:
       places.writePlacePops(pp, placesNamesPath)
-  
+
   def compileBinaryData(self):
     geoblockspath = os.path.join(self.dpath, 'geoblocks')
-    linkspath = os.path.join(self.dpath, self.stl + '101.uf1.links')
+    #linkspath = os.path.join(self.dpath, self.stl + '101.uf1.links')
     binpath = os.path.join(self.options.bindir, 'linkfixup')
     outpath = os.path.join(self.dpath, self.stl + '.pb')
     cmd = [binpath, '--plgeo', geoblockspath, '-p', outpath]
     needsbuild = newerthan(geoblockspath, outpath)
-    needsbuild = needsbuild or newerthan(linkspath, outpath)
+    #needsbuild = needsbuild or newerthan(linkspath, outpath)
     needsbuild = needsbuild or newerthan(binpath, outpath)
     if not needsbuild:
       return
@@ -452,7 +452,7 @@ class StateData(setupstatedata.StateData):
     self.logf('data compile took %f seconds', time.time() - start)
     if status != 0:
       raise Exception('error (%d) executing: cd %s && "%s"' % (status, self.dpath,'" "'.join(cmd)))
-  
+
   def placelist(self):
     """placespops.csv -> highlightPlaces.txt short list of place ids"""
     placelistPath = os.path.join(self.dpath, 'highlightPlaces.txt')
@@ -471,7 +471,7 @@ class StateData(setupstatedata.StateData):
       line = next(fin)
       line = line.strip()
       return list(map(int, line.split(' ')))
-      
+
   def buildHighlightBlocklist(self):
     """highlightPlaces.txt + geoblocks.places -> highlight.ubidz binary ubid list"""
     places = self.placelist()
@@ -481,7 +481,7 @@ class StateData(setupstatedata.StateData):
     if self.options.dryrun:
       return
     filterPlacesToUbidList(placesPath, places, highlightBlocklistPath)
-    
+
   def dostate_inner(self):
     linkspath = self.processShapefile(self.dpath)
     if not linkspath:
@@ -542,7 +542,7 @@ def main():
     stulist = crawley.getAllStulist()
   pg = ProcessGlobals(options, crawley)
   setupstatedata.runMaybeThreaded(stulist, pg, options)
-    
+
 
 if __name__ == '__main__':
   main()

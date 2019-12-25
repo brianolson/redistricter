@@ -28,7 +28,7 @@ import resultspage
 import runallstates
 import states
 
-srcdir_ = os.path.dirname(os.path.abspath(__file__))
+srcdir_ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 _resources = ('report.css', 'tweet.ico', 'spreddit7.gif')
 
@@ -162,7 +162,7 @@ def parseAnalyzeStats(rawblob):
     maxp = float(m.group(4))
     minp = float(m.group(5))
     return (kmpp, maxp - minp, std)
-    
+
 
 # Example analyze output:
 # generation 0: 21.679798418 Km/person
@@ -193,21 +193,27 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
            '--labels', 'total,white,black,native,asian,pacific,other,mixed',
            '--dsort', '1', '--notext',
            '--html', htmlout,
-           '-P', pbfile, '-d', numd, '--loadSolution', solution]
+           '-P', pbfile, '-d', numd]
+    if solution:
+        if solution.lower().endswith('.csv'):
+            cmd += ['--csv-solution', solution]
+        else:
+            cmd += ['--loadSolution', solution]
     if exportpath:
         cmd += ['--export', exportpath]
 
     if printcmd:
         printcmd(cmd)
     try:
-        p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        p.stdin.write(part1data)
-        p.stdin.close()
-        p.wait()
-        analyze_text = p.stdout.read()
-        return analyze_text
+        result = subprocess.run(cmd, input=part1data, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        result.check_returncode()
+        return result.stdout.decode()
+    except subprocess.SubprocessError as e:
+        logging.error('failed analyzing race in subprocess %r < %s / %s', cmd, zipname, part1name, exc_info=True)
+        logging.error('stderr:\n%s\n\n', e.stderr.decode())
     except:
         logging.error('failed analyzing race in subprocess %r', cmd, exc_info=True)
+        raise
     return None
 
 
@@ -217,7 +223,7 @@ def getStatesCsvSources(actualsDir):
     anyError = False
 
     distdirall = os.listdir(actualsDir)
-    
+
     statefileRawRe = re.compile('.._(..)_.*\.txt', re.IGNORECASE)
 
     for fname in distdirall:
@@ -232,7 +238,7 @@ def getStatesCsvSources(actualsDir):
                 else:
                     logging.error('collision %s -> %s AND %s', stu, old, fname)
                     anyError = True
-    
+
     return stDistFiles, anyError
 
 
@@ -319,10 +325,10 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 class SubmissionAnalyzer(object):
     def __init__(self, options, dbpath=None):
         self.options = options
-        
+
         # map from STU/config-name to runallstates.configuration objects
         self.config = {}
-        
+
         self.dbpath = dbpath
         # sqlite connection
         self.db = None
@@ -349,7 +355,7 @@ class SubmissionAnalyzer(object):
             maps, _ = getStatesCsvSources(os.path.join(self.options.actualdir, actualSet))
             self._actualsMaps[actualSet] = maps
         return maps[stu]
-    
+
     def getSocial(self, pageabsurl, cgipageabsurl):
         context = dict(
             pageabsurl=pageabsurl,
@@ -363,7 +369,7 @@ class SubmissionAnalyzer(object):
         if path is None:
             path = self.options.datadir
         loadDatadirConfigurations(self.config, path)
-    
+
     def opendb(self, path):
         self.db = sqlite3.connect(path)
         c = self.db.cursor()
@@ -374,7 +380,7 @@ class SubmissionAnalyzer(object):
         c.execute('CREATE TABLE IF NOT EXISTS vars (name TEXT PRIMARY KEY, value TEXT)')
         c.close()
         self.db.commit()
-    
+
     def lookupByPath(self, path):
         """Return db value for path."""
         c = self.db.cursor()
@@ -382,7 +388,7 @@ class SubmissionAnalyzer(object):
         out = c.fetchone()
         c.close()
         return out
-    
+
     def measureSolution(self, solraw, configname):
         """For file-like object of solution and config name, return (kmpp, spread)."""
         #./analyze -B data/MA/ma.pb -d 10 --loadSolution - < rundir/MA_Congress/link1/bestKmpp.dsz
@@ -419,7 +425,7 @@ class SubmissionAnalyzer(object):
         min = int(m.group(2))
         spread = max - min
         return (kmpp, spread)
-    
+
     def setFromPath(self, fpath, innerpath):
         """Return True if db was written."""
         tf_mtime = int(os.path.getmtime(fpath))
@@ -459,7 +465,7 @@ class SubmissionAnalyzer(object):
         c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
             (tfparts['vars'], tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
         return True
-    
+
     def updatedb(self, path):
         """Update db for solutions under path."""
         if not self.db:
@@ -482,7 +488,7 @@ class SubmissionAnalyzer(object):
                     break
         if setAny:
             self.db.commit()
-    
+
     def getConfigCounts(self):
         """For all configurations, return dict mapping config name to a dict {'count': number of solutions reported} for it.
         It's probably handy to extend that dict with getBestSolutionInfo below.
@@ -493,7 +499,7 @@ class SubmissionAnalyzer(object):
         for config, count in rows:
             configs[config] = {'count': count, 'config': config}
         return configs
-    
+
     def getBestSolutionInfo(self, cname, data):
         """Set fields in dict 'data' for the best solution to configuration 'cname'."""
         c = self.db.cursor()
@@ -511,13 +517,13 @@ class SubmissionAnalyzer(object):
         data['spread'] = row[1]
         data['id'] = row[2]
         data['path'] = row[3]
-    
+
     def getBestConfigs(self):
         configs = self.getConfigCounts()
         for cname, data in configs.items():
             self.getBestSolutionInfo(cname, data)
         return configs
-    
+
     def writeConfigOverride(self, outpath):
         out = open(outpath, 'w')
         bestconfigs = self.getBestConfigs()
@@ -562,7 +568,7 @@ class SubmissionAnalyzer(object):
                     continue
                 out.write(line)
         out.close()
-    
+
     def newestWinner(self, configs):
         newestconfig = None
         for cname, data in configs.items():
@@ -571,7 +577,7 @@ class SubmissionAnalyzer(object):
             if (newestconfig is None) or (data['id'] > newestconfig['id']):
                 newestconfig = data
         return newestconfig
-    
+
     def writeHtml(self, outpath, configs=None):
         if configs is None:
             configs = self.getBestConfigs()
@@ -608,7 +614,7 @@ class SubmissionAnalyzer(object):
         out.write('</html></body>\n')
         out.close()
         self.copyResources()
-    
+
     def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None, highlight=None):
         args = dict(self.config[cname].drendargs)
         args.pop('--loadSolution', None)
@@ -637,7 +643,7 @@ class SubmissionAnalyzer(object):
             self.stderr.write('config args {!r}\n'.format(self.config[cname].drendargs))
             self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
             return None
-    
+
     def statenav(self, current, configs):
         if (current is None) and self._statenav_all:
             return self._statenav_all
@@ -680,7 +686,7 @@ class SubmissionAnalyzer(object):
         if current is None:
             self._statenav_all = text
         return text
-    
+
     def statedir(self, stu, configs):
         stu = stu.upper()
         name = states.nameForPostalCode(stu)
@@ -724,14 +730,14 @@ class SubmissionAnalyzer(object):
         pageabsurl = urljoin(self.options.siteurl, self.options.rooturl, stu) + '/'
         cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
         cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, firstvar, 'map500.png'))
-        
+
         if not os.path.isdir(sdir):
             os.makedirs(sdir)
         extrahtml = ''
         extrahtmlpath = os.path.join(sdir, 'extra.html')
         if os.path.isfile(extrahtmlpath):
             extrahtml = open(extrahtmlpath, 'r').read()
-        
+
         out = open(ihtmlpath, 'w')
         out.write(
             djangotemplates.render(
@@ -750,7 +756,7 @@ class SubmissionAnalyzer(object):
             socialshare=self.safeSocialShare,
         )))
         out.close()
-    
+
     def measureRace(self, cname, solution, htmlout, exportpath):
         config = self.config[cname]
         stl = cname[0:2].lower()
@@ -762,7 +768,7 @@ class SubmissionAnalyzer(object):
         pbfile = config.args['-P']
 
         measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath, self.options.bindir)
-    
+
     def processFailedSubmissions(self, configs, cname):
         c = self.db.cursor()
         rows = c.execute('SELECT id, path FROM submissions WHERE config = ? AND kmpp IS NULL', (cname,))
@@ -783,6 +789,7 @@ class SubmissionAnalyzer(object):
             #p.stdin.close()
             #raw = p.stdout.read()
             (raw, _unused) = p.communicate(data['binlog'])
+            raw = raw.decode()
             allpoints = []
             bestSpreadPoint = None
             for line in raw.splitlines():
@@ -798,7 +805,7 @@ class SubmissionAnalyzer(object):
             if bestSpreadPoint:
                 bestSpreadPoints.append(bestSpreadPoint)
             if len(allpoints) > 20:
-                half = len(allpoints) / 2
+                half = len(allpoints) // 2
                 allpoints = allpoints[half:]
             elif len(allpoints) < 10:
                 continue
@@ -813,7 +820,7 @@ class SubmissionAnalyzer(object):
             out.comment(repr(bestSpreadPoints))
         out.close()
         return kmpppath
-    
+
     def cleanupSolutionPath(self, tpath):
         if not tpath:
             return None
@@ -821,7 +828,7 @@ class SubmissionAnalyzer(object):
             tpath = tpath[len(os.sep):]
         tpath = os.path.join(self.options.soldir, tpath)
         return tpath
-    
+
     def buildReportDirForConfig(self, configs, cname, data, stu):
         """Write report/$config/{index.html,map.png,map500.png,solution.dsz}
         """
@@ -852,7 +859,7 @@ class SubmissionAnalyzer(object):
         if not (needsIndexHtml or needsDrend or needsLargeMap):
             logging.debug('nothing to do for %s', cname)
             return
-        
+
         tpath = self.cleanupSolutionPath(data['path'])
         tfparts = extractSome(tpath, ('solution', 'statsum'))
         actualMapPath = None
@@ -861,7 +868,7 @@ class SubmissionAnalyzer(object):
         current_kmpp = None
         current_spread = None
         current_std = None
-        
+
         if 'solution' in tfparts:
             # write solution.dsz
             solpath = os.path.join(sdir, 'solution.dsz')
@@ -870,13 +877,13 @@ class SubmissionAnalyzer(object):
                 dszout = open(solpath, 'wb')
                 dszout.write(tfparts['solution'])
                 dszout.close()
-            
+
             racehtml = os.path.join(sdir, 'race.html')
             solutioncsvgz = os.path.join(sdir, 'solution.csv.gz')
             if self.options.redraw or newerthan(solpath, racehtml) or newerthan(solpath, solutioncsvgz):
                 # TODO: there could be smarter logic here to run faster if only one piece is needed.
                 self.measureRace(cname, solpath, racehtml, solutioncsvgz)
-            
+
             solutionzip = os.path.join(sdir, 'solution.zip')
             if newerthan(solutioncsvgz, solutionzip):
                 try:
@@ -895,7 +902,7 @@ class SubmissionAnalyzer(object):
                             os.unlink(solutionzip)
                         except:
                             pass
-            
+
             # Make images map.png and map500.png
             if needsDrend:
                 self.doDrend(cname, data, mappath, dszpath=solpath, highlight=highlight_path)
@@ -921,7 +928,7 @@ class SubmissionAnalyzer(object):
         else:
             logging.error('no solution for %s', cname)
             self.processFailedSubmissions(configs, cname)
-        
+
         # index.html
         (kmpp, spread, std) = resultspage.parse_statsum(tfparts.get('statsum'))
         if (kmpp is None) or (spread is None) or (std is None):
@@ -950,7 +957,7 @@ class SubmissionAnalyzer(object):
             actualHtmlData = ahin.read()
             ahin.close
         self.summaryCsv(stu, statename, kmpp, spread, std, current_kmpp, current_spread, current_std)
-        
+
         context = dict(
             statename=statename,
             stu=stu,
@@ -1044,9 +1051,10 @@ class SubmissionAnalyzer(object):
 
             if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):
                 analyzeText = measure_race(stl, districts, pb, simplecsvpath, htmlout, zipname, printcmd=lambda x: logging.info('%r', x))
-                atout = open(analyzeout, 'w')
-                atout.write(analyzeText)
-                atout.close()
+                if not analyzeText:
+                    raise Exception("measure_race({}, ...) failed".format(stl))
+                with open(analyzeout, 'w') as atout:
+                    atout.write(analyzeText)
             if newerthan(pngout, png500out):
                 subprocess.call(['convert', pngout, '-resize', '500x500', png500out])
 
@@ -1058,7 +1066,7 @@ class SubmissionAnalyzer(object):
         if (current_kmpp is None) or (current_spread is None) or (current_std is None):
             logging.warn('failed to get current stats for %s from %s', stl, analyzeout)
         return current_kmpp, current_spread, current_std
-    
+
     def buildBestSoFarDirs(self, configs=None):
         """$outdir/$XX_yyy/$id/{index.html,ba_500.png,ba.png,map.png,map500.png}
         With hard links from $XX_yyy/* to $XX_yyy/$id/* for the current best.
@@ -1082,7 +1090,7 @@ class SubmissionAnalyzer(object):
         pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
         cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
         cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, newestconfig, 'map500.png'))
-        
+
         index_html_path = os.path.join(outdir, 'index.html')
         index_html = open(index_html_path, 'w')
         index_html.write(djangotemplates.render('root_index.html',dict(
