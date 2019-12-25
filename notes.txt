@@ -23,7 +23,7 @@ Neglecting the curvature of the earth and using longitudes and latitudes as cart
 
 2005-01-20 14:44:20 -0800
 
-A region based solver will be able to use the same population variance and moment measures of district-plan fitness, but the solutions will be automatically constrained to be 
+A region based solver will be able to use the same population variance and moment measures of district-plan fitness, but the solutions will be automatically constrained to be
 
 
 Census Data URLs:
@@ -153,7 +153,7 @@ http://www.lwv.org//AM/Template.cfm?Section=Home
 http://www.brennancenter.org/content/resource/a_citizens_guide_to_redistricting/
 http://www.brennancenter.org/content/section/category/redistricting/
 
-Indiana Secretary of State Todd Rokita 
+Indiana Secretary of State Todd Rokita
 http://www.in.gov/sos/
 http://www.rethinkingredistricting.com/
 
@@ -191,7 +191,7 @@ http://www.house.mo.gov/largemap.aspx
 2012-05-28 14:38:05 EDT (Monday, May 28 02:38:05 PM)
 
 TODO: set G+ on the website
-https://plusone.google.com/_/+1/confirm?hl=en&url=${url} 
+https://plusone.google.com/_/+1/confirm?hl=en&url=${url}
 
 2013-05-04 16:11:54 EDT (Saturday, May 04 04:11:54 PM)
 
@@ -271,8 +271,8 @@ https://github.com/mapbox/mercantile
 
 
 Pennsylvania constitution on how to draw state legislature districts
-https://en.wikisource.org/wiki/Constitution_of_the_Commonwealth_of_Pennsylvania_1874/Article_2#Section_16:_Senatorial_districts. 
- 
+https://en.wikisource.org/wiki/Constitution_of_the_Commonwealth_of_Pennsylvania_1874/Article_2#Section_16:_Senatorial_districts.
+
 Section 16: Senatorial districts.
 The State shall be divided into fifty senatorial districts of compact and contiguous territory, as nearly equal in population as may be, and each district shall be entitled to elect one Senator. Each county containing one or more ratios of population, shall be entitled to one Senator for each ratio, and to an additional Senator for a surplus of population exceeding three-fifths of a ratio, but no county shall form a separate district, unless it shall contain four-fifths of a ratio, except where the adjoining counties are each entitled to one or more Senators, when such county may be assigned a Senator on less than four-fifths and ex
 ceeding one-half of the ratio; and no county shall be divided unless entitled to
@@ -283,7 +283,7 @@ all be ascertained by dividing the whole population of the state by the number f
 ifty.
 
 Section 17: Representative districts.
-The members of the House of Representatives shall be apportioned among the several counties, on a ratio obtained by dividing the population of the State as ascertained by the most recent United States census by two hundred. Every county containing less than five ratios shall have one representative for every full ratio, and an additional representative when the surplus exceeds half a ratio; but each county shall have at least one representative. Every county containing five ratios or more shall have one representative for every full ratio. Every city containing a population equal to a ratio, shall elect separately its proportion of the representatives allotted to the county in which it is located. Every city entitled to more than four representatives, and every county having more than one hundred thousand inhabitants shall be divided into districts of compact and contiguous territory, each district to elect its proportion of representatives according to its population, but no district shall elect more than four representatives.  
+The members of the House of Representatives shall be apportioned among the several counties, on a ratio obtained by dividing the population of the State as ascertained by the most recent United States census by two hundred. Every county containing less than five ratios shall have one representative for every full ratio, and an additional representative when the surplus exceeds half a ratio; but each county shall have at least one representative. Every county containing five ratios or more shall have one representative for every full ratio. Every city containing a population equal to a ratio, shall elect separately its proportion of the representatives allotted to the county in which it is located. Every city entitled to more than four representatives, and every county having more than one hundred thousand inhabitants shall be divided into districts of compact and contiguous territory, each district to elect its proportion of representatives according to its population, but no district shall elect more than four representatives.
 
 
 citation in Duke Journal of Constitutional Law & Public Policy, article by Micah Altman and Michael McDonald, http://scholarship.law.duke.edu/djclpp/vol5/iss1/5/ , "The Promise and Perils of Computers in Redistricting", 2010, Vol 5 issue 1
@@ -515,7 +515,7 @@ p.28 SOTOMAYOR trolls it out "Could you tell me
 what the value is to democracy from political
 gerrymandering?  How -- how does that help our
 system of government?"
- 
+
 p.30 ROBERTS want to ask the appealees (vs WI) about standing. :-/
 Is any one person harmed by systemic gerrymandering?
 Do parties matter? Why do people vote? What is democracy?
@@ -608,5 +608,8 @@ Are we representing people or places?
 Are we representing people or a line on the map?
 Identifying a person only with the place they live is serfdom.
 
+2019-01-08 22:47:30 EST (Tuesday, January 08 10:47:30 PM)
+
+http://www.cleanmissouri.org/wp-content/uploads/2018/04/Packet-048-Petition-Text-copy.pdf
 
 # xeof end of file search target
