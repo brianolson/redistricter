@@ -155,7 +155,7 @@ POPTYPE CountyCityDistricterSet::grabWholeCounties(POPTYPE di) {
 
 POPTYPE CountyCityDistricterSet::grabWholeCities(POPTYPE di) {
   // search cities which match district population and lock-allocate them
-  // TODO: make this so it can be disabled, or randomized so it only happens to some of the eligible cities.
+  // TODO: make this so it can be disabled, or randomized so it only happens to some of the eligible cities. also with grabWholeCounties above.
   int dpop = popTarget();
   unsigned int minCountyDistrictPop = dpop * (1.0 - countyCloseEnoughPopulationFraction);
   unsigned int maxCountyDistrictPop = dpop * (1.0 + countyCloseEnoughPopulationFraction);
