@@ -27,7 +27,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.bolson.redistricting.ShapefileBundle</mainClass>
+                  <mainClass>org.bolson.redistricter.ShapefileBundle</mainClass>
                 </transformer>
               </transformers>
             </configuration>
