@@ -74,6 +74,14 @@ void stringVectorAppendCallback(vector<const char*>& context, const char* str) {
     context.push_back(str);
 }
 
+enum LogLevel {
+  PANIC=0,
+  ERROR=1,
+  WARNING=2,
+  INFO=3,
+  DEBUG=4,
+};
+
 class AnalyzeApp {
     public:
     AnalyzeApp();
@@ -94,23 +102,30 @@ class AnalyzeApp {
 
     bool distrow;
     bool distcol;
-    bool quiet;
+  LogLevel verbosity;
 
     int dsort;
 
     FILE* textout;
     FILE* csvout;
     FILE* htmlout;
+    FILE* logout;
 
     PlaceNames* placenames;
+
+
+  void debug(const char* format, ...);
+  void info(const char* format, ...);
 };
 
 AnalyzeApp::AnalyzeApp()
-    : distrow(true), distcol(false), quiet(false),
+    : distrow(true), distcol(false), verbosity(DEBUG),
       dsort(-1),
       textout(NULL),
       csvout(NULL),
-      htmlout(NULL)
+      htmlout(NULL),
+      logout(stderr),
+      placenames(NULL)
 {}
 
 int AnalyzeApp::dataExport(const char* exportPath) {
@@ -311,7 +326,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	bool nohtml = false;
 
 	const char* exportPath = NULL;
-	
+
 	vector<const char*> compareArgs;
 	vector<const char*> labelArgs;
 
@@ -360,12 +375,13 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 
 	// Open various output files so they can be appended to while looping through things to compare.
 
+        bool stdoutInUse = false;
 	if (notext) {
 	    textout = NULL;
 	} else {
 	    if ((textOutName == NULL) || (textOutName[0] == '\0') || (0 == strcmp("-", textOutName))) {
 		textout = stdout;
-		quiet = true;
+                stdoutInUse = true;
 	    } else {
 		textout = fopen(textOutName, "w");
 		if (textout == NULL) {
@@ -380,7 +396,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	} else {
 	    if ((csvOutName[0] == '\0') || (0 == strcmp("-", csvOutName))) {
 		csvout = stdout;
-		quiet = true;
+                stdoutInUse = true;
 	    } else {
 		csvout = fopen(csvOutName, "w");
 		if (csvout == NULL) {
@@ -395,7 +411,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	} else {
 	    if ((htmlOutName[0] == '\0') || (0 == strcmp("-", htmlOutName))) {
 		htmlout = stdout;
-		quiet = true;
+                stdoutInUse = true;
 	    } else {
 		htmlout = fopen(htmlOutName, "w");
 		if (htmlout == NULL) {
@@ -408,22 +424,25 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	sov.initNodes();
 	sov.allocSolution();
 	if (sov.hasSolutionToLoad()) {
-		if (!quiet) {
-		    fprintf(stdout, "loading \"%s\"\n", sov.getSolutionFilename());
-		}
+                info("loading \"%s\"\n", sov.getSolutionFilename());
 		if (sov.hasSolutionToLoad()) {
 		    sov.loadSolution();
 		}
-		if (!quiet) {
+                if (!stdoutInUse || verbosity >= DEBUG) {
 			char* statstr = new char[10000];
 			sov.getDistrictStats(statstr, 10000);
-			fputs(statstr, stdout);
-			delete [] statstr;
 			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
-			fprintf(stdout, "pop FH-ssd: %g\n", ssd);
+                        if (!stdoutInUse) {
+                          fputs(statstr, stdout);
+                          fprintf(stdout, "pop FH-ssd: %g\n", ssd);
+                        } else {
+                          debug("%s", statstr);
+                          debug("pop FH-ssd: %g\n", ssd);
+                        }
+			delete [] statstr;
 		}
 	}
-	
+
 	if (exportPath != NULL) {
             // Take the data we just loaded and write it back out again.
             int ret = dataExport(exportPath);
@@ -513,21 +532,18 @@ int AnalyzeApp::placeSplits() {
 int AnalyzeApp::doCompare(char* fname, char* label) {
     vector<int> columns;
     parseCompareArg(fname, &columns);
-    if (!quiet) {
-        fprintf(stdout, "reading \"%s\" columns:", fname);
-        for (unsigned int col = 0; col < columns.size(); ++col) {
-            fprintf(stdout, " %d", columns[col]);
-        }
-        fprintf(stdout, "\n");
+    if (verbosity >= INFO) {
+      info("reading \"%s\" columns:", fname);
+      for (unsigned int col = 0; col < columns.size(); ++col) {
+        info(" %d", columns[col]);
+      }
+      info("\n");
     }
     vector<uint32_t*> data_columns;
     int recnos_matched;
     bool ok = read_uf1_columns_for_recnos(
                                           sov.gd, fname, columns, &data_columns, &recnos_matched);
-    if (!quiet) {
-        fprintf(stdout, "%d recnos matched of %d points\n",
-                recnos_matched, sov.gd->numPoints);
-    }
+    info("%d recnos matched of %d points\n", recnos_matched, sov.gd->numPoints);
     if (!ok) {
         fprintf(stderr, "read file \"%s\" failed\n", fname);
         return 1;
@@ -568,7 +584,7 @@ int AnalyzeApp::doCompare(char* fname, char* label) {
             }
         }
     }
-		
+
     // sort districts based on some column index
     int* dsortIndecies = new int[sov.districts];
     for (int d = 0; d < sov.districts; ++d) {
@@ -593,12 +609,12 @@ int AnalyzeApp::doCompare(char* fname, char* label) {
     if (textout != NULL) {
         writeText(textout, columns, labels, counts, dsortIndecies, fname);
     }
-		
+
     // csv out
     if (csvout != NULL) {
         writeCSV(csvout, columns, labels, counts, dsortIndecies);
     }
-		
+
     // html out
     if (htmlout != NULL) {
         writeHtml(htmlout, columns, labels, counts, dsortIndecies);
@@ -610,6 +626,23 @@ int AnalyzeApp::doCompare(char* fname, char* label) {
 
     delete [] labels;
     return 0;
+}
+
+void AnalyzeApp::debug(const char* format, ...) {
+  va_list ap;
+  va_start(ap, format);
+  if (verbosity >= DEBUG) {
+    vfprintf(logout, format, ap);
+  }
+  va_end(ap);
+}
+void AnalyzeApp::info(const char* format, ...) {
+  va_list ap;
+  va_start(ap, format);
+  if (verbosity >= INFO) {
+    vfprintf(logout, format, ap);
+  }
+  va_end(ap);
 }
 
 int main( int argc, const char** argv ) {
