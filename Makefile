@@ -1,12 +1,8 @@
 ROOTDIR=${PWD}
 SRCDIR=${ROOTDIR}/cpp
 UNAME:=$(shell uname)
--include cpp/makeopts/${UNAME}.pre
--include cpp/localvars.make
 
-all:	districter2 linkfixup drend analyze dumpBinLog jall
-
-include cpp/cpp.make
+all: jall
 
 jall:	java/org/bolson/redistricter/Redata.java tools.jar
 

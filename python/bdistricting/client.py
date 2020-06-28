@@ -27,7 +27,7 @@ import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 
-from newerthan import newerthan
+from .newerthan import newerthan
 
 rand = random.Random()
 HREF_SCRAPER_ = re.compile(r'<a class="data" href="([^"]+)">([^<]+)</a>', re.IGNORECASE)

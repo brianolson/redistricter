@@ -30,3 +30,7 @@ include
 .hg
 cpp/bin
 cpp/dumpBinLog
+build/
+bin/dumpBinLog
+bestlog
+runlog
