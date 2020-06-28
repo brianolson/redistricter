@@ -5,6 +5,7 @@
 __author__ = "Brian Olson"
 
 
+from six.moves.urllib import parse
 import http.server
 import base64
 import cgi
@@ -18,8 +19,8 @@ import traceback
 import time
 import zlib
 
-import kmppspreadplot
-import plotstatlog
+from . import kmppspreadplot
+from . import plotstatlog
 
 logger = logging.getLogger(__name__)
 
@@ -351,7 +352,7 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
         pathQuery = self.path.split('?', 1)
         self.path = pathQuery[0]
         if len(pathQuery) > 1:
-            self.query = cgi.parse_qs(pathQuery[1])
+            self.query = parse.parse_qs(pathQuery[1])
         if self.runExtensions():
             return
         if self.path == '/favicon.ico':
@@ -379,7 +380,7 @@ class ResultServerHandler(http.server.SimpleHTTPRequestHandler):
         if pathQuery[0] == '/action':
             query = {}
             if len(pathQuery) > 1:
-                query = cgi.parse_qs(pathQuery[1])
+                query = parse.parse_qs(pathQuery[1])
             dest = query.get('dest', [dest])
             dest = dest[0]
             action = query.get('a')

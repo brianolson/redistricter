@@ -59,8 +59,8 @@ import traceback
 import pdb
 
 # local imports
-import client
-import manybest
+from . import client
+from . import manybest
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)
@@ -527,7 +527,7 @@ def ignoreFile(cname):
 def getDefaultBindir():
     bindir = os.environ.get('REDISTRICTER_BIN')
     if bindir is None:
-        bindir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+        bindir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../bin'))
     return bindir
 
 
@@ -1346,7 +1346,7 @@ class runallstates(object):
 
         severthread = None
         if self.options.port > 0:
-            import resultserver
+            from . import resultserver
             def extensionFu(handler):
                 return self.setCurrentRunningHtml(handler)
             actions = {}

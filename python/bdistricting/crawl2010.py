@@ -437,6 +437,7 @@ class StateData(setupstatedata.StateData):
     geoblockspath = os.path.join(self.dpath, 'geoblocks')
     #linkspath = os.path.join(self.dpath, self.stl + '101.uf1.links')
     binpath = os.path.join(self.options.bindir, 'linkfixup')
+    print(f"binpath = {binpath}")
     outpath = os.path.join(self.dpath, self.stl + '.pb')
     cmd = [binpath, '--plgeo', geoblockspath, '-p', outpath]
     needsbuild = newerthan(geoblockspath, outpath)

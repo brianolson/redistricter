@@ -53,3 +53,5 @@ target_link_libraries(analyze PRIVATE redata PNG::PNG Threads::Threads protobuf)
 
 add_executable(dumpBinLog ${SRCDIR}/dumpBinLog.cpp)
 target_link_libraries(dumpBinLog PRIVATE redata Threads::Threads protobuf)
+
+install(TARGETS districter2 linkfixup drend analyze dumpBinLog DESTINATION ${CMAKE_SOURCE_DIR}/bin)
