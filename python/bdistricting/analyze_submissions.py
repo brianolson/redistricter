@@ -40,7 +40,7 @@ def _google_analytics():
         if not os.path.exists(gapath):
             _ga_cache = ''
             return _ga_cache
-        _ga_cache = open(gapath, 'rb').read()
+        _ga_cache = open(gapath, 'rt').read()
     return _ga_cache
 
 def localtime():
@@ -953,9 +953,8 @@ class SubmissionAnalyzer(object):
         cgiimageurl = urllib.parse.quote_plus(urljoin(self.options.siteurl, self.options.rooturl, cname, 'map500.png'))
         actualHtmlData = None
         if actualHtmlPath:
-            ahin = open(actualHtmlPath, 'rb')
-            actualHtmlData = ahin.read()
-            ahin.close
+            with open(actualHtmlPath, 'rt') as ahin:
+                actualHtmlData = ahin.read()
         self.summaryCsv(stu, statename, kmpp, spread, std, current_kmpp, current_spread, current_std)
 
         context = dict(
