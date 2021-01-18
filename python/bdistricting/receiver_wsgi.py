@@ -26,10 +26,9 @@ SUFFIX_LETTERS_ = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ021345678
 rand = random.Random()
 
 
-def makeEventId(remote_addr=None, now=None):
-    now = time.time()
-    lt = time.localtime(now)
-    nowstr = time.strftime('%Y%m%d/%H%M%S', lt)
+def makeEventId(remote_addr):
+    "return e.g. 20161110/221815_72.74.165.240_Uuc"
+    nowstr = time.strftime('%Y%m%d/%H%M%S', time.gmtime())
     outparts = [nowstr, '_']
     if remote_addr:
         outparts.append(str(remote_addr))
@@ -116,7 +115,51 @@ class outTarfileSet(object):
         self.out.close()
 
 
+def error_text(environ, start_response, code, message):
+    start_response(str(code), [('Content-Type', 'text/plain')])
+    return [message]
+
+
+MAX_BODY = 1000000
+
+
 def application(environ, start_response):
+    if environ['REQUEST_METHOD'] == 'GET':
+        return old_http_get(environ, start_response)
+    if environ['REQUEST_METHOD'] != 'POST':
+        return error_text(environ, start_response, 400, 'bad method')
+    # new json:
+    remote_addr = environ.get('REMOTE_ADDR')
+    debug = remote_addr == '127.0.0.1' || remote_addr == '::1'
+    content_type = environ.get('HTTP_CONTENT_TYPE')
+    if content_type != 'application/json':
+        return error_text(environ, start_response, 400, 'wrong type')
+    # TODO: Limit input to 1MB
+    raw = environ['wsgi.input'].read(MAX_BODY)
+    if len(raw) == MAX_BODY:
+        return error_text(environ, start_response, 400, 'bad submission')
+    ob = json.loads(raw)
+    if ('bestKmpp.dsz' not in ob) and ('binlog' not in ob):
+        return error_text(environ, start_response, 400, 'empty submission')
+    # TODO: more validation of good upload
+    # TODO: rate limit per submitting host
+    dest_dir = environ[kSoldirEnvName]
+    eventid = makeEventId(remote_addr) # eventid contains a / at yyyymmdd/HHMMSS
+    outpath = os.path.join(dest_dir, eventid + '.json')
+    outdir = os.path.dirname(outpath)
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir, exist_ok=True)
+    with open(outpath, 'wb') as fout:
+        fout.write(raw)
+    headers = [('Content-Type', 'application/json')]
+    start_response('200 OK', headers)
+    ret = {
+        'id': eventid,
+    }
+    return [json.dumps(ret)]
+
+
+def old_http_get(environ, start_response):
     form = cgi.FieldStorage(fp=environ.get('wsgi.input'), environ=environ)
     debug = stringTruth(form.getfirst('debug')) or stringTruth(environ.get('DEBUG'))
     if debug:

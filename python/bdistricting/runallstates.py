@@ -1164,7 +1164,7 @@ class runallstates(object):
             if self.dry_run:
                 sys.stdout.write('would send dir {!r} to server\n'.format(ctd))
             else:
-                self.client.sendResultDir(ctd, {'config': stu}, sendAnything=True)
+                self.client.sendResultJSON(ctd, {'config': stu}, sendAnything=True)
             didSend = ctd
         mb = manybest.manybest()
         mb.ngood = self.options.keepbest
@@ -1198,7 +1198,7 @@ class runallstates(object):
             if self.dry_run:
                 sys.stdout.write('would send best dir {!r} if it has not already been sent\n'.format(mb.they[0]))
             else:
-                self.client.sendResultDir(bestPath, {'config': stu})
+                self.client.sendResultJSON(bestPath, {'config': stu})
         return True
 
     def doDrend(self, stu, mb):

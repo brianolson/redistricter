@@ -29,6 +29,8 @@ import urllib.parse
 
 from newerthan import newerthan
 
+logger = logging.getLogger(__name__)
+
 rand = random.Random()
 HREF_SCRAPER_ = re.compile(r'<a class="data" href="([^"]+)">([^<]+)</a>', re.IGNORECASE)
 CONFIG_BLOCK_ = re.compile(r'<pre class="config">(.*?)</pre>', re.IGNORECASE|re.DOTALL|re.MULTILINE)
@@ -105,6 +107,15 @@ def fileOlderThan(filename, seconds):
     st = os.stat(filename)
     return (st.st_mtime + seconds) < time.time()
 
+def resultfile(out, fieldname, filename, b64=False):
+    if os.path.exists(filename):
+        with open(filename, 'rb') as fin:
+            raw = fin.read()
+            if b64:
+                out[fieldname] = base64.b64_encode(raw)
+            else:
+                out[fieldname] = raw
+
 class Client(object):
     def __init__(self, options):
         self.options = options
@@ -133,7 +144,7 @@ class Client(object):
             return []
         return self.runoptsraw.splitlines()
 
-    def defaultGETHeaders(self):
+    def clientHeaders(self):
         # track which client is which by a random number it picks.
         aid = self.lastmods.get('AGENT_ID')
         if not aid:
@@ -174,7 +185,7 @@ class Client(object):
             self.parseHtmlConfigPage(f.read())
             f.close()
             return
-        GET_headers = self.defaultGETHeaders()
+        GET_headers = self.clientHeaders()
         if not configCacheMissing:
             if_modified_since = self.lastmods.get('.configCache')
             if if_modified_since:
@@ -247,7 +258,7 @@ class Client(object):
             logging.info('fetchIfServerCopyNewer "%s" -> "%s"', remoteurl, localpath)
             return localpath
         lastmod = self.lastmods.get(dataset)
-        GET_headers = self.defaultGETHeaders()
+        GET_headers = self.clientHeaders()
         if lastmod:
             GET_headers['If-Modified-Since'] = lastmod
         try:
@@ -322,6 +333,48 @@ class Client(object):
         # TODO: find out what the server would prefer us to work on.
         return random.choice(list(self.knownDatasets.keys()))
 
+    def sendResultJSON(self, resultdir, vars=None, sendAnything=False):
+        """ send json object
+        {
+        "bestKmpp.dsz": "base64 string of bestKmpp.dsz"
+        }
+        """
+        submiturl = self.config.get('config', 'submiturl')
+        if not submiturl:
+            sys.stderr.write('cannot send to server because no submiturl is configured\n')
+            return
+        sentmarker = os.path.join(resultdir, 'sent')
+        if os.path.exists(sentmarker):
+            sys.stderr.write('found "%s", already sent dir %s, not sending again\n' % (sentmarker, resultdir))
+            return
+        bkpath = os.path.join(resultdir, 'bestKmpp.dsz')
+        have_bestkmpp = os.path.exists(bkpath)
+        if (not have_bestkmpp) and (not sendAnything):
+            sys.stderr.write('trying to send result dir "%s" but there is no bestKmpp.dsz\n' % resultdir)
+            return
+        out = {}
+        if vars:
+            out['vars'] = vars
+        resultfile(out, 'bestKmpp.dsz', bkpath, True)
+        resultfile(out, 'binlog', os.path.join(resultdir, 'binlog'), True)
+        resultfile(out, 'statsum', os.path.join(resultdir, 'statsum'))
+        logger.info('sending to %s', submiturl)
+        headers = self.clientHeaders()
+        headers['Content-Type'] = 'application/json'
+        req = urllib.request.Request(submiturl, data=json.dumps(out), headers=GET_headers, method='POST')
+        try:
+            uf = urllib.request.urlopen(req)
+            retval = uf.read()
+            logger.info(retval)
+            # mark dir as sent so we don't re-send it
+            if retval.startswith('ok'):
+                tf = open(sentmarker, 'w')
+                tf.write(time.ctime() + '\n')
+                tf.close()
+        except Exception as e:
+            logger.error('send result failed for %s due to %r', resultdir, e, exc_info=True)
+        logger.debug('sent')
+        return
     def sendResultDir(self, resultdir, vars=None, sendAnything=False):
         # It kinda sucks that I have to reimplement MIME composition here
         # but the standard library is really designed for email and not http.
@@ -367,23 +420,23 @@ class Client(object):
         body.write(ddboundary)
         body.write('--\r\n\r\n')
         sbody = body.getvalue()
-        GET_headers = self.defaultGETHeaders()
+        GET_headers = self.clientHeaders()
         GET_headers['Content-Type'] = 'multipart/form-data; charset="utf-8"; boundary=' + boundary
         GET_headers['Content-Length'] = str(len(sbody))
-        print('sending to ' + submiturl)
+        logger.info('sending to ' + submiturl)
         req = urllib.request.Request(submiturl, data=sbody, headers=GET_headers)
         try:
             uf = urllib.request.urlopen(req)
             retval = uf.read()
-            print(retval)
+            logger.info(retval)
             # mark dir as sent so we don't re-send it
             if retval.startswith('ok'):
                 tf = open(sentmarker, 'w')
                 tf.write(time.ctime() + '\n')
                 tf.close()
         except Exception as e:
-            print('send result failed for %s due to %r' % (resultdir, e))
-        print('Done')
+            logger.error('send result failed for %s due to %r' % (resultdir, e))
+        logger.debug('Done')
 
 
 class MyMimePart(object):
@@ -426,7 +479,7 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
     c = Client(options)
     if options.send:
-        c.sendResultDir(options.send, {'localpath':options.send})
+        c.sendResultJSON(options.send, {'localpath':options.send})
         return
     for arch, url in c.knownDatasets.items():
         c.unpackArchive(arch, url)
