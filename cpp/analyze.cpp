@@ -109,6 +109,7 @@ class AnalyzeApp {
     FILE* textout;
     FILE* csvout;
     FILE* htmlout;
+    FILE* statsout;
     FILE* logout;
 
     PlaceNames* placenames;
@@ -124,6 +125,7 @@ AnalyzeApp::AnalyzeApp()
       textout(NULL),
       csvout(NULL),
       htmlout(NULL),
+      statsout(NULL),
       logout(stderr),
       placenames(NULL)
 {}
@@ -325,6 +327,9 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	const char* htmlOutName = NULL;
 	bool nohtml = false;
 
+	const char* statsOutName = NULL;
+	bool nostats = false;
+
 	const char* exportPath = NULL;
 
 	vector<const char*> compareArgs;
@@ -346,6 +351,8 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    BoolArg("notext", &notext);
 	    StringArg("csv", &csvOutName);
 	    BoolArg("nocsv", &nocsv);
+	    StringArg("stats", &statsOutName);
+	    BoolArg("nostats", &nostats);
 	    BoolArg("distrow", &distrow);
 	    BoolArg("distcol", &distcol);
 	    StringArg("export", &exportPath);
@@ -421,6 +428,18 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    }
 	}
 
+        if (nostats) {
+          statsout = NULL;
+        } else if (0 == strcmp("-", statsOutName)) {
+            statsout = stdout;
+            stdoutInUse = true;
+        } else if (statsOutName[0] == '\0') {
+          if (!stdoutInUse) {
+            statsout = stdout;
+            stdoutInUse = true;
+          }
+        }
+
 	sov.initNodes();
 	sov.allocSolution();
 	if (sov.hasSolutionToLoad()) {
@@ -428,13 +447,13 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 		if (sov.hasSolutionToLoad()) {
 		    sov.loadSolution();
 		}
-                if (!stdoutInUse || verbosity >= DEBUG) {
+                if ((statsout != NULL) || verbosity >= DEBUG) {
 			char* statstr = new char[10000];
 			sov.getDistrictStats(statstr, 10000);
 			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
                         if (!stdoutInUse) {
-                          fputs(statstr, stdout);
-                          fprintf(stdout, "pop FH-ssd: %g\n", ssd);
+                          fputs(statstr, statsout);
+                          fprintf(statsout, "pop FH-ssd: %g\n", ssd);
                         } else {
                           debug("%s", statstr);
                           debug("pop FH-ssd: %g\n", ssd);
