@@ -336,7 +336,10 @@ class Client(object):
     def sendResultJSON(self, resultdir, vars=None, sendAnything=False):
         """ send json object
         {
-        "bestKmpp.dsz": "base64 string of bestKmpp.dsz"
+        "bestKmpp.dsz": "base64 string of bestKmpp.dsz",
+        "binlog": base64,
+        "statsum": text,
+        "vars": {}
         }
         """
         submiturl = self.config.get('config', 'submiturl')
