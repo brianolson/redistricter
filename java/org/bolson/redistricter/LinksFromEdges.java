@@ -20,11 +20,11 @@ import org.bolson.redistricter.ShapefileBundle.MapSetLinkWrapper;
  */
 public class LinksFromEdges {
 	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
-	
+
 	TreeMap<Long, byte[]> tfidUbid = new TreeMap<Long, byte[]>();
 	Map<byte[], Set<byte[]> > links;
 	ShapefileBundle.SetLink linkSetter;
-	
+
 	LinksFromEdges() {
 		boolean tree = true;
 		if (tree) {
@@ -34,7 +34,7 @@ public class LinksFromEdges {
 		}
 		linkSetter = new MapSetLinkWrapper(links);
 	}
-	
+
 	/**
 	 * Gather tfid:ubid mappings.
 	 * @param path shapefile bundle .zip file to process.
@@ -46,7 +46,7 @@ public class LinksFromEdges {
 		sb.open(path);
 		return readFaces(sb, true);
 	}
-	
+
 	/**
 	 * Gather tfid:ubid mappings.
 	 * @param sb data to process
@@ -57,10 +57,10 @@ public class LinksFromEdges {
 	int readFaces(ShapefileBundle sb, boolean y2kmode) throws IOException {
 		DBaseFieldDescriptor blockIdField = null;
 		// synthesize blockId from parts of faces file
-		DBaseFieldDescriptor state = sb.dbf.getField("STATEFP00");
-		DBaseFieldDescriptor county = sb.dbf.getField("COUNTYFP00");
-		DBaseFieldDescriptor tract = sb.dbf.getField("TRACTCE00");
-		DBaseFieldDescriptor block = sb.dbf.getField("BLOCKCE00");
+		DBaseFieldDescriptor state = sb.dbf.getFieldBest("STATEFP20","STATEFP10","STATEFP00");
+		DBaseFieldDescriptor county = sb.dbf.getFieldBest("COUNTYFP20","COUNTYFP10","COUNTYFP00");
+		DBaseFieldDescriptor tract = sb.dbf.getFieldBest("TRACTCE20","TRACTCE10","TRACTCE00");
+		DBaseFieldDescriptor block = sb.dbf.getFieldBest("BLOCKCE20","BLOCKCE10","BLOCKCE00");
 		DBaseFieldDescriptor suffix = sb.dbf.getField("SUFFIX1CE");
 		if ((state != null) && (county != null) && (tract != null) && (block != null) && (y2kmode || (suffix != null))) {
 			CompositeDBaseField cfield = new CompositeDBaseField();
@@ -82,17 +82,17 @@ public class LinksFromEdges {
 		while (pl != null) {
 			count++;
 			byte[] rowbytes = sb.dbf.next();
-			
+
 			byte[] blockid = blockIdField.getBytes(rowbytes, 0, rowbytes.length);
 			long id = tfid.getLong(rowbytes, 0, rowbytes.length);
 			//long ubid = ShapefileBundle.blockidToUbid(ubidBuffer);
 			tfidUbid.put(id, blockid);
 			pl = (Polygon)sb.shp.next();
 		}
-		
+
 		return count;
 	}
-	
+
 	int readEdges(String path) throws IOException {
 		ShapefileBundle sb = new ShapefileBundle();
 		sb.open(path);
@@ -120,7 +120,7 @@ public class LinksFromEdges {
 			} catch (NumberFormatException e) {
 				errorCount++;
 			}
-			
+
 			pl = (PolyLine)sb.shp.next();
 		}
 		if (errorCount > 0) {
@@ -133,14 +133,14 @@ public class LinksFromEdges {
 	 * Read .zip bundles of shapefile data (edges and faces from Census data).
 	 * Write 'geoblocks.links' file with pairwise link information between loaded Census blocks.
 	 * @param argv
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void main(String[] argv) throws IOException {
 		long totalStart = System.currentTimeMillis();
 		ShapefileBundle.loggingInit();
 		ArrayList<String> inputPaths = new ArrayList<String>();
 		String linksOut = null;
-		
+
 		for (int i = 0; i < argv.length; ++i) {
 			if (argv[i].endsWith(".zip")) {
 				inputPaths.add(argv[i]);

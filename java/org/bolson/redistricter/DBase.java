@@ -24,7 +24,7 @@ public class DBase {
 	byte mdx;
 	byte language;
 	String driverName = null;
-	
+
 	DataInputStream in;
 	byte[] scratch = new byte[48];
 	public ArrayList<DBaseFieldDescriptor> fields = new ArrayList<DBaseFieldDescriptor>();
@@ -32,13 +32,13 @@ public class DBase {
 	 * Each record is fixed length.
 	 */
 	int recordLength;
-	
+
 	int readCount = 0;
-	
+
 	/**
 	 * Immediately reads header data.
 	 * @param x stream to read from
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public void setInputStream(DataInputStream x) throws IOException {
 		in = x;
@@ -90,7 +90,7 @@ public class DBase {
 		readCount++;
 		return scratch;
 	}
-	
+
 	public String toString() {
 		StringBuffer sb = new StringBuffer("(DBF ");
 		sb.append(Integer.toHexString(version));
@@ -126,5 +126,19 @@ public class DBase {
 			}
 		}
 		return null;
+	}
+	public DBaseFieldDescriptor getFieldBest(String... fieldnames) {
+          DBaseFieldDescriptor best = null;
+          int besti = fieldnames.length;
+		for (DBaseFieldDescriptor field : fields) {
+                  for (int i = 0; i < besti; i++) {
+                    String name = fieldnames[i];
+			if (field.name.equals(name)) {
+                          besti = i;
+                          best = field;
+			}
+                  }
+		}
+		return best;
 	}
 }
