@@ -40,6 +40,8 @@ import solution
 
 from states import *
 
+logger = logging.getLogger(__name__)
+
 sf1IndexName = 'SF1index.html'
 sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
 tigerbase = 'http://www2.census.gov/geo/tiger/'
@@ -273,18 +275,10 @@ class StateData(object):
         self.setuplog = open(os.path.join(self.dpath, 'setuplog'), 'a')
         self._zipspath = os.path.join(self.dpath, 'zips')
 
-    def logf(self, fmt, *args):
-        if args:
-            msg = (fmt % args) + '\n'
-        else:
-            msg = fmt + '\n'
-        sys.stdout.write(self.stu + ' ' + msg)
-        self.setuplog.write(msg)
-
     def mkdir(self, path, options):
         if not os.path.isdir(path):
             if options.dryrun:
-                self.logf('mkdir %s', path)
+                logger.info('mkdir %s', path)
             else:
                 os.mkdir(path)
 
@@ -292,7 +286,7 @@ class StateData(object):
         if os.path.exists(localpath):
             return localpath
         if self.options.dryrun:
-            self.logf('would fetch "%s" -> "%s"', url, localpath)
+            logger.info('would fetch "%s" -> "%s"', url, localpath)
             return localpath
         logging.info('fetch "%s" -> "%s"', url, localpath)
         (filename, info) = urllib.request.urlretrieve(url, localpath)
@@ -316,12 +310,12 @@ class StateData(object):
         fo = None
         cds = None
         if newerthan(geozip, uf101):
-            self.logf('%s -> %s', geozip, uf101)
+            logger.info('%s -> %s', geozip, uf101)
             if not self.options.dryrun:
                 fo = open(uf101, 'w')
         currentDsz = os.path.join(dpath, self.stu + 'current.dsz')
         if newerthan(geozip, currentDsz):
-            self.logf('%s -> %s', geozip, currentDsz)
+            logger.info('%s -> %s', geozip, currentDsz)
             if not self.options.dryrun:
                 cds = []
         if (fo is None) and (cds is None):
@@ -353,7 +347,7 @@ class StateData(object):
             for x in cds:
                 if x != -1:
                     cdvals[x] = 1
-            self.logf(
+            logger.info(
                 'found congressional districts from %dth congress: %s',
                 congress_number, repr(list(cdvals.keys())))
             cnDsz = os.path.join(dpath, '%s%d.dsz' % (self.stu, congress_number))
@@ -386,7 +380,7 @@ class StateData(object):
                     nameForPostalCode(self.stu).upper().replace(' ', '_'))
             else:
                 raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
-            self.logf('guessing tiger data source "%s", if this is wrong, edit "%s"', turl, turlpath)
+            logger.info('guessing tiger data source "%s", if this is wrong, edit "%s"', turl, turlpath)
             if self.options.dryrun:
                 return turl
             self.turl_time = time.time()
@@ -416,7 +410,7 @@ class StateData(object):
             raw = uf.read()
             uf.close()
             if self.options.dryrun:
-                self.logf('would write "%s"', indexpath)
+                logger.info('would write "%s"', indexpath)
             else:
                 of = open(indexpath, 'w')
                 of.write(raw)
@@ -462,7 +456,7 @@ class StateData(object):
             if os.path.exists(badpath):
                 os.unlink(badpath)
             os.rename(localpath, badpath)
-            self.logf('bad zip file "%s" moved aside to "%s". (from url %s) to skip: ` rm "%s" && touch "%s" `', localpath, badpath, url, badpath, localpath)
+            logger.info('bad zip file "%s" moved aside to "%s". (from url %s) to skip: ` rm "%s" && touch "%s" `', localpath, badpath, url, badpath, localpath)
         return ok
 
     def getEdges(self):
@@ -518,7 +512,7 @@ class StateData(object):
             if shapefile.betterShapefileZip(zname, bestzip):
                 bestzip = zname
         if bestzip is None:
-            self.logf('found no best zipfile to use')
+            logger.info('found no best zipfile to use')
             return None
         zipspath = self.zipspath(dpath)
         assert zipspath is not None
@@ -543,7 +537,7 @@ class StateData(object):
         mppblg_name = os.path.join(dpath, self.stu + '_lg.mppb')
         masklg_name = os.path.join(dpath, self.stu + 'blocks_lg.png')
         projname = projectionForPostalCode(self.stu)
-        self.logf('%s proj = %s', self.stu, projname)
+        logger.info('%s proj = %s', self.stu, projname)
         linksargs = None
         baseRenderArgs = [
             '--boundx', '1920', '--boundy', '1080',
@@ -564,28 +558,28 @@ class StateData(object):
                 self.options.bindir, self.options.strict))
             needlinks = False
         if needlinks and edgesPaths and facesPaths and (any_newerthan(edgesPaths, linksname) or any_newerthan(facesPaths, linksname)):
-            self.logf('need %s from edges+faces', linksname)
+            logger.info('need %s from edges+faces', linksname)
             lecmd = linksfromedges.makeCommand(facesPaths + edgesPaths + ['--links', linksname], self.options.bindir, self.options.strict)
             commands.append(lecmd)
         elif needlinks and (not edgesPaths) and facesPaths and any_newerthan(facesPaths, linksname):
-            self.logf('need %s from faces', linksname)
+            logger.info('need %s from faces', linksname)
             linksargs = ['--links', linksname]
         elif needlinks and (not edgesPaths) and (not facesPaths) and newerthan(bestzip, linksname):
-            self.logf('need %s from %s', linksname, bestzip)
+            logger.info('need %s from %s', linksname, bestzip)
             linksargs = ['--links', linksname]
         if facesPaths:
             if any_newerthan(facesPaths, mppb_name) or self.options.redraw:
-                self.logf('need %s from faces', mppb_name)
+                logger.info('need %s from faces', mppb_name)
                 renderArgs += ['--rast', mppb_name]
             if any_newerthan(facesPaths, mask_name) or self.options.redraw:
-                self.logf('need %s from faces', mask_name)
+                logger.info('need %s from faces', mask_name)
                 renderArgs += ['--mask', mask_name]
         else:
             if newerthan(bestzip, mppb_name) or self.options.redraw:
-                self.logf('need %s from %s', mppb_name, bestzip)
+                logger.info('need %s from %s', mppb_name, bestzip)
                 renderArgs += ['--rast', mppb_name]
             if newerthan(bestzip, mask_name) or self.options.redraw:
-                self.logf('need %s from %s', mask_name, bestzip)
+                logger.info('need %s from %s', mask_name, bestzip)
                 renderArgs += ['--mask', mask_name]
 
         # Build primary command to make links and/or .mppb raster
@@ -620,10 +614,10 @@ class StateData(object):
         # Maybe make {stu}_sm.mppb
         smargs = []
         if (facesPaths and (any_newerthan(facesPaths, mppbsm_name)  or self.options.redraw)) or (newerthan(bestzip, mppbsm_name) or self.options.redraw):
-            self.logf('need %s', mppbsm_name)
+            logger.info('need %s', mppbsm_name)
             smargs += ['--rast', mppbsm_name]
         if (facesPaths and (any_newerthan(facesPaths, masksm_name) or self.options.redraw)) or (newerthan(bestzip, masksm_name) or self.options.redraw):
-            self.logf('need %s', masksm_name)
+            logger.info('need %s', masksm_name)
             smargs += ['--mask', masksm_name]
         if smargs:
             smargs += ['--boundx', '640', '--boundy', '480'] + projectionArgs
@@ -638,10 +632,10 @@ class StateData(object):
         # Maybe make {stu}_lg.mppb
         lgargs = []
         if (facesPaths and (any_newerthan(facesPaths, mppblg_name) or self.options.redraw)) or (newerthan(bestzip, mppblg_name) or self.options.redraw):
-            self.logf('need %s', mppblg_name)
+            logger.info('need %s', mppblg_name)
             lgargs += ['--rast', mppblg_name]
         if (facesPaths and (any_newerthan(facesPaths, masklg_name) or self.options.redraw)) or (newerthan(bestzip, masklg_name) or self.options.redraw):
-            self.logf('need %s', masklg_name)
+            logger.info('need %s', masklg_name)
             lgargs += ['--mask', masklg_name]
         if lgargs:
             lgargs += ['--boundx', '3840', '--boundy', '2160'] + projectionArgs
@@ -655,7 +649,7 @@ class StateData(object):
 
         # Run any accumulated commands in processShapefile()
         for command in commands:
-            self.logf('command: %s', ' '.join(command))
+            logger.info('command: %s', ' '.join(command))
             if not self.options.dryrun:
                 status = subprocess.call(command, shell=False, stdin=None)
                 if status != 0:
@@ -687,24 +681,24 @@ class StateData(object):
         outpath = os.path.join(dpath, outpath)
         needsbuild = not os.path.isfile(outpath)
         if (not needsbuild) and newerthan(uf1path, outpath):
-            self.logf('%s > %s', uf1path, outpath)
+            logger.info('%s > %s', uf1path, outpath)
             needsbuild = True
         if (not needsbuild) and newerthan(linkspath, outpath):
-            self.logf('%s > %s', linkspath, outpath)
+            logger.info('%s > %s', linkspath, outpath)
             needsbuild = True
         if (not needsbuild) and newerthan(binpath, outpath):
-            self.logf('%s > %s', binpath, outpath)
+            logger.info('%s > %s', binpath, outpath)
             needsbuild = True
         if not needsbuild:
             return
 #        if not (newerthan(uf1path, outpath) or newerthan(linkspath, outpath)):
 #            return
-        self.logf('cd %s && "%s"', dpath, '" "'.join(cmd))
+        logger.info('cd %s && "%s"', dpath, '" "'.join(cmd))
         if self.options.dryrun:
             return
         start = time.time()
         status = subprocess.call(cmd, cwd=dpath)
-        self.logf('data compile took %f seconds', time.time() - start)
+        logger.info('data compile took %f seconds', time.time() - start)
         if status != 0:
             raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 
@@ -714,13 +708,13 @@ class StateData(object):
         mfpath = os.path.join(dpath, '.make')
         if not newerthan(__file__, mfpath):
             return mfpath
-        self.logf('-> %s', mfpath)
+        logger.info('-> %s', mfpath)
         if self.options.protobuf:
             stl_bin = self.stl + '.pb'
         else:
             stl_bin = self.stl + '.gbin'
         if self.options.dryrun:
-            self.logf('would write "%s"', mfpath)
+            logger.info('would write "%s"', mfpath)
             return mfpath
         out = open(mfpath, 'w')
         out.write(makefile_fragment_template.substitute({
@@ -795,13 +789,13 @@ class StateData(object):
                     logging.debug('not cleaning "%s"', fpath)
                     continue
                 if self.options.dryrun or self.options.verbose:
-                    self.logf('rm %s', fpath)
+                    logger.info('rm %s', fpath)
                 if not self.options.dryrun:
                     os.remove(fpath)
 
     def dostate(self):
         start = time.time()
-        self.logf('start at %s\n', time.ctime(start))
+        logger.info('start at %s\n', time.ctime(start))
         ok = False
         try:
             if self.options.clean:
@@ -811,8 +805,8 @@ class StateData(object):
                 ok = self.dostate_inner()
         except:
             errmsg = traceback.format_exc() + ('\n%s error running %s\n' % (self.stu, self.stu))
-            self.logf(errmsg)
-        self.logf('ok=%s after %f seconds\n', ok, time.time() - start)
+            logger.info(errmsg)
+        logger.info('ok=%s after %f seconds\n', ok, time.time() - start)
         self.setuplog.flush()
         sys.stdout.flush()
 
@@ -835,13 +829,13 @@ class StateData(object):
                 return False
         linkspath = self.makelinks(self.dpath)
         if not linkspath:
-            self.logf('makelinks failed')
+            logger.info('makelinks failed')
             return False
         self.compileBinaryData(self.dpath)
         handargspath = os.path.join(self.dpath, 'handargs')
         if not os.path.isfile(handargspath):
             if self.options.dryrun:
-                self.logf('would write "%s"', handargspath)
+                logger.info('would write "%s"', handargspath)
             else:
                 ha = open(handargspath, 'w')
                 ha.write('-g 10000\n')
@@ -853,18 +847,18 @@ class StateData(object):
             dryrun=self.options.dryrun)
         makecmd = ['make', '-k', self.stu + '_all', '-f', makefile]
         if self.options.dryrun:
-            self.logf('would run "%s"', ' '.join(makecmd))
+            logger.info('would run "%s"', ' '.join(makecmd))
         else:
             start = time.time()
             status = subprocess.call(makecmd)
             if status != 0:
                 sys.stderr.write(
                     'command "%s" failed with %d\n' % (' '.join(makecmd), status))
-            self.logf('final make took %f seconds', time.time() - start)
+            logger.info('final make took %f seconds', time.time() - start)
         if self.options.archive_runfiles:
             start = time.time()
             outname = self.archiveRunfiles()
-            self.logf('wrote "%s" in %f seconds', outname, (time.time() - start))
+            logger.info('wrote "%s" in %f seconds', outname, (time.time() - start))
         return True
 
 
