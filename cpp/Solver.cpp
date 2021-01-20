@@ -122,173 +122,179 @@ Solver::Solver() :
 {
 //_link_draw_array( NULL ),
 }
-    Solver::~Solver() {
-if ( nodes != NULL ) {
-delete [] nodes;
-}
-if ( allneigh != NULL ) {
-delete [] allneigh;
-}
-if ( winner != NULL ) {
-delete [] winner;
-}
-if ( _dists != NULL ) {
-delete _dists;
-}
-if ( gd != NULL ) {
-delete gd;
-}
+
+Solver::~Solver() {
+  if ( nodes != NULL ) {
+    delete [] nodes;
+  }
+  if ( allneigh != NULL ) {
+    delete [] allneigh;
+  }
+  if ( winner != NULL ) {
+    delete [] winner;
+  }
+  if ( _dists != NULL ) {
+    delete _dists;
+  }
+  if ( gd != NULL ) {
+    delete gd;
+  }
 #if WITH_PNG
-if ( pngname != NULL ) {
-free(pngname);
-}
+  if ( pngname != NULL ) {
+    free(pngname);
+  }
 #endif
-if ( distfname != NULL ) {
-delete distfname;
-}
-if ( coordfname != NULL ) {
-delete coordfname;
-}
-if ( dumpname != NULL ) {
-free( dumpname );
-}
+  if ( distfname != NULL ) {
+    delete distfname;
+  }
+  if ( coordfname != NULL ) {
+    delete coordfname;
+  }
+  if ( dumpname != NULL ) {
+    free( dumpname );
+  }
 #if 0
-if ( loadname != NULL ) {
-delete loadname;
-}
+  if ( loadname != NULL ) {
+    delete loadname;
+  }
 #endif
-if (pbStatLog != NULL) {
-delete pbStatLog;
-}
-}
-
-        // doesn't do anything, just a tag to switch on in Solver::load()
-        GeoData* protobufGeoDataTag( const char* inputname ) {
-assert(0);
-exit(1);
-return NULL;
+  if (pbStatLog != NULL) {
+    delete pbStatLog;
+  }
 }
 
-            int writeToProtoFile(Solver* sov, const char* filename);
+// doesn't do anything, just a tag to switch on in Solver::load()
+GeoData* protobufGeoDataTag( const char* inputname ) {
+  assert(0);
+  exit(1);
+  return NULL;
+}
+
+int writeToProtoFile(Solver* sov, const char* filename);
 int readFromProtoFile(Solver* sov, const char* filename);
 
 int Solver::writeProtobuf( const char* fname ) {
-return writeToProtoFile(this, fname);
+  return writeToProtoFile(this, fname);
 }
 
 void Solver::load() {
-int err = -1;
-if ( err >= 0 ) {
-// success. done.
-} else if ( geoFact == protobufGeoDataTag ) {
-err = readFromProtoFile(this, inputname);
-if (err < 0) {
-return;
-}
-} else
-{
-gd = geoFact( inputname );
-err = gd->load();
-if ( err < 0 ) {
-return;
-}
-readLinksFile(NULL);
-}
+  int err = -1;
+  if ( err >= 0 ) {
+    // success. done.
+  } else if ( geoFact == protobufGeoDataTag ) {
+    err = readFromProtoFile(this, inputname);
+    if (err < 0) {
+      return;
+    }
+  } else
+  {
+    gd = geoFact( inputname );
+    err = gd->load();
+    if ( err < 0 ) {
+      return;
+    }
+    readLinksFile(NULL);
+  }
 
 #if 0
-if ( districts <= 0 ) {
-int tdistricts = gd->numDistricts();
-if ( tdistricts > 1 ) {
-districts = tdistricts;
-} else {
-districts = districts * -1;
-}
-}
+  if ( districts <= 0 ) {
+    int tdistricts = gd->numDistricts();
+    if ( tdistricts > 1 ) {
+      districts = tdistricts;
+    } else {
+      districts = districts * -1;
+    }
+  }
 #endif
 
-minx = gd->minx;
-maxx = gd->maxx;
-miny = gd->miny;
-maxy = gd->maxy;
-totalpop = gd->totalpop;
-dcx = (maxx + minx) / 2.0;
-dcy = (miny + maxy) / 2.0;
-//printf("minx %0.6lf, miny  %0.6lf, maxx %0.6lf, maxy %0.6lf\n", (double)minx, (double)miny, (double)maxx, (double)maxy );
-zoom = 1.0;
-districtPopTarget = totalpop / districts;
+  minx = gd->minx;
+  maxx = gd->maxx;
+  miny = gd->miny;
+  maxy = gd->maxy;
+  totalpop = gd->totalpop;
+  dcx = (maxx + minx) / 2.0;
+  dcy = (miny + maxy) / 2.0;
+  //printf("minx %0.6lf, miny  %0.6lf, maxx %0.6lf, maxy %0.6lf\n", (double)minx, (double)miny, (double)maxx, (double)maxy );
+  zoom = 1.0;
+  districtPopTarget = totalpop / districts;
 }
 
 void Solver::readLinksFile(const char* filename) {
-// read edges from edge file
-char* linkFileName = NULL;
-mmaped linksFile;
-if (filename == NULL ) {
-linkFileName = strdup( inputname );
-assert(linkFileName != NULL);
-{
-size_t nlen = strlen( linkFileName ) + 8;
-linkFileName = (char*)realloc( linkFileName, nlen );
-assert(linkFileName != NULL);
-}
-strcat( linkFileName, ".links" );
-linksFile.open( linkFileName );
-} else {
-linksFile.open( filename );
-}
-readLinksFileData((const char*)linksFile.data, linksFile.sb.st_size);
-linksFile.close();
-if (linkFileName != NULL) {
-free( linkFileName );
-}
+  // read edges from edge file
+  char* linkFileName = NULL;
+  mmaped linksFile;
+  if (filename == NULL ) {
+    linkFileName = strdup( inputname );
+    assert(linkFileName != NULL);
+    {
+      size_t nlen = strlen( linkFileName ) + 8;
+      linkFileName = (char*)realloc( linkFileName, nlen );
+      assert(linkFileName != NULL);
+    }
+    strcat( linkFileName, ".links" );
+    linksFile.open( linkFileName );
+  } else {
+    linksFile.open( filename );
+  }
+  readLinksFileData((const char*)linksFile.data, linksFile.sb.st_size);
+  linksFile.close();
+  if (linkFileName != NULL) {
+    free( linkFileName );
+  }
 }
 bool Solver::readLinksFileData(const char* data, size_t len) {
-char buf[20];
-memset(buf, 0, sizeof(buf));
-int j = 0;
-size_t sizeof_linkLine = 27;
-size_t sizeof_ubid = 13;
-int offseta = 0;
-int offsetb = 13;
-if ( data[26] == '\n') {
-// old format, two CCCTTTTTTBBBB county-tract-block sets, and '\n'
-//sizeof_linkLine = 27;
-} else if ( data[15] == ',' && data[31] == '\n' ) {
-// new format, two SSCCCTTTTTTBBBB state-county-tract-block values with ',' between and '\n' after
-sizeof_linkLine = 32;
-sizeof_ubid = 15;
-offseta = 0;
-offsetb = 16;
-} else {
-fprintf(stderr, "bad format links file\n");
-return false;
-}
-numEdges = len / sizeof_linkLine;
-edgeData = new int32_t[numEdges*2];
-int noIndexEdgeDataCount = 0;
-for ( unsigned int i = 0 ; i < numEdges; i++ ) {
-uint64_t tubid;
-memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offseta, sizeof_ubid );
-tubid = strtoull( buf, NULL, 10 );
-edgeData[j*2  ] = gd->indexOfUbid( tubid );
-if ( edgeData[j*2  ] < 0 ) {
-printf("ubid %lu => index %d\n", tubid, edgeData[j*2] );
-noIndexEdgeDataCount++;
-continue;
-}
-memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offsetb, sizeof_ubid );
-tubid = strtoull( buf, NULL, 10 );
-edgeData[j*2+1] = gd->indexOfUbid( tubid );
-if ( edgeData[j*2+1] < 0 ) {
-printf("ubid %lu => index %d\n", tubid, edgeData[j*2+1] );
-continue;
-}
-j++;
-}
-if (noIndexEdgeDataCount) {
-  printf("%d no index edgeData parts of %d\n", noIndexEdgeDataCount, numEdges);
-}
-numEdges = j;
-return true;
+  char buf[20];
+  memset(buf, 0, sizeof(buf));
+  int j = 0;
+  size_t sizeof_linkLine = 27;
+  size_t sizeof_ubid = 13;
+  int offseta = 0;
+  int offsetb = 13;
+  if ( data[26] == '\n') {
+    // old format, two CCCTTTTTTBBBB county-tract-block sets, and '\n'
+    //sizeof_linkLine = 27;
+  } else if ( data[15] == ',' && data[31] == '\n' ) {
+    // new format, two SSCCCTTTTTTBBBB state-county-tract-block values with ',' between and '\n' after
+    sizeof_linkLine = 32;
+    sizeof_ubid = 15;
+    offseta = 0;
+    offsetb = 16;
+  } else {
+    fprintf(stderr, "bad format links file\n");
+    return false;
+  }
+  numEdges = len / sizeof_linkLine;
+  edgeData = new int32_t[numEdges*2];
+  int noIndexEdgeDataCount = 0;
+  for ( unsigned int i = 0 ; i < numEdges; i++ ) {
+    uint64_t tubid;
+    memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offseta, sizeof_ubid );
+    tubid = strtoull( buf, NULL, 10 );
+    edgeData[j*2  ] = gd->indexOfUbid( tubid );
+    if ( edgeData[j*2  ] < 0 ) {
+      if (noIndexEdgeDataCount<50) {
+        printf("ubid %lu => index %d\n", tubid, edgeData[j*2] );
+      }
+      noIndexEdgeDataCount++;
+      continue;
+    }
+    memcpy( buf, ((caddr_t)data) + sizeof_linkLine*i + offsetb, sizeof_ubid );
+    tubid = strtoull( buf, NULL, 10 );
+    edgeData[j*2+1] = gd->indexOfUbid( tubid );
+    if ( edgeData[j*2+1] < 0 ) {
+      if (noIndexEdgeDataCount<50) {
+        printf("ubid %lu => index %d\n", tubid, edgeData[j*2+1] );
+      }
+      noIndexEdgeDataCount++;
+      continue;
+    }
+    j++;
+  }
+  if (noIndexEdgeDataCount) {
+    printf("%d no index edgeData parts of %d\n", noIndexEdgeDataCount, numEdges);
+  }
+  numEdges = j;
+  return true;
 }
 
 void Solver::readLinksBin() {

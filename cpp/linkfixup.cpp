@@ -184,7 +184,7 @@ class newedge {
 public:
 	int32_t a, b;
 	newedge* next;
-	
+
 	newedge( int32_t i, int32_t j, newedge* ni = NULL ) : a( i ), b( j ), next( ni ) {}
 };
 newedge* neroot = NULL;
@@ -199,9 +199,9 @@ int main( int argc, const char** argv ) {
 	const char* poname = NULL;
 	int maxNewEdgeCount = 100;
 	bool doProj = false;
-	
+
 	nargc=1;
-	
+
 	for ( i = 1; i < argc; i++ ) {
 		if ( ! strcmp( argv[i], "-o" ) ) {
 			i++;
@@ -265,11 +265,11 @@ int main( int argc, const char** argv ) {
 	int* bfsearchq = new int[numPoints];
 	int bfin = 0;
 	int bfout = 0;
-	
+
 	bfsearchq[0] = 0;
 	hit.set(0);
 	bfin = 1;
-	
+
 #define modinc(n) do { (n) = ((n + 1) % numPoints); } while ( 0 )
 	int nohitcount;
 	int mini;
@@ -294,12 +294,12 @@ int main( int argc, const char** argv ) {
 			}
 		}
 		printf("bf search hit %d out of %d\n", bfhitcount, numPoints);
-		
+
 		mini = -1;
 		minj = -1;
 		mind = 1000000000.0;
 		nohitcount = 0;
-		
+
 		for ( int i = 0; i < numPoints; i++ ) {
 			if ( ! hit.test(i) ) {
 				for ( int j = 0; j < numPoints; j++ ) {
@@ -335,13 +335,13 @@ int main( int argc, const char** argv ) {
 			exit(1);
 			return 1;
 		}
-		
+
 		bfsearchq[0] = mini;
 		bfin = 1;
 		bfout = 0;
 		hit.set( mini );
 	} while ( 1 );
-	
+
 	if ( necount > 0 ) {
 		printf("writing %d new links to \"%s\" and/or \"%s\"\n", necount, foname, poname );
 		int32_t* newe = new int32_t[(sov.numEdges + necount) * 2];
@@ -399,14 +399,19 @@ Node* initNodesFromLinksFile( GeoData* gd, const char* inputname ) {
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2  ] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2  ] < 0 ) {
+                  if (noIndexEdgeDataCount < 50) {
 			printf("ubid %lu => index %ld\n", tubid, edgeData[j*2] );
+                  }
+			noIndexEdgeDataCount++;
 			continue;
 		}
 		memcpy( buf, ((caddr_t)linksFile.data) + sizeof_linkLine*i + 13, 13 );
 		tubid = strtoull( buf, NULL, 10 );
 		edgeData[j*2+1] = gd->indexOfUbid( tubid );
 		if ( edgeData[j*2+1] < 0 ) {
+                  if (noIndexEdgeDataCount < 50) {
 			printf("ubid %lu => index %ld\n", tubid, edgeData[j*2+1] );
+                  }
 			noIndexEdgeDataCount++;
 			continue;
 		}
