@@ -32,13 +32,13 @@ import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
-from . import generaterunconfigs
-from . import linksfromedges
-from .newerthan import newerthan, any_newerthan
-from . import shapefile
-from . import solution
+import generaterunconfigs
+import linksfromedges
+from newerthan import newerthan, any_newerthan
+import shapefile
+import solution
 
-from .states import *
+from states import *
 
 sf1IndexName = 'SF1index.html'
 sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
@@ -142,7 +142,7 @@ class ProcessGlobals(object):
 			sf1data = uf.read()
 			uf.close()
 		return sf1data
-	
+
 	def getGeoUrls(self):
 		"""Returns list of urls to ..geo_uf1.zip files"""
 		if self.geourls is not None:
@@ -182,7 +182,7 @@ class ProcessGlobals(object):
 				fo.close()
 			self.geourls = geo_urls
 			return geo_urls
-	
+
 	def getGeoUrl(self, stl):
 		"""Return the url to xxgeo_uf1.zip for state xx."""
 		geourls = self.getGeoUrls()
@@ -191,7 +191,7 @@ class ProcessGlobals(object):
 			if uf1zip in x:
 				return x
 		return None
-	
+
 	def getTigerLatestShapefileEdition(self, raw):
 		"""New shapefile data lives in directories of this pattern.
 		ex: http://www2.census.gov/geo/tiger/TIGER2009/
@@ -213,7 +213,7 @@ class ProcessGlobals(object):
 			raise Exception('found no tiger editions at "%s"' % tigerbase)
 		self.bestYear = bestyear
 		return '%sTIGER%04d/' % (tigerbase, bestyear)
-	
+
 	def getTigerLatest(self):
 		"""For either shapefile or old line-file, return latest base URL."""
 		if self.tigerlatest is not None:
@@ -230,7 +230,7 @@ class ProcessGlobals(object):
 		else:
                         raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 		return self.tigerlatest
-	
+
 	def getState(self, name):
 		return StateData(self, name, self.options)
 
@@ -272,7 +272,7 @@ class StateData(object):
 		self.dpath = os.path.join(self.options.datadir, self.stu)
 		self.setuplog = open(os.path.join(self.dpath, 'setuplog'), 'a')
 		self._zipspath = os.path.join(self.dpath, 'zips')
-	
+
 	def logf(self, fmt, *args):
 		if args:
 			msg = (fmt % args) + '\n'
@@ -280,14 +280,14 @@ class StateData(object):
 			msg = fmt + '\n'
 		sys.stdout.write(self.stu + ' ' + msg)
 		self.setuplog.write(msg)
-	
+
 	def mkdir(self, path, options):
 		if not os.path.isdir(path):
 			if options.dryrun:
 				self.logf('mkdir %s', path)
 			else:
 				os.mkdir(path)
-	
+
 	def maybeUrlRetrieve(self, url, localpath, contenttype=None):
 		if os.path.exists(localpath):
 			return localpath
@@ -306,7 +306,7 @@ class StateData(object):
 				raise Exception('download failed: ' + url + ' if this is OK, touch ' + localpath)
 			return None
 		return localpath
-	
+
 	def makeUf101(self, geozip, uf101, dpath=None):
 		"""From xxgeo_uf1.zip, distill the 101 (block level) geopgraphic
 		summary file xx101.uf1 ."""
@@ -365,7 +365,7 @@ class StateData(object):
 			makedefaults.write('%sDISTOPT ?= -d %d\n' % (
 				self.stu, len(cdvals)))
 			makedefaults.close()
-	
+
 	def getTigerBase(self, dpath=None):
 		"""Determine the base URL for shapefile data for this state.
 		Cached in 'data/XX/tigerurl'.
@@ -404,7 +404,7 @@ class StateData(object):
 			self.bestYear = int(m.group(1))
 			self.turl = turl.strip()
 			return self.turl
-	
+
 	def getTigerZipIndexHtml(self, dpath):
 		"""Return raw html of zip index listing. (maybe cached)"""
 		zipspath = self.zipspath(dpath)
@@ -426,7 +426,7 @@ class StateData(object):
 			raw = f.read()
 			f.close()
 		return raw
-	
+
 	def getTigerZipIndex(self, dpath):
 		"""Return list of basic zip files to download."""
 		if self.ziplist is not None:
@@ -440,7 +440,7 @@ class StateData(object):
 		else:
                         raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 		return self.ziplist
-	
+
 	def getCountyPaths(self):
 		"""Return list of relative href values for county dirs."""
 		raw = self.getTigerZipIndexHtml(self.dpath)
@@ -449,7 +449,7 @@ class StateData(object):
 		# LA has "Parish"
 		re_string = 'href="(%02d\\d\\d\\d_[^"]+(?:County|city|Municipality|Census_Area|Borough|Parish)/?)"' % (fipsForPostalCode(self.stu))
 		return re.findall(re_string, raw, re.IGNORECASE)
-	
+
 	def goodZip(self, localpath, url):
 		if not os.path.exists(localpath):
 			return False
@@ -464,7 +464,7 @@ class StateData(object):
 			os.rename(localpath, badpath)
 			self.logf('bad zip file "%s" moved aside to "%s". (from url %s) to skip: ` rm "%s" && touch "%s" `', localpath, badpath, url, badpath, localpath)
 		return ok
-	
+
 	def getEdges(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_edges.zip
 		counties = self.getCountyPaths()
@@ -479,7 +479,7 @@ class StateData(object):
 			if not ok:
 				return False
 		return True
-	
+
 	def getFaces(self):
 		# http://www2.census.gov/geo/tiger/TIGER2009/25_MASSACHUSETTS/25027_Worcester_County/tl_2009_25027_faces.zip
 		counties = self.getCountyPaths()
@@ -494,12 +494,12 @@ class StateData(object):
 			if not ok:
 				return False
 		return True
-	
+
 	def zipspath(self, dpath=None):
 		if dpath is None:
 			return self._zipspath
 		return os.path.join(dpath, 'zips')
-	
+
 	def downloadTigerZips(self, dpath):
 		"""Download basic data as needed to XX/zips/"""
 		turl = self.getTigerBase(dpath)
@@ -509,7 +509,7 @@ class StateData(object):
 			zp = os.path.join(zipspath, z)
 			self.maybeUrlRetrieve(turl + z, zp)
 		return ziplist
-	
+
 	def processShapefile(self, dpath):
 		"""Build .links and .mppb rasterization from shapefile."""
 		bestzip = None
@@ -661,13 +661,13 @@ class StateData(object):
 				if status != 0:
 					raise Exception('error (%d) executing: "%s"' % (status, ' '.join(command)))
 		return linksname
-	
+
 	def makelinks(self, dpath):
 		"""Deprecated. Use shapefile bundle."""
 		if self.options.shapefile:
 			return self.processShapefile(dpath)
 		raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
-	
+
 	def compileBinaryData(self, dpath=None):
 		if dpath is None:
 			dpath = self.dpath
@@ -707,7 +707,7 @@ class StateData(object):
 		self.logf('data compile took %f seconds', time.time() - start)
 		if status != 0:
 			raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
-	
+
 	def writeMakeFragment(self, dpath=None):
 		if dpath is None:
 			dpath = self.dpath
@@ -731,7 +731,7 @@ class StateData(object):
 			'bindir': self.options.bindir}))
 		out.close()
 		return mfpath
-	
+
 	def getextras(self, extras=None):
 		"""Get extra data like 00001 series data."""
 		if extras is None:
@@ -743,7 +743,7 @@ class StateData(object):
 			xurl = geourl.replace('geo_uf1', x + '_uf1')
 			xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
 			self.maybeUrlRetrieve(xurl, xpath)
-	
+
 	def acceptArchivePart(self, dirpath, fname):
 		flower = fname.lower()
 		for oksuffix in ['.pb', '.mppb', '.png', '.jpg', '_stats', '.html']:
@@ -752,10 +752,10 @@ class StateData(object):
 		if dirpath.endswith('config'):
 			return True
 		return False
-	
+
 	def archiveRunfiles(self):
 		"""Bundle key data as XX_runfiles.tar.gz"""
-		if ((not os.path.isdir(self.options.archive_runfiles)) or 
+		if ((not os.path.isdir(self.options.archive_runfiles)) or
 			(not os.access(self.options.archive_runfiles, os.X_OK|os.W_OK))):
 			sys.stderr.write('error: "%s" is not a writable directory\n' % self.options.archive_runfiles)
 			return None
@@ -786,7 +786,7 @@ class StateData(object):
 			out.add(part, arcname, False)
 		out.close()
 		return destpath
-	
+
 	def clean(self):
 		for (dirpath, dirnames, filenames) in os.walk(self.dpath):
 			for fname in filenames:
@@ -798,7 +798,7 @@ class StateData(object):
 					self.logf('rm %s', fpath)
 				if not self.options.dryrun:
 					os.remove(fpath)
-	
+
 	def dostate(self):
 		start = time.time()
 		self.logf('start at %s\n', time.ctime(start))
@@ -815,7 +815,7 @@ class StateData(object):
 		self.logf('ok=%s after %f seconds\n', ok, time.time() - start)
 		self.setuplog.flush()
 		sys.stdout.flush()
-	
+
 	def dostate_inner(self):
 		self.mkdir(self.dpath, self.options)
 		if self.options.extras:
@@ -908,10 +908,10 @@ class SyncrhonizedIteratorWrapper(object):
 	def __init__(self, it):
 		self.it = it.__iter__()
 		self.lock = threading.Lock()
-	
+
 	def __iter__(self):
 		return self
-	
+
 	def __next__(self):
 		self.lock.acquire()
 		try:
@@ -946,7 +946,7 @@ def main(argv):
 		logging.getLogger().setLevel(logging.DEBUG)
 	if not os.path.isdir(options.datadir):
 		raise Exception('data dir "%s" does not exist' % options.datadir)
-	
+
 	if not options.shapefile:
                 raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
 	pg = ProcessGlobals(options)

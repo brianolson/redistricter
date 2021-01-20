@@ -10,7 +10,7 @@ import sys
 
 legpath_ = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
 
-from .states import codeForState
+from states import codeForState
 
 def run(datadir='data', stulist=None, dryrun=False, newerthan=None):
 	congress_total = 0
