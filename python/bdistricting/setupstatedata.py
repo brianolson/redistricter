@@ -19,7 +19,6 @@ import glob
 import logging
 import optparse
 import os
-import pickle
 import re
 import string
 import subprocess

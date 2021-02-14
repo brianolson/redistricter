@@ -8,23 +8,19 @@ import time
 
 # in name \t archive name
 PACKAGEDEF = """
-districter2_staticproto	bin/districter2
-drend_static	bin/drend
-client.py	bin/client.py
-kmppspreadplot.py	bin/kmppspreadplot.py
-manybest.py	bin/manybest.py
-measurerace.py	bin/measurerace.py
-newerthan.py	bin/newerthan.py
-plotlib.js	bin/plotlib.js
-plotstatlog.py	bin/plotstatlog.py
-resultserver.py	bin/resultserver.py
-resultspage.py	bin/resultspage.py
-runallstates.py	bin/runallstates.py
-solution.py	bin/solution.py
-states.py	bin/states.py
-totaltime.py	bin/totaltime.py
-variability.py	bin/variability.py
-run_redistricter.py	run_redistricter
+districter2	bin/districter2
+drend	bin/drend
+python/bdistricting/run_redistricter.py	bin/run_redistricter.py
+python/bdistricting/runallstates.py	bin/runallstates.py
+python/bdistricting/client.py	bin/client.py
+python/bdistricting/newerthan.py	bin/newerthan.py
+python/bdistricting/manybest.py	bin/manybest.py
+
+python/bdistricting/resultserver.py	bin/resultserver.py
+python/bdistricting/kmppspreadplot.py	bin/kmppspreadplot.py
+python/bdistricting/plotstatlog.py	bin/plotstatlog.py
+html/plotlib.js	bin/plotlib.js
+
 at_home_README.txt	README.TXT
 """
 
@@ -42,10 +38,10 @@ def parsePackageDef(linesource):
 def main():
 #	ok = subprocess.call(['make', '-j', '4', 'all', 'jall', 'districter2_staticproto', 'OG=-O2 -NDEBUG'])
 #	assert ok == 0
-	outprefix = time.strftime('redistricer_%Y%m%d_%H%M%S')
-	outname = outprefix + '.tar.gz'
+	outprefix = time.strftime('redistricter_%Y%m%d_%H%M%S')
+	outname = outprefix + '.tar.xz'
 	files = parsePackageDef(PACKAGEDEF.splitlines())
-	tf = tarfile.open(outname, 'w:gz')
+	tf = tarfile.open(outname, 'w:xz')
 	for fname, arcname in files:
 		arcname = os.path.join(outprefix, arcname)
 		tf.add(fname, arcname=arcname)
@@ -55,4 +51,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-

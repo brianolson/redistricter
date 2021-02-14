@@ -31,16 +31,7 @@ Inside each XX_Foo/YYYYMMDD_HHMMSS/ run directory should be:
 
 __author__ = "Brian Olson"
 
-# TODO: shiny GUI?
-# At the most basic, curses or Tk progress bars.
-# Or, render a recent map and display it.
-# Maybe rewrite this run script in C++ and build it into the districter binary?
-# (But I get free leak-resistance by not having a long-lived program,
-# and pickle is kinda handy.)
-# For now, there's the web interface, and it may stay that way.
-# There should probably be a doubleclickable Mac runner.
 
-import pickle
 import datetime
 import glob
 import logging
@@ -327,13 +318,9 @@ class configuration(object):
     """
     Get basic args from:
     1. $configdir/${name}_args
-    2. $datadir/geometry.pickle
-    #3. $datadir/basicargs
 
     Get drend command from:
     1. $configdir/${name}_drendcmd
-    2. $datadir/geometry.pickle
-    #3. $datadir/drendcmd
     """
     def __init__(self, name=None, datadir=None, config=None, dataroot=None):
         # name often upper case 2 char code
@@ -483,8 +470,7 @@ class configuration(object):
                 self.applyConfigLine(line, self.dataroot)
 
     def readDatadirConfig(self, datadir=None):
-        """Read a datadir/geometry.pickle and calculate basic config.
-        datadir is path to state dir, "data/MN" or so.
+        """Check contents of state dir, "data/MN" or so.
         """
         if datadir is None:
             assert self.datadir is not None
@@ -774,7 +760,6 @@ class runallstates(object):
             self.stdargs.update(argListToDict(extraArgs))
         for arg in args:
             astu = arg.upper()
-            #if IsReadableFile(os.path.join(self.datadir, astu, "basicargs")) or IsReadableFile(os.path.join(self.datadir, astu, "geometry.pickle")):
             if (os.path.isdir(os.path.join(self.datadir, astu)) or
                 self.options.server):
                 # Any existing directory, or if there's a server we might fetch it.
