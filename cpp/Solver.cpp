@@ -272,7 +272,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
     tubid = strtoull( buf, NULL, 10 );
     edgeData[j*2  ] = gd->indexOfUbid( tubid );
     if ( edgeData[j*2  ] < 0 ) {
-      if (noIndexEdgeDataCount<50) {
+      if (noIndexEdgeDataCount < 30) {
         printf("ubid %lu => index %d\n", tubid, edgeData[j*2] );
       }
       noIndexEdgeDataCount++;
@@ -282,7 +282,7 @@ bool Solver::readLinksFileData(const char* data, size_t len) {
     tubid = strtoull( buf, NULL, 10 );
     edgeData[j*2+1] = gd->indexOfUbid( tubid );
     if ( edgeData[j*2+1] < 0 ) {
-      if (noIndexEdgeDataCount<50) {
+      if (noIndexEdgeDataCount < 30) {
         printf("ubid %lu => index %d\n", tubid, edgeData[j*2+1] );
       }
       noIndexEdgeDataCount++;
