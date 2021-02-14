@@ -127,9 +127,9 @@ def getCountySet(datadir):
   return getCensusTigerSetList(datadir, COUNTY_URL, 'county_index.html', COUNTY_RE)
 
 
-# e.g. http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Virginia/va2010.pl.zip
+# e.g. http://www2.census.gov/census_2020/01-Redistricting_File--PL_94-171/Virginia/va2020.pl.zip
 # takes (state name, stl) like ('Virginia', 'va')
-PL_ZIP_TEMPLATE = 'http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/%s/%s2010.pl.zip'
+PL_ZIP_TEMPLATE = 'http://www2.census.gov/census_2020/01-Redistricting_File--PL_94-171/%s/%s2020.pl.zip'
 
 class Crawler(object):
   def __init__(self, options):
@@ -278,8 +278,8 @@ class ProcessGlobals(setupstatedata.ProcessGlobals):
     return StateData(self, name, self.options)
 
 
-def pl94_171_2010_ubid(line):
-  """From a line of a PL94-171 (2010) file, return the 'unique block id' used by Redistricter system.
+def pl94_171_2020_ubid(line):
+  """From a line of a PL94-171 (2020) file, return the 'unique block id' used by Redistricter system.
   {state}{county}{tract}{block}
   This winds up being a 15 digit decimal number that fits in a 64 bit unsigned int."""
   return line[27:32] + line[54:60] + line[61:65]
@@ -309,7 +309,7 @@ def readPlaceNames(placeNamesPath):
 
 class GeoBlocksPlaces(object):
   """
-  Receives lines from {stl}2010.pl.zip/{stl}geo2010.pl filtered at '750' summary level.
+  Receives lines from {stl}2020.pl.zip/{stl}geo2020.pl filtered at '750' summary level.
         Gather place:block-ubid mappings.
         Write to binary or text format.
         Also collect place:population summary; write to csv.
@@ -319,14 +319,14 @@ class GeoBlocksPlaces(object):
     self.places = {}
     self.placePops = {}
 
-  def pl2010line(self, line):
-    """accumulate a line of a PL94-171 (2010) file
+  def pl2020line(self, line):
+    """accumulate a line of a PL94-171 (2020) file
                 should have been filtered to summary level 750 which has
                 one record for each block"""
     placecode = line[50:52]
     if placecode in self.ACTIVE_INCORPORATED_PLACE_CODES:
       place = line[45:50]
-      ubid = pl94_171_2010_ubid(line)
+      ubid = pl94_171_2020_ubid(line)
       placelist = self.places.get(place)
       if placelist is None:
         placelist = [ubid]
@@ -388,11 +388,11 @@ class StateData(setupstatedata.StateData):
     return out
 
   def getGeoBlocks(self):
-    """From xx2010.pl.zip get block level geo file.
+    """From xx2020.pl.zip get block level geo file.
         -> geoblocks filtered file of per-block data
         -> geoblocks.places binary ubid:block map
         -> placespops.csv summary placeid:pop csv"""
-    plzip = os.path.join(self.dpath, 'zips', self.stl + '2010.pl.zip')
+    plzip = os.path.join(self.dpath, 'zips', self.stl + '2020.pl.zip')
     geoblockspath = os.path.join(self.dpath, 'geoblocks')
     placespath = geoblockspath + '.places'
     placePopPath = os.path.join(self.dpath, 'placespops.csv')
@@ -415,13 +415,13 @@ class StateData(setupstatedata.StateData):
     places = GeoBlocksPlaces()
     fo = open(geoblockspath, 'w')
     zf = zipfile.ZipFile(plzip, 'r')
-    raw = zf.read(self.stl + 'geo2010.pl').decode()
+    raw = zf.read(self.stl + 'geo2020.pl').decode()
     zf.close()
     filter = 'PLST  ' + self.stu + '750'
     for line in raw.splitlines(True):
       if line.startswith(filter):
         fo.write(line)
-        places.pl2010line(line)
+        places.pl2020line(line)
     fo.close()
     with gzip.open(placespath, 'wb') as placefile:
       places.writeUbidPlaceMap(placefile)

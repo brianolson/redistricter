@@ -20,8 +20,7 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import zipfile
 
-#import djangotemplates
-import jinjatemplates as djangotemplates
+import jinjatemplates
 from kmppspreadplot import svgplotter
 from newerthan import newerthan, any_newerthan
 import resultspage
@@ -363,7 +362,7 @@ class SubmissionAnalyzer(object):
             rooturl=self.options.rooturl,
             socialshare=self.safeSocialShare,
             )
-        return djangotemplates.render('social_django.html', context)
+        return jinjatemplates.render('social_django.html', context)
 
     def loadDatadir(self, path=None):
         if path is None:
@@ -583,7 +582,7 @@ class SubmissionAnalyzer(object):
             configs = self.getBestConfigs()
         newestconfig = self.newestWinner(configs)
 
-        # TODO: django templates?
+        # TODO: jinja templates?
         out = open(outpath, 'w')
         out.write("""<!doctype html>
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
@@ -740,7 +739,7 @@ class SubmissionAnalyzer(object):
 
         out = open(ihtmlpath, 'w')
         out.write(
-            djangotemplates.render(
+            jinjatemplates.render(
                 'state_dir.html',
                 dict(
             statename=name,
@@ -995,7 +994,7 @@ class SubmissionAnalyzer(object):
             atomicLink(actualMapLgPath, os.path.join(outdir, cname, stu + '_lg.png'))
             atomicLink(actualMap500Path, os.path.join(outdir, cname, stu + '500.png'))
         out = open(ihpath, 'w')
-        out.write(djangotemplates.render('st_index_django.html', context))
+        out.write(jinjatemplates.render('st_index_django.html', context))
         out.close()
         for x in ('map.png', 'map500.png', 'map_lg.png', 'index.html', 'solution.dsz', 'solution.csv.gz', 'solution.zip'):
             atomicLink(os.path.join(sdir, x), os.path.join(outdir, cname, x))
@@ -1092,7 +1091,7 @@ class SubmissionAnalyzer(object):
 
         index_html_path = os.path.join(outdir, 'index.html')
         index_html = open(index_html_path, 'w')
-        index_html.write(djangotemplates.render('root_index.html',dict(
+        index_html.write(jinjatemplates.render('root_index.html',dict(
             statenav=self.statenav(None, configs),
             rooturl=self.options.rooturl,
             localtime=localtime(),

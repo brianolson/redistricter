@@ -1,11 +1,13 @@
+* {box-sizing:border-box;}
 body{color:#000000;background-color:#ffffff;}
 p.gentime{color:#555;}
 /* div.rb site nav item */
 /* state nav left */
-table.snl{font-size:10pt; font-family:'Helvetica',sans-serif;margin-bottom:4px;}
+table.snl{z-index:1;position:relative;font-size:24px;background-color:#aaa;font-family:'Helvetica',sans-serif;margin-bottom:4px;}
+#statebutton{font-size:30px;border:1px solid black;display:inline-block;}
 tr.slg{}
 tr.slgC{background-color:#ddd}
-table.sp td{vertical-align:top;}
+table.sp td{vertical-align:top;position:relative;}
 table.myo{}
 table.myo td{padding-left:3px;}
 td.myoh{max-width:30em;text-align:center;}
@@ -21,3 +23,22 @@ td.nc{text-align:center;}
 #linkexp{font-size:60%;position:relative;}
 #lefl{position:absolute;z-index:9;display:none;background-color:#fff;padding:4px;font-size:12pt;border:1px solid #555;width:50ex;}
 .fakelink{color:#00f;text-decoration:underline;cursor:pointer;}
+
+/* single result page st_index */
+td.myon{text-align:right;padding-right:0.5em;}
+td.myow{text-align:right;font-weight:bold;}
+td.myoh{text-align:right;}
+#rhs div{text-align:center;}
+td.better{background-color:#e0ffe0;}
+td.demobox table td{text-align:right;padding-left:0.3em;}
+
+div.leftbar{width:100%;}
+div.content{width:100%;}
+
+/* https://www.w3schools.com/css/css_rwd_mediaqueries.asp 600, 768, 992, 1200 */
+@media only screen and (min-width: 768px) {
+    table.snl{font-size:10pt;background-color:#fff;display:block;}
+    #statebutton{display:none;}
+    div.leftbar{width:200px;}
+    div.content{width:auto;}
+}

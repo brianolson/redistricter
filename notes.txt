@@ -612,4 +612,33 @@ Identifying a person only with the place they live is serfdom.
 
 http://www.cleanmissouri.org/wp-content/uploads/2018/04/Packet-048-Petition-Text-copy.pdf
 
+2021 reapportionment estimates
+https://docs.google.com/spreadsheets/d/1MkSW6Y9TAMBq9mGPiuTNInDfJ3PQiDkNyRro25WxG5s/edit?usp=sharing
+
+2021-01-19 17:35:05 EST (Tuesday, January 19 05:35:05 PM)
+
+https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html
+https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2020pl/TGRSHP2020PL_TechDoc.pdf
+
+States Posted on 01/19/2021: AR, CO, MD, NJ & VA
+States Posting on 01/26/2021: CA, IA, IN, LA, MO, NC, NY, OH, & OR
+States Posting on 02/02/2021: DE, HI, ME, MS, NE, NV, PA, SD, WA, WI
+
+https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+https://www2.census.gov/geo/tiger/TIGER2020PL/STATE/
+https://www2.census.gov/geo/tiger/TIGER2020PL/STATE/08_COLORADO/
+https://www2.census.gov/geo/tiger/TIGER2020PL/STATE/08_COLORADO/08/tl_2020_08_county20.zip
+https://www2.census.gov/geo/tiger/TIGER2020PL/STATE/08_COLORADO/08073/tl_2020_08073_edges.zip
+https://www2.census.gov/geo/tiger/TIGER2020PL/STATE/08_COLORADO/08073/tl_2020_08073_faces.zip
+
+https://www2.census.gov/geo/tiger/TIGER2020PL/LAYER/FACES/
+https://www2.census.gov/geo/tiger/TIGER2020PL/LAYER/EDGES/
+https://www2.census.gov/geo/tiger/TIGER2020PL/LAYER/COUNTY/2020/
+https://www2.census.gov/geo/tiger/TIGER2020PL/LAYER/TABBLOCK/2020/
+
+http://www2.census.gov/census_2010/
+-> ?
+https://www2.census.gov/census_2020/
+
+
 # xeof end of file search target
