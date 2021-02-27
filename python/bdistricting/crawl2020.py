@@ -261,8 +261,8 @@ class Crawler(object):
     for it in self.tabblock:
       stu = states.codeForFips(it.state_fips)
       assert(stu)
-      if stu == 'DC' or stu == 'PR':
-        continue
+      # if stu == 'DC' or stu == 'PR':
+      #   continue
       stulist.append(stu)
     return stulist
 

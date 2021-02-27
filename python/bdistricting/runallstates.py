@@ -32,10 +32,10 @@ Inside each XX_Foo/YYYYMMDD_HHMMSS/ run directory should be:
 __author__ = "Brian Olson"
 
 
+import argparse
 import datetime
 import glob
 import logging
-import optparse
 import os
 import random
 import re
@@ -588,7 +588,7 @@ class runallstates(object):
         self.lock = DummyLock()
         # used by getNextState and runthread
         self.qpos = 0
-        # dict from optparse
+        # args from argparse
         self.options = {}
         # What is currently running
         self.currentOps = {}
@@ -712,37 +712,37 @@ class runallstates(object):
 
     def readArgs(self, argv):
         default_server = os.environ.get('REDISTRICTER_SERVER')
-        argp = optparse.OptionParser(description="arguments after '--' will be passed to the solver")
+        argp = argparse.ArgumentParser()
         # TODO: add options to not make PNG after run or to not store g/ intermediates.
-        argp.add_option('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
-        argp.add_option('--bindir', '--bin', dest='bindir', default=self.bindir)
-        argp.add_option('--exe', dest='exepath', default=None)
-        argp.add_option('--runsecs', dest='runsecs', type='float', default=None)
-        argp.add_option('--config', dest='configList', action='append', default=[])
-        argp.add_option('--config-include', dest='config_include', action='append', default=[], help='regex compared to unpacked config file path, like "AZ/config/Senate". partial match includes the config. overrides --config-exclude')
-        argp.add_option('--config-exclude', dest='config_exclude', action='append', default=[], help='regex compared to config file path. partial match causes config to not be used. overriden by --config-include')
-        argp.add_option('--configdir', dest='configdir', default=None)
-        argp.add_option('--config-override', dest='config_override_path', default='configoverride')
-        argp.add_option('--threads', dest='threads', type='int', default=1)
-        argp.add_option('--port', dest='port', type='int', default=-1, help='port to serve stats on via HTTP')
-        argp.add_option('--dry-run', '-n', dest='dry_run', action='store_true', default=False)
-        argp.add_option('--mode', dest='mode', type='choice', choices=('d2','nn'), default='nn')
-        argp.add_option('--d2', dest='mode', action='store_const', const='d2')
-        argp.add_option('--nn', dest='mode', action='store_const', const='nn')
-        argp.add_option('--runlog', dest='runlog', default='runlog', help='append a record of all solver runs here')
-        argp.add_option('--bestlog', dest='bestlog', default='bestlog', help='append a record of each solver run that is best-so-far')
-        argp.add_option('--keepbest', dest='keepbest', default=2, type='int', help='number of best solutions to keep')
-        argp.add_option('--solutionlog', dest='solutionlog', default=False, action='store_true', help='store intermediate solutions under g/*')
-        argp.add_option('--nosolutionlog', dest='solutionlog', action='store_false')
-        argp.add_option('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
-        argp.add_option('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
-        argp.add_option('--verbose', '-v', dest='verbose', action='store_true', default=False)
-        argp.add_option('--weighted', dest='weighted', action='store_true', default=True, help='Pick weighted-random configurations to run next. (default)')
-        argp.add_option('--round-robin', dest='weighted', action='store_false', help='Run each configuration in turn.')
-        argp.add_option('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default='3/7', help='f/s checks the last (f+s) events and exits if >f are failures')
-        argp.add_option('--diskQuota', dest='diskQuota', default='100M', help='how much disk to use storing data and results. Default 100M.')
-        #argp.add_option('', dest='', default=None, help='')
-        (options, args) = argp.parse_args()
+        argp.add_argument('-d', '--data', '--datadir', dest='datadir', default=self.datadir)
+        argp.add_argument('--bindir', '--bin', dest='bindir', default=self.bindir)
+        argp.add_argument('--exe', dest='exepath', default=None)
+        argp.add_argument('--runsecs', dest='runsecs', type=float, default=None)
+        argp.add_argument('--config', dest='configList', action='append', default=[])
+        argp.add_argument('--config-include', dest='config_include', action='append', default=[], help='regex compared to unpacked config file path, like "AZ/config/Senate". partial match includes the config. overrides --config-exclude')
+        argp.add_argument('--config-exclude', dest='config_exclude', action='append', default=[], help='regex compared to config file path. partial match causes config to not be used. overriden by --config-include')
+        argp.add_argument('--configdir', dest='configdir', default=None)
+        argp.add_argument('--config-override', dest='config_override_path', default='configoverride')
+        argp.add_argument('--threads', dest='threads', type=int, default=1)
+        argp.add_argument('--port', dest='port', type=int, default=-1, help='port to serve stats on via HTTP')
+        argp.add_argument('--dry-run', '-n', dest='dry_run', action='store_true', default=False)
+        argp.add_argument('--mode', dest='mode', choices=('d2','nn'), default='nn')
+        argp.add_argument('--d2', dest='mode', action='store_const', const='d2')
+        argp.add_argument('--nn', dest='mode', action='store_const', const='nn')
+        argp.add_argument('--runlog', dest='runlog', default='runlog', help='append a record of all solver runs here')
+        argp.add_argument('--bestlog', dest='bestlog', default='bestlog', help='append a record of each solver run that is best-so-far')
+        argp.add_argument('--keepbest', dest='keepbest', default=2, type=int, help='number of best solutions to keep')
+        argp.add_argument('--solutionlog', dest='solutionlog', default=False, action='store_true', help='store intermediate solutions under g/*')
+        argp.add_argument('--nosolutionlog', dest='solutionlog', action='store_false')
+        argp.add_argument('--server', dest='server', default=default_server, help='url of config page on server from which to download data')
+        argp.add_argument('--force-config-reload', dest='force_config_reload', action='store_true', default=False)
+        argp.add_argument('--verbose', '-v', dest='verbose', action='store_true', default=False)
+        argp.add_argument('--weighted', dest='weighted', action='store_true', default=True, help='Pick weighted-random configurations to run next. (default)')
+        argp.add_argument('--round-robin', dest='weighted', action='store_false', help='Run each configuration in turn.')
+        argp.add_argument('--failuresPerSuccessesAllowed', '--fr', dest='failureRate', default='3/7', help='f/s checks the last (f+s) events and exits if >f are failures')
+        argp.add_argument('--diskQuota', dest='diskQuota', default='100M', help='how much disk to use storing data and results. Default 100M.')
+        #argp.add_argument('', dest='', default=None, help='')
+        (options, args) = argp.parse_known_intermixed_args()
         self.options = options
         if options.verbose:
             logging.basicConfig(level=logging.DEBUG)

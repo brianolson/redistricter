@@ -13,7 +13,7 @@ states = [
 	('Colorado',	'CO',	8),
 	('Connecticut',	'CT',	9),
 	('Delaware',	'DE',	10),
-	#('Washington D.C.',	'DC',	11),
+	('Washington D.C.',	'DC',	11),
 	('Florida',	'FL',	12),
 	('Georgia',	'GA',	13),
 	('Hawaii',	'HI',	15),
@@ -44,7 +44,7 @@ states = [
 	('Oklahoma',	'OK',	40),
 	('Oregon',	'OR',	41),
 	('Pennsylvania',	'PA',	42),
-	#('Puerto Rico',	'PR',	72),
+	('Puerto Rico',	'PR',	72),
 	('Rhode Island',	'RI',	44),
 	('South Carolina',	'SC',	45),
 	('South Dakota',	'SD',	46),
@@ -60,11 +60,11 @@ states = [
 ]
 
 ignored_fips = [
-        11, # Washington D.C.
+        #11, # Washington D.C.
         60, # American Samoa
         66, # Guam
         69, # Northern Mariana Islands
-        72, # Puerto Rico
+        #72, # Puerto Rico
         78, # Virgin Islands
 ]
 
@@ -120,7 +120,7 @@ _legstats = None
 
 class LegislatureStat(object):
 	"""Basic info for a state legislature or congressional delegation."""
-	
+
 	def __init__(self, name, shortname, code, count):
 		self.name = name
 		self.shortname = shortname
