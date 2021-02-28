@@ -7,11 +7,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/brianolson/redistricter/runner/version"
 )
 
 // args for districter2
@@ -24,6 +25,8 @@ var argsWithParam = []string{
 	"--runDutySeconds", "--sleepDutySeconds",
 }
 
+// arg for running program
+// can be standalone "--name" or ("--name" "val")
 type arg struct {
 	name   string
 	val    string
@@ -59,7 +62,7 @@ func NewArgs() *Args {
 	return aa
 }
 
-func (a *Args) Update(ca *ConfigArgs) {
+func (a *Args) Update(ca ConfigArgs) *Args {
 	for k, v := range ca.Kwargs {
 		found := false
 		for i, aa := range a.args {
@@ -76,11 +79,43 @@ func (a *Args) Update(ca *ConfigArgs) {
 	for _, sa := range ca.Args {
 		a.args = append(a.args, marg(sa))
 	}
+	return a
+}
+
+func (a *Args) ToArray() []string {
+	olen := 0
+	for _, xa := range a.args {
+		if xa.hasVal {
+			olen += 2
+		} else {
+			olen += 1
+		}
+	}
+	out := make([]string, olen)
+	pos := 0
+	for _, xa := range a.args {
+		out[pos] = xa.name
+		pos++
+		if xa.hasVal {
+			out[pos] = xa.val
+			pos++
+		}
+	}
+	return out
 }
 
 type ConfigArgs struct {
-	Args   []string          `json:"args"`
-	Kwargs map[string]string `json:"kwargs"`
+	Args   []string          `json:"args,omitempty"`
+	Kwargs map[string]string `json:"kwargs,omitempty"`
+}
+
+// implement json.Marshaler
+// except it seems to not make any difference :-/
+func (ca *ConfigArgs) MarshalJSON() ([]byte, error) {
+	if len(ca.Args) == 0 && len(ca.Kwargs) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(ca)
 }
 
 type Config struct {
@@ -89,7 +124,7 @@ type Config struct {
 	// e.g. NC_Congress
 	Name string `json:"name"`
 
-	Solver ConfigArgs `json:"solve,omitempty"`
+	Solver ConfigArgs `json:"solver,omitempty"`
 	Drend  ConfigArgs `json:"drend,omitempty"`
 	Common ConfigArgs `json:"common,omitempty"`
 
@@ -135,7 +170,7 @@ func maybeFail(err error, errfmt string, params ...interface{}) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, errfmt, params...)
+	fmt.Fprintf(os.Stderr, errfmt+"\n", params...)
 	os.Exit(1)
 }
 
@@ -186,7 +221,7 @@ type RunContext struct {
 func (rc *RunContext) run() {
 }
 
-func (rc *RunContext) readDataDir() {
+func (rc *RunContext) readDataDir() (configs map[string]Config) {
 	ddf, err := os.Open(rc.dataDir)
 	if err == os.ErrNotExist {
 		err = os.MkdirAll(rc.dataDir, 0766)
@@ -198,10 +233,15 @@ func (rc *RunContext) readDataDir() {
 		err = nil
 	}
 	maybeFail(err, "%s: could not read dir, %v", rc.dataDir, err)
-	configs := make(map[string]Config)
+	configs = make(map[string]Config)
 	for _, fi := range infos {
 		rc.readDataDirConfig(configs, fi)
 	}
+	if verbose {
+		cj, _ := json.Marshal(configs)
+		fmt.Fprintf(os.Stderr, "found configs:\n%v\n", string(cj))
+	}
+	return
 }
 func (rc *RunContext) readDataDirConfig(configs map[string]Config, fi os.FileInfo) {
 	if !fi.IsDir() {
@@ -217,6 +257,7 @@ func (rc *RunContext) readDataDirConfig(configs map[string]Config, fi os.FileInf
 	if err != nil {
 		return
 	}
+	debug("found %s", ddConfigPath)
 	for _, cfi := range cci {
 		if !strings.HasSuffix(cfi.Name(), ".json") {
 			continue
@@ -242,16 +283,44 @@ func (rc *RunContext) readDataDirConfigJson(configs map[string]Config, jspath st
 	configs[nc.Name] = nc
 }
 
+var needsEscape = " ?*"
+
+// shell escape
+func shescape(x string) string {
+	xi := strings.IndexAny(x, needsEscape)
+	if xi >= 0 {
+		return "'" + x + "'"
+	}
+	return x
+}
+
+func (rc *RunContext) debugCommandLines() {
+	for cname, config := range rc.config.Configs {
+		cmd := NewArgs().Update(config.Common).Update(config.Solver).ToArray()
+		for i, p := range cmd {
+			cmd[i] = shescape(p)
+		}
+		debug("%s: %s/districter2 %s", cname, rc.binDir, strings.Join(cmd, " "))
+	}
+}
+
 func (rc *RunContext) runFromAvailableData() {
 }
 
+var verbose = false
+
+func debug(format string, params ...interface{}) {
+	if verbose {
+		fmt.Fprintf(os.Stderr, "debug: "+format+"\n", params...)
+	}
+}
+
 func logerror(format string, params ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, params...)
+	fmt.Fprintf(os.Stderr, format+"\n", params...)
 }
 
 func main() {
 	var (
-		getURL    string = defaultURL
 		clientDir string
 	)
 	var rc RunContext
@@ -259,18 +328,24 @@ func main() {
 	maybeFail(err, "pwd: %v", err)
 	pwd, err = filepath.Abs(pwd)
 	maybeFail(err, "pwd.abs: %v", err)
-	flag.StringVar(&getURL, "url", defaultURL, "url to fetch bot config json from")
+	flag.StringVar(&rc.config.ConfigURL, "url", defaultURL, "url to fetch bot config json from")
 	flag.StringVar(&clientDir, "dir", pwd, "dir to hold local data")
 	flag.StringVar(&rc.dataDir, "data", "", "dir path with datasets")
 	flag.StringVar(&rc.workDir, "work", "", "work dir path")
 	flag.StringVar(&rc.binDir, "bin", "", "bin dir path")
 	flag.IntVar(&rc.threads, "threads", runtime.NumCPU(), "number of districter2 processes to run")
 	flag.BoolVar(&rc.local, "local", false, "run from local data")
+	flag.BoolVar(&verbose, "verbose", false, "show debug log")
 	// TODO: --diskQuota
 	// TODO: --failuresPerSuccessesAllowed=5/2
 	// TODO: include/exclude list of what things to run
-	nicePath, err := exec.LookPath("nice")
-	fmt.Printf("nice=%s err=%v\n", nicePath, err)
+	flag.Parse()
+
+	debug("GOARCH=%s GOOS=%s version=%s", runtime.GOARCH, runtime.GOOS, version.Version)
+	/*
+		nicePath, err := exec.LookPath("nice")
+		fmt.Printf("nice=%s err=%v\n", nicePath, err)
+	*/
 
 	if rc.dataDir == "" {
 		rc.dataDir = filepath.Join(clientDir, "data")
@@ -281,4 +356,11 @@ func main() {
 	if rc.binDir == "" {
 		rc.binDir = filepath.Join(clientDir, "bin")
 	}
+
+	rc.config.Configs = rc.readDataDir()
+
+	if !rc.local {
+		logerror("TODO: get config URL")
+	}
+	rc.debugCommandLines()
 }

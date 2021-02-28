@@ -485,15 +485,16 @@ class StateData(setupstatedata.StateData):
     if not linkspath:
       logger.info('processShapefile failed')
       return False
-    self.getGeoBlocks()
-    self.compileBinaryData()
-    self.buildHighlightBlocklist()
-    # TODO:
-    # csvpath=os.path.join(os.path.dirname(__file__), 'legislatures2020.csv')
+    csvpath = os.path.join(os.path.dirname(__file__), 'legislatures2020.csv')
     generaterunconfigs.run(
       datadir=self.options.datadir,
       stulist=[self.stu],
-      dryrun=self.options.dryrun)
+      dryrun=self.options.dryrun,
+      csvpath=csvpath,
+    )
+    self.getGeoBlocks()
+    self.compileBinaryData()
+    self.buildHighlightBlocklist()
     if self.options.archive_runfiles:
       start = time.time()
       outname = self.archiveRunfiles()

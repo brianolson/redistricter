@@ -25,7 +25,6 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None, csvpath=None
     for row in fc:
         stu = codeForState(row[0])
         if (stulist is not None) and (stu not in stulist):
-            logger.error('%s: unknown state %r', csvpath, row[0])
             continue
         configdir = os.path.join(datadir, stu, 'config')
         if not os.path.isdir(configdir):
