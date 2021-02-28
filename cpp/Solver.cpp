@@ -1030,7 +1030,8 @@ const char* Solver::argHelp = "may use single - or double --; may use -n=v or -n
     "-maxSpreadFraction  ignore results if district populations ((max - min)/avg) greater than this\n"
     "-maxSpreadAbsolute  ignore results if district populations (max - min) greater than this\n"
     "-runDutySeconds     run for this many seconds, then sleep (10)\n"
-    "-sleepDutySeconds   sleep for this many seconds, then run (0)\n";
+    "-sleepDutySeconds   sleep for this many seconds, then run (0)\n"
+    "-nice n             decrease priority by n\n";
 
 int Solver::handleArgs( int argc, const char** argv ) {
   int argcout = 1;
@@ -1051,6 +1052,7 @@ int Solver::handleArgs( int argc, const char** argv ) {
   bool nearestNeighbor = false;
   bool d2mode = false;
   bool ccmode = false;
+  int nicex = 0;
   while (argi < argc) {
     StringArg("i", &inputname);  // deprecated
     StringArg("U", &uf1InputName);  // only for linkfixup
@@ -1090,6 +1092,7 @@ int Solver::handleArgs( int argc, const char** argv ) {
     DoubleArg("spreadGiveupFraction", &recentSpreadGiveupFraction);
     IntArg("sleepDutySeconds", &sleepDutySeconds);
     IntArg("runDutySeconds", &runDutySeconds);
+    IntArg("nice", &nicex);
 #if 1
     argv[argcout] = argv[argi];
     argcout++;
@@ -1099,6 +1102,9 @@ int Solver::handleArgs( int argc, const char** argv ) {
     fputs( argHelp, stderr );
     exit(1);
 #endif
+  }
+  if (nicex > 0) {
+    nice(nicex);
   }
   if (uf1InputName != NULL) {
     inputname = uf1InputName;
