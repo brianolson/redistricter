@@ -15,6 +15,7 @@ a two letter postal abbreviation for a state:
 """
 
 # standard
+import abc
 import glob
 import logging
 import optparse
@@ -41,82 +42,6 @@ from states import *
 
 logger = logging.getLogger(__name__)
 
-sf1IndexName = 'SF1index.html'
-sf1url = 'http://ftp2.census.gov/census_2000/datasets/Summary_File_1/'
-tigerbase = 'http://www2.census.gov/geo/tiger/'
-
-def cdFromUf1Line(line):
-    """Return (cd, congress number) or (-1, None)."""
-    for start,congress_number in [
-        (142, 110),
-        (140, 109),
-        (138, 108),
-        (136, 106)]:
-        cd = line[start:start+2]
-        if cd != '  ':
-            try:
-                icd = int(cd)
-                assert icd >= 1
-                assert icd < 250
-                icd -= 1
-                return (icd, congress_number)
-            except:
-                pass
-    return (-1, None)
-
-CURSOL_RE_ = re.compile(r'(..)(\d\d\d).dsz')
-
-def linkBestCurrentSolution(dpath):
-    alldsz = glob.glob(dpath + '/*dsz')
-    currentLink = None
-    bestDsz = None
-    bestN = None
-    stu = None
-    for x in alldsz:
-        if x.endswith('current.dsz'):
-            assert os.path.islink(x)
-            currentLink = os.readlink(x)
-            continue
-        fname = os.path.basename(x)
-        m = CURSOL_RE_.match(fname)
-        assert m is not None, ('failed to parse %s' % fname)
-        nstu = m.group(1).upper()
-        if stu is None:
-            stu = nstu
-        assert nstu == stu
-        nth = int(m.group(2))
-        if (bestDsz is None) or (nth > bestN):
-            bestN = nth
-            bestDsz = fname
-    if bestDsz is None:
-        return None
-    currentDsz = os.path.join(dpath, stu + 'current.dsz')
-    if os.path.islink(currentDsz):
-        odsz = os.readlink(currentDsz)
-        if odsz == bestDsz:
-            return bestDsz
-        os.unlink(currentDsz)
-    os.symlink(bestDsz, currentDsz)
-    return bestDsz
-
-basic_make_rules_ = """
--include ${dpath}/makedefaults
--include ${dpath}/makeoptions
-
-${stu}_all:    ${dpath}/${stu}_start_sm.jpg ${dpath}/${stu}_sm.mppb ${dpath}/${stu}_start_sm.png
-
-${dpath}/${stu}_start_sm.jpg:    ${dpath}/${stu}_start.png
-    convert ${dpath}/${stu}_start.png -resize 150x150 ${dpath}/${stu}_start_sm.jpg
-
-${dpath}/${stu}_start.png:    ${bindir}/drend ${dpath}/${stu}.mppb ${dpath}/${stu}current.dsz
-    ${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}.mppb --pngout ${dpath}/${stu}_start.png --loadSolution ${dpath}/${stu}current.dsz > ${dpath}/${stu}_start_stats
-
-${dpath}/${stu}_start_sm.png:    ${bindir}/drend ${dpath}/${stu}_sm.mppb ${dpath}/${stu}current.dsz
-    ${bindir}/drend -B ${dpath}/${stu_bin} $${${stu}DISTOPT} --mppb ${dpath}/${stu}_sm.mppb --pngout ${dpath}/${stu}_start_sm.png --loadSolution ${dpath}/${stu}current.dsz
-"""
-
-makefile_fragment_template = string.Template(basic_make_rules_)
-
 class ProcessGlobals(object):
     def __init__(self, options):
         self.options = options
@@ -125,111 +50,8 @@ class ProcessGlobals(object):
         self.bestYear = None
         self.bestYearEdition = None
 
-    def getSF1Index(self):
-        """Returns whole sf1 index html file in one buffer."""
-        sf1ipath = os.path.join(self.options.datadir, sf1IndexName)
-        if not os.path.isfile(sf1ipath):
-            if self.options.dryrun:
-                logging.info('should fetch "%s"', sf1url)
-                return ''
-            uf = urllib.request.urlopen(sf1url)
-            sf1data = uf.read()
-            uf.close()
-            fo = open(sf1ipath, 'w')
-            fo.write(sf1data)
-            fo.close()
-        else:
-            uf = open(sf1ipath, 'r')
-            sf1data = uf.read()
-            uf.close()
-        return sf1data
-
-    def getGeoUrls(self):
-        """Returns list of urls to ..geo_uf1.zip files"""
-        if self.geourls is not None:
-            return self.geourls
-        geopath = os.path.join(self.options.datadir, 'geo_urls')
-        if os.path.isfile(geopath):
-            guf = open(geopath, 'r')
-            raw = guf.read()
-            guf.close()
-            self.geourls = raw.splitlines()
-            return self.geourls
-        else:
-            sf1index = self.getSF1Index()
-            subdirpat = re.compile(r'href="([A-Z][^"]+)"')
-            geouf1pat = re.compile(r'href="(..geo_uf1.zip)"')
-            geo_urls = []
-            for line in sf1index.splitlines():
-                m = subdirpat.search(line)
-                if m:
-                    subdir = m.group(1)
-                    surl = sf1url + subdir
-                    logging.info('surl=%s', surl)
-                    uf = urllib.request.urlopen(surl)
-                    ud = uf.read()
-                    uf.close()
-                    gum = geouf1pat.search(ud)
-                    if gum:
-                        gu = surl + gum.group(1)
-                        logging.info('gu=%s', gu)
-                        geo_urls.append(gu)
-            if self.options.dryrun:
-                logging.info('would write "%s"', geopath)
-            else:
-                fo = open(geopath, 'w')
-                for gu in geo_urls:
-                    fo.write(gu + '\n')
-                fo.close()
-            self.geourls = geo_urls
-            return geo_urls
-
-    def getGeoUrl(self, stl):
-        """Return the url to xxgeo_uf1.zip for state xx."""
-        geourls = self.getGeoUrls()
-        uf1zip = stl + 'geo_uf1.zip'
-        for x in geourls:
-            if uf1zip in x:
-                return x
-        return None
-
-    def getTigerLatestShapefileEdition(self, raw):
-        """New shapefile data lives in directories of this pattern.
-        ex: http://www2.census.gov/geo/tiger/TIGER2009/
-        """
-#TODO: 2010 data has a new layout. Write new code to crawl it.
-#http://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_34_tabblock10.zip
-#http://www2.census.gov/geo/tiger/TIGER2010/FACES/tl_2010_22001_faces.zip
-#http://www2.census.gov/geo/tiger/TIGER2010/EDGES/tl_2010_22001_edges.zip
-#http://www2.census.gov/geo/tiger/TIGER2010/COUNTY/2010/tl_2010_22_county10.zip
-#http://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Virginia/va2010.pl.zip
-
-        bestyear = None
-        editions = re.compile(r'href="TIGER(\d\d\d\d)/')
-        for m in editions.finditer(raw):
-            year = int(m.group(1))
-            if ((bestyear is None) or (year > bestyear)) and (year <= 2009):
-                bestyear = year
-        if bestyear is None:
-            raise Exception('found no tiger editions at "%s"' % tigerbase)
-        self.bestYear = bestyear
-        return '%sTIGER%04d/' % (tigerbase, bestyear)
-
     def getTigerLatest(self):
         """For either shapefile or old line-file, return latest base URL."""
-        if self.tigerlatest is not None:
-            return self.tigerlatest
-        if self.options.dryrun:
-            logging.info('would fetch "%s"', tigerbase)
-            raw = ''
-        else:
-            uf = urllib.request.urlopen(tigerbase)
-            raw = uf.read()
-            uf.close()
-        if self.options.shapefile:
-            self.tigerlatest = self.getTigerLatestShapefileEdition(raw)
-        else:
-            raise Exception('old tiger line files not supported, must use post-2009 esri shapefile data')
         return self.tigerlatest
 
     def getState(self, name):
@@ -257,7 +79,7 @@ def checkZipFile(path):
         return False
 
 
-class StateData(object):
+class StateData(metaclass=abc.ABCMeta):
     def __init__(self, pg, st, options):
         self.pg = pg
         self.stl = st.lower()
@@ -299,65 +121,6 @@ class StateData(object):
                 raise Exception('download failed: ' + url + ' if this is OK, touch ' + localpath)
             return None
         return localpath
-
-    def makeUf101(self, geozip, uf101, dpath=None):
-        """From xxgeo_uf1.zip, distill the 101 (block level) geopgraphic
-        summary file xx101.uf1 ."""
-        if dpath is None:
-            dpath = self.dpath
-        self.maybeUrlRetrieve(self.pg.getGeoUrl(self.stl), geozip)
-        fo = None
-        cds = None
-        if newerthan(geozip, uf101):
-            logger.info('%s -> %s', geozip, uf101)
-            if not self.options.dryrun:
-                fo = open(uf101, 'w')
-        currentDsz = os.path.join(dpath, self.stu + 'current.dsz')
-        if newerthan(geozip, currentDsz):
-            logger.info('%s -> %s', geozip, currentDsz)
-            if not self.options.dryrun:
-                cds = []
-        if (fo is None) and (cds is None):
-            # nothing to do
-            return
-        zf = zipfile.ZipFile(geozip, 'r')
-        raw = zf.read(self.stl + 'geo.uf1')
-        zf.close()
-        filter = 'uSF1  ' + self.stu + '101'
-        congress_number = None  # enforce consistency
-        for line in raw.splitlines(True):
-            if line.startswith(filter):
-                if fo is not None:
-                    fo.write(line)
-                if cds is not None:
-                    cd, cong_num = cdFromUf1Line(line)
-                    if congress_number is None:
-                        congress_number = cong_num
-                    if cong_num is not None:
-                        assert cong_num == congress_number
-                    cds.append(cd)
-        if fo is not None:
-            fo.close()
-        if congress_number is None:
-            # not one line had a valid cd,congress_number; bail
-            return
-        if cds is not None:
-            cdvals = {}
-            for x in cds:
-                if x != -1:
-                    cdvals[x] = 1
-            logger.info(
-                'found congressional districts from %dth congress: %s',
-                congress_number, repr(list(cdvals.keys())))
-            cnDsz = os.path.join(dpath, '%s%d.dsz' % (self.stu, congress_number))
-            currentSolution = open(cnDsz, 'wb')
-            currentSolution.write(solution.makeDsz(cds))
-            currentSolution.close()
-            linkBestCurrentSolution(dpath)
-            makedefaults = open(os.path.join(dpath, 'makedefaults'), 'w')
-            makedefaults.write('%sDISTOPT ?= -d %d\n' % (
-                self.stu, len(cdvals)))
-            makedefaults.close()
 
     def getTigerBase(self, dpath=None):
         """Determine the base URL for shapefile data for this state.
@@ -701,42 +464,6 @@ class StateData(object):
         if status != 0:
             raise Exception('error (%d) executing: cd %s && "%s"' % (status, dpath,'" "'.join(cmd)))
 
-    def writeMakeFragment(self, dpath=None):
-        if dpath is None:
-            dpath = self.dpath
-        mfpath = os.path.join(dpath, '.make')
-        if not newerthan(__file__, mfpath):
-            return mfpath
-        logger.info('-> %s', mfpath)
-        if self.options.protobuf:
-            stl_bin = self.stl + '.pb'
-        else:
-            stl_bin = self.stl + '.gbin'
-        if self.options.dryrun:
-            logger.info('would write "%s"', mfpath)
-            return mfpath
-        out = open(mfpath, 'w')
-        out.write(makefile_fragment_template.substitute({
-            'dpath': dpath,
-            'stu': self.stu,
-            'stl': self.stl,
-            'stu_bin': stl_bin,
-            'bindir': self.options.bindir}))
-        out.close()
-        return mfpath
-
-    def getextras(self, extras=None):
-        """Get extra data like 00001 series data."""
-        if extras is None:
-            extras = self.options.extras
-        geourl = self.pg.getGeoUrl(self.stl)
-        zipspath = self.zipspath(self.dpath)
-        self.mkdir(zipspath, self.options)
-        for x in extras:
-            xurl = geourl.replace('geo_uf1', x + '_uf1')
-            xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
-            self.maybeUrlRetrieve(xurl, xpath)
-
     def archiveRunfiles(self):
         """Bundle key data as XX_runfiles.tar.gz"""
         if ((not os.path.isdir(self.options.archive_runfiles)) or
@@ -796,56 +523,10 @@ class StateData(object):
         self.setuplog.flush()
         sys.stdout.flush()
 
+    # overridden in crawl2010.py and crawl2020.py
+    @abc.abstractmethod
     def dostate_inner(self):
-        self.mkdir(self.dpath, self.options)
-        if self.options.extras:
-            self.getextras()
-            if self.options.extras_only:
-                return True
-        geozip = os.path.join(self.dpath, self.stl + 'geo_uf1.zip')
-        uf101 = os.path.join(self.dpath, self.stl + '101.uf1')
-        self.makeUf101(geozip, uf101)
-        if self.options.getFaces:
-            ok = self.getFaces()
-            if not ok:
-                return False
-        if self.options.getEdges:
-            ok = self.getEdges()
-            if not ok:
-                return False
-        linkspath = self.makelinks(self.dpath)
-        if not linkspath:
-            logger.info('makelinks failed')
-            return False
-        self.compileBinaryData(self.dpath)
-        handargspath = os.path.join(self.dpath, 'handargs')
-        if not os.path.isfile(handargspath):
-            if self.options.dryrun:
-                logger.info('would write "%s"', handargspath)
-            else:
-                ha = open(handargspath, 'w')
-                ha.write('-g 10000\n')
-                ha.close
-        makefile = self.writeMakeFragment()
-        generaterunconfigs.run(
-            datadir=self.options.datadir,
-            stulist=[self.stu],
-            dryrun=self.options.dryrun)
-        makecmd = ['make', '-k', self.stu + '_all', '-f', makefile]
-        if self.options.dryrun:
-            logger.info('would run "%s"', ' '.join(makecmd))
-        else:
-            start = time.time()
-            status = subprocess.call(makecmd)
-            if status != 0:
-                sys.stderr.write(
-                    'command "%s" failed with %d\n' % (' '.join(makecmd), status))
-            logger.info('final make took %f seconds', time.time() - start)
-        if self.options.archive_runfiles:
-            start = time.time()
-            outname = self.archiveRunfiles()
-            logger.info('wrote "%s" in %f seconds', outname, (time.time() - start))
-        return True
+        return False
 
 
 def getOptionParser():
