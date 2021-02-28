@@ -15,8 +15,8 @@ from states import codeForState
 logger = logging.getLogger(__name__)
 
 def run(datadir='data', stulist=None, dryrun=False, newerthan=None, csvpath=None):
-        if csvpath is None:
-                csvpath = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
+    if csvpath is None:
+        csvpath = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
     congress_total = 0
     # csv is
     # State Name, Legislative Body Name, Seats
