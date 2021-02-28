@@ -488,6 +488,8 @@ class StateData(setupstatedata.StateData):
     self.getGeoBlocks()
     self.compileBinaryData()
     self.buildHighlightBlocklist()
+    # TODO:
+    # csvpath=os.path.join(os.path.dirname(__file__), 'legislatures2020.csv')
     generaterunconfigs.run(
       datadir=self.options.datadir,
       stulist=[self.stu],

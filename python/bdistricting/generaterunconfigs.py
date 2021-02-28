@@ -47,6 +47,8 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None, csvpath=None
                     out.write('disabled\n')
             with open(outname + '.json', 'w') as out:
                 ob = {
+                    'st':stu,
+                    'name':stu + '_' + name_part,
                     'common':{'kwargs':{'-d':row[2]}}
                 }
                 json.dump(ob, out)
