@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -49,6 +51,7 @@ var defaultArgs = []arg{
 	aarg("--statLog", "statlog"),
 	aarg("--binLog", "binlog"),
 	aarg("--maxSpreadFraction", "0.01"),
+	aarg("-o", "final.dsz"),
 }
 
 type Args struct {
@@ -60,6 +63,16 @@ func NewArgs() *Args {
 	aa.args = make([]arg, len(defaultArgs), len(defaultArgs)+10)
 	copy(aa.args, defaultArgs)
 	return aa
+}
+
+func (a *Args) Arg(name, val string) *Args {
+	a.args = append(a.args, aarg(name, val))
+	return a
+}
+
+func (a *Args) Flag(f string) *Args {
+	a.args = append(a.args, marg(f))
+	return a
 }
 
 func (a *Args) Update(ca ConfigArgs) *Args {
@@ -147,6 +160,13 @@ type Config struct {
 	DataURL string `json:"data,omitempty"`
 }
 
+func (config *Config) GetWeight() float64 {
+	if config.Weight <= 0.000001 {
+		return 1.0
+	}
+	return config.Weight
+}
+
 type AllConfig struct {
 	// .Configs[config.Name] = config
 	Configs map[string]Config `json:"c"`
@@ -174,10 +194,19 @@ func maybeFail(err error, errfmt string, params ...interface{}) {
 	os.Exit(1)
 }
 
+type fetchError struct {
+	url string
+	err error
+}
+
+func (fe *fetchError) Error() string {
+	return fmt.Sprintf("could not GET %v, %v", fe.url, fe.err)
+}
+
 func doFetch(url, path string) error {
 	response, err := http.DefaultClient.Get(url)
 	if err != nil {
-		return fmt.Errorf("could not GET %v, %v", url, err)
+		return &fetchError{url, err}
 	}
 	out, err := os.Create(path)
 	if err != nil {
@@ -185,7 +214,7 @@ func doFetch(url, path string) error {
 	}
 	_, err = io.Copy(out, response.Body)
 	if err != nil {
-		return fmt.Errorf("%s: could not create, %v", path, err)
+		return fmt.Errorf("%s: could not write, %v", path, err)
 	}
 	err = out.Close()
 	return err
@@ -216,6 +245,10 @@ type RunContext struct {
 	local bool
 
 	config AllConfig
+
+	weightSum float64
+
+	notnice bool
 }
 
 func (rc *RunContext) run() {
@@ -283,6 +316,14 @@ func (rc *RunContext) readDataDirConfigJson(configs map[string]Config, jspath st
 	configs[nc.Name] = nc
 }
 
+func (rc *RunContext) sumWeights() {
+	ws := float64(0.0)
+	for _, config := range rc.config.Configs {
+		ws += config.GetWeight()
+	}
+	rc.weightSum = ws
+}
+
 var needsEscape = " ?*"
 
 // shell escape
@@ -295,16 +336,93 @@ func shescape(x string) string {
 }
 
 func (rc *RunContext) debugCommandLines() {
-	for cname, config := range rc.config.Configs {
-		cmd := NewArgs().Update(config.Common).Update(config.Solver).ToArray()
-		for i, p := range cmd {
-			cmd[i] = shescape(p)
-		}
-		debug("%s: %s/districter2 %s", cname, rc.binDir, strings.Join(cmd, " "))
+	for _, config := range rc.config.Configs {
+		rc.runConfig(config, true)
 	}
 }
 
+func (rc *RunContext) runConfig(config Config, dryrun bool) {
+	now := time.Now()
+	timestamp := now.Format("20060102_150405")
+	tmpdirName := fmt.Sprintf("%s_%04d", timestamp, rand.Intn(9999))
+	workdir := filepath.Join(rc.workDir, config.Name, tmpdirName)
+	stl := strings.ToLower(config.State)
+	args := NewArgs().Update(config.Common).Update(config.Solver)
+	args.Arg("-P", filepath.Join(rc.dataDir, config.State, stl+".pb"))
+	if !rc.notnice {
+		args.Arg("-nice", "19")
+	}
+	cmd := args.ToArray()
+	if verbose {
+		dcmd := make([]string, len(cmd))
+		for i, p := range cmd {
+			dcmd[i] = shescape(p)
+		}
+		debug("%s: (mkdir -p %s && cd %s && %s/districter2 %s)", config.Name, workdir, workdir, rc.binDir, strings.Join(dcmd, " "))
+	}
+	if !dryrun {
+		logerror("TODO: actually run the command")
+	}
+}
+
+func (rc *RunContext) randomConfig() Config {
+	// weirdly doubly-random, by hash order and by deliberate randomness
+	pick := rand.Float64() * rc.weightSum
+	for _, config := range rc.config.Configs {
+		cw := config.GetWeight()
+		if pick < cw {
+			return config
+		}
+		pick -= cw
+	}
+	// paranoid nonsense code in case something was wrong with weight?
+	ipick := rand.Intn(len(rc.config.Configs))
+	i := 0
+	for _, config := range rc.config.Configs {
+		if i < ipick {
+			return config
+		}
+		i++
+	}
+	for _, config := range rc.config.Configs {
+		return config
+	}
+	return Config{}
+}
+
 func (rc *RunContext) runFromAvailableData() {
+}
+
+func (rc *RunContext) configPath() string {
+	return filepath.Join(rc.workDir, "config.json")
+}
+
+func (rc *RunContext) loadConfig() {
+	configpath := rc.configPath()
+	fin, err := os.Open(configpath)
+	if errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	maybeFail(err, "%s: could not read, %v", configpath, err)
+	defer fin.Close()
+	dec := json.NewDecoder(fin)
+	err = dec.Decode(&rc.config)
+	maybeFail(err, "%s: bad json, %v", configpath, err)
+}
+
+func (rc *RunContext) saveConfig() {
+	configpath := rc.configPath()
+	fout, err := os.Create(configpath)
+	maybeFail(err, "%s: could not write, %v", configpath, err)
+	defer fout.Close()
+	enc := json.NewEncoder(fout)
+	err = enc.Encode(rc.config)
+	maybeFail(err, "%s: could not write, %v", configpath, err)
+}
+
+func (rc *RunContext) readServerConfig(fin io.Reader) error {
+	dec := json.NewDecoder(fin)
+	return dec.Decode(&rc.config)
 }
 
 var verbose = false
@@ -317,6 +435,11 @@ func debug(format string, params ...interface{}) {
 
 func logerror(format string, params ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", params...)
+}
+
+// e.g. io.fs.PathError
+type nestedError interface {
+	Unwrap() error
 }
 
 func main() {
@@ -336,16 +459,13 @@ func main() {
 	flag.IntVar(&rc.threads, "threads", runtime.NumCPU(), "number of districter2 processes to run")
 	flag.BoolVar(&rc.local, "local", false, "run from local data")
 	flag.BoolVar(&verbose, "verbose", false, "show debug log")
-	// TODO: --diskQuota
+	flag.BoolVar(&rc.notnice, "full-prio", false, "run without `nice`")
+	// TODO: --diskQuota limit of combined clientDir contents
 	// TODO: --failuresPerSuccessesAllowed=5/2
 	// TODO: include/exclude list of what things to run
 	flag.Parse()
 
 	debug("GOARCH=%s GOOS=%s version=%s", runtime.GOARCH, runtime.GOOS, version.Version)
-	/*
-		nicePath, err := exec.LookPath("nice")
-		fmt.Printf("nice=%s err=%v\n", nicePath, err)
-	*/
 
 	if rc.dataDir == "" {
 		rc.dataDir = filepath.Join(clientDir, "data")
@@ -357,10 +477,27 @@ func main() {
 		rc.binDir = filepath.Join(clientDir, "bin")
 	}
 
+	err = os.MkdirAll(rc.workDir, 0755)
+	maybeFail(err, "%s: could not create work dir, %v", rc.workDir, err)
+
 	rc.config.Configs = rc.readDataDir()
+	rc.loadConfig()
 
 	if !rc.local {
 		logerror("TODO: get config URL")
+		serverConfigPath := filepath.Join(rc.workDir, "server_config.json")
+		err := maybeFetch(rc.config.ConfigURL, serverConfigPath, 23*time.Hour)
+		if err != nil {
+			if _, ok := err.(*fetchError); !ok {
+				maybeFail(err, "could not fetch server config from %s, %v", rc.config.ConfigURL, err)
+			}
+		}
+		fin, err := os.Open(serverConfigPath)
+		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
+		err = rc.readServerConfig(fin)
+		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
+		fin.Close()
 	}
 	rc.debugCommandLines()
+	rc.saveConfig()
 }
