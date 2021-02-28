@@ -737,15 +737,6 @@ class StateData(object):
             xpath = os.path.join(zipspath, self.stl + x + '_uf1.zip')
             self.maybeUrlRetrieve(xurl, xpath)
 
-    def acceptArchivePart(self, dirpath, fname):
-        flower = fname.lower()
-        for oksuffix in ['.pb', '.mppb', '.png', '.jpg', '_stats', '.html']:
-            if flower.endswith(oksuffix):
-                return True
-        if dirpath.endswith('config'):
-            return True
-        return False
-
     def archiveRunfiles(self):
         """Bundle key data as XX_runfiles.tar.gz"""
         if ((not os.path.isdir(self.options.archive_runfiles)) or
@@ -753,19 +744,15 @@ class StateData(object):
             sys.stderr.write('error: "%s" is not a writable directory\n' % self.options.archive_runfiles)
             return None
         destpath = os.path.join(self.options.archive_runfiles, self.stu + '_runfiles.tar.gz')
-        partpaths = []
-        needsupdate = False
         dpath = os.path.join(self.options.datadir, self.stu)
-        for (dirpath, dirnames, filenames) in os.walk(dpath):
-            partpaths.append(dirpath)
-            if 'zips' in dirnames:
-                dirnames.remove('zips')
-            for fname in filenames:
-                if self.acceptArchivePart(dirpath, fname):
-                    fpath = os.path.join(dirpath, fname)
-                    if (not needsupdate) and newerthan(fpath, destpath):
-                        needsupdate = True
-                    partpaths.append(fpath)
+        partpaths = [
+            os.path.join(dpath, self.stl + '.pb'),
+            os.path.join(dpath, self.stu + '.mppb'),
+        ] + glob.glob(os.path.join(dpath, 'config', '*'))
+        needsupdate = False
+        for part in partpaths:
+            if (not needsupdate) and newerthan(part, destpath):
+                needsupdate = True
         if not needsupdate:
             return destpath
         out = tarfile.open(destpath, 'w|gz')
