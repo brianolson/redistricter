@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -9,9 +11,12 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/brianolson/redistricter/runner/version"
@@ -49,7 +54,7 @@ var defaultArgs = []arg{
 	aarg("--popRatioFactorPoints", "0,1.4,30000,1.4,80000,500,100000,50,120000,500"),
 	aarg("-g", "150000"),
 	aarg("--statLog", "statlog"),
-	aarg("--binLog", "binlog"),
+	//aarg("--binLog", "binlog"),
 	aarg("--maxSpreadFraction", "0.01"),
 	aarg("-o", "final.dsz"),
 }
@@ -182,6 +187,10 @@ type AllConfig struct {
 
 	// e.g. {"NM":"https://bot.bdistricting.com/2020/NM_1234.tar.gz", ...}
 	StateDataURLs map[string]string
+
+	// Solver crash/fail should not exceed mfn/mfd
+	MaxFailuresNumerator   int `json:"mfn"`
+	MaxFailuresDenominator int `json:"mfd"`
 }
 
 const defaultURL = "https://bdistricting.com/bot/2020.json"
@@ -249,9 +258,23 @@ type RunContext struct {
 	weightSum float64
 
 	notnice bool
+
+	// use sync/atomic on this
+	gracefulExit uint32
+
+	ctx context.Context
+
+	// subprocess state
+	subpLock  sync.Mutex
+	subpCond  *sync.Cond
+	children  []*SolverThread
+	finishes  []int // 0 = success, 1 = failure
+	finishPos int
 }
 
-func (rc *RunContext) run() {
+func (rc *RunContext) init() {
+	rc.ctx = context.Background() // TODO: pass contexts around for cancellation
+	rc.subpCond = sync.NewCond(&rc.subpLock)
 }
 
 func (rc *RunContext) readDataDir() (configs map[string]Config) {
@@ -276,6 +299,8 @@ func (rc *RunContext) readDataDir() (configs map[string]Config) {
 	}
 	return
 }
+
+// part of readDataDir
 func (rc *RunContext) readDataDirConfig(configs map[string]Config, fi os.FileInfo) {
 	if !fi.IsDir() {
 		return
@@ -299,6 +324,8 @@ func (rc *RunContext) readDataDirConfig(configs map[string]Config, fi os.FileInf
 		rc.readDataDirConfigJson(configs, jspath)
 	}
 }
+
+// part of readDataDirConfig which is part of readDataDir
 func (rc *RunContext) readDataDirConfigJson(configs map[string]Config, jspath string) {
 	jsf, err := os.Open(jspath)
 	if err != nil {
@@ -342,6 +369,7 @@ func (rc *RunContext) debugCommandLines() {
 }
 
 func (rc *RunContext) runConfig(config Config, dryrun bool) {
+	// if not dryrun it must be called from inside rc.subpLock
 	now := time.Now()
 	timestamp := now.Format("20060102_150405")
 	tmpdirName := fmt.Sprintf("%s_%04d", timestamp, rand.Intn(9999))
@@ -352,16 +380,63 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 	if !rc.notnice {
 		args.Arg("-nice", "19")
 	}
-	cmd := args.ToArray()
+	argStrings := args.ToArray()
 	if verbose {
-		dcmd := make([]string, len(cmd))
-		for i, p := range cmd {
+		dcmd := make([]string, len(argStrings))
+		for i, p := range argStrings {
 			dcmd[i] = shescape(p)
 		}
-		debug("%s: (mkdir -p %s && cd %s && %s/districter2 %s)", config.Name, workdir, workdir, rc.binDir, strings.Join(dcmd, " "))
+		debug("%s: (mkdir -p %s && cd %s && %s/districter2 %s)", config.Name, workdir, workdir, rc.binDir, strings.Join(argStrings, " "))
 	}
 	if !dryrun {
-		logerror("TODO: actually run the command")
+		st, err := NewSolverThread(rc.ctx, os.Stdout, workdir, filepath.Join(rc.binDir, "districter2"), argStrings)
+		if err != nil {
+			rc.error("error starting solver, %v", err)
+		} else {
+			rc.children = append(rc.children, st)
+			go rc.solverWaiter(st)
+		}
+	}
+}
+
+func (rc *RunContext) solverWaiter(st *SolverThread) {
+	err := st.cmd.Wait()
+	rc.logFinish(st, err)
+}
+
+func (rc *RunContext) logFinish(st *SolverThread, err error) {
+	rc.subpLock.Lock()
+	defer func() {
+		rc.subpCond.Broadcast()
+		rc.subpLock.Unlock()
+	}()
+	fval := 0
+	if err != nil {
+		fval = 1
+	}
+	if len(rc.finishes) >= rc.config.MaxFailuresDenominator {
+		rc.finishes[rc.finishPos] = fval
+	} else {
+		rc.finishes = append(rc.finishes, fval)
+	}
+	if len(rc.finishes) >= rc.config.MaxFailuresDenominator {
+		fc := 0
+		for _, v := range rc.finishes {
+			fc += v
+		}
+		if fc >= rc.config.MaxFailuresNumerator {
+			rc.error("too many failures, %d/%d", fc, len(rc.finishes))
+		}
+	}
+	for i, stv := range rc.children {
+		if stv == st {
+			if i != len(rc.children)-1 {
+				rc.children[i] = rc.children[len(rc.children)-1]
+			}
+			rc.children[len(rc.children)-1] = nil // Go GC
+			rc.children = rc.children[:len(rc.children)-1]
+			break
+		}
 	}
 }
 
@@ -390,7 +465,33 @@ func (rc *RunContext) randomConfig() Config {
 	return Config{}
 }
 
-func (rc *RunContext) runFromAvailableData() {
+func (rc *RunContext) maybeStartSolver() bool {
+	// must be run from inside rc.subpLock
+	if len(rc.children) >= rc.threads {
+		return false
+	}
+	nextc := rc.randomConfig()
+	rc.runConfig(nextc, false)
+	return true
+}
+
+// start a graceful exit (let running solvers finish)
+func (rc *RunContext) quit() {
+	atomic.StoreUint32(&rc.gracefulExit, 1)
+	rc.subpLock.Lock()
+	defer rc.subpLock.Unlock()
+	rc.subpCond.Broadcast()
+}
+
+func (rc *RunContext) runLoop() {
+	rc.subpLock.Lock()
+	defer rc.subpLock.Unlock()
+	for atomic.LoadUint32(&rc.gracefulExit) == 0 {
+		didStart := rc.maybeStartSolver()
+		if !didStart {
+			rc.subpCond.Wait()
+		}
+	}
 }
 
 func (rc *RunContext) configPath() string {
@@ -423,6 +524,60 @@ func (rc *RunContext) saveConfig() {
 func (rc *RunContext) readServerConfig(fin io.Reader) error {
 	dec := json.NewDecoder(fin)
 	return dec.Decode(&rc.config)
+}
+
+func (rc *RunContext) error(format string, params ...interface{}) {
+	rc.quit()
+	logerror(format, params...)
+}
+
+type SolverThread struct {
+	cmd *exec.Cmd
+
+	pstdout io.ReadCloser
+	pstderr io.ReadCloser
+
+	lstdout *bufio.Scanner
+	lstderr *bufio.Scanner
+
+	out io.Writer
+}
+
+func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args []string) (st *SolverThread, err error) {
+	pcmd := exec.CommandContext(
+		ctx,
+		bin,
+		args...,
+	)
+	pstdout, err := pcmd.StdoutPipe()
+	if err != nil {
+		err = fmt.Errorf("could not get exec stdout, %v", err)
+		return
+	}
+	pstderr, err := pcmd.StderrPipe()
+	if err != nil {
+		err = fmt.Errorf("could not get exec stderr, %v", err)
+		return
+	}
+
+	st = new(SolverThread)
+	st.cmd = pcmd
+	st.pstdout = pstdout
+	st.pstderr = pstderr
+	st.lstdout = bufio.NewScanner(st.pstdout)
+	st.lstderr = bufio.NewScanner(st.pstderr)
+	st.out = out
+
+	go st.prefixThread(st.lstdout, "O")
+	go st.prefixThread(st.lstderr, "E")
+	err = st.cmd.Start()
+	return
+}
+
+func (st *SolverThread) prefixThread(lines *bufio.Scanner, prefix string) {
+	for lines.Scan() {
+		fmt.Fprintf(st.out, "%s %d %s\n", prefix, st.cmd.Process.Pid, lines.Text())
+	}
 }
 
 var verbose = false
@@ -498,6 +653,7 @@ func main() {
 		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
 		fin.Close()
 	}
+	rc.sumWeights()
 	rc.debugCommandLines()
 	rc.saveConfig()
 }

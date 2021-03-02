@@ -19,3 +19,6 @@ jcompile:	java/org/bolson/redistricter/Redata.java
 tools.jar:	java/org/bolson/redistricter/Redata.java
 	mvn package
 	ln -s `ls -t target/redistricter*.jar | head -1` tools.jar
+
+python/bdistricting/redata_pb2.py:
+	protoc redata.proto --python_out=python/bdistricting

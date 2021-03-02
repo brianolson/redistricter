@@ -1,6 +1,7 @@
 syntax = "proto2";
 
 option java_package = "org.bolson.redistricter";
+option go_package = ".;data";
 option optimize_for = LITE_RUNTIME;
 
 // intpoints/fpoints, population, area, ubids and recnos should all have the same length.
@@ -13,11 +14,11 @@ message RedistricterData {
 	repeated uint64 ubids = 5;  // universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	repeated int32 recnos = 6;  // LOGRECNO
 	repeated int32 edges = 7;  // index,index pairs
-	
+
 	// Default number of districts for this data set.
 	// Probably the number of US House districts.
 	optional int32 numDistricts = 8;
-	
+
 	repeated group Other = 9 {
 		// name of this data
 		required string name = 10;
@@ -34,17 +35,17 @@ message RedistricterData {
 message MapRasterization {
 	repeated group Block = 1 {
 		// Pick one of {ubid, recno, blockid}
-		
+
 		// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 		optional uint64 ubid = 2;
 		// "logical record number"
 		optional int32 recno = 6;
 		// String form preferred by TIGER data, concatenated state,county,tract,block
 		optional bytes blockid = 7;
-		
+
 		// The pixels associated with this block. (x,y) pairs.
 		repeated int32 xy = 3;
-		
+
 		// Pixels that should get 'water' treatment.
 		repeated int32 waterxy = 8;
 	}
