@@ -193,6 +193,13 @@ type AllConfig struct {
 	MaxFailuresDenominator int `json:"mfd"`
 }
 
+func (ac *AllConfig) Normalize() {
+	if ac.MaxFailuresDenominator == 0 {
+		ac.MaxFailuresNumerator = 5
+		ac.MaxFailuresDenominator = 11
+	}
+}
+
 const defaultURL = "https://bdistricting.com/bot/2020.json"
 
 func maybeFail(err error, errfmt string, params ...interface{}) {
@@ -389,13 +396,18 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 		debug("%s: (mkdir -p %s && cd %s && %s/districter2 %s)", config.Name, workdir, workdir, rc.binDir, strings.Join(argStrings, " "))
 	}
 	if !dryrun {
+		err := os.MkdirAll(workdir, 0755)
+		if err != nil {
+			rc.error("could not mkdir runner thread workdir %s, %v", workdir, err)
+			return
+		}
 		st, err := NewSolverThread(rc.ctx, os.Stdout, workdir, filepath.Join(rc.binDir, "districter2"), argStrings)
 		if err != nil {
 			rc.error("error starting solver, %v", err)
-		} else {
-			rc.children = append(rc.children, st)
-			go rc.solverWaiter(st)
+			return
 		}
+		rc.children = append(rc.children, st)
+		go rc.solverWaiter(st)
 	}
 }
 
@@ -509,6 +521,7 @@ func (rc *RunContext) loadConfig() {
 	dec := json.NewDecoder(fin)
 	err = dec.Decode(&rc.config)
 	maybeFail(err, "%s: bad json, %v", configpath, err)
+	rc.config.Normalize()
 }
 
 func (rc *RunContext) saveConfig() {
@@ -599,9 +612,11 @@ type nestedError interface {
 
 func main() {
 	var (
-		clientDir string
+		clientDir            string
+		printAllCommandLines bool
 	)
 	var rc RunContext
+	rc.init()
 	pwd, err := os.Getwd()
 	maybeFail(err, "pwd: %v", err)
 	pwd, err = filepath.Abs(pwd)
@@ -615,6 +630,7 @@ func main() {
 	flag.BoolVar(&rc.local, "local", false, "run from local data")
 	flag.BoolVar(&verbose, "verbose", false, "show debug log")
 	flag.BoolVar(&rc.notnice, "full-prio", false, "run without `nice`")
+	flag.BoolVar(&printAllCommandLines, "print-all-commands", false, "debug")
 	// TODO: --diskQuota limit of combined clientDir contents
 	// TODO: --failuresPerSuccessesAllowed=5/2
 	// TODO: include/exclude list of what things to run
@@ -654,6 +670,10 @@ func main() {
 		fin.Close()
 	}
 	rc.sumWeights()
-	rc.debugCommandLines()
+	if printAllCommandLines {
+		rc.debugCommandLines()
+		return
+	}
 	rc.saveConfig()
+	rc.runLoop()
 }
