@@ -53,6 +53,22 @@ func statlogBestKmpp(fin io.Reader) (bestKmpp statlogLine, err error) {
 	return
 }
 
+/*
+early log (some in no district)
+
+gen 600: 267839 in no district (pop=9284963) 9.0261786208 Km/person
+population avg=19271 std=10140.9895
+max=36703 (dist# 1)  min=5089 (dist# 5)  median=15747 (dist# 12)
+kmpp var per 601=1084.556321, spread var per 601=0.042117
+
+later log
+
+generation 107300: 41.529453028 Km/person
+population avg=733499 std=266.437417
+max=733885 (dist# 10)  min=732896 (dist# 4)  median=733589 (dist# 12)
+kmpp var per 5000=0.001357, spread var per 5000=0.002679
+*/
+
 type subReadCloser struct {
 	cur io.ReadCloser
 	sub io.ReadCloser

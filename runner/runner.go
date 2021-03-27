@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -416,6 +417,41 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 	rc.logFinish(st, err)
 }
 
+// read statlog at end
+// get best kmpp
+// write statlog.gz
+// remove original flat statlog
+func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp statlogLine, err error) {
+	statlogPath := filepath.Join(st.cwd, "statlog")
+	// read, filter for bestkmpp, copy to .gz
+	fin, err := os.Open(statlogPath)
+	if err != nil {
+		err = fmt.Errorf("%s: could not read statlog, %v", statlogPath, err)
+		return
+	}
+	fout, err := os.Create(statlogPath + ".gz")
+	if err != nil {
+		err = fmt.Errorf("%s.gz: could not write statlog.gz, %v", statlogPath, err)
+		return
+	}
+	gzout := gzip.NewWriter(fout)
+	gp := GzipPipe{fin, fout, gzout}
+	bestKmpp, err = statlogBestKmpp(&gp)
+	if err != nil {
+		err = fmt.Errorf("statlog line reading, %v", err)
+		return
+	}
+	// TODO: use bestKmpp
+	debug(" best kmpp %f", bestKmpp)
+	err = gp.Finish()
+	if err != nil {
+		err = fmt.Errorf("statlog finish, %v", err)
+		return
+	}
+	os.Remove(statlogPath)
+	return
+}
+
 func (rc *RunContext) logFinish(st *SolverThread, err error) {
 	rc.subpLock.Lock()
 	defer func() {
@@ -546,6 +582,7 @@ func (rc *RunContext) error(format string, params ...interface{}) {
 
 type SolverThread struct {
 	cmd *exec.Cmd
+	cwd string
 
 	pstdout io.ReadCloser
 	pstderr io.ReadCloser
@@ -562,6 +599,7 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 		bin,
 		args...,
 	)
+	pcmd.Dir = cwd
 	pstdout, err := pcmd.StdoutPipe()
 	if err != nil {
 		err = fmt.Errorf("could not get exec stdout, %v", err)
@@ -575,6 +613,7 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 
 	st = new(SolverThread)
 	st.cmd = pcmd
+	st.cwd = cwd
 	st.pstdout = pstdout
 	st.pstderr = pstderr
 	st.lstdout = bufio.NewScanner(st.pstdout)
