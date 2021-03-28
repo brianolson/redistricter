@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/base64"
@@ -432,6 +433,7 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 	if err == nil {
 		rc.maybeSendSolution(st, bestKmpp, statsum)
 	}
+	rc.best.Log(st.cwd, st.config.Name, err == nil, bestKmpp)
 	rc.logFinish(st, bestKmpp, err)
 }
 
@@ -440,6 +442,7 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, 
 	result.Vars = make(map[string]string, 1)
 	result.Vars["config"] = st.config.Name
 
+	// check bestKmpp against local best
 	prevBest, err := rc.best.Get(st.config.Name)
 	if err == nil {
 		if bestKmpp.Kmpp >= prevBest.Kmpp {
@@ -447,7 +450,7 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, 
 			return
 		}
 	}
-	// TODO: check bestKmpp against local best
+
 	dszpath := filepath.Join(st.cwd, "bestKmpp.dsz")
 	dsz, err := ioutil.ReadFile(dszpath)
 	if err != nil {
@@ -475,7 +478,34 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, 
 		result.SetBinlog(binlog)
 	}
 
-	debug("TODO: send to %s", rc.config.PostURL)
+	result.Statsum = statsum
+
+	blob, err := json.Marshal(result)
+	if err != nil {
+		logerror("result json encode error: %v", err)
+		return
+	}
+	br := bytes.NewReader(blob)
+	hr, err := http.Post(rc.config.PostURL, "applicatio/json", br)
+	if err != nil {
+		logerror("result post error: %v", err)
+		return
+	}
+	if hr.StatusCode != 200 {
+		msg := make([]byte, 1000)
+		n, berr := hr.Body.Read(msg)
+		if berr == nil {
+			logerror("post status %s, message: %s", hr.Status, string(msg[:n]))
+		} else {
+			logerror("post status %s", hr.Status)
+		}
+		return
+	}
+
+	err = rc.best.Put(st.config.Name, bestKmpp)
+	if err != nil {
+		logerror("local best db err: %v", err)
+	}
 }
 
 // read statlog at end

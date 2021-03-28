@@ -21,15 +21,20 @@ func OpenBestDB(path string) (bdb *BestDB, err error) {
 	}
 	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(bestkey)
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists(logkey)
 		return err
 	})
 	if err != nil {
-		return nil, fmt.Errorf("could not init http cache db, %v", err)
+		return nil, fmt.Errorf("could not bests db, %v", err)
 	}
 	return &BestDB{path, db}, nil
 }
 
 var bestkey = []byte("b")
+var logkey = []byte("l")
 
 func (best *BestDB) Put(configName string, stat StatlogLine) error {
 	key := []byte(configName)
@@ -58,6 +63,28 @@ func (best *BestDB) Get(configName string) (stat StatlogLine, err error) {
 	}
 	err = json.Unmarshal(data, &stat)
 	return
+}
+
+type WorkLog struct {
+	ConfigName string      `json:"n"`
+	BestKmpp   StatlogLine `json:"b"`
+	Ok         bool        `json:"ok"`
+}
+
+// Log records something that happened, successful or not, good or not, for local stats and process
+func (best *BestDB) Log(workdir, configName string, ok bool, stat StatlogLine) error {
+	rec := WorkLog{configName, stat, ok}
+	key := []byte(workdir)
+	blob, err := json.Marshal(rec)
+	if err != nil {
+		return err
+	}
+	err = best.db.Update(func(tx *bbolt.Tx) error {
+		bu := tx.Bucket(logkey)
+		bu.Put(key, blob)
+		return nil
+	})
+	return err
 }
 
 func (best *BestDB) Close() {
