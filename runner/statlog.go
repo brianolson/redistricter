@@ -11,10 +11,10 @@ import (
 	"strings"
 )
 
-type statlogLine struct {
-	kmpp   float64
-	spread float64
-	std    float64
+type StatlogLine struct {
+	Kmpp   float64
+	Spread float64
+	Std    float64
 }
 
 var bestKmppRe *regexp.Regexp
@@ -25,24 +25,28 @@ func init() {
 
 var ErrKmppNotFound error = errors.New("best Km/p not found")
 
-// find log line:
+// gather lines at end of log prefixed with '#'
+// parse log line:
 // #Best Km/p: Km/p={fake_kmpp} spread=1535.000000 std=424.780999 gen=50983
-
-func statlogBestKmpp(fin io.Reader) (bestKmpp statlogLine, err error) {
+func statlogSummary(fin io.Reader) (bestKmpp StatlogLine, statsum string, err error) {
+	sumlines := make([]string, 0, 10)
 	scanner := bufio.NewScanner(fin)
 	for scanner.Scan() {
 		line := scanner.Text()
+		if len(line) > 0 && line[0] == '#' {
+			sumlines = append(sumlines, line)
+		}
 		parts := bestKmppRe.FindStringSubmatch(line)
 		if parts != nil {
-			bestKmpp.kmpp, err = strconv.ParseFloat(parts[1], 64)
+			bestKmpp.Kmpp, err = strconv.ParseFloat(parts[1], 64)
 			if err != nil {
 				return
 			}
-			bestKmpp.spread, err = strconv.ParseFloat(parts[2], 64)
+			bestKmpp.Spread, err = strconv.ParseFloat(parts[2], 64)
 			if err != nil {
 				return
 			}
-			bestKmpp.std, err = strconv.ParseFloat(parts[3], 64)
+			bestKmpp.Std, err = strconv.ParseFloat(parts[3], 64)
 			return
 		}
 	}
@@ -50,6 +54,7 @@ func statlogBestKmpp(fin io.Reader) (bestKmpp statlogLine, err error) {
 	if err == nil {
 		err = ErrKmppNotFound
 	}
+	statsum = strings.Join(sumlines, "\n")
 	return
 }
 

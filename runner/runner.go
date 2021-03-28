@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -278,11 +280,19 @@ type RunContext struct {
 	children  []*SolverThread
 	finishes  []int // 0 = success, 1 = failure
 	finishPos int
+
+	best *BestDB
 }
 
 func (rc *RunContext) init() {
 	rc.ctx = context.Background() // TODO: pass contexts around for cancellation
 	rc.subpCond = sync.NewCond(&rc.subpLock)
+	bestpath := filepath.Join(rc.workDir, "bestdb")
+	var err error
+	rc.best, err = OpenBestDB(bestpath)
+	if err != nil {
+		logerror("%s: %v", bestpath, err)
+	}
 }
 
 func (rc *RunContext) readDataDir() (configs map[string]Config) {
@@ -402,7 +412,7 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 			rc.error("could not mkdir runner thread workdir %s, %v", workdir, err)
 			return
 		}
-		st, err := NewSolverThread(rc.ctx, os.Stdout, workdir, filepath.Join(rc.binDir, "districter2"), argStrings)
+		st, err := NewSolverThread(rc.ctx, os.Stdout, workdir, filepath.Join(rc.binDir, "districter2"), argStrings, config)
 		if err != nil {
 			rc.error("error starting solver, %v", err)
 			return
@@ -414,14 +424,65 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 
 func (rc *RunContext) solverWaiter(st *SolverThread) {
 	err := st.cmd.Wait()
-	rc.logFinish(st, err)
+	bestKmpp, statsum, sterr := rc.processStatlog(st)
+	if err == nil && sterr != nil {
+		logerror("%s/statlog: %s", st.cwd, sterr)
+		err = sterr
+	}
+	if err == nil {
+		rc.maybeSendSolution(st, bestKmpp, statsum)
+	}
+	rc.logFinish(st, bestKmpp, err)
+}
+
+func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, statsum string) {
+	var result ResultJSON
+	result.Vars = make(map[string]string, 1)
+	result.Vars["config"] = st.config.Name
+
+	prevBest, err := rc.best.Get(st.config.Name)
+	if err == nil {
+		if bestKmpp.Kmpp >= prevBest.Kmpp {
+			// not as good as our own best, nevermind
+			return
+		}
+	}
+	// TODO: check bestKmpp against local best
+	dszpath := filepath.Join(st.cwd, "bestKmpp.dsz")
+	dsz, err := ioutil.ReadFile(dszpath)
+	if err != nil {
+		logerror("%s: %v", dszpath, err)
+		if st.config.SendAnything {
+			// keep going
+		} else {
+			// don't send
+			return
+		}
+	} else {
+		result.SetSolution(dsz)
+	}
+
+	if st.config.SendAnything {
+		binlogpath := filepath.Join(st.cwd, "binlog")
+		binlog, blerr := ioutil.ReadFile(binlogpath)
+		if blerr != nil {
+			logerror("%s: %v", binlogpath, blerr)
+			if err != nil {
+				// also no dsz, nothing to send
+				return
+			}
+		}
+		result.SetBinlog(binlog)
+	}
+
+	debug("TODO: send to %s", rc.config.PostURL)
 }
 
 // read statlog at end
 // get best kmpp
 // write statlog.gz
 // remove original flat statlog
-func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp statlogLine, err error) {
+func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp StatlogLine, statsum string, err error) {
 	statlogPath := filepath.Join(st.cwd, "statlog")
 	// read, filter for bestkmpp, copy to .gz
 	fin, err := os.Open(statlogPath)
@@ -436,7 +497,7 @@ func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp statlogLine, er
 	}
 	gzout := gzip.NewWriter(fout)
 	gp := GzipPipe{fin, fout, gzout}
-	bestKmpp, err = statlogBestKmpp(&gp)
+	bestKmpp, statsum, err = statlogSummary(&gp)
 	if err != nil {
 		err = fmt.Errorf("statlog line reading, %v", err)
 		return
@@ -452,9 +513,10 @@ func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp statlogLine, er
 	return
 }
 
-func (rc *RunContext) logFinish(st *SolverThread, err error) {
+func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err error) {
 	rc.subpLock.Lock()
 	defer func() {
+		// release runLoop to maybe start a new one
 		rc.subpCond.Broadcast()
 		rc.subpLock.Unlock()
 	}()
@@ -591,9 +653,11 @@ type SolverThread struct {
 	lstderr *bufio.Scanner
 
 	out io.Writer
+
+	config Config
 }
 
-func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args []string) (st *SolverThread, err error) {
+func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args []string, config Config) (st *SolverThread, err error) {
 	pcmd := exec.CommandContext(
 		ctx,
 		bin,
@@ -619,6 +683,7 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 	st.lstdout = bufio.NewScanner(st.pstdout)
 	st.lstderr = bufio.NewScanner(st.pstderr)
 	st.out = out
+	st.config = config
 
 	go st.prefixThread(st.lstdout, "O")
 	go st.prefixThread(st.lstderr, "E")
@@ -630,6 +695,25 @@ func (st *SolverThread) prefixThread(lines *bufio.Scanner, prefix string) {
 	for lines.Scan() {
 		fmt.Fprintf(st.out, "%s %d %s\n", prefix, st.cmd.Process.Pid, lines.Text())
 	}
+}
+
+func b64(blob []byte) string {
+	return base64.StdEncoding.EncodeToString(blob)
+}
+
+type ResultJSON struct {
+	Vars        map[string]string `json:"vars"`
+	SolutionB64 string            `json:"bestKmpp.dsz"`
+	BinlogB64   string            `json:"binlog"`
+	Statsum     string            `json:"statsum"`
+}
+
+func (r *ResultJSON) SetSolution(dsz []byte) {
+	r.SolutionB64 = b64(dsz)
+}
+
+func (r *ResultJSON) SetBinlog(binlog []byte) {
+	r.BinlogB64 = b64(binlog)
 }
 
 var verbose = false

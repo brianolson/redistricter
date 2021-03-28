@@ -24,7 +24,7 @@ func TestStatlogBestKmppFromFile(t *testing.T) {
 	}
 	fin, err := OpenAny(testStatlogPath)
 	maybeFatalf(t, err, "%s: could not open, %v", testStatlogPath, err)
-	_, err = statlogBestKmpp(fin)
+	_, _, err = statlogSummary(fin)
 	maybeFatalf(t, err, "%s: bad statlog, %v", testStatlogPath, err)
 }
 
@@ -32,7 +32,7 @@ func TestStatlogBestKmpp(t *testing.T) {
 	const raw = `#Best Km/p: Km/p=41.261278 spread=1535.000000 std=424.780999 gen=50983
 `
 	fin := strings.NewReader(raw)
-	_, err := statlogBestKmpp(fin)
+	_, _, err := statlogSummary(fin)
 	maybeFatalf(t, err, "%s: bad statlog, %v", testStatlogPath, err)
 }
 
