@@ -286,7 +286,7 @@ type RunContext struct {
 }
 
 func (rc *RunContext) init() {
-	rc.ctx = context.Background() // TODO: pass contexts around for cancellation
+	rc.ctx = context.Background()
 	rc.subpCond = sync.NewCond(&rc.subpLock)
 	bestpath := filepath.Join(rc.workDir, "bestdb")
 	var err error
@@ -486,7 +486,7 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, 
 		return
 	}
 	br := bytes.NewReader(blob)
-	hr, err := http.Post(rc.config.PostURL, "applicatio/json", br)
+	hr, err := http.Post(rc.config.PostURL, "application/json", br)
 	if err != nil {
 		logerror("result post error: %v", err)
 		return
@@ -532,8 +532,7 @@ func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp StatlogLine, st
 		err = fmt.Errorf("statlog line reading, %v", err)
 		return
 	}
-	// TODO: use bestKmpp
-	debug(" best kmpp %f", bestKmpp)
+	debug("%s: best kmpp %f", statlogPath, bestKmpp)
 	err = gp.Finish()
 	if err != nil {
 		err = fmt.Errorf("statlog finish, %v", err)
