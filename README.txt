@@ -15,7 +15,7 @@ DEPENDENCIES:
 	zlib compression library
 	google protocol buffers http://code.google.com/p/protobuf/
 
-BUILDING:	
+BUILDING:
 
 There's no ./configure because autoconf is hard. :-(
 
@@ -68,3 +68,8 @@ sudo make install
 cd ../python
 python setup.py test
 python setup.py install
+
+
+DEVELOPMENT:
+
+data.txt description of files and data bundles involved in running the system

@@ -1,0 +1,35 @@
+STU = two letter postal code, upper case
+stl = two letter postal code, lower case
+
+
+# data for running solver
+
+{STU}_runfiles.tar.gz
+contains:
+{STU}/{stl}.pb -- redistricting data
+{STU}/{STU}.mppb -- map pixel protobuf file
+{STU}/config/*.json -- e.g. Congress.json Assembly.json
+
+
+# run config json
+{
+ "args": [], // e.g. "-d2"
+ "kwargs": {}, // e.g. "-g":"150000"
+}
+
+
+# result submission JSON
+{
+ "vars": {"config":"CA_Congress", ... },
+ "bestKmpp.dsz": "", // base64 encoded dsz district solution file
+ "binlog": "", // base64 encoded log
+ "statsum": "", // end summary text from statlog
+}
+
+# (old) internal submission tar as recorded on server
+
+solution -- dsz district solution file
+vars -- url encoded a=b&... values. {"config":"CA_Congress", ... }
+binlog -- optional log
+statlog.gz -- optional log
+statsum -- end summary text from statlog
