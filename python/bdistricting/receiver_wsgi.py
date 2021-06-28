@@ -134,7 +134,6 @@ def application(environ, start_response):
     content_type = environ.get('HTTP_CONTENT_TYPE')
     if content_type != 'application/json':
         return error_text(environ, start_response, 400, 'wrong type')
-    # TODO: Limit input to 1MB
     raw = environ['wsgi.input'].read(MAX_BODY)
     if len(raw) == MAX_BODY:
         return error_text(environ, start_response, 400, 'bad submission')
