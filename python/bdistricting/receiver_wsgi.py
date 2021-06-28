@@ -173,7 +173,6 @@ def old_http_get(environ, start_response):
         cgitb.enable()
     else:
         pass
-        # TODO: for production, log errors rather than displaying them.
 
     dest_dir = environ[kSoldirEnvName]
 
@@ -192,14 +191,10 @@ def old_http_get(environ, start_response):
     else:
         headers.append( ('Content-Type', 'text/plain') )
 
-    # TODO: more validation at receive time
-    # TODO: de-dup at receive time
-
     if solution or binlog or statlog_gz:
         solsave = outTarfileSet(os.path.join(dest_dir, eventid + '.tar.gz'))
         # solsave = outFileSet(os.path.join(dest_dir, eventid))
         start_response('200 OK', headers)
-        # TODO: write to tar file
         # Just a solution is enough. Store it.
         solsave.outParam('solution', solution)
         solsave.outParam('vars', vars)
@@ -211,7 +206,6 @@ def old_http_get(environ, start_response):
         start_response('400 bad request', headers)
         status = 'no solution|binlog|statlog.gz'
     outl = []
-    # TODO: json response
     if html:
         outl.append("""<!DOCTYPE html>
 <html><head><title>solution submission</title></head><body bgcolor="#ffffff" text="#000000">
