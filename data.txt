@@ -33,3 +33,23 @@ vars -- url encoded a=b&... values. {"config":"CA_Congress", ... }
 binlog -- optional log
 statlog.gz -- optional log
 statsum -- end summary text from statlog
+
+
+# .dsz solution format
+uint32 file version == 4  // this establishes endianness; write native, read either. (This is a slightly terrible idea, sorry)
+uint32 number of points
+uint32 size of compressed data
+byte-per-block, in order of blocks in census data, with a district assignment for each block. compressed by zlib compress().
+
+
+# solution csv
+
+block number is a 15 digit decimal number (fits in uint64), district is a decimal number:
+
+SSCCCTTTTTTBBBB,d
+
+SS = two digits of FIPS state id
+CCC = two digit of FIPS county id
+TTTTTT = six digits of Census Tract id
+BBBB = four digits of Census Block id
+d = district number
