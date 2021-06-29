@@ -32,13 +32,13 @@ import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
-import generaterunconfigs
-import linksfromedges
-from newerthan import newerthan, any_newerthan
-import shapefile
-import solution
+from . import generaterunconfigs
+from . import linksfromedges
+from .newerthan import newerthan, any_newerthan
+from . import shapefile
+from . import solution
 
-from states import *
+from .states import *
 
 logger = logging.getLogger(__name__)
 

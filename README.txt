@@ -39,6 +39,7 @@ python3 -m venv ve
 # this assumes bash or sh-like shell, to source a script into your session
 . ve/bin/activate
 pip install -r python/requirements.txt
+(cd python && pip install -e .)
 
 Make a directory, which I traditionally call "data", to hold the Census data, and fetch a state of data into it, run preprocessing:
 

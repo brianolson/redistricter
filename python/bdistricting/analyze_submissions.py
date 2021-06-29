@@ -20,12 +20,12 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import zipfile
 
-import jinjatemplates
-from kmppspreadplot import svgplotter
-from newerthan import newerthan, any_newerthan
-import resultspage
-import runallstates
-import states
+from . import jinjatemplates
+from .kmppspreadplot import svgplotter
+from .newerthan import newerthan, any_newerthan
+from . import resultspage
+from . import runallstates
+from . import states
 
 srcdir_ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

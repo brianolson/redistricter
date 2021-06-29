@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 
-from states import codeForState
+from .states import codeForState
 
 logger = logging.getLogger(__name__)
 

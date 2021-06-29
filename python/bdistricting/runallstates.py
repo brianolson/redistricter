@@ -50,8 +50,8 @@ import traceback
 import pdb
 
 # local imports
-import client
-import manybest
+from . import client
+from . import manybest
 
 has_poll = "poll" in dir(select)
 has_select = "select" in dir(select)

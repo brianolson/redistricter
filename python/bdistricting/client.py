@@ -27,7 +27,7 @@ import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 
-from newerthan import newerthan
+from .newerthan import newerthan
 
 logger = logging.getLogger(__name__)
 

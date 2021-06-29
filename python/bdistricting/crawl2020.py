@@ -15,13 +15,13 @@ import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 # local
-import generaterunconfigs
-import linksfromedges
-from newerthan import newerthan
-import setupstatedata
-import shapefile
-import states
-from makePlaceBlockList import getTopNPlaceCodes, filterPlacesToUbidList
+from . import generaterunconfigs
+from . import linksfromedges
+from .newerthan import newerthan
+from . import setupstatedata
+from . import shapefile
+from . import states
+from .makePlaceBlockList import getTopNPlaceCodes, filterPlacesToUbidList
 
 logger = logging.getLogger(__name__)
 

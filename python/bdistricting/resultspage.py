@@ -6,7 +6,7 @@ import re
 import string
 import sys
 
-from states import *
+from .states import *
 
 stulist = list(stateAbbreviations())
 stulist.sort()
