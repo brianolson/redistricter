@@ -5,6 +5,7 @@
 import cgi
 import cgitb
 from io import StringIO
+import json
 import logging
 import os
 import random
@@ -14,6 +15,9 @@ import time
 
 
 logger = logging.getLogger(__name__)
+
+if (os.getenv('SERVER_SOFTWARE') or '').startswith('gunicorn') and (__name__ != '__main__'):
+    logger = logging.getLogger('gunicorn.error')
 
 
 # variables read from the environment
@@ -117,6 +121,8 @@ class outTarfileSet(object):
 
 def error_text(environ, start_response, code, message):
     start_response(str(code), [('Content-Type', 'text/plain')])
+    if isinstance(message, str):
+        message = message.encode()
     return [message]
 
 
@@ -130,10 +136,11 @@ def application(environ, start_response):
         return error_text(environ, start_response, 400, 'bad method')
     # new json:
     remote_addr = environ.get('REMOTE_ADDR')
-    debug = remote_addr == '127.0.0.1' || remote_addr == '::1'
-    content_type = environ.get('HTTP_CONTENT_TYPE')
+    debug = remote_addr == '127.0.0.1' or remote_addr == '::1'
+    content_type = environ.get('CONTENT_TYPE')
     if content_type != 'application/json':
-        return error_text(environ, start_response, 400, 'wrong type')
+        logger.info('bad content type %r, %r', content_type, environ.keys())
+        return error_text(environ, start_response, 400, 'wrong type {!r}'.format(content_type))
     raw = environ['wsgi.input'].read(MAX_BODY)
     if len(raw) == MAX_BODY:
         return error_text(environ, start_response, 400, 'bad submission')
@@ -142,7 +149,7 @@ def application(environ, start_response):
         return error_text(environ, start_response, 400, 'empty submission')
     # TODO: more validation of good upload
     # TODO: rate limit per submitting host
-    dest_dir = environ[kSoldirEnvName]
+    dest_dir = os.environ[kSoldirEnvName]
     eventid = makeEventId(remote_addr) # eventid contains a / at yyyymmdd/HHMMSS
     outpath = os.path.join(dest_dir, eventid + '.json')
     outdir = os.path.dirname(outpath)
@@ -155,7 +162,7 @@ def application(environ, start_response):
     ret = {
         'id': eventid,
     }
-    return [json.dumps(ret)]
+    return [json.dumps(ret).encode()]
 
 
 def old_http_get(environ, start_response):
