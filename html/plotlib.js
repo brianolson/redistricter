@@ -42,28 +42,36 @@ PlotCommon.prototype.setupxy = function(xy) {
 }
 
 PlotCommon.prototype.setup = function(canvas, xy, opt) {
-    if (opt && opt.data) {
-		for (var di = 0, ds; ds = opt.data[di]; di++) {
-			this.setupxy(ds.xy);
-		}
-    } else {
-	this.setupxy(xy);
-    }
-	this.ctx = canvas.getContext('2d');
-  if (opt && opt['ylabels']) {
-    this.miny_str = opt['ylabels'][0] || '';
-    this.maxy_str = opt['ylabels'][1] || '';
-    this.lasty_str = opt['ylabels'][2] || '';
+  if (opt && opt.data) {
+	for (var di = 0, ds; ds = opt.data[di]; di++) {
+	  this.setupxy(ds.xy);
+	}
   } else {
+	this.setupxy(xy);
+  }
+  this.ctx = canvas.getContext('2d');
+  this.miny_str = null;
+  this.maxy_str = null;
+  this.lasty_str = null;
+  if (opt && opt['ylabels']) {
+    this.miny_str = opt['ylabels'][0]; // '' to disable; null and undefined get replaced with default value
+    this.maxy_str = opt['ylabels'][1];
+    this.lasty_str = opt['ylabels'][2];
+  }
+  if ((!this.miny_str) && (this.miny_str != '')) {
 	this.miny_str = new String(this.miny);
+  }
+  if ((!this.maxy_str) && (this.maxy_str != '')) {
 	this.maxy_str = new String(this.maxy);
+  }
+  if ((!this.lasty_str) && (this.lasty_str != '')) {
 	this.lasty_str = new String(this.lasty);
   }
 
-	this.miny_width = this.ctx.measureText(this.miny_str).width;
-	this.maxy_width = this.ctx.measureText(this.maxy_str).width;
-	this.lasty_width = this.ctx.measureText(this.lasty_str).width;
-	this.max_ystr_width = Math.max(this.maxy_width, this.miny_width, this.lasty_width);
+  this.miny_width = this.ctx.measureText(this.miny_str).width;
+  this.maxy_width = this.ctx.measureText(this.maxy_str).width;
+  this.lasty_width = this.ctx.measureText(this.lasty_str).width;
+  this.max_ystr_width = Math.max(this.maxy_width, this.miny_width, this.lasty_width);
   if (opt && opt['ylabels'] && (opt['ylabels'].length > 3)) {
     for (var yli = 3, yl; yl = opt['ylabels'][yli]; yli++) {
       var yl_width = this.ctx.measureText(yl[1]).width;
@@ -72,22 +80,22 @@ PlotCommon.prototype.setup = function(canvas, xy, opt) {
       }
     }
   }
-	if (opt && (opt['miny'] != undefined)) {
-		this.miny = opt['miny'];
-	}
-	if (opt && (opt['maxy'] != undefined)) {
-		this.maxy = opt['maxy'];
-	}
-	if (opt && (opt['minx'] != undefined)) {
-		this.minx = opt['minx'];
-	}
-	if (opt && (opt['maxx'] != undefined)) {
-		this.maxx = opt['maxx'];
-	}
-	this.insetx = 0;//max_ystr_width * 1.1;
-	this.insety = canvas.height - 11;
-	this.scalex = (canvas.width - this.max_ystr_width) / (this.maxx - this.minx);
-	this.scaley = (canvas.height - 11) / (this.maxy - this.miny);
+  if (opt && (opt['miny'] != undefined)) {
+	this.miny = opt['miny'];
+  }
+  if (opt && (opt['maxy'] != undefined)) {
+	this.maxy = opt['maxy'];
+  }
+  if (opt && (opt['minx'] != undefined)) {
+	this.minx = opt['minx'];
+  }
+  if (opt && (opt['maxx'] != undefined)) {
+	this.maxx = opt['maxx'];
+  }
+  this.insetx = 0;//max_ystr_width * 1.1;
+  this.insety = canvas.height - 11;
+  this.scalex = (canvas.width - this.max_ystr_width) / (this.maxx - this.minx);
+  this.scaley = (canvas.height - 11) / (this.maxy - this.miny);
 };
 
 PlotCommon.prototype.px = function(dx) {
@@ -229,7 +237,8 @@ MultiLinePlot.prototype.plot = function(canvas, datas, opt) {
 	    strokeStyle = defaultLineStyles[defaultLineStylesIter];
 	    defaultLineStylesIter = (defaultLineStylesIter + 1) % defaultLineStyles.length;
 	}
-	this.ctx.strokeStyle = strokeStyle;
+      this.ctx.strokeStyle = strokeStyle;
+      this.ctx.lineWidth = dat.lineWidth || 1;
 	this.ctx.beginPath();
 	this.ctx.moveTo(this.px(xy[0]), this.py(xy[1]));
 	for (var i = 2; i < xy.length; i += 2) {
