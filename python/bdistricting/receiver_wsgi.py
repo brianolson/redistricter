@@ -1,6 +1,9 @@
 #!/usr/bin/python
 #
 # WSGI (PEP 0333) based upload receiver
+#
+# usage:
+#  REDISTRICTER_SOLUTIONS=/tmp/solutions gunicorn --bind=127.0.0.1:7319 bdistricting.receiver_wsgi:application
 
 import cgi
 import cgitb
