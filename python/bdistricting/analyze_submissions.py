@@ -372,7 +372,6 @@ class SubmissionAnalyzer(object):
     def opendb(self, path):
         self.db = sqlite3.connect(path)
         c = self.db.cursor()
-        # TODO?: make this less sqlite3 specific sql
         c.execute('CREATE TABLE IF NOT EXISTS submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, vars TEXT, unixtime INTEGER, kmpp REAL, spread INTEGER, path TEXT, config TEXT)')
         c.execute('CREATE INDEX IF NOT EXISTS submissions_path ON submissions (path)')
         c.execute('CREATE INDEX IF NOT EXISTS submissions_config ON submissions (config)')
@@ -959,6 +958,7 @@ class SubmissionAnalyzer(object):
         context = dict(
             statename=statename,
             stu=stu,
+            cname=cname,
             statenav=self.statenav(cname, configs),
             ba_large='map.png',
             ba_small='map500.png',

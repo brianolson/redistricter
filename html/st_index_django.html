@@ -4,6 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="{{rooturl}}s/report.css" rel="stylesheet" type="text/css" />
 <meta property="og:image" content="{{ba_small}}" />
+<meta property="og:title" content="BDistricting: {{statename}}" />
+<meta property="og:url" content="https://www.bdistricting.com/2020/{{cname}}/" />
+<meta property="og:site_name" content="BDistricting" />
 {% if socialshare %}
 <script type="application/x-social-share-privacy-settings">{"path_prefix":"/ssp/","layout":"line","services":{"buffer":{"status":false},"delicious":{"status":false},"disqus":{"status":false},"flattr":{"status":false},"linkedin":{"status":false},"stumbleupon":{"status":false},"xing":{"status":false}}}</script>
 {% else %}
@@ -27,16 +30,16 @@
 </td><td id="rhs">
 
 <table id="imt" align="center">
-<tr><th>My Way</th><th>Current</th></tr>
+{% if current_small %}<tr><th>My Way</th><th>Current</th></tr>{% endif %}
 <tr><td align="center"><a href="{{ba_large}}"><img src="{{ba_small}}" title="{{statename}} congressional district map, my way" alt="{{statename}} congressional district map, current"></a></td>{% if current_small %}<td align="center"><a href="{{current_large}}"><img src="{{current_small}}"></a></td>{% endif %}</tr>
 <tr><td align="center">{{statename}} possible district map from my solver.<br /><a href="{{ba_large}}" title="{{statename}} congressional district map, my way">Larger {{statename}} map</a></td>{% if current_small %}<td align="center">{{statename}} current district map<br /><a href="{{current_large}}">Larger {{statename}} map</a></td>{% endif %}</tr>
 </table>
 
 <table border="1" style="margin-top:1em;margin-bottom:1em;" align="center">
-<tr><td></td><td class="myow">My Way</td><td class="myow">Current</td></tr>
-<tr><td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myon{% if my_kmpp < current_kmpp %} better{% endif %}">{{my_kmpp|pprint}}</td><td class="myon{% if my_kmpp > current_kmpp %} better{% endif %}">{{current_kmpp|pprint}}</td></tr>
-<tr><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about )--></td><td class="myon{% if my_spread < current_spread %} better{% endif %}">{{my_spread}}</td><td class="myon{% if my_spread > current_spread %} better{% endif %}">{{current_spread}}</td></tr>
-<tr><td class="myoh">standard deviation of<br />district populations</td><td class="myon{% if my_std < current_std %} better{% endif %}">{{my_std}}</td><td class="myon{% if my_std > current_std %} better{% endif %}">{{current_std}}</td></tr>
+{% if current_small %}<tr><td></td><td class="myow">My Way</td><td class="myow">Current</td></tr>{% endif %}
+<tr><td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myon{% if my_kmpp < current_kmpp %} better{% endif %}">{{my_kmpp|pprint}}</td>{% if current_small %}<td class="myon{% if my_kmpp > current_kmpp %} better{% endif %}">{{current_kmpp|pprint}}</td>{% endif %}</tr>
+<tr><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about )--></td><td class="myon{% if my_spread < current_spread %} better{% endif %}">{{my_spread}}</td>{% if current_small %}<td class="myon{% if my_spread > current_spread %} better{% endif %}">{{current_spread}}</td>{% endif %}</tr>
+<tr><td class="myoh">standard deviation of<br />district populations</td><td class="myon{% if my_std < current_std %} better{% endif %}">{{my_std}}</td>{% if current_small %}<td class="myon{% if my_std > current_std %} better{% endif %}">{{current_std}}</td>{% endif %}</tr>
 </table>
 
 {{extra|safe}}
@@ -55,6 +58,7 @@
 {{racedata|safe}}
 {% endif %}
 <div><a href="solution.zip">zipped csv block list for {{statename}}</a></div>
+<div><a href="/2010/{{cname}}/">{{statename}} from 2010 Census</a></div>
 <div><a href="/2000/{{stu}}/">{{statename}} from 2000 Census</a></div>
 </td></tr></table>
 <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work by <a xmlns:cc="http://creativecommons.org/ns#" href="http://bdistricting.com/" property="cc:attributionName" rel="cc:attributionURL">Brian Olson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.</p>
