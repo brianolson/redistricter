@@ -294,7 +294,7 @@ def pl94_171_2020_ubid(parts):
 
 def readPlaceNames(placeNamesPath):
   placeNames = {}
-  with open(placeNamesPath) as ppin:
+  with open(placeNamesPath, encoding='iso-8859-1') as ppin:
     for line in ppin:
       if not line:
         continue
@@ -551,7 +551,7 @@ class StateData(setupstatedata.StateData):
     places = GeoBlocksPlaces()
     fo = open(geoblockspath, 'w')
     zf = zipfile.ZipFile(plzip, 'r')
-    raw = zf.read(self.stl + 'geo2020.pl').decode()
+    raw = zf.read(self.stl + 'geo2020.pl').decode('iso-8859-1') # I am sad the data isn't UTF-8
     zf.close()
     for line in raw.splitlines(True):
       parts = line.split('|')
