@@ -65,7 +65,7 @@ public:
 		return ubidCounty(ubidOfIndex(index));
 	}
 
-	// Map "Logical Record Number" to internal index so that we can map in 
+	// Map "Logical Record Number" to internal index so that we can map in
 	// other Census data files.
 	class RecnoNode {
 	public:
@@ -87,7 +87,7 @@ public:
 	// uint32_t[numPoints] {0:None, else place id}
 	// Census 'place', filtered to be towns/cities/municipalities
 	uint32_t* place;
-	
+
 	GeoData();
 	int open( const char* inputname );
 	virtual int load() = 0;
@@ -95,7 +95,7 @@ public:
 	//virtual uint64_t ubid( int index ) = 0;
 	// get "Logical Record Number" which links to deeper census data.
 	//virtual uint32_t logrecno( int index ) = 0;
-	
+
 	/** Binary Format:
 	int32_t endianness; Should read as 1 in the correct endianness.
 	                    May become a version number in the future.
@@ -167,17 +167,17 @@ public:
 
 	virtual POPTYPE oldDist( int index );
 
-private:	
+private:
 	// Get Unique Block ID, the ull interpretation of concatenated
 	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	// Ubid links to geometry data which tags blocks by this string.
 	// This is eqivalent to Cenus 2000 tiger shapefile BLOCKID.
 	// TODO: 2010 shapefile has an extra digit appended.
 	uint64_t ubid( int index );
-	
+
 	// get "Logical Record Number" which links to deeper census data.
 	uint32_t logrecno( int index );
-	
+
 	int countDistricts();
 };
 
@@ -188,18 +188,22 @@ public:
 
 	virtual int load();
 	virtual int numDistricts();
-	
+
 	// Get Unique Block ID, the ull interpretation of concatenated
 	// decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
 	// Ubid links to geometry data which tags blocks by this string.
 	// This is eqivalent to Cenus 2000 tiger shapefile BLOCKID.
 	// TODO: 2010 shapefile has an extra digit appended.
 	//virtual uint64_t ubid( int index );
-	
+
 	// get "Logical Record Number" which links to deeper census data.
 	//virtual uint32_t logrecno( int index );
-		
+
 	POPTYPE oldDist( int index );
+
+private:
+  int load2010();
+  int load2020();
 };
 
 

@@ -44,6 +44,11 @@ TABBLOCK_RE = re.compile(r'tl_2020_(\d\d)_tabblock20.zip', re.IGNORECASE)
 # Three days
 INDEX_CACHE_SECONDS = 3*24*3600
 
+class PSV(csv.Dialect):
+  "Pipe Separated Values"
+  def __init__(self):
+    self.delimiter = '|'
+
 def cachedIndexNeedsFetch(path):
   try:
     st = os.stat(path)
@@ -126,10 +131,12 @@ def getTabblockSet(datadir):
 def getCountySet(datadir):
   return getCensusTigerSetList(datadir, COUNTY_URL, 'county_index.html', COUNTY_RE)
 
-
+# TODO: watch this space Aug 12
+# https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/
 # e.g. http://www2.census.gov/census_2020/01-Redistricting_File--PL_94-171/Virginia/va2020.pl.zip
 # takes (state name, stl) like ('Virginia', 'va')
-PL_ZIP_TEMPLATE = 'http://www2.census.gov/census_2020/01-Redistricting_File--PL_94-171/%s/%s2020.pl.zip'
+# https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Connecticut/ct2020.pl.zip
+PL_ZIP_TEMPLATE = 'https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{}/{}2020.pl.zip'
 
 class Crawler(object):
   def __init__(self, options):
@@ -278,11 +285,12 @@ class ProcessGlobals(setupstatedata.ProcessGlobals):
     return StateData(self, name, self.options)
 
 
-def pl94_171_2020_ubid(line):
+def pl94_171_2020_ubid(parts):
   """From a line of a PL94-171 (2020) file, return the 'unique block id' used by Redistricter system.
   {state}{county}{tract}{block}
   This winds up being a 15 digit decimal number that fits in a 64 bit unsigned int."""
-  return line[27:32] + line[54:60] + line[61:65]
+  return parts[STATE_FIPS] + parts[COUNTY_FIPS] + parts[TRACT] + parts[BLOCK]
+  #return line[27:32] + line[54:60] + line[61:65]
 
 def readPlaceNames(placeNamesPath):
   placeNames = {}
@@ -306,6 +314,134 @@ def readPlaceNames(placeNamesPath):
   logging.debug('read %d names from %r', len(placeNames), placeNamesPath)
   return placeNames
 
+geoHeaderHeaderText = '''
+# Record Codes
+FILEID
+STUSAB
+SUMLEV
+GEOVAR
+GEOCOMP
+CHARITER
+CIFSN
+LOGRECNO
+
+# Geographic Area Codes
+GEOID
+GEOCODE
+REGION
+DIVISION
+STATE
+STATENS
+COUNTY
+COUNTYCC
+COUNTYNS
+COUSUB
+COUSUBCC
+COUSUBNS
+SUBMCD
+SUBMCDCC
+SUBMCDNS
+ESTATE
+ESTATECC
+ESTATENS
+CONCIT
+CONCITCC
+CONCITNS
+PLACE
+PLACECC
+PLACENS
+TRACT
+BLKGRP
+BLOCK
+AIANHH
+AIHHTLI
+AIANHHFP
+AIANHHCC
+AIANHHNS
+AITS
+AITSFP
+AITSCC
+ATSSNS
+TTRACT
+TBLKGRP
+ANRC
+ANRCCC
+ANRCNS
+CBSA
+MEMI
+CSA
+BETDIV
+NECTA
+NMEMI
+CNECTA
+NECTADIV
+CBSAPCI
+NECTAPCI
+UA
+UATYPE
+UR
+CD116
+CD118
+CD119
+CD120
+CD121
+SLDU18
+SLDU22
+SLDU24
+SLDU26
+SLDU28
+SLDL18
+SLDL22
+SLDL24
+SLDL26
+SLDL28
+VTD
+VTDI
+ZCTA
+SDELM
+SDSEC
+SDUNI
+PUMA
+
+# Area Characteristics
+AREALAND
+AREAWATR
+BASENAME
+NAME
+FUNCSTAT
+GCUNI
+POP100
+HU100
+INTPTLAT
+INTPTLON
+LSADC
+PARTFLAG
+
+# Special Area Codes
+UGA
+'''
+
+def makeGeoHeaderColList():
+  for line in geoHeaderHeaderText.splitlines():
+    if not line:
+      continue
+    if line[0] == '#':
+      continue
+    line = line.strip()
+    if not line:
+      continue
+    yield line
+
+geoHeaderHeader = list(makeGeoHeaderColList())
+geoHeaderNameToCol = {v:i for i,v in enumerate(geoHeaderHeader)}
+
+STATE_FIPS = geoHeaderNameToCol['STATE']
+COUNTY_FIPS = geoHeaderNameToCol['COUNTY']
+TRACT = geoHeaderNameToCol['TRACT']
+BLOCK = geoHeaderNameToCol['BLOCK']
+PLACECC = geoHeaderNameToCol['PLACECC']
+PLACE = geoHeaderNameToCol['PLACE']
+POPCOL = geoHeaderNameToCol['POP100']
 
 class GeoBlocksPlaces(object):
   """
@@ -319,21 +455,21 @@ class GeoBlocksPlaces(object):
     self.places = {}
     self.placePops = {}
 
-  def pl2020line(self, line):
+  def pl2020line(self, parts):
     """accumulate a line of a PL94-171 (2020) file
                 should have been filtered to summary level 750 which has
                 one record for each block"""
-    placecode = line[50:52]
+    placecode = parts[PLACECC]
     if placecode in self.ACTIVE_INCORPORATED_PLACE_CODES:
-      place = line[45:50]
-      ubid = pl94_171_2020_ubid(line)
+      place = parts[PLACE]
+      ubid = pl94_171_2020_ubid(parts)
       placelist = self.places.get(place)
       if placelist is None:
         placelist = [ubid]
         self.places[place] = placelist
       else:
         placelist.append(ubid)
-      pop = int(line[318:327])
+      pop = int(parts[POPCOL])
       self.placePops[place] = self.placePops.get(place,0) + pop
 
   def writePlaceUbidMap(self, out):
@@ -397,7 +533,7 @@ class StateData(setupstatedata.StateData):
     placespath = geoblockspath + '.places'
     placePopPath = os.path.join(self.dpath, 'placespops.csv')
     if not os.path.exists(plzip):
-      plzipurl = PL_ZIP_TEMPLATE % (self.name.replace(' ', '_'), self.stl)
+      plzipurl = PL_ZIP_TEMPLATE.format(self.name.replace(' ', '_'), self.stl)
       logger.info('%s -> %s', plzipurl, plzip)
       if not self.options.dryrun:
         urllib.request.urlretrieve(plzipurl, plzip)
@@ -417,11 +553,12 @@ class StateData(setupstatedata.StateData):
     zf = zipfile.ZipFile(plzip, 'r')
     raw = zf.read(self.stl + 'geo2020.pl').decode()
     zf.close()
-    filter = 'PLST  ' + self.stu + '750'
     for line in raw.splitlines(True):
-      if line.startswith(filter):
-        fo.write(line)
-        places.pl2020line(line)
+      parts = line.split('|')
+      if parts[2] != '750':
+        continue
+      fo.write(line)
+      places.pl2020line(parts)
     fo.close()
     with gzip.open(placespath, 'wb') as placefile:
       places.writeUbidPlaceMap(placefile)
@@ -510,14 +647,20 @@ def strbool(x):
 
 def main():
   argp = setupstatedata.getOptionParser()
-  argp.add_option('--download', dest='download', default='True', action='store_true')
+  argp.add_option('--download', dest='download', default=True, action='store_true')
   argp.add_option('--no-download', dest='download', action='store_false')
+  argp.add_option('--show-geo-cols', default=False, action='store_true')
   (options, args) = argp.parse_args()
   if options.verbose:
     logging.basicConfig(level=logging.DEBUG)
     logging.debug('options=%r', options)
   else:
     logging.basicConfig(level=logging.INFO)
+  if options.show_geo_cols:
+    for i,v in enumerate(geoHeaderHeader):
+      print(v,i)
+    sys.exit(0)
+    return
   assert options.shapefile
   if not os.path.isdir(options.datadir):
     raise Exception('data dir "%s" does not exist' % options.datadir)

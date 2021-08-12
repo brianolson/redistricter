@@ -8,189 +8,225 @@ public final class Redata {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistryLite registry) {
   }
+
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions(
+        (com.google.protobuf.ExtensionRegistryLite) registry);
+  }
   public interface RedistricterDataOrBuilder extends
       // @@protoc_insertion_point(interface_extends:RedistricterData)
-      com.google.protobuf.MessageLiteOrBuilder {
+      com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @return A list containing the intpoints.
      */
     java.util.List<java.lang.Integer> getIntpointsList();
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @return The count of intpoints.
      */
     int getIntpointsCount();
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @param index The index of the element to return.
+     * @return The intpoints at the given index.
      */
     int getIntpoints(int index);
 
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @return A list containing the fpoints.
      */
     java.util.List<java.lang.Double> getFpointsList();
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @return The count of fpoints.
      */
     int getFpointsCount();
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @param index The index of the element to return.
+     * @return The fpoints at the given index.
      */
     double getFpoints(int index);
 
     /**
      * <code>repeated int32 population = 3;</code>
+     * @return A list containing the population.
      */
     java.util.List<java.lang.Integer> getPopulationList();
     /**
      * <code>repeated int32 population = 3;</code>
+     * @return The count of population.
      */
     int getPopulationCount();
     /**
      * <code>repeated int32 population = 3;</code>
+     * @param index The index of the element to return.
+     * @return The population at the given index.
      */
     int getPopulation(int index);
 
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @return A list containing the area.
      */
     java.util.List<java.lang.Long> getAreaList();
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @return The count of area.
      */
     int getAreaCount();
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @param index The index of the element to return.
+     * @return The area at the given index.
      */
     long getArea(int index);
 
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @return A list containing the ubids.
      */
     java.util.List<java.lang.Long> getUbidsList();
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @return The count of ubids.
      */
     int getUbidsCount();
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @param index The index of the element to return.
+     * @return The ubids at the given index.
      */
     long getUbids(int index);
 
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @return A list containing the recnos.
      */
     java.util.List<java.lang.Integer> getRecnosList();
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @return The count of recnos.
      */
     int getRecnosCount();
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @param index The index of the element to return.
+     * @return The recnos at the given index.
      */
     int getRecnos(int index);
 
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @return A list containing the edges.
      */
     java.util.List<java.lang.Integer> getEdgesList();
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @return The count of edges.
      */
     int getEdgesCount();
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @param index The index of the element to return.
+     * @return The edges at the given index.
      */
     int getEdges(int index);
 
     /**
-     * <code>optional int32 numDistricts = 8;</code>
-     *
      * <pre>
      * Default number of districts for this data set.
      * Probably the number of US House districts.
      * </pre>
+     *
+     * <code>optional int32 numDistricts = 8;</code>
+     * @return Whether the numDistricts field is set.
      */
     boolean hasNumDistricts();
     /**
-     * <code>optional int32 numDistricts = 8;</code>
-     *
      * <pre>
      * Default number of districts for this data set.
      * Probably the number of US House districts.
      * </pre>
+     *
+     * <code>optional int32 numDistricts = 8;</code>
+     * @return The numDistricts.
      */
     int getNumDistricts();
 
@@ -207,71 +243,97 @@ public final class Redata {
      * <code>repeated group Other = 9 { ... }</code>
      */
     int getOtherCount();
+    /**
+     * <code>repeated group Other = 9 { ... }</code>
+     */
+    java.util.List<? extends org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder> 
+        getOtherOrBuilderList();
+    /**
+     * <code>repeated group Other = 9 { ... }</code>
+     */
+    org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder getOtherOrBuilder(
+        int index);
 
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @return A list containing the place.
      */
     java.util.List<java.lang.Integer> getPlaceList();
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @return The count of place.
      */
     int getPlaceCount();
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @param index The index of the element to return.
+     * @return The place at the given index.
      */
     int getPlace(int index);
   }
   /**
-   * Protobuf type {@code RedistricterData}
-   *
    * <pre>
    * intpoints/fpoints, population, area, ubids and recnos should all have the same length.
    * </pre>
+   *
+   * Protobuf type {@code RedistricterData}
    */
   public static final class RedistricterData extends
-      com.google.protobuf.GeneratedMessageLite implements
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:RedistricterData)
       RedistricterDataOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use RedistricterData.newBuilder() to construct.
-    private RedistricterData(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+    private RedistricterData(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private RedistricterData(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final RedistricterData defaultInstance;
-    public static RedistricterData getDefaultInstance() {
-      return defaultInstance;
+    private RedistricterData() {
+      intpoints_ = emptyIntList();
+      fpoints_ = emptyDoubleList();
+      population_ = emptyIntList();
+      area_ = emptyLongList();
+      ubids_ = emptyLongList();
+      recnos_ = emptyIntList();
+      edges_ = emptyIntList();
+      other_ = java.util.Collections.emptyList();
+      place_ = emptyIntList();
     }
 
-    public RedistricterData getDefaultInstanceForType() {
-      return defaultInstance;
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RedistricterData();
     }
 
-    private final com.google.protobuf.ByteString unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
     private RedistricterData(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput);
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -280,156 +342,149 @@ public final class Redata {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                intpoints_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                intpoints_ = newIntList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              intpoints_.add(input.readInt32());
+              intpoints_.addInt(input.readInt32());
               break;
             }
             case 10: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                intpoints_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
+                intpoints_ = newIntList();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                intpoints_.add(input.readInt32());
+                intpoints_.addInt(input.readInt32());
               }
               input.popLimit(limit);
               break;
             }
             case 17: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                fpoints_ = new java.util.ArrayList<java.lang.Double>();
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                fpoints_ = newDoubleList();
                 mutable_bitField0_ |= 0x00000002;
               }
-              fpoints_.add(input.readDouble());
+              fpoints_.addDouble(input.readDouble());
               break;
             }
             case 18: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002) && input.getBytesUntilLimit() > 0) {
-                fpoints_ = new java.util.ArrayList<java.lang.Double>();
+              if (!((mutable_bitField0_ & 0x00000002) != 0) && input.getBytesUntilLimit() > 0) {
+                fpoints_ = newDoubleList();
                 mutable_bitField0_ |= 0x00000002;
               }
               while (input.getBytesUntilLimit() > 0) {
-                fpoints_.add(input.readDouble());
+                fpoints_.addDouble(input.readDouble());
               }
               input.popLimit(limit);
               break;
             }
             case 24: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                population_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                population_ = newIntList();
                 mutable_bitField0_ |= 0x00000004;
               }
-              population_.add(input.readInt32());
+              population_.addInt(input.readInt32());
               break;
             }
             case 26: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004) && input.getBytesUntilLimit() > 0) {
-                population_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000004) != 0) && input.getBytesUntilLimit() > 0) {
+                population_ = newIntList();
                 mutable_bitField0_ |= 0x00000004;
               }
               while (input.getBytesUntilLimit() > 0) {
-                population_.add(input.readInt32());
+                population_.addInt(input.readInt32());
               }
               input.popLimit(limit);
               break;
             }
             case 32: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                area_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                area_ = newLongList();
                 mutable_bitField0_ |= 0x00000008;
               }
-              area_.add(input.readUInt64());
+              area_.addLong(input.readUInt64());
               break;
             }
             case 34: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
-                area_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000008) != 0) && input.getBytesUntilLimit() > 0) {
+                area_ = newLongList();
                 mutable_bitField0_ |= 0x00000008;
               }
               while (input.getBytesUntilLimit() > 0) {
-                area_.add(input.readUInt64());
+                area_.addLong(input.readUInt64());
               }
               input.popLimit(limit);
               break;
             }
             case 40: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                ubids_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                ubids_ = newLongList();
                 mutable_bitField0_ |= 0x00000010;
               }
-              ubids_.add(input.readUInt64());
+              ubids_.addLong(input.readUInt64());
               break;
             }
             case 42: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
-                ubids_ = new java.util.ArrayList<java.lang.Long>();
+              if (!((mutable_bitField0_ & 0x00000010) != 0) && input.getBytesUntilLimit() > 0) {
+                ubids_ = newLongList();
                 mutable_bitField0_ |= 0x00000010;
               }
               while (input.getBytesUntilLimit() > 0) {
-                ubids_.add(input.readUInt64());
+                ubids_.addLong(input.readUInt64());
               }
               input.popLimit(limit);
               break;
             }
             case 48: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-                recnos_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
+                recnos_ = newIntList();
                 mutable_bitField0_ |= 0x00000020;
               }
-              recnos_.add(input.readInt32());
+              recnos_.addInt(input.readInt32());
               break;
             }
             case 50: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
-                recnos_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000020) != 0) && input.getBytesUntilLimit() > 0) {
+                recnos_ = newIntList();
                 mutable_bitField0_ |= 0x00000020;
               }
               while (input.getBytesUntilLimit() > 0) {
-                recnos_.add(input.readInt32());
+                recnos_.addInt(input.readInt32());
               }
               input.popLimit(limit);
               break;
             }
             case 56: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-                edges_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+                edges_ = newIntList();
                 mutable_bitField0_ |= 0x00000040;
               }
-              edges_.add(input.readInt32());
+              edges_.addInt(input.readInt32());
               break;
             }
             case 58: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
-                edges_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000040) != 0) && input.getBytesUntilLimit() > 0) {
+                edges_ = newIntList();
                 mutable_bitField0_ |= 0x00000040;
               }
               while (input.getBytesUntilLimit() > 0) {
-                edges_.add(input.readInt32());
+                edges_.addInt(input.readInt32());
               }
               input.popLimit(limit);
               break;
@@ -440,7 +495,7 @@ public final class Redata {
               break;
             }
             case 75: {
-              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+              if (!((mutable_bitField0_ & 0x00000100) != 0)) {
                 other_ = new java.util.ArrayList<org.bolson.redistricter.Redata.RedistricterData.Other>();
                 mutable_bitField0_ |= 0x00000100;
               }
@@ -449,24 +504,31 @@ public final class Redata {
               break;
             }
             case 96: {
-              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
-                place_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000200) != 0)) {
+                place_ = newIntList();
                 mutable_bitField0_ |= 0x00000200;
               }
-              place_.add(input.readUInt32());
+              place_.addInt(input.readUInt32());
               break;
             }
             case 98: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
-                place_ = new java.util.ArrayList<java.lang.Integer>();
+              if (!((mutable_bitField0_ & 0x00000200) != 0) && input.getBytesUntilLimit() > 0) {
+                place_ = newIntList();
                 mutable_bitField0_ |= 0x00000200;
               }
               while (input.getBytesUntilLimit() > 0) {
-                place_.add(input.readUInt32());
+                place_.addInt(input.readUInt32());
               }
               input.popLimit(limit);
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -475,115 +537,114 @@ public final class Redata {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          intpoints_ = java.util.Collections.unmodifiableList(intpoints_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          intpoints_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          fpoints_ = java.util.Collections.unmodifiableList(fpoints_);
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          fpoints_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          population_ = java.util.Collections.unmodifiableList(population_);
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+          population_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-          area_ = java.util.Collections.unmodifiableList(area_);
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
+          area_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          ubids_ = java.util.Collections.unmodifiableList(ubids_);
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          ubids_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-          recnos_ = java.util.Collections.unmodifiableList(recnos_);
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
+          recnos_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-          edges_ = java.util.Collections.unmodifiableList(edges_);
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
+          edges_.makeImmutable(); // C
         }
-        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((mutable_bitField0_ & 0x00000100) != 0)) {
           other_ = java.util.Collections.unmodifiableList(other_);
         }
-        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
-          place_ = java.util.Collections.unmodifiableList(place_);
+        if (((mutable_bitField0_ & 0x00000200) != 0)) {
+          place_.makeImmutable(); // C
         }
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
+        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static com.google.protobuf.Parser<RedistricterData> PARSER =
-        new com.google.protobuf.AbstractParser<RedistricterData>() {
-      public RedistricterData parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new RedistricterData(input, extensionRegistry);
-      }
-    };
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bolson.redistricter.Redata.internal_static_RedistricterData_descriptor;
+    }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<RedistricterData> getParserForType() {
-      return PARSER;
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bolson.redistricter.Redata.internal_static_RedistricterData_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bolson.redistricter.Redata.RedistricterData.class, org.bolson.redistricter.Redata.RedistricterData.Builder.class);
     }
 
     public interface OtherOrBuilder extends
         // @@protoc_insertion_point(interface_extends:RedistricterData.Other)
-        com.google.protobuf.MessageLiteOrBuilder {
+        com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return Whether the name field is set.
        */
       boolean hasName();
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return The name.
        */
       java.lang.String getName();
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return The bytes for name.
        */
       com.google.protobuf.ByteString
           getNameBytes();
 
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @return A list containing the odata.
        */
       java.util.List<java.lang.Integer> getOdataList();
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @return The count of odata.
        */
       int getOdataCount();
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @param index The index of the element to return.
+       * @return The odata at the given index.
        */
       int getOdata(int index);
     }
@@ -591,37 +652,42 @@ public final class Redata {
      * Protobuf type {@code RedistricterData.Other}
      */
     public static final class Other extends
-        com.google.protobuf.GeneratedMessageLite implements
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:RedistricterData.Other)
         OtherOrBuilder {
+    private static final long serialVersionUID = 0L;
       // Use Other.newBuilder() to construct.
-      private Other(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+      private Other(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
-        this.unknownFields = builder.getUnknownFields();
       }
-      private Other(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-      private static final Other defaultInstance;
-      public static Other getDefaultInstance() {
-        return defaultInstance;
+      private Other() {
+        name_ = "";
+        odata_ = emptyIntList();
       }
 
-      public Other getDefaultInstanceForType() {
-        return defaultInstance;
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new Other();
       }
 
-      private final com.google.protobuf.ByteString unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
       private Other(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        initFields();
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         int mutable_bitField0_ = 0;
-        com.google.protobuf.ByteString.Output unknownFieldsOutput =
-            com.google.protobuf.ByteString.newOutput();
-        com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-            com.google.protobuf.CodedOutputStream.newInstance(
-                unknownFieldsOutput);
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
         try {
           boolean done = false;
           while (!done) {
@@ -630,13 +696,6 @@ public final class Redata {
               case 0:
                 done = true;
                 break;
-              default: {
-                if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                       extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
               case 82: {
                 com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
@@ -644,24 +703,31 @@ public final class Redata {
                 break;
               }
               case 88: {
-                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                  odata_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                  odata_ = newIntList();
                   mutable_bitField0_ |= 0x00000002;
                 }
-                odata_.add(input.readInt32());
+                odata_.addInt(input.readInt32());
                 break;
               }
               case 90: {
                 int length = input.readRawVarint32();
                 int limit = input.pushLimit(length);
-                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002) && input.getBytesUntilLimit() > 0) {
-                  odata_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000002) != 0) && input.getBytesUntilLimit() > 0) {
+                  odata_ = newIntList();
                   mutable_bitField0_ |= 0x00000002;
                 }
                 while (input.getBytesUntilLimit() > 0) {
-                  odata_.add(input.readInt32());
+                  odata_.addInt(input.readInt32());
                 }
                 input.popLimit(limit);
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
                 break;
               }
             }
@@ -670,56 +736,52 @@ public final class Redata {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
           throw new com.google.protobuf.InvalidProtocolBufferException(
-              e.getMessage()).setUnfinishedMessage(this);
+              e).setUnfinishedMessage(this);
         } finally {
-          if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-            odata_ = java.util.Collections.unmodifiableList(odata_);
+          if (((mutable_bitField0_ & 0x00000002) != 0)) {
+            odata_.makeImmutable(); // C
           }
-          try {
-            unknownFieldsCodedOutput.flush();
-          } catch (java.io.IOException e) {
-          // Should not happen
-          } finally {
-            unknownFields = unknownFieldsOutput.toByteString();
-          }
+          this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static com.google.protobuf.Parser<Other> PARSER =
-          new com.google.protobuf.AbstractParser<Other>() {
-        public Other parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Other(input, extensionRegistry);
-        }
-      };
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_RedistricterData_Other_descriptor;
+      }
 
       @java.lang.Override
-      public com.google.protobuf.Parser<Other> getParserForType() {
-        return PARSER;
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_RedistricterData_Other_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.RedistricterData.Other.class, org.bolson.redistricter.Redata.RedistricterData.Other.Builder.class);
       }
 
       private int bitField0_;
       public static final int NAME_FIELD_NUMBER = 10;
-      private java.lang.Object name_;
+      private volatile java.lang.Object name_;
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return Whether the name field is set.
        */
+      @java.lang.Override
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return The name.
        */
+      @java.lang.Override
       public java.lang.String getName() {
         java.lang.Object ref = name_;
         if (ref instanceof java.lang.String) {
@@ -735,12 +797,14 @@ public final class Redata {
         }
       }
       /**
-       * <code>required string name = 10;</code>
-       *
        * <pre>
        * name of this data
        * </pre>
+       *
+       * <code>required string name = 10;</code>
+       * @return The bytes for name.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getNameBytes() {
         java.lang.Object ref = name_;
@@ -756,47 +820,49 @@ public final class Redata {
       }
 
       public static final int ODATA_FIELD_NUMBER = 11;
-      private java.util.List<java.lang.Integer> odata_;
+      private com.google.protobuf.Internal.IntList odata_;
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @return A list containing the odata.
        */
+      @java.lang.Override
       public java.util.List<java.lang.Integer>
           getOdataList() {
         return odata_;
       }
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @return The count of odata.
        */
       public int getOdataCount() {
         return odata_.size();
       }
       /**
-       * <code>repeated int32 odata = 11;</code>
-       *
        * <pre>
        * odata should be the same length as point/area/ubids/recnos
        * It was probably imported from Sf1 .uf1 files based on logrecno.
        * </pre>
+       *
+       * <code>repeated int32 odata = 11;</code>
+       * @param index The index of the element to return.
+       * @return The odata at the given index.
        */
       public int getOdata(int index) {
-        return odata_.get(index);
+        return odata_.getInt(index);
       }
 
-      private void initFields() {
-        name_ = "";
-        odata_ = java.util.Collections.emptyList();
-      }
       private byte memoizedIsInitialized = -1;
+      @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
         if (isInitialized == 1) return true;
@@ -810,49 +876,93 @@ public final class Redata {
         return true;
       }
 
+      @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
-        getSerializedSize();
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeBytes(10, getNameBytes());
+        if (((bitField0_ & 0x00000001) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 10, name_);
         }
         for (int i = 0; i < odata_.size(); i++) {
-          output.writeInt32(11, odata_.get(i));
+          output.writeInt32(11, odata_.getInt(i));
         }
-        output.writeRawBytes(unknownFields);
+        unknownFields.writeTo(output);
       }
 
-      private int memoizedSerializedSize = -1;
+      @java.lang.Override
       public int getSerializedSize() {
-        int size = memoizedSerializedSize;
+        int size = memoizedSize;
         if (size != -1) return size;
 
         size = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeBytesSize(10, getNameBytes());
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, name_);
         }
         {
           int dataSize = 0;
           for (int i = 0; i < odata_.size(); i++) {
             dataSize += com.google.protobuf.CodedOutputStream
-              .computeInt32SizeNoTag(odata_.get(i));
+              .computeInt32SizeNoTag(odata_.getInt(i));
           }
           size += dataSize;
           size += 1 * getOdataList().size();
         }
-        size += unknownFields.size();
-        memoizedSerializedSize = size;
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
         return size;
       }
 
-      private static final long serialVersionUID = 0L;
       @java.lang.Override
-      protected java.lang.Object writeReplace()
-          throws java.io.ObjectStreamException {
-        return super.writeReplace();
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof org.bolson.redistricter.Redata.RedistricterData.Other)) {
+          return super.equals(obj);
+        }
+        org.bolson.redistricter.Redata.RedistricterData.Other other = (org.bolson.redistricter.Redata.RedistricterData.Other) obj;
+
+        if (hasName() != other.hasName()) return false;
+        if (hasName()) {
+          if (!getName()
+              .equals(other.getName())) return false;
+        }
+        if (!getOdataList()
+            .equals(other.getOdataList())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
       }
 
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasName()) {
+          hash = (37 * hash) + NAME_FIELD_NUMBER;
+          hash = (53 * hash) + getName().hashCode();
+        }
+        if (getOdataCount() > 0) {
+          hash = (37 * hash) + ODATA_FIELD_NUMBER;
+          hash = (53 * hash) + getOdataList().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -876,80 +986,119 @@ public final class Redata {
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.RedistricterData.Other parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
-      public static Builder newBuilder() { return Builder.create(); }
+      @java.lang.Override
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.bolson.redistricter.Redata.RedistricterData.Other prototype) {
-        return newBuilder().mergeFrom(prototype);
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
       }
-      public Builder toBuilder() { return newBuilder(this); }
+      public static Builder newBuilder(org.bolson.redistricter.Redata.RedistricterData.Other prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
 
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
       /**
        * Protobuf type {@code RedistricterData.Other}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessageLite.Builder<
-            org.bolson.redistricter.Redata.RedistricterData.Other, Builder>
-          implements
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:RedistricterData.Other)
           org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.bolson.redistricter.Redata.internal_static_RedistricterData_Other_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.bolson.redistricter.Redata.internal_static_RedistricterData_Other_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.bolson.redistricter.Redata.RedistricterData.Other.class, org.bolson.redistricter.Redata.RedistricterData.Other.Builder.class);
+        }
+
         // Construct using org.bolson.redistricter.Redata.RedistricterData.Other.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
         }
-        private static Builder create() {
-          return new Builder();
-        }
-
+        @java.lang.Override
         public Builder clear() {
           super.clear();
           name_ = "";
           bitField0_ = (bitField0_ & ~0x00000001);
-          odata_ = java.util.Collections.emptyList();
+          odata_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000002);
           return this;
         }
 
-        public Builder clone() {
-          return create().mergeFrom(buildPartial());
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.bolson.redistricter.Redata.internal_static_RedistricterData_Other_descriptor;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.RedistricterData.Other getDefaultInstanceForType() {
           return org.bolson.redistricter.Redata.RedistricterData.Other.getDefaultInstance();
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.RedistricterData.Other build() {
           org.bolson.redistricter.Redata.RedistricterData.Other result = buildPartial();
           if (!result.isInitialized()) {
@@ -958,21 +1107,65 @@ public final class Redata {
           return result;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.RedistricterData.Other buildPartial() {
           org.bolson.redistricter.Redata.RedistricterData.Other result = new org.bolson.redistricter.Redata.RedistricterData.Other(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((from_bitField0_ & 0x00000001) != 0)) {
             to_bitField0_ |= 0x00000001;
           }
           result.name_ = name_;
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            odata_ = java.util.Collections.unmodifiableList(odata_);
+          if (((bitField0_ & 0x00000002) != 0)) {
+            odata_.makeImmutable();
             bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.odata_ = odata_;
           result.bitField0_ = to_bitField0_;
+          onBuilt();
           return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.bolson.redistricter.Redata.RedistricterData.Other) {
+            return mergeFrom((org.bolson.redistricter.Redata.RedistricterData.Other)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
         }
 
         public Builder mergeFrom(org.bolson.redistricter.Redata.RedistricterData.Other other) {
@@ -980,7 +1173,7 @@ public final class Redata {
           if (other.hasName()) {
             bitField0_ |= 0x00000001;
             name_ = other.name_;
-            
+            onChanged();
           }
           if (!other.odata_.isEmpty()) {
             if (odata_.isEmpty()) {
@@ -990,21 +1183,22 @@ public final class Redata {
               ensureOdataIsMutable();
               odata_.addAll(other.odata_);
             }
-            
+            onChanged();
           }
-          setUnknownFields(
-              getUnknownFields().concat(other.unknownFields));
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
           return this;
         }
 
+        @java.lang.Override
         public final boolean isInitialized() {
           if (!hasName()) {
-            
             return false;
           }
           return true;
         }
 
+        @java.lang.Override
         public Builder mergeFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1014,7 +1208,7 @@ public final class Redata {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             parsedMessage = (org.bolson.redistricter.Redata.RedistricterData.Other) e.getUnfinishedMessage();
-            throw e;
+            throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
               mergeFrom(parsedMessage);
@@ -1026,21 +1220,23 @@ public final class Redata {
 
         private java.lang.Object name_ = "";
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @return Whether the name field is set.
          */
         public boolean hasName() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
+          return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @return The name.
          */
         public java.lang.String getName() {
           java.lang.Object ref = name_;
@@ -1057,11 +1253,12 @@ public final class Redata {
           }
         }
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @return The bytes for name.
          */
         public com.google.protobuf.ByteString
             getNameBytes() {
@@ -1077,11 +1274,13 @@ public final class Redata {
           }
         }
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @param value The name to set.
+         * @return This builder for chaining.
          */
         public Builder setName(
             java.lang.String value) {
@@ -1090,28 +1289,31 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
           name_ = value;
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @return This builder for chaining.
          */
         public Builder clearName() {
           bitField0_ = (bitField0_ & ~0x00000001);
           name_ = getDefaultInstance().getName();
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>required string name = 10;</code>
-         *
          * <pre>
          * name of this data
          * </pre>
+         *
+         * <code>required string name = 10;</code>
+         * @param value The bytes for name to set.
+         * @return This builder for chaining.
          */
         public Builder setNameBytes(
             com.google.protobuf.ByteString value) {
@@ -1120,370 +1322,463 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
           name_ = value;
-          
+          onChanged();
           return this;
         }
 
-        private java.util.List<java.lang.Integer> odata_ = java.util.Collections.emptyList();
+        private com.google.protobuf.Internal.IntList odata_ = emptyIntList();
         private void ensureOdataIsMutable() {
-          if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-            odata_ = new java.util.ArrayList<java.lang.Integer>(odata_);
+          if (!((bitField0_ & 0x00000002) != 0)) {
+            odata_ = mutableCopy(odata_);
             bitField0_ |= 0x00000002;
            }
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @return A list containing the odata.
          */
         public java.util.List<java.lang.Integer>
             getOdataList() {
-          return java.util.Collections.unmodifiableList(odata_);
+          return ((bitField0_ & 0x00000002) != 0) ?
+                   java.util.Collections.unmodifiableList(odata_) : odata_;
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @return The count of odata.
          */
         public int getOdataCount() {
           return odata_.size();
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @param index The index of the element to return.
+         * @return The odata at the given index.
          */
         public int getOdata(int index) {
-          return odata_.get(index);
+          return odata_.getInt(index);
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @param index The index to set the value at.
+         * @param value The odata to set.
+         * @return This builder for chaining.
          */
         public Builder setOdata(
             int index, int value) {
           ensureOdataIsMutable();
-          odata_.set(index, value);
-          
+          odata_.setInt(index, value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @param value The odata to add.
+         * @return This builder for chaining.
          */
         public Builder addOdata(int value) {
           ensureOdataIsMutable();
-          odata_.add(value);
-          
+          odata_.addInt(value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @param values The odata to add.
+         * @return This builder for chaining.
          */
         public Builder addAllOdata(
             java.lang.Iterable<? extends java.lang.Integer> values) {
           ensureOdataIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
               values, odata_);
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 odata = 11;</code>
-         *
          * <pre>
          * odata should be the same length as point/area/ubids/recnos
          * It was probably imported from Sf1 .uf1 files based on logrecno.
          * </pre>
+         *
+         * <code>repeated int32 odata = 11;</code>
+         * @return This builder for chaining.
          */
         public Builder clearOdata() {
-          odata_ = java.util.Collections.emptyList();
+          odata_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000002);
-          
+          onChanged();
           return this;
         }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
 
         // @@protoc_insertion_point(builder_scope:RedistricterData.Other)
       }
 
+      // @@protoc_insertion_point(class_scope:RedistricterData.Other)
+      private static final org.bolson.redistricter.Redata.RedistricterData.Other DEFAULT_INSTANCE;
       static {
-        defaultInstance = new Other(true);
-        defaultInstance.initFields();
+        DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.RedistricterData.Other();
       }
 
-      // @@protoc_insertion_point(class_scope:RedistricterData.Other)
+      public static org.bolson.redistricter.Redata.RedistricterData.Other getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Other>
+          PARSER = new com.google.protobuf.AbstractParser<Other>() {
+        @java.lang.Override
+        public Other parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Other(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Other> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Other> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.bolson.redistricter.Redata.RedistricterData.Other getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
     }
 
     private int bitField0_;
     public static final int INTPOINTS_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Integer> intpoints_;
+    private com.google.protobuf.Internal.IntList intpoints_;
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @return A list containing the intpoints.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getIntpointsList() {
       return intpoints_;
     }
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @return The count of intpoints.
      */
     public int getIntpointsCount() {
       return intpoints_.size();
     }
     /**
-     * <code>repeated int32 intpoints = 1;</code>
-     *
      * <pre>
      * only one of intpoints or fpoints should have any data in it.
      * </pre>
+     *
+     * <code>repeated int32 intpoints = 1;</code>
+     * @param index The index of the element to return.
+     * @return The intpoints at the given index.
      */
     public int getIntpoints(int index) {
-      return intpoints_.get(index);
+      return intpoints_.getInt(index);
     }
 
     public static final int FPOINTS_FIELD_NUMBER = 2;
-    private java.util.List<java.lang.Double> fpoints_;
+    private com.google.protobuf.Internal.DoubleList fpoints_;
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @return A list containing the fpoints.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Double>
         getFpointsList() {
       return fpoints_;
     }
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @return The count of fpoints.
      */
     public int getFpointsCount() {
       return fpoints_.size();
     }
     /**
-     * <code>repeated double fpoints = 2;</code>
-     *
      * <pre>
      * lon,lat pairs, degrees
      * </pre>
+     *
+     * <code>repeated double fpoints = 2;</code>
+     * @param index The index of the element to return.
+     * @return The fpoints at the given index.
      */
     public double getFpoints(int index) {
-      return fpoints_.get(index);
+      return fpoints_.getDouble(index);
     }
 
     public static final int POPULATION_FIELD_NUMBER = 3;
-    private java.util.List<java.lang.Integer> population_;
+    private com.google.protobuf.Internal.IntList population_;
     /**
      * <code>repeated int32 population = 3;</code>
+     * @return A list containing the population.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getPopulationList() {
       return population_;
     }
     /**
      * <code>repeated int32 population = 3;</code>
+     * @return The count of population.
      */
     public int getPopulationCount() {
       return population_.size();
     }
     /**
      * <code>repeated int32 population = 3;</code>
+     * @param index The index of the element to return.
+     * @return The population at the given index.
      */
     public int getPopulation(int index) {
-      return population_.get(index);
+      return population_.getInt(index);
     }
 
     public static final int AREA_FIELD_NUMBER = 4;
-    private java.util.List<java.lang.Long> area_;
+    private com.google.protobuf.Internal.LongList area_;
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @return A list containing the area.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Long>
         getAreaList() {
       return area_;
     }
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @return The count of area.
      */
     public int getAreaCount() {
       return area_.size();
     }
     /**
-     * <code>repeated uint64 area = 4;</code>
-     *
      * <pre>
      * square meters
      * </pre>
+     *
+     * <code>repeated uint64 area = 4;</code>
+     * @param index The index of the element to return.
+     * @return The area at the given index.
      */
     public long getArea(int index) {
-      return area_.get(index);
+      return area_.getLong(index);
     }
 
     public static final int UBIDS_FIELD_NUMBER = 5;
-    private java.util.List<java.lang.Long> ubids_;
+    private com.google.protobuf.Internal.LongList ubids_;
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @return A list containing the ubids.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Long>
         getUbidsList() {
       return ubids_;
     }
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @return The count of ubids.
      */
     public int getUbidsCount() {
       return ubids_.size();
     }
     /**
-     * <code>repeated uint64 ubids = 5;</code>
-     *
      * <pre>
      * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
      * </pre>
+     *
+     * <code>repeated uint64 ubids = 5;</code>
+     * @param index The index of the element to return.
+     * @return The ubids at the given index.
      */
     public long getUbids(int index) {
-      return ubids_.get(index);
+      return ubids_.getLong(index);
     }
 
     public static final int RECNOS_FIELD_NUMBER = 6;
-    private java.util.List<java.lang.Integer> recnos_;
+    private com.google.protobuf.Internal.IntList recnos_;
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @return A list containing the recnos.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getRecnosList() {
       return recnos_;
     }
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @return The count of recnos.
      */
     public int getRecnosCount() {
       return recnos_.size();
     }
     /**
-     * <code>repeated int32 recnos = 6;</code>
-     *
      * <pre>
      * LOGRECNO
      * </pre>
+     *
+     * <code>repeated int32 recnos = 6;</code>
+     * @param index The index of the element to return.
+     * @return The recnos at the given index.
      */
     public int getRecnos(int index) {
-      return recnos_.get(index);
+      return recnos_.getInt(index);
     }
 
     public static final int EDGES_FIELD_NUMBER = 7;
-    private java.util.List<java.lang.Integer> edges_;
+    private com.google.protobuf.Internal.IntList edges_;
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @return A list containing the edges.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getEdgesList() {
       return edges_;
     }
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @return The count of edges.
      */
     public int getEdgesCount() {
       return edges_.size();
     }
     /**
-     * <code>repeated int32 edges = 7;</code>
-     *
      * <pre>
      * index,index pairs
      * </pre>
+     *
+     * <code>repeated int32 edges = 7;</code>
+     * @param index The index of the element to return.
+     * @return The edges at the given index.
      */
     public int getEdges(int index) {
-      return edges_.get(index);
+      return edges_.getInt(index);
     }
 
     public static final int NUMDISTRICTS_FIELD_NUMBER = 8;
     private int numDistricts_;
     /**
-     * <code>optional int32 numDistricts = 8;</code>
-     *
      * <pre>
      * Default number of districts for this data set.
      * Probably the number of US House districts.
      * </pre>
+     *
+     * <code>optional int32 numDistricts = 8;</code>
+     * @return Whether the numDistricts field is set.
      */
+    @java.lang.Override
     public boolean hasNumDistricts() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>optional int32 numDistricts = 8;</code>
-     *
      * <pre>
      * Default number of districts for this data set.
      * Probably the number of US House districts.
      * </pre>
+     *
+     * <code>optional int32 numDistricts = 8;</code>
+     * @return The numDistricts.
      */
+    @java.lang.Override
     public int getNumDistricts() {
       return numDistricts_;
     }
@@ -1493,12 +1788,14 @@ public final class Redata {
     /**
      * <code>repeated group Other = 9 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<org.bolson.redistricter.Redata.RedistricterData.Other> getOtherList() {
       return other_;
     }
     /**
      * <code>repeated group Other = 9 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder> 
         getOtherOrBuilderList() {
       return other_;
@@ -1506,70 +1803,67 @@ public final class Redata {
     /**
      * <code>repeated group Other = 9 { ... }</code>
      */
+    @java.lang.Override
     public int getOtherCount() {
       return other_.size();
     }
     /**
      * <code>repeated group Other = 9 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.RedistricterData.Other getOther(int index) {
       return other_.get(index);
     }
     /**
      * <code>repeated group Other = 9 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder getOtherOrBuilder(
         int index) {
       return other_.get(index);
     }
 
     public static final int PLACE_FIELD_NUMBER = 12;
-    private java.util.List<java.lang.Integer> place_;
+    private com.google.protobuf.Internal.IntList place_;
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @return A list containing the place.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getPlaceList() {
       return place_;
     }
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @return The count of place.
      */
     public int getPlaceCount() {
       return place_.size();
     }
     /**
-     * <code>repeated uint32 place = 12;</code>
-     *
      * <pre>
      * per-block place id (originally 5 digit non-zero decimal int)
      * </pre>
+     *
+     * <code>repeated uint32 place = 12;</code>
+     * @param index The index of the element to return.
+     * @return The place at the given index.
      */
     public int getPlace(int index) {
-      return place_.get(index);
+      return place_.getInt(index);
     }
 
-    private void initFields() {
-      intpoints_ = java.util.Collections.emptyList();
-      fpoints_ = java.util.Collections.emptyList();
-      population_ = java.util.Collections.emptyList();
-      area_ = java.util.Collections.emptyList();
-      ubids_ = java.util.Collections.emptyList();
-      recnos_ = java.util.Collections.emptyList();
-      edges_ = java.util.Collections.emptyList();
-      numDistricts_ = 0;
-      other_ = java.util.Collections.emptyList();
-      place_ = java.util.Collections.emptyList();
-    }
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1585,45 +1879,45 @@ public final class Redata {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
       for (int i = 0; i < intpoints_.size(); i++) {
-        output.writeInt32(1, intpoints_.get(i));
+        output.writeInt32(1, intpoints_.getInt(i));
       }
       for (int i = 0; i < fpoints_.size(); i++) {
-        output.writeDouble(2, fpoints_.get(i));
+        output.writeDouble(2, fpoints_.getDouble(i));
       }
       for (int i = 0; i < population_.size(); i++) {
-        output.writeInt32(3, population_.get(i));
+        output.writeInt32(3, population_.getInt(i));
       }
       for (int i = 0; i < area_.size(); i++) {
-        output.writeUInt64(4, area_.get(i));
+        output.writeUInt64(4, area_.getLong(i));
       }
       for (int i = 0; i < ubids_.size(); i++) {
-        output.writeUInt64(5, ubids_.get(i));
+        output.writeUInt64(5, ubids_.getLong(i));
       }
       for (int i = 0; i < recnos_.size(); i++) {
-        output.writeInt32(6, recnos_.get(i));
+        output.writeInt32(6, recnos_.getInt(i));
       }
       for (int i = 0; i < edges_.size(); i++) {
-        output.writeInt32(7, edges_.get(i));
+        output.writeInt32(7, edges_.getInt(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(8, numDistricts_);
       }
       for (int i = 0; i < other_.size(); i++) {
         output.writeGroup(9, other_.get(i));
       }
       for (int i = 0; i < place_.size(); i++) {
-        output.writeUInt32(12, place_.get(i));
+        output.writeUInt32(12, place_.getInt(i));
       }
-      output.writeRawBytes(unknownFields);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
+    @java.lang.Override
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -1631,7 +1925,7 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < intpoints_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeInt32SizeNoTag(intpoints_.get(i));
+            .computeInt32SizeNoTag(intpoints_.getInt(i));
         }
         size += dataSize;
         size += 1 * getIntpointsList().size();
@@ -1646,7 +1940,7 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < population_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeInt32SizeNoTag(population_.get(i));
+            .computeInt32SizeNoTag(population_.getInt(i));
         }
         size += dataSize;
         size += 1 * getPopulationList().size();
@@ -1655,7 +1949,7 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < area_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt64SizeNoTag(area_.get(i));
+            .computeUInt64SizeNoTag(area_.getLong(i));
         }
         size += dataSize;
         size += 1 * getAreaList().size();
@@ -1664,7 +1958,7 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < ubids_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt64SizeNoTag(ubids_.get(i));
+            .computeUInt64SizeNoTag(ubids_.getLong(i));
         }
         size += dataSize;
         size += 1 * getUbidsList().size();
@@ -1673,7 +1967,7 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < recnos_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeInt32SizeNoTag(recnos_.get(i));
+            .computeInt32SizeNoTag(recnos_.getInt(i));
         }
         size += dataSize;
         size += 1 * getRecnosList().size();
@@ -1682,12 +1976,12 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < edges_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeInt32SizeNoTag(edges_.get(i));
+            .computeInt32SizeNoTag(edges_.getInt(i));
         }
         size += dataSize;
         size += 1 * getEdgesList().size();
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(8, numDistricts_);
       }
@@ -1699,23 +1993,116 @@ public final class Redata {
         int dataSize = 0;
         for (int i = 0; i < place_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt32SizeNoTag(place_.get(i));
+            .computeUInt32SizeNoTag(place_.getInt(i));
         }
         size += dataSize;
         size += 1 * getPlaceList().size();
       }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.bolson.redistricter.Redata.RedistricterData)) {
+        return super.equals(obj);
+      }
+      org.bolson.redistricter.Redata.RedistricterData other = (org.bolson.redistricter.Redata.RedistricterData) obj;
+
+      if (!getIntpointsList()
+          .equals(other.getIntpointsList())) return false;
+      if (!getFpointsList()
+          .equals(other.getFpointsList())) return false;
+      if (!getPopulationList()
+          .equals(other.getPopulationList())) return false;
+      if (!getAreaList()
+          .equals(other.getAreaList())) return false;
+      if (!getUbidsList()
+          .equals(other.getUbidsList())) return false;
+      if (!getRecnosList()
+          .equals(other.getRecnosList())) return false;
+      if (!getEdgesList()
+          .equals(other.getEdgesList())) return false;
+      if (hasNumDistricts() != other.hasNumDistricts()) return false;
+      if (hasNumDistricts()) {
+        if (getNumDistricts()
+            != other.getNumDistricts()) return false;
+      }
+      if (!getOtherList()
+          .equals(other.getOtherList())) return false;
+      if (!getPlaceList()
+          .equals(other.getPlaceList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getIntpointsCount() > 0) {
+        hash = (37 * hash) + INTPOINTS_FIELD_NUMBER;
+        hash = (53 * hash) + getIntpointsList().hashCode();
+      }
+      if (getFpointsCount() > 0) {
+        hash = (37 * hash) + FPOINTS_FIELD_NUMBER;
+        hash = (53 * hash) + getFpointsList().hashCode();
+      }
+      if (getPopulationCount() > 0) {
+        hash = (37 * hash) + POPULATION_FIELD_NUMBER;
+        hash = (53 * hash) + getPopulationList().hashCode();
+      }
+      if (getAreaCount() > 0) {
+        hash = (37 * hash) + AREA_FIELD_NUMBER;
+        hash = (53 * hash) + getAreaList().hashCode();
+      }
+      if (getUbidsCount() > 0) {
+        hash = (37 * hash) + UBIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getUbidsList().hashCode();
+      }
+      if (getRecnosCount() > 0) {
+        hash = (37 * hash) + RECNOS_FIELD_NUMBER;
+        hash = (53 * hash) + getRecnosList().hashCode();
+      }
+      if (getEdgesCount() > 0) {
+        hash = (37 * hash) + EDGES_FIELD_NUMBER;
+        hash = (53 * hash) + getEdgesList().hashCode();
+      }
+      if (hasNumDistricts()) {
+        hash = (37 * hash) + NUMDISTRICTS_FIELD_NUMBER;
+        hash = (53 * hash) + getNumDistricts();
+      }
+      if (getOtherCount() > 0) {
+        hash = (37 * hash) + OTHER_FIELD_NUMBER;
+        hash = (53 * hash) + getOtherList().hashCode();
+      }
+      if (getPlaceCount() > 0) {
+        hash = (37 * hash) + PLACE_FIELD_NUMBER;
+        hash = (53 * hash) + getPlaceList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
     public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1739,100 +2126,144 @@ public final class Redata {
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.RedistricterData parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.bolson.redistricter.Redata.RedistricterData prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(org.bolson.redistricter.Redata.RedistricterData prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     /**
-     * Protobuf type {@code RedistricterData}
-     *
      * <pre>
      * intpoints/fpoints, population, area, ubids and recnos should all have the same length.
      * </pre>
+     *
+     * Protobuf type {@code RedistricterData}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          org.bolson.redistricter.Redata.RedistricterData, Builder>
-        implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:RedistricterData)
         org.bolson.redistricter.Redata.RedistricterDataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_RedistricterData_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_RedistricterData_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.RedistricterData.class, org.bolson.redistricter.Redata.RedistricterData.Builder.class);
+      }
+
       // Construct using org.bolson.redistricter.Redata.RedistricterData.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
 
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
       private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getOtherFieldBuilder();
+        }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
+      @java.lang.Override
       public Builder clear() {
         super.clear();
-        intpoints_ = java.util.Collections.emptyList();
+        intpoints_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000001);
-        fpoints_ = java.util.Collections.emptyList();
+        fpoints_ = emptyDoubleList();
         bitField0_ = (bitField0_ & ~0x00000002);
-        population_ = java.util.Collections.emptyList();
+        population_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000004);
-        area_ = java.util.Collections.emptyList();
+        area_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000008);
-        ubids_ = java.util.Collections.emptyList();
+        ubids_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000010);
-        recnos_ = java.util.Collections.emptyList();
+        recnos_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000020);
-        edges_ = java.util.Collections.emptyList();
+        edges_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000040);
         numDistricts_ = 0;
         bitField0_ = (bitField0_ & ~0x00000080);
-        other_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
-        place_ = java.util.Collections.emptyList();
+        if (otherBuilder_ == null) {
+          other_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000100);
+        } else {
+          otherBuilder_.clear();
+        }
+        place_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bolson.redistricter.Redata.internal_static_RedistricterData_descriptor;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.RedistricterData getDefaultInstanceForType() {
         return org.bolson.redistricter.Redata.RedistricterData.getDefaultInstance();
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.RedistricterData build() {
         org.bolson.redistricter.Redata.RedistricterData result = buildPartial();
         if (!result.isInitialized()) {
@@ -1841,61 +2272,109 @@ public final class Redata {
         return result;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.RedistricterData buildPartial() {
         org.bolson.redistricter.Redata.RedistricterData result = new org.bolson.redistricter.Redata.RedistricterData(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          intpoints_ = java.util.Collections.unmodifiableList(intpoints_);
+        if (((bitField0_ & 0x00000001) != 0)) {
+          intpoints_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.intpoints_ = intpoints_;
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          fpoints_ = java.util.Collections.unmodifiableList(fpoints_);
+        if (((bitField0_ & 0x00000002) != 0)) {
+          fpoints_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.fpoints_ = fpoints_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          population_ = java.util.Collections.unmodifiableList(population_);
+        if (((bitField0_ & 0x00000004) != 0)) {
+          population_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.population_ = population_;
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          area_ = java.util.Collections.unmodifiableList(area_);
+        if (((bitField0_ & 0x00000008) != 0)) {
+          area_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000008);
         }
         result.area_ = area_;
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          ubids_ = java.util.Collections.unmodifiableList(ubids_);
+        if (((bitField0_ & 0x00000010) != 0)) {
+          ubids_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.ubids_ = ubids_;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
-          recnos_ = java.util.Collections.unmodifiableList(recnos_);
+        if (((bitField0_ & 0x00000020) != 0)) {
+          recnos_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.recnos_ = recnos_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          edges_ = java.util.Collections.unmodifiableList(edges_);
+        if (((bitField0_ & 0x00000040) != 0)) {
+          edges_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000040);
         }
         result.edges_ = edges_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.numDistricts_ = numDistricts_;
           to_bitField0_ |= 0x00000001;
         }
-        result.numDistricts_ = numDistricts_;
-        if (((bitField0_ & 0x00000100) == 0x00000100)) {
-          other_ = java.util.Collections.unmodifiableList(other_);
-          bitField0_ = (bitField0_ & ~0x00000100);
+        if (otherBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) != 0)) {
+            other_ = java.util.Collections.unmodifiableList(other_);
+            bitField0_ = (bitField0_ & ~0x00000100);
+          }
+          result.other_ = other_;
+        } else {
+          result.other_ = otherBuilder_.build();
         }
-        result.other_ = other_;
-        if (((bitField0_ & 0x00000200) == 0x00000200)) {
-          place_ = java.util.Collections.unmodifiableList(place_);
+        if (((bitField0_ & 0x00000200) != 0)) {
+          place_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000200);
         }
         result.place_ = place_;
         result.bitField0_ = to_bitField0_;
+        onBuilt();
         return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bolson.redistricter.Redata.RedistricterData) {
+          return mergeFrom((org.bolson.redistricter.Redata.RedistricterData)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
       }
 
       public Builder mergeFrom(org.bolson.redistricter.Redata.RedistricterData other) {
@@ -1908,7 +2387,7 @@ public final class Redata {
             ensureIntpointsIsMutable();
             intpoints_.addAll(other.intpoints_);
           }
-          
+          onChanged();
         }
         if (!other.fpoints_.isEmpty()) {
           if (fpoints_.isEmpty()) {
@@ -1918,7 +2397,7 @@ public final class Redata {
             ensureFpointsIsMutable();
             fpoints_.addAll(other.fpoints_);
           }
-          
+          onChanged();
         }
         if (!other.population_.isEmpty()) {
           if (population_.isEmpty()) {
@@ -1928,7 +2407,7 @@ public final class Redata {
             ensurePopulationIsMutable();
             population_.addAll(other.population_);
           }
-          
+          onChanged();
         }
         if (!other.area_.isEmpty()) {
           if (area_.isEmpty()) {
@@ -1938,7 +2417,7 @@ public final class Redata {
             ensureAreaIsMutable();
             area_.addAll(other.area_);
           }
-          
+          onChanged();
         }
         if (!other.ubids_.isEmpty()) {
           if (ubids_.isEmpty()) {
@@ -1948,7 +2427,7 @@ public final class Redata {
             ensureUbidsIsMutable();
             ubids_.addAll(other.ubids_);
           }
-          
+          onChanged();
         }
         if (!other.recnos_.isEmpty()) {
           if (recnos_.isEmpty()) {
@@ -1958,7 +2437,7 @@ public final class Redata {
             ensureRecnosIsMutable();
             recnos_.addAll(other.recnos_);
           }
-          
+          onChanged();
         }
         if (!other.edges_.isEmpty()) {
           if (edges_.isEmpty()) {
@@ -1968,20 +2447,36 @@ public final class Redata {
             ensureEdgesIsMutable();
             edges_.addAll(other.edges_);
           }
-          
+          onChanged();
         }
         if (other.hasNumDistricts()) {
           setNumDistricts(other.getNumDistricts());
         }
-        if (!other.other_.isEmpty()) {
-          if (other_.isEmpty()) {
-            other_ = other.other_;
-            bitField0_ = (bitField0_ & ~0x00000100);
-          } else {
-            ensureOtherIsMutable();
-            other_.addAll(other.other_);
+        if (otherBuilder_ == null) {
+          if (!other.other_.isEmpty()) {
+            if (other_.isEmpty()) {
+              other_ = other.other_;
+              bitField0_ = (bitField0_ & ~0x00000100);
+            } else {
+              ensureOtherIsMutable();
+              other_.addAll(other.other_);
+            }
+            onChanged();
           }
-          
+        } else {
+          if (!other.other_.isEmpty()) {
+            if (otherBuilder_.isEmpty()) {
+              otherBuilder_.dispose();
+              otherBuilder_ = null;
+              other_ = other.other_;
+              bitField0_ = (bitField0_ & ~0x00000100);
+              otherBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getOtherFieldBuilder() : null;
+            } else {
+              otherBuilder_.addAllMessages(other.other_);
+            }
+          }
         }
         if (!other.place_.isEmpty()) {
           if (place_.isEmpty()) {
@@ -1991,23 +2486,24 @@ public final class Redata {
             ensurePlaceIsMutable();
             place_.addAll(other.place_);
           }
-          
+          onChanged();
         }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getOtherCount(); i++) {
           if (!getOther(i).isInitialized()) {
-            
             return false;
           }
         }
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2017,7 +2513,7 @@ public final class Redata {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.bolson.redistricter.Redata.RedistricterData) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -2027,726 +2523,843 @@ public final class Redata {
       }
       private int bitField0_;
 
-      private java.util.List<java.lang.Integer> intpoints_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.IntList intpoints_ = emptyIntList();
       private void ensureIntpointsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          intpoints_ = new java.util.ArrayList<java.lang.Integer>(intpoints_);
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          intpoints_ = mutableCopy(intpoints_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @return A list containing the intpoints.
        */
       public java.util.List<java.lang.Integer>
           getIntpointsList() {
-        return java.util.Collections.unmodifiableList(intpoints_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(intpoints_) : intpoints_;
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @return The count of intpoints.
        */
       public int getIntpointsCount() {
         return intpoints_.size();
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @param index The index of the element to return.
+       * @return The intpoints at the given index.
        */
       public int getIntpoints(int index) {
-        return intpoints_.get(index);
+        return intpoints_.getInt(index);
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @param index The index to set the value at.
+       * @param value The intpoints to set.
+       * @return This builder for chaining.
        */
       public Builder setIntpoints(
           int index, int value) {
         ensureIntpointsIsMutable();
-        intpoints_.set(index, value);
-        
+        intpoints_.setInt(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @param value The intpoints to add.
+       * @return This builder for chaining.
        */
       public Builder addIntpoints(int value) {
         ensureIntpointsIsMutable();
-        intpoints_.add(value);
-        
+        intpoints_.addInt(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @param values The intpoints to add.
+       * @return This builder for chaining.
        */
       public Builder addAllIntpoints(
           java.lang.Iterable<? extends java.lang.Integer> values) {
         ensureIntpointsIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, intpoints_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 intpoints = 1;</code>
-       *
        * <pre>
        * only one of intpoints or fpoints should have any data in it.
        * </pre>
+       *
+       * <code>repeated int32 intpoints = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIntpoints() {
-        intpoints_ = java.util.Collections.emptyList();
+        intpoints_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000001);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Double> fpoints_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.DoubleList fpoints_ = emptyDoubleList();
       private void ensureFpointsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-          fpoints_ = new java.util.ArrayList<java.lang.Double>(fpoints_);
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          fpoints_ = mutableCopy(fpoints_);
           bitField0_ |= 0x00000002;
          }
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @return A list containing the fpoints.
        */
       public java.util.List<java.lang.Double>
           getFpointsList() {
-        return java.util.Collections.unmodifiableList(fpoints_);
+        return ((bitField0_ & 0x00000002) != 0) ?
+                 java.util.Collections.unmodifiableList(fpoints_) : fpoints_;
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @return The count of fpoints.
        */
       public int getFpointsCount() {
         return fpoints_.size();
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @param index The index of the element to return.
+       * @return The fpoints at the given index.
        */
       public double getFpoints(int index) {
-        return fpoints_.get(index);
+        return fpoints_.getDouble(index);
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @param index The index to set the value at.
+       * @param value The fpoints to set.
+       * @return This builder for chaining.
        */
       public Builder setFpoints(
           int index, double value) {
         ensureFpointsIsMutable();
-        fpoints_.set(index, value);
-        
+        fpoints_.setDouble(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @param value The fpoints to add.
+       * @return This builder for chaining.
        */
       public Builder addFpoints(double value) {
         ensureFpointsIsMutable();
-        fpoints_.add(value);
-        
+        fpoints_.addDouble(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @param values The fpoints to add.
+       * @return This builder for chaining.
        */
       public Builder addAllFpoints(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureFpointsIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, fpoints_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated double fpoints = 2;</code>
-       *
        * <pre>
        * lon,lat pairs, degrees
        * </pre>
+       *
+       * <code>repeated double fpoints = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFpoints() {
-        fpoints_ = java.util.Collections.emptyList();
+        fpoints_ = emptyDoubleList();
         bitField0_ = (bitField0_ & ~0x00000002);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Integer> population_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.IntList population_ = emptyIntList();
       private void ensurePopulationIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-          population_ = new java.util.ArrayList<java.lang.Integer>(population_);
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          population_ = mutableCopy(population_);
           bitField0_ |= 0x00000004;
          }
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @return A list containing the population.
        */
       public java.util.List<java.lang.Integer>
           getPopulationList() {
-        return java.util.Collections.unmodifiableList(population_);
+        return ((bitField0_ & 0x00000004) != 0) ?
+                 java.util.Collections.unmodifiableList(population_) : population_;
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @return The count of population.
        */
       public int getPopulationCount() {
         return population_.size();
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @param index The index of the element to return.
+       * @return The population at the given index.
        */
       public int getPopulation(int index) {
-        return population_.get(index);
+        return population_.getInt(index);
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @param index The index to set the value at.
+       * @param value The population to set.
+       * @return This builder for chaining.
        */
       public Builder setPopulation(
           int index, int value) {
         ensurePopulationIsMutable();
-        population_.set(index, value);
-        
+        population_.setInt(index, value);
+        onChanged();
         return this;
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @param value The population to add.
+       * @return This builder for chaining.
        */
       public Builder addPopulation(int value) {
         ensurePopulationIsMutable();
-        population_.add(value);
-        
+        population_.addInt(value);
+        onChanged();
         return this;
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @param values The population to add.
+       * @return This builder for chaining.
        */
       public Builder addAllPopulation(
           java.lang.Iterable<? extends java.lang.Integer> values) {
         ensurePopulationIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, population_);
-        
+        onChanged();
         return this;
       }
       /**
        * <code>repeated int32 population = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPopulation() {
-        population_ = java.util.Collections.emptyList();
+        population_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000004);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Long> area_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.LongList area_ = emptyLongList();
       private void ensureAreaIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-          area_ = new java.util.ArrayList<java.lang.Long>(area_);
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          area_ = mutableCopy(area_);
           bitField0_ |= 0x00000008;
          }
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @return A list containing the area.
        */
       public java.util.List<java.lang.Long>
           getAreaList() {
-        return java.util.Collections.unmodifiableList(area_);
+        return ((bitField0_ & 0x00000008) != 0) ?
+                 java.util.Collections.unmodifiableList(area_) : area_;
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @return The count of area.
        */
       public int getAreaCount() {
         return area_.size();
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @param index The index of the element to return.
+       * @return The area at the given index.
        */
       public long getArea(int index) {
-        return area_.get(index);
+        return area_.getLong(index);
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @param index The index to set the value at.
+       * @param value The area to set.
+       * @return This builder for chaining.
        */
       public Builder setArea(
           int index, long value) {
         ensureAreaIsMutable();
-        area_.set(index, value);
-        
+        area_.setLong(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @param value The area to add.
+       * @return This builder for chaining.
        */
       public Builder addArea(long value) {
         ensureAreaIsMutable();
-        area_.add(value);
-        
+        area_.addLong(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @param values The area to add.
+       * @return This builder for chaining.
        */
       public Builder addAllArea(
           java.lang.Iterable<? extends java.lang.Long> values) {
         ensureAreaIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, area_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 area = 4;</code>
-       *
        * <pre>
        * square meters
        * </pre>
+       *
+       * <code>repeated uint64 area = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearArea() {
-        area_ = java.util.Collections.emptyList();
+        area_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000008);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Long> ubids_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.LongList ubids_ = emptyLongList();
       private void ensureUbidsIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-          ubids_ = new java.util.ArrayList<java.lang.Long>(ubids_);
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          ubids_ = mutableCopy(ubids_);
           bitField0_ |= 0x00000010;
          }
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @return A list containing the ubids.
        */
       public java.util.List<java.lang.Long>
           getUbidsList() {
-        return java.util.Collections.unmodifiableList(ubids_);
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(ubids_) : ubids_;
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @return The count of ubids.
        */
       public int getUbidsCount() {
         return ubids_.size();
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @param index The index of the element to return.
+       * @return The ubids at the given index.
        */
       public long getUbids(int index) {
-        return ubids_.get(index);
+        return ubids_.getLong(index);
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @param index The index to set the value at.
+       * @param value The ubids to set.
+       * @return This builder for chaining.
        */
       public Builder setUbids(
           int index, long value) {
         ensureUbidsIsMutable();
-        ubids_.set(index, value);
-        
+        ubids_.setLong(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @param value The ubids to add.
+       * @return This builder for chaining.
        */
       public Builder addUbids(long value) {
         ensureUbidsIsMutable();
-        ubids_.add(value);
-        
+        ubids_.addLong(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @param values The ubids to add.
+       * @return This builder for chaining.
        */
       public Builder addAllUbids(
           java.lang.Iterable<? extends java.lang.Long> values) {
         ensureUbidsIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, ubids_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint64 ubids = 5;</code>
-       *
        * <pre>
        * universal block identifier (my internal number), decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>repeated uint64 ubids = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearUbids() {
-        ubids_ = java.util.Collections.emptyList();
+        ubids_ = emptyLongList();
         bitField0_ = (bitField0_ & ~0x00000010);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Integer> recnos_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.IntList recnos_ = emptyIntList();
       private void ensureRecnosIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
-          recnos_ = new java.util.ArrayList<java.lang.Integer>(recnos_);
+        if (!((bitField0_ & 0x00000020) != 0)) {
+          recnos_ = mutableCopy(recnos_);
           bitField0_ |= 0x00000020;
          }
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @return A list containing the recnos.
        */
       public java.util.List<java.lang.Integer>
           getRecnosList() {
-        return java.util.Collections.unmodifiableList(recnos_);
+        return ((bitField0_ & 0x00000020) != 0) ?
+                 java.util.Collections.unmodifiableList(recnos_) : recnos_;
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @return The count of recnos.
        */
       public int getRecnosCount() {
         return recnos_.size();
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @param index The index of the element to return.
+       * @return The recnos at the given index.
        */
       public int getRecnos(int index) {
-        return recnos_.get(index);
+        return recnos_.getInt(index);
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @param index The index to set the value at.
+       * @param value The recnos to set.
+       * @return This builder for chaining.
        */
       public Builder setRecnos(
           int index, int value) {
         ensureRecnosIsMutable();
-        recnos_.set(index, value);
-        
+        recnos_.setInt(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @param value The recnos to add.
+       * @return This builder for chaining.
        */
       public Builder addRecnos(int value) {
         ensureRecnosIsMutable();
-        recnos_.add(value);
-        
+        recnos_.addInt(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @param values The recnos to add.
+       * @return This builder for chaining.
        */
       public Builder addAllRecnos(
           java.lang.Iterable<? extends java.lang.Integer> values) {
         ensureRecnosIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, recnos_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 recnos = 6;</code>
-       *
        * <pre>
        * LOGRECNO
        * </pre>
+       *
+       * <code>repeated int32 recnos = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRecnos() {
-        recnos_ = java.util.Collections.emptyList();
+        recnos_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000020);
-        
+        onChanged();
         return this;
       }
 
-      private java.util.List<java.lang.Integer> edges_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.IntList edges_ = emptyIntList();
       private void ensureEdgesIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
-          edges_ = new java.util.ArrayList<java.lang.Integer>(edges_);
+        if (!((bitField0_ & 0x00000040) != 0)) {
+          edges_ = mutableCopy(edges_);
           bitField0_ |= 0x00000040;
          }
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @return A list containing the edges.
        */
       public java.util.List<java.lang.Integer>
           getEdgesList() {
-        return java.util.Collections.unmodifiableList(edges_);
+        return ((bitField0_ & 0x00000040) != 0) ?
+                 java.util.Collections.unmodifiableList(edges_) : edges_;
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @return The count of edges.
        */
       public int getEdgesCount() {
         return edges_.size();
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @param index The index of the element to return.
+       * @return The edges at the given index.
        */
       public int getEdges(int index) {
-        return edges_.get(index);
+        return edges_.getInt(index);
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The edges to set.
+       * @return This builder for chaining.
        */
       public Builder setEdges(
           int index, int value) {
         ensureEdgesIsMutable();
-        edges_.set(index, value);
-        
+        edges_.setInt(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @param value The edges to add.
+       * @return This builder for chaining.
        */
       public Builder addEdges(int value) {
         ensureEdgesIsMutable();
-        edges_.add(value);
-        
+        edges_.addInt(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @param values The edges to add.
+       * @return This builder for chaining.
        */
       public Builder addAllEdges(
           java.lang.Iterable<? extends java.lang.Integer> values) {
         ensureEdgesIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, edges_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated int32 edges = 7;</code>
-       *
        * <pre>
        * index,index pairs
        * </pre>
+       *
+       * <code>repeated int32 edges = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEdges() {
-        edges_ = java.util.Collections.emptyList();
+        edges_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000040);
-        
+        onChanged();
         return this;
       }
 
       private int numDistricts_ ;
       /**
-       * <code>optional int32 numDistricts = 8;</code>
-       *
        * <pre>
        * Default number of districts for this data set.
        * Probably the number of US House districts.
        * </pre>
+       *
+       * <code>optional int32 numDistricts = 8;</code>
+       * @return Whether the numDistricts field is set.
        */
+      @java.lang.Override
       public boolean hasNumDistricts() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
-       * <code>optional int32 numDistricts = 8;</code>
-       *
        * <pre>
        * Default number of districts for this data set.
        * Probably the number of US House districts.
        * </pre>
+       *
+       * <code>optional int32 numDistricts = 8;</code>
+       * @return The numDistricts.
        */
+      @java.lang.Override
       public int getNumDistricts() {
         return numDistricts_;
       }
       /**
-       * <code>optional int32 numDistricts = 8;</code>
-       *
        * <pre>
        * Default number of districts for this data set.
        * Probably the number of US House districts.
        * </pre>
+       *
+       * <code>optional int32 numDistricts = 8;</code>
+       * @param value The numDistricts to set.
+       * @return This builder for chaining.
        */
       public Builder setNumDistricts(int value) {
         bitField0_ |= 0x00000080;
         numDistricts_ = value;
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>optional int32 numDistricts = 8;</code>
-       *
        * <pre>
        * Default number of districts for this data set.
        * Probably the number of US House districts.
        * </pre>
+       *
+       * <code>optional int32 numDistricts = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumDistricts() {
         bitField0_ = (bitField0_ & ~0x00000080);
         numDistricts_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private java.util.List<org.bolson.redistricter.Redata.RedistricterData.Other> other_ =
         java.util.Collections.emptyList();
       private void ensureOtherIsMutable() {
-        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
+        if (!((bitField0_ & 0x00000100) != 0)) {
           other_ = new java.util.ArrayList<org.bolson.redistricter.Redata.RedistricterData.Other>(other_);
           bitField0_ |= 0x00000100;
          }
       }
 
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.RedistricterData.Other, org.bolson.redistricter.Redata.RedistricterData.Other.Builder, org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder> otherBuilder_;
+
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public java.util.List<org.bolson.redistricter.Redata.RedistricterData.Other> getOtherList() {
-        return java.util.Collections.unmodifiableList(other_);
+        if (otherBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(other_);
+        } else {
+          return otherBuilder_.getMessageList();
+        }
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public int getOtherCount() {
-        return other_.size();
+        if (otherBuilder_ == null) {
+          return other_.size();
+        } else {
+          return otherBuilder_.getCount();
+        }
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public org.bolson.redistricter.Redata.RedistricterData.Other getOther(int index) {
-        return other_.get(index);
+        if (otherBuilder_ == null) {
+          return other_.get(index);
+        } else {
+          return otherBuilder_.getMessage(index);
+        }
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public Builder setOther(
           int index, org.bolson.redistricter.Redata.RedistricterData.Other value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (otherBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureOtherIsMutable();
+          other_.set(index, value);
+          onChanged();
+        } else {
+          otherBuilder_.setMessage(index, value);
         }
-        ensureOtherIsMutable();
-        other_.set(index, value);
-
         return this;
       }
       /**
@@ -2754,21 +3367,29 @@ public final class Redata {
        */
       public Builder setOther(
           int index, org.bolson.redistricter.Redata.RedistricterData.Other.Builder builderForValue) {
-        ensureOtherIsMutable();
-        other_.set(index, builderForValue.build());
-
+        if (otherBuilder_ == null) {
+          ensureOtherIsMutable();
+          other_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          otherBuilder_.setMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public Builder addOther(org.bolson.redistricter.Redata.RedistricterData.Other value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (otherBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureOtherIsMutable();
+          other_.add(value);
+          onChanged();
+        } else {
+          otherBuilder_.addMessage(value);
         }
-        ensureOtherIsMutable();
-        other_.add(value);
-
         return this;
       }
       /**
@@ -2776,12 +3397,16 @@ public final class Redata {
        */
       public Builder addOther(
           int index, org.bolson.redistricter.Redata.RedistricterData.Other value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (otherBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureOtherIsMutable();
+          other_.add(index, value);
+          onChanged();
+        } else {
+          otherBuilder_.addMessage(index, value);
         }
-        ensureOtherIsMutable();
-        other_.add(index, value);
-
         return this;
       }
       /**
@@ -2789,9 +3414,13 @@ public final class Redata {
        */
       public Builder addOther(
           org.bolson.redistricter.Redata.RedistricterData.Other.Builder builderForValue) {
-        ensureOtherIsMutable();
-        other_.add(builderForValue.build());
-
+        if (otherBuilder_ == null) {
+          ensureOtherIsMutable();
+          other_.add(builderForValue.build());
+          onChanged();
+        } else {
+          otherBuilder_.addMessage(builderForValue.build());
+        }
         return this;
       }
       /**
@@ -2799,9 +3428,13 @@ public final class Redata {
        */
       public Builder addOther(
           int index, org.bolson.redistricter.Redata.RedistricterData.Other.Builder builderForValue) {
-        ensureOtherIsMutable();
-        other_.add(index, builderForValue.build());
-
+        if (otherBuilder_ == null) {
+          ensureOtherIsMutable();
+          other_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          otherBuilder_.addMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
@@ -2809,139 +3442,269 @@ public final class Redata {
        */
       public Builder addAllOther(
           java.lang.Iterable<? extends org.bolson.redistricter.Redata.RedistricterData.Other> values) {
-        ensureOtherIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, other_);
-
+        if (otherBuilder_ == null) {
+          ensureOtherIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, other_);
+          onChanged();
+        } else {
+          otherBuilder_.addAllMessages(values);
+        }
         return this;
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public Builder clearOther() {
-        other_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
-
+        if (otherBuilder_ == null) {
+          other_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000100);
+          onChanged();
+        } else {
+          otherBuilder_.clear();
+        }
         return this;
       }
       /**
        * <code>repeated group Other = 9 { ... }</code>
        */
       public Builder removeOther(int index) {
-        ensureOtherIsMutable();
-        other_.remove(index);
-
+        if (otherBuilder_ == null) {
+          ensureOtherIsMutable();
+          other_.remove(index);
+          onChanged();
+        } else {
+          otherBuilder_.remove(index);
+        }
         return this;
       }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.RedistricterData.Other.Builder getOtherBuilder(
+          int index) {
+        return getOtherFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder getOtherOrBuilder(
+          int index) {
+        if (otherBuilder_ == null) {
+          return other_.get(index);  } else {
+          return otherBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public java.util.List<? extends org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder> 
+           getOtherOrBuilderList() {
+        if (otherBuilder_ != null) {
+          return otherBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(other_);
+        }
+      }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.RedistricterData.Other.Builder addOtherBuilder() {
+        return getOtherFieldBuilder().addBuilder(
+            org.bolson.redistricter.Redata.RedistricterData.Other.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.RedistricterData.Other.Builder addOtherBuilder(
+          int index) {
+        return getOtherFieldBuilder().addBuilder(
+            index, org.bolson.redistricter.Redata.RedistricterData.Other.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Other = 9 { ... }</code>
+       */
+      public java.util.List<org.bolson.redistricter.Redata.RedistricterData.Other.Builder> 
+           getOtherBuilderList() {
+        return getOtherFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.RedistricterData.Other, org.bolson.redistricter.Redata.RedistricterData.Other.Builder, org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder> 
+          getOtherFieldBuilder() {
+        if (otherBuilder_ == null) {
+          otherBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.bolson.redistricter.Redata.RedistricterData.Other, org.bolson.redistricter.Redata.RedistricterData.Other.Builder, org.bolson.redistricter.Redata.RedistricterData.OtherOrBuilder>(
+                  other_,
+                  ((bitField0_ & 0x00000100) != 0),
+                  getParentForChildren(),
+                  isClean());
+          other_ = null;
+        }
+        return otherBuilder_;
+      }
 
-      private java.util.List<java.lang.Integer> place_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.IntList place_ = emptyIntList();
       private void ensurePlaceIsMutable() {
-        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
-          place_ = new java.util.ArrayList<java.lang.Integer>(place_);
+        if (!((bitField0_ & 0x00000200) != 0)) {
+          place_ = mutableCopy(place_);
           bitField0_ |= 0x00000200;
          }
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @return A list containing the place.
        */
       public java.util.List<java.lang.Integer>
           getPlaceList() {
-        return java.util.Collections.unmodifiableList(place_);
+        return ((bitField0_ & 0x00000200) != 0) ?
+                 java.util.Collections.unmodifiableList(place_) : place_;
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @return The count of place.
        */
       public int getPlaceCount() {
         return place_.size();
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @param index The index of the element to return.
+       * @return The place at the given index.
        */
       public int getPlace(int index) {
-        return place_.get(index);
+        return place_.getInt(index);
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @param index The index to set the value at.
+       * @param value The place to set.
+       * @return This builder for chaining.
        */
       public Builder setPlace(
           int index, int value) {
         ensurePlaceIsMutable();
-        place_.set(index, value);
-        
+        place_.setInt(index, value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @param value The place to add.
+       * @return This builder for chaining.
        */
       public Builder addPlace(int value) {
         ensurePlaceIsMutable();
-        place_.add(value);
-        
+        place_.addInt(value);
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @param values The place to add.
+       * @return This builder for chaining.
        */
       public Builder addAllPlace(
           java.lang.Iterable<? extends java.lang.Integer> values) {
         ensurePlaceIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, place_);
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 place = 12;</code>
-       *
        * <pre>
        * per-block place id (originally 5 digit non-zero decimal int)
        * </pre>
+       *
+       * <code>repeated uint32 place = 12;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPlace() {
-        place_ = java.util.Collections.emptyList();
+        place_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000200);
-        
+        onChanged();
         return this;
       }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:RedistricterData)
     }
 
+    // @@protoc_insertion_point(class_scope:RedistricterData)
+    private static final org.bolson.redistricter.Redata.RedistricterData DEFAULT_INSTANCE;
     static {
-      defaultInstance = new RedistricterData(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.RedistricterData();
     }
 
-    // @@protoc_insertion_point(class_scope:RedistricterData)
+    public static org.bolson.redistricter.Redata.RedistricterData getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<RedistricterData>
+        PARSER = new com.google.protobuf.AbstractParser<RedistricterData>() {
+      @java.lang.Override
+      public RedistricterData parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RedistricterData(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<RedistricterData> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RedistricterData> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.bolson.redistricter.Redata.RedistricterData getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface MapRasterizationOrBuilder extends
       // @@protoc_insertion_point(interface_extends:MapRasterization)
-      com.google.protobuf.MessageLiteOrBuilder {
+      com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>repeated group Block = 1 { ... }</code>
@@ -2956,64 +3719,82 @@ public final class Redata {
      * <code>repeated group Block = 1 { ... }</code>
      */
     int getBlockCount();
+    /**
+     * <code>repeated group Block = 1 { ... }</code>
+     */
+    java.util.List<? extends org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder> 
+        getBlockOrBuilderList();
+    /**
+     * <code>repeated group Block = 1 { ... }</code>
+     */
+    org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder getBlockOrBuilder(
+        int index);
 
     /**
      * <code>optional int32 sizex = 4;</code>
+     * @return Whether the sizex field is set.
      */
     boolean hasSizex();
     /**
      * <code>optional int32 sizex = 4;</code>
+     * @return The sizex.
      */
     int getSizex();
 
     /**
      * <code>optional int32 sizey = 5;</code>
+     * @return Whether the sizey field is set.
      */
     boolean hasSizey();
     /**
      * <code>optional int32 sizey = 5;</code>
+     * @return The sizey.
      */
     int getSizey();
   }
   /**
-   * Protobuf type {@code MapRasterization}
-   *
    * <pre>
    * For each block, a list of pixels (x,y coords) to draw.
    * </pre>
+   *
+   * Protobuf type {@code MapRasterization}
    */
   public static final class MapRasterization extends
-      com.google.protobuf.GeneratedMessageLite implements
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:MapRasterization)
       MapRasterizationOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use MapRasterization.newBuilder() to construct.
-    private MapRasterization(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+    private MapRasterization(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private MapRasterization(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final MapRasterization defaultInstance;
-    public static MapRasterization getDefaultInstance() {
-      return defaultInstance;
+    private MapRasterization() {
+      block_ = java.util.Collections.emptyList();
     }
 
-    public MapRasterization getDefaultInstanceForType() {
-      return defaultInstance;
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MapRasterization();
     }
 
-    private final com.google.protobuf.ByteString unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
     private MapRasterization(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput);
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -3022,15 +3803,8 @@ public final class Redata {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 11: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 block_ = new java.util.ArrayList<org.bolson.redistricter.Redata.MapRasterization.Block>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -3048,186 +3822,205 @@ public final class Redata {
               sizey_ = input.readInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           block_ = java.util.Collections.unmodifiableList(block_);
         }
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
+        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static com.google.protobuf.Parser<MapRasterization> PARSER =
-        new com.google.protobuf.AbstractParser<MapRasterization>() {
-      public MapRasterization parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MapRasterization(input, extensionRegistry);
-      }
-    };
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bolson.redistricter.Redata.internal_static_MapRasterization_descriptor;
+    }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<MapRasterization> getParserForType() {
-      return PARSER;
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bolson.redistricter.Redata.internal_static_MapRasterization_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bolson.redistricter.Redata.MapRasterization.class, org.bolson.redistricter.Redata.MapRasterization.Builder.class);
     }
 
     public interface BlockOrBuilder extends
         // @@protoc_insertion_point(interface_extends:MapRasterization.Block)
-        com.google.protobuf.MessageLiteOrBuilder {
+        com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>optional uint64 ubid = 2;</code>
-       *
        * <pre>
        * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>optional uint64 ubid = 2;</code>
+       * @return Whether the ubid field is set.
        */
       boolean hasUbid();
       /**
-       * <code>optional uint64 ubid = 2;</code>
-       *
        * <pre>
        * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>optional uint64 ubid = 2;</code>
+       * @return The ubid.
        */
       long getUbid();
 
       /**
-       * <code>optional int32 recno = 6;</code>
-       *
        * <pre>
        * "logical record number"
        * </pre>
+       *
+       * <code>optional int32 recno = 6;</code>
+       * @return Whether the recno field is set.
        */
       boolean hasRecno();
       /**
-       * <code>optional int32 recno = 6;</code>
-       *
        * <pre>
        * "logical record number"
        * </pre>
+       *
+       * <code>optional int32 recno = 6;</code>
+       * @return The recno.
        */
       int getRecno();
 
       /**
-       * <code>optional bytes blockid = 7;</code>
-       *
        * <pre>
        * String form preferred by TIGER data, concatenated state,county,tract,block
        * </pre>
+       *
+       * <code>optional bytes blockid = 7;</code>
+       * @return Whether the blockid field is set.
        */
       boolean hasBlockid();
       /**
-       * <code>optional bytes blockid = 7;</code>
-       *
        * <pre>
        * String form preferred by TIGER data, concatenated state,county,tract,block
        * </pre>
+       *
+       * <code>optional bytes blockid = 7;</code>
+       * @return The blockid.
        */
       com.google.protobuf.ByteString getBlockid();
 
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @return A list containing the xy.
        */
       java.util.List<java.lang.Integer> getXyList();
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @return The count of xy.
        */
       int getXyCount();
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @param index The index of the element to return.
+       * @return The xy at the given index.
        */
       int getXy(int index);
 
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @return A list containing the waterxy.
        */
       java.util.List<java.lang.Integer> getWaterxyList();
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @return The count of waterxy.
        */
       int getWaterxyCount();
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @param index The index of the element to return.
+       * @return The waterxy at the given index.
        */
       int getWaterxy(int index);
     }
     /**
-     * Protobuf type {@code MapRasterization.Block}
-     *
      * <pre>
      * Pick one of {ubid, recno, blockid}
      * </pre>
+     *
+     * Protobuf type {@code MapRasterization.Block}
      */
     public static final class Block extends
-        com.google.protobuf.GeneratedMessageLite implements
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:MapRasterization.Block)
         BlockOrBuilder {
+    private static final long serialVersionUID = 0L;
       // Use Block.newBuilder() to construct.
-      private Block(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+      private Block(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
-        this.unknownFields = builder.getUnknownFields();
       }
-      private Block(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-      private static final Block defaultInstance;
-      public static Block getDefaultInstance() {
-        return defaultInstance;
+      private Block() {
+        blockid_ = com.google.protobuf.ByteString.EMPTY;
+        xy_ = emptyIntList();
+        waterxy_ = emptyIntList();
       }
 
-      public Block getDefaultInstanceForType() {
-        return defaultInstance;
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new Block();
       }
 
-      private final com.google.protobuf.ByteString unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
       private Block(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        initFields();
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         int mutable_bitField0_ = 0;
-        com.google.protobuf.ByteString.Output unknownFieldsOutput =
-            com.google.protobuf.ByteString.newOutput();
-        com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-            com.google.protobuf.CodedOutputStream.newInstance(
-                unknownFieldsOutput);
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
         try {
           boolean done = false;
           while (!done) {
@@ -3236,35 +4029,28 @@ public final class Redata {
               case 0:
                 done = true;
                 break;
-              default: {
-                if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                       extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
               case 16: {
                 bitField0_ |= 0x00000001;
                 ubid_ = input.readUInt64();
                 break;
               }
               case 24: {
-                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                  xy_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                  xy_ = newIntList();
                   mutable_bitField0_ |= 0x00000008;
                 }
-                xy_.add(input.readInt32());
+                xy_.addInt(input.readInt32());
                 break;
               }
               case 26: {
                 int length = input.readRawVarint32();
                 int limit = input.pushLimit(length);
-                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
-                  xy_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000008) != 0) && input.getBytesUntilLimit() > 0) {
+                  xy_ = newIntList();
                   mutable_bitField0_ |= 0x00000008;
                 }
                 while (input.getBytesUntilLimit() > 0) {
-                  xy_.add(input.readInt32());
+                  xy_.addInt(input.readInt32());
                 }
                 input.popLimit(limit);
                 break;
@@ -3280,24 +4066,31 @@ public final class Redata {
                 break;
               }
               case 64: {
-                if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                  waterxy_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                  waterxy_ = newIntList();
                   mutable_bitField0_ |= 0x00000010;
                 }
-                waterxy_.add(input.readInt32());
+                waterxy_.addInt(input.readInt32());
                 break;
               }
               case 66: {
                 int length = input.readRawVarint32();
                 int limit = input.pushLimit(length);
-                if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
-                  waterxy_ = new java.util.ArrayList<java.lang.Integer>();
+                if (!((mutable_bitField0_ & 0x00000010) != 0) && input.getBytesUntilLimit() > 0) {
+                  waterxy_ = newIntList();
                   mutable_bitField0_ |= 0x00000010;
                 }
                 while (input.getBytesUntilLimit() > 0) {
-                  waterxy_.add(input.readInt32());
+                  waterxy_.addInt(input.readInt32());
                 }
                 input.popLimit(limit);
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
                 break;
               }
             }
@@ -3306,59 +4099,55 @@ public final class Redata {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
           throw new com.google.protobuf.InvalidProtocolBufferException(
-              e.getMessage()).setUnfinishedMessage(this);
+              e).setUnfinishedMessage(this);
         } finally {
-          if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-            xy_ = java.util.Collections.unmodifiableList(xy_);
+          if (((mutable_bitField0_ & 0x00000008) != 0)) {
+            xy_.makeImmutable(); // C
           }
-          if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-            waterxy_ = java.util.Collections.unmodifiableList(waterxy_);
+          if (((mutable_bitField0_ & 0x00000010) != 0)) {
+            waterxy_.makeImmutable(); // C
           }
-          try {
-            unknownFieldsCodedOutput.flush();
-          } catch (java.io.IOException e) {
-          // Should not happen
-          } finally {
-            unknownFields = unknownFieldsOutput.toByteString();
-          }
+          this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static com.google.protobuf.Parser<Block> PARSER =
-          new com.google.protobuf.AbstractParser<Block>() {
-        public Block parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Block(input, extensionRegistry);
-        }
-      };
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_MapRasterization_Block_descriptor;
+      }
 
       @java.lang.Override
-      public com.google.protobuf.Parser<Block> getParserForType() {
-        return PARSER;
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_MapRasterization_Block_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.MapRasterization.Block.class, org.bolson.redistricter.Redata.MapRasterization.Block.Builder.class);
       }
 
       private int bitField0_;
       public static final int UBID_FIELD_NUMBER = 2;
       private long ubid_;
       /**
-       * <code>optional uint64 ubid = 2;</code>
-       *
        * <pre>
        * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>optional uint64 ubid = 2;</code>
+       * @return Whether the ubid field is set.
        */
+      @java.lang.Override
       public boolean hasUbid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>optional uint64 ubid = 2;</code>
-       *
        * <pre>
        * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
        * </pre>
+       *
+       * <code>optional uint64 ubid = 2;</code>
+       * @return The ubid.
        */
+      @java.lang.Override
       public long getUbid() {
         return ubid_;
       }
@@ -3366,22 +4155,26 @@ public final class Redata {
       public static final int RECNO_FIELD_NUMBER = 6;
       private int recno_;
       /**
-       * <code>optional int32 recno = 6;</code>
-       *
        * <pre>
        * "logical record number"
        * </pre>
+       *
+       * <code>optional int32 recno = 6;</code>
+       * @return Whether the recno field is set.
        */
+      @java.lang.Override
       public boolean hasRecno() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional int32 recno = 6;</code>
-       *
        * <pre>
        * "logical record number"
        * </pre>
+       *
+       * <code>optional int32 recno = 6;</code>
+       * @return The recno.
        */
+      @java.lang.Override
       public int getRecno() {
         return recno_;
       }
@@ -3389,102 +4182,110 @@ public final class Redata {
       public static final int BLOCKID_FIELD_NUMBER = 7;
       private com.google.protobuf.ByteString blockid_;
       /**
-       * <code>optional bytes blockid = 7;</code>
-       *
        * <pre>
        * String form preferred by TIGER data, concatenated state,county,tract,block
        * </pre>
+       *
+       * <code>optional bytes blockid = 7;</code>
+       * @return Whether the blockid field is set.
        */
+      @java.lang.Override
       public boolean hasBlockid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
-       * <code>optional bytes blockid = 7;</code>
-       *
        * <pre>
        * String form preferred by TIGER data, concatenated state,county,tract,block
        * </pre>
+       *
+       * <code>optional bytes blockid = 7;</code>
+       * @return The blockid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getBlockid() {
         return blockid_;
       }
 
       public static final int XY_FIELD_NUMBER = 3;
-      private java.util.List<java.lang.Integer> xy_;
+      private com.google.protobuf.Internal.IntList xy_;
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @return A list containing the xy.
        */
+      @java.lang.Override
       public java.util.List<java.lang.Integer>
           getXyList() {
         return xy_;
       }
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @return The count of xy.
        */
       public int getXyCount() {
         return xy_.size();
       }
       /**
-       * <code>repeated int32 xy = 3;</code>
-       *
        * <pre>
        * The pixels associated with this block. (x,y) pairs.
        * </pre>
+       *
+       * <code>repeated int32 xy = 3;</code>
+       * @param index The index of the element to return.
+       * @return The xy at the given index.
        */
       public int getXy(int index) {
-        return xy_.get(index);
+        return xy_.getInt(index);
       }
 
       public static final int WATERXY_FIELD_NUMBER = 8;
-      private java.util.List<java.lang.Integer> waterxy_;
+      private com.google.protobuf.Internal.IntList waterxy_;
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @return A list containing the waterxy.
        */
+      @java.lang.Override
       public java.util.List<java.lang.Integer>
           getWaterxyList() {
         return waterxy_;
       }
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @return The count of waterxy.
        */
       public int getWaterxyCount() {
         return waterxy_.size();
       }
       /**
-       * <code>repeated int32 waterxy = 8;</code>
-       *
        * <pre>
        * Pixels that should get 'water' treatment.
        * </pre>
+       *
+       * <code>repeated int32 waterxy = 8;</code>
+       * @param index The index of the element to return.
+       * @return The waterxy at the given index.
        */
       public int getWaterxy(int index) {
-        return waterxy_.get(index);
+        return waterxy_.getInt(index);
       }
 
-      private void initFields() {
-        ubid_ = 0L;
-        recno_ = 0;
-        blockid_ = com.google.protobuf.ByteString.EMPTY;
-        xy_ = java.util.Collections.emptyList();
-        waterxy_ = java.util.Collections.emptyList();
-      }
       private byte memoizedIsInitialized = -1;
+      @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
         if (isInitialized == 1) return true;
@@ -3494,34 +4295,34 @@ public final class Redata {
         return true;
       }
 
+      @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
-        getSerializedSize();
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           output.writeUInt64(2, ubid_);
         }
         for (int i = 0; i < xy_.size(); i++) {
-          output.writeInt32(3, xy_.get(i));
+          output.writeInt32(3, xy_.getInt(i));
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           output.writeInt32(6, recno_);
         }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000004) != 0)) {
           output.writeBytes(7, blockid_);
         }
         for (int i = 0; i < waterxy_.size(); i++) {
-          output.writeInt32(8, waterxy_.get(i));
+          output.writeInt32(8, waterxy_.getInt(i));
         }
-        output.writeRawBytes(unknownFields);
+        unknownFields.writeTo(output);
       }
 
-      private int memoizedSerializedSize = -1;
+      @java.lang.Override
       public int getSerializedSize() {
-        int size = memoizedSerializedSize;
+        int size = memoizedSize;
         if (size != -1) return size;
 
         size = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           size += com.google.protobuf.CodedOutputStream
             .computeUInt64Size(2, ubid_);
         }
@@ -3529,16 +4330,16 @@ public final class Redata {
           int dataSize = 0;
           for (int i = 0; i < xy_.size(); i++) {
             dataSize += com.google.protobuf.CodedOutputStream
-              .computeInt32SizeNoTag(xy_.get(i));
+              .computeInt32SizeNoTag(xy_.getInt(i));
           }
           size += dataSize;
           size += 1 * getXyList().size();
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(6, recno_);
         }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000004) != 0)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBytesSize(7, blockid_);
         }
@@ -3546,23 +4347,93 @@ public final class Redata {
           int dataSize = 0;
           for (int i = 0; i < waterxy_.size(); i++) {
             dataSize += com.google.protobuf.CodedOutputStream
-              .computeInt32SizeNoTag(waterxy_.get(i));
+              .computeInt32SizeNoTag(waterxy_.getInt(i));
           }
           size += dataSize;
           size += 1 * getWaterxyList().size();
         }
-        size += unknownFields.size();
-        memoizedSerializedSize = size;
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
         return size;
       }
 
-      private static final long serialVersionUID = 0L;
       @java.lang.Override
-      protected java.lang.Object writeReplace()
-          throws java.io.ObjectStreamException {
-        return super.writeReplace();
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof org.bolson.redistricter.Redata.MapRasterization.Block)) {
+          return super.equals(obj);
+        }
+        org.bolson.redistricter.Redata.MapRasterization.Block other = (org.bolson.redistricter.Redata.MapRasterization.Block) obj;
+
+        if (hasUbid() != other.hasUbid()) return false;
+        if (hasUbid()) {
+          if (getUbid()
+              != other.getUbid()) return false;
+        }
+        if (hasRecno() != other.hasRecno()) return false;
+        if (hasRecno()) {
+          if (getRecno()
+              != other.getRecno()) return false;
+        }
+        if (hasBlockid() != other.hasBlockid()) return false;
+        if (hasBlockid()) {
+          if (!getBlockid()
+              .equals(other.getBlockid())) return false;
+        }
+        if (!getXyList()
+            .equals(other.getXyList())) return false;
+        if (!getWaterxyList()
+            .equals(other.getWaterxyList())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
       }
 
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasUbid()) {
+          hash = (37 * hash) + UBID_FIELD_NUMBER;
+          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+              getUbid());
+        }
+        if (hasRecno()) {
+          hash = (37 * hash) + RECNO_FIELD_NUMBER;
+          hash = (53 * hash) + getRecno();
+        }
+        if (hasBlockid()) {
+          hash = (37 * hash) + BLOCKID_FIELD_NUMBER;
+          hash = (53 * hash) + getBlockid().hashCode();
+        }
+        if (getXyCount() > 0) {
+          hash = (37 * hash) + XY_FIELD_NUMBER;
+          hash = (53 * hash) + getXyList().hashCode();
+        }
+        if (getWaterxyCount() > 0) {
+          hash = (37 * hash) + WATERXY_FIELD_NUMBER;
+          hash = (53 * hash) + getWaterxyList().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3586,67 +4457,102 @@ public final class Redata {
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.MapRasterization.Block parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
-      public static Builder newBuilder() { return Builder.create(); }
+      @java.lang.Override
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.bolson.redistricter.Redata.MapRasterization.Block prototype) {
-        return newBuilder().mergeFrom(prototype);
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
       }
-      public Builder toBuilder() { return newBuilder(this); }
+      public static Builder newBuilder(org.bolson.redistricter.Redata.MapRasterization.Block prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
 
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
       /**
-       * Protobuf type {@code MapRasterization.Block}
-       *
        * <pre>
        * Pick one of {ubid, recno, blockid}
        * </pre>
+       *
+       * Protobuf type {@code MapRasterization.Block}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessageLite.Builder<
-            org.bolson.redistricter.Redata.MapRasterization.Block, Builder>
-          implements
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:MapRasterization.Block)
           org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.bolson.redistricter.Redata.internal_static_MapRasterization_Block_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.bolson.redistricter.Redata.internal_static_MapRasterization_Block_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.bolson.redistricter.Redata.MapRasterization.Block.class, org.bolson.redistricter.Redata.MapRasterization.Block.Builder.class);
+        }
+
         // Construct using org.bolson.redistricter.Redata.MapRasterization.Block.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
         }
-        private static Builder create() {
-          return new Builder();
-        }
-
+        @java.lang.Override
         public Builder clear() {
           super.clear();
           ubid_ = 0L;
@@ -3655,21 +4561,25 @@ public final class Redata {
           bitField0_ = (bitField0_ & ~0x00000002);
           blockid_ = com.google.protobuf.ByteString.EMPTY;
           bitField0_ = (bitField0_ & ~0x00000004);
-          xy_ = java.util.Collections.emptyList();
+          xy_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000008);
-          waterxy_ = java.util.Collections.emptyList();
+          waterxy_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000010);
           return this;
         }
 
-        public Builder clone() {
-          return create().mergeFrom(buildPartial());
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.bolson.redistricter.Redata.internal_static_MapRasterization_Block_descriptor;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.MapRasterization.Block getDefaultInstanceForType() {
           return org.bolson.redistricter.Redata.MapRasterization.Block.getDefaultInstance();
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.MapRasterization.Block build() {
           org.bolson.redistricter.Redata.MapRasterization.Block result = buildPartial();
           if (!result.isInitialized()) {
@@ -3678,34 +4588,78 @@ public final class Redata {
           return result;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.MapRasterization.Block buildPartial() {
           org.bolson.redistricter.Redata.MapRasterization.Block result = new org.bolson.redistricter.Redata.MapRasterization.Block(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((from_bitField0_ & 0x00000001) != 0)) {
+            result.ubid_ = ubid_;
             to_bitField0_ |= 0x00000001;
           }
-          result.ubid_ = ubid_;
-          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((from_bitField0_ & 0x00000002) != 0)) {
+            result.recno_ = recno_;
             to_bitField0_ |= 0x00000002;
           }
-          result.recno_ = recno_;
-          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((from_bitField0_ & 0x00000004) != 0)) {
             to_bitField0_ |= 0x00000004;
           }
           result.blockid_ = blockid_;
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
-            xy_ = java.util.Collections.unmodifiableList(xy_);
+          if (((bitField0_ & 0x00000008) != 0)) {
+            xy_.makeImmutable();
             bitField0_ = (bitField0_ & ~0x00000008);
           }
           result.xy_ = xy_;
-          if (((bitField0_ & 0x00000010) == 0x00000010)) {
-            waterxy_ = java.util.Collections.unmodifiableList(waterxy_);
+          if (((bitField0_ & 0x00000010) != 0)) {
+            waterxy_.makeImmutable();
             bitField0_ = (bitField0_ & ~0x00000010);
           }
           result.waterxy_ = waterxy_;
           result.bitField0_ = to_bitField0_;
+          onBuilt();
           return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.bolson.redistricter.Redata.MapRasterization.Block) {
+            return mergeFrom((org.bolson.redistricter.Redata.MapRasterization.Block)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
         }
 
         public Builder mergeFrom(org.bolson.redistricter.Redata.MapRasterization.Block other) {
@@ -3727,7 +4681,7 @@ public final class Redata {
               ensureXyIsMutable();
               xy_.addAll(other.xy_);
             }
-            
+            onChanged();
           }
           if (!other.waterxy_.isEmpty()) {
             if (waterxy_.isEmpty()) {
@@ -3737,17 +4691,19 @@ public final class Redata {
               ensureWaterxyIsMutable();
               waterxy_.addAll(other.waterxy_);
             }
-            
+            onChanged();
           }
-          setUnknownFields(
-              getUnknownFields().concat(other.unknownFields));
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
           return this;
         }
 
+        @java.lang.Override
         public final boolean isInitialized() {
           return true;
         }
 
+        @java.lang.Override
         public Builder mergeFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3757,7 +4713,7 @@ public final class Redata {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             parsedMessage = (org.bolson.redistricter.Redata.MapRasterization.Block) e.getUnfinishedMessage();
-            throw e;
+            throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
               mergeFrom(parsedMessage);
@@ -3769,127 +4725,147 @@ public final class Redata {
 
         private long ubid_ ;
         /**
-         * <code>optional uint64 ubid = 2;</code>
-         *
          * <pre>
          * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
          * </pre>
+         *
+         * <code>optional uint64 ubid = 2;</code>
+         * @return Whether the ubid field is set.
          */
+        @java.lang.Override
         public boolean hasUbid() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
+          return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>optional uint64 ubid = 2;</code>
-         *
          * <pre>
          * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
          * </pre>
+         *
+         * <code>optional uint64 ubid = 2;</code>
+         * @return The ubid.
          */
+        @java.lang.Override
         public long getUbid() {
           return ubid_;
         }
         /**
-         * <code>optional uint64 ubid = 2;</code>
-         *
          * <pre>
          * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
          * </pre>
+         *
+         * <code>optional uint64 ubid = 2;</code>
+         * @param value The ubid to set.
+         * @return This builder for chaining.
          */
         public Builder setUbid(long value) {
           bitField0_ |= 0x00000001;
           ubid_ = value;
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>optional uint64 ubid = 2;</code>
-         *
          * <pre>
          * decimal digits {state, county, tract, block}: SSCCCTTTTTTBBBB
          * </pre>
+         *
+         * <code>optional uint64 ubid = 2;</code>
+         * @return This builder for chaining.
          */
         public Builder clearUbid() {
           bitField0_ = (bitField0_ & ~0x00000001);
           ubid_ = 0L;
-          
+          onChanged();
           return this;
         }
 
         private int recno_ ;
         /**
-         * <code>optional int32 recno = 6;</code>
-         *
          * <pre>
          * "logical record number"
          * </pre>
+         *
+         * <code>optional int32 recno = 6;</code>
+         * @return Whether the recno field is set.
          */
+        @java.lang.Override
         public boolean hasRecno() {
-          return ((bitField0_ & 0x00000002) == 0x00000002);
+          return ((bitField0_ & 0x00000002) != 0);
         }
         /**
-         * <code>optional int32 recno = 6;</code>
-         *
          * <pre>
          * "logical record number"
          * </pre>
+         *
+         * <code>optional int32 recno = 6;</code>
+         * @return The recno.
          */
+        @java.lang.Override
         public int getRecno() {
           return recno_;
         }
         /**
-         * <code>optional int32 recno = 6;</code>
-         *
          * <pre>
          * "logical record number"
          * </pre>
+         *
+         * <code>optional int32 recno = 6;</code>
+         * @param value The recno to set.
+         * @return This builder for chaining.
          */
         public Builder setRecno(int value) {
           bitField0_ |= 0x00000002;
           recno_ = value;
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>optional int32 recno = 6;</code>
-         *
          * <pre>
          * "logical record number"
          * </pre>
+         *
+         * <code>optional int32 recno = 6;</code>
+         * @return This builder for chaining.
          */
         public Builder clearRecno() {
           bitField0_ = (bitField0_ & ~0x00000002);
           recno_ = 0;
-          
+          onChanged();
           return this;
         }
 
         private com.google.protobuf.ByteString blockid_ = com.google.protobuf.ByteString.EMPTY;
         /**
-         * <code>optional bytes blockid = 7;</code>
-         *
          * <pre>
          * String form preferred by TIGER data, concatenated state,county,tract,block
          * </pre>
+         *
+         * <code>optional bytes blockid = 7;</code>
+         * @return Whether the blockid field is set.
          */
+        @java.lang.Override
         public boolean hasBlockid() {
-          return ((bitField0_ & 0x00000004) == 0x00000004);
+          return ((bitField0_ & 0x00000004) != 0);
         }
         /**
-         * <code>optional bytes blockid = 7;</code>
-         *
          * <pre>
          * String form preferred by TIGER data, concatenated state,county,tract,block
          * </pre>
+         *
+         * <code>optional bytes blockid = 7;</code>
+         * @return The blockid.
          */
+        @java.lang.Override
         public com.google.protobuf.ByteString getBlockid() {
           return blockid_;
         }
         /**
-         * <code>optional bytes blockid = 7;</code>
-         *
          * <pre>
          * String form preferred by TIGER data, concatenated state,county,tract,block
          * </pre>
+         *
+         * <code>optional bytes blockid = 7;</code>
+         * @param value The blockid to set.
+         * @return This builder for chaining.
          */
         public Builder setBlockid(com.google.protobuf.ByteString value) {
           if (value == null) {
@@ -3897,220 +4873,288 @@ public final class Redata {
   }
   bitField0_ |= 0x00000004;
           blockid_ = value;
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>optional bytes blockid = 7;</code>
-         *
          * <pre>
          * String form preferred by TIGER data, concatenated state,county,tract,block
          * </pre>
+         *
+         * <code>optional bytes blockid = 7;</code>
+         * @return This builder for chaining.
          */
         public Builder clearBlockid() {
           bitField0_ = (bitField0_ & ~0x00000004);
           blockid_ = getDefaultInstance().getBlockid();
-          
+          onChanged();
           return this;
         }
 
-        private java.util.List<java.lang.Integer> xy_ = java.util.Collections.emptyList();
+        private com.google.protobuf.Internal.IntList xy_ = emptyIntList();
         private void ensureXyIsMutable() {
-          if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-            xy_ = new java.util.ArrayList<java.lang.Integer>(xy_);
+          if (!((bitField0_ & 0x00000008) != 0)) {
+            xy_ = mutableCopy(xy_);
             bitField0_ |= 0x00000008;
            }
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @return A list containing the xy.
          */
         public java.util.List<java.lang.Integer>
             getXyList() {
-          return java.util.Collections.unmodifiableList(xy_);
+          return ((bitField0_ & 0x00000008) != 0) ?
+                   java.util.Collections.unmodifiableList(xy_) : xy_;
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @return The count of xy.
          */
         public int getXyCount() {
           return xy_.size();
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @param index The index of the element to return.
+         * @return The xy at the given index.
          */
         public int getXy(int index) {
-          return xy_.get(index);
+          return xy_.getInt(index);
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @param index The index to set the value at.
+         * @param value The xy to set.
+         * @return This builder for chaining.
          */
         public Builder setXy(
             int index, int value) {
           ensureXyIsMutable();
-          xy_.set(index, value);
-          
+          xy_.setInt(index, value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @param value The xy to add.
+         * @return This builder for chaining.
          */
         public Builder addXy(int value) {
           ensureXyIsMutable();
-          xy_.add(value);
-          
+          xy_.addInt(value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @param values The xy to add.
+         * @return This builder for chaining.
          */
         public Builder addAllXy(
             java.lang.Iterable<? extends java.lang.Integer> values) {
           ensureXyIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
               values, xy_);
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 xy = 3;</code>
-         *
          * <pre>
          * The pixels associated with this block. (x,y) pairs.
          * </pre>
+         *
+         * <code>repeated int32 xy = 3;</code>
+         * @return This builder for chaining.
          */
         public Builder clearXy() {
-          xy_ = java.util.Collections.emptyList();
+          xy_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000008);
-          
+          onChanged();
           return this;
         }
 
-        private java.util.List<java.lang.Integer> waterxy_ = java.util.Collections.emptyList();
+        private com.google.protobuf.Internal.IntList waterxy_ = emptyIntList();
         private void ensureWaterxyIsMutable() {
-          if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-            waterxy_ = new java.util.ArrayList<java.lang.Integer>(waterxy_);
+          if (!((bitField0_ & 0x00000010) != 0)) {
+            waterxy_ = mutableCopy(waterxy_);
             bitField0_ |= 0x00000010;
            }
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @return A list containing the waterxy.
          */
         public java.util.List<java.lang.Integer>
             getWaterxyList() {
-          return java.util.Collections.unmodifiableList(waterxy_);
+          return ((bitField0_ & 0x00000010) != 0) ?
+                   java.util.Collections.unmodifiableList(waterxy_) : waterxy_;
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @return The count of waterxy.
          */
         public int getWaterxyCount() {
           return waterxy_.size();
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @param index The index of the element to return.
+         * @return The waterxy at the given index.
          */
         public int getWaterxy(int index) {
-          return waterxy_.get(index);
+          return waterxy_.getInt(index);
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @param index The index to set the value at.
+         * @param value The waterxy to set.
+         * @return This builder for chaining.
          */
         public Builder setWaterxy(
             int index, int value) {
           ensureWaterxyIsMutable();
-          waterxy_.set(index, value);
-          
+          waterxy_.setInt(index, value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @param value The waterxy to add.
+         * @return This builder for chaining.
          */
         public Builder addWaterxy(int value) {
           ensureWaterxyIsMutable();
-          waterxy_.add(value);
-          
+          waterxy_.addInt(value);
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @param values The waterxy to add.
+         * @return This builder for chaining.
          */
         public Builder addAllWaterxy(
             java.lang.Iterable<? extends java.lang.Integer> values) {
           ensureWaterxyIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
               values, waterxy_);
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>repeated int32 waterxy = 8;</code>
-         *
          * <pre>
          * Pixels that should get 'water' treatment.
          * </pre>
+         *
+         * <code>repeated int32 waterxy = 8;</code>
+         * @return This builder for chaining.
          */
         public Builder clearWaterxy() {
-          waterxy_ = java.util.Collections.emptyList();
+          waterxy_ = emptyIntList();
           bitField0_ = (bitField0_ & ~0x00000010);
-          
+          onChanged();
           return this;
         }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
 
         // @@protoc_insertion_point(builder_scope:MapRasterization.Block)
       }
 
+      // @@protoc_insertion_point(class_scope:MapRasterization.Block)
+      private static final org.bolson.redistricter.Redata.MapRasterization.Block DEFAULT_INSTANCE;
       static {
-        defaultInstance = new Block(true);
-        defaultInstance.initFields();
+        DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.MapRasterization.Block();
       }
 
-      // @@protoc_insertion_point(class_scope:MapRasterization.Block)
+      public static org.bolson.redistricter.Redata.MapRasterization.Block getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Block>
+          PARSER = new com.google.protobuf.AbstractParser<Block>() {
+        @java.lang.Override
+        public Block parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Block(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Block> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Block> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.bolson.redistricter.Redata.MapRasterization.Block getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
     }
 
     private int bitField0_;
@@ -4119,12 +5163,14 @@ public final class Redata {
     /**
      * <code>repeated group Block = 1 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<org.bolson.redistricter.Redata.MapRasterization.Block> getBlockList() {
       return block_;
     }
     /**
      * <code>repeated group Block = 1 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder> 
         getBlockOrBuilderList() {
       return block_;
@@ -4132,18 +5178,21 @@ public final class Redata {
     /**
      * <code>repeated group Block = 1 { ... }</code>
      */
+    @java.lang.Override
     public int getBlockCount() {
       return block_.size();
     }
     /**
      * <code>repeated group Block = 1 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.MapRasterization.Block getBlock(int index) {
       return block_.get(index);
     }
     /**
      * <code>repeated group Block = 1 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder getBlockOrBuilder(
         int index) {
       return block_.get(index);
@@ -4153,13 +5202,17 @@ public final class Redata {
     private int sizex_;
     /**
      * <code>optional int32 sizex = 4;</code>
+     * @return Whether the sizex field is set.
      */
+    @java.lang.Override
     public boolean hasSizex() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 sizex = 4;</code>
+     * @return The sizex.
      */
+    @java.lang.Override
     public int getSizex() {
       return sizex_;
     }
@@ -4168,23 +5221,23 @@ public final class Redata {
     private int sizey_;
     /**
      * <code>optional int32 sizey = 5;</code>
+     * @return Whether the sizey field is set.
      */
+    @java.lang.Override
     public boolean hasSizey() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 sizey = 5;</code>
+     * @return The sizey.
      */
+    @java.lang.Override
     public int getSizey() {
       return sizey_;
     }
 
-    private void initFields() {
-      block_ = java.util.Collections.emptyList();
-      sizex_ = 0;
-      sizey_ = 0;
-    }
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4194,24 +5247,24 @@ public final class Redata {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
       for (int i = 0; i < block_.size(); i++) {
         output.writeGroup(1, block_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(4, sizex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(5, sizey_);
       }
-      output.writeRawBytes(unknownFields);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
+    @java.lang.Override
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -4219,26 +5272,80 @@ public final class Redata {
         size += com.google.protobuf.CodedOutputStream
           .computeGroupSize(1, block_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, sizex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, sizey_);
       }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.bolson.redistricter.Redata.MapRasterization)) {
+        return super.equals(obj);
+      }
+      org.bolson.redistricter.Redata.MapRasterization other = (org.bolson.redistricter.Redata.MapRasterization) obj;
+
+      if (!getBlockList()
+          .equals(other.getBlockList())) return false;
+      if (hasSizex() != other.hasSizex()) return false;
+      if (hasSizex()) {
+        if (getSizex()
+            != other.getSizex()) return false;
+      }
+      if (hasSizey() != other.hasSizey()) return false;
+      if (hasSizey()) {
+        if (getSizey()
+            != other.getSizey()) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getBlockCount() > 0) {
+        hash = (37 * hash) + BLOCK_FIELD_NUMBER;
+        hash = (53 * hash) + getBlockList().hashCode();
+      }
+      if (hasSizex()) {
+        hash = (37 * hash) + SIZEX_FIELD_NUMBER;
+        hash = (53 * hash) + getSizex();
+      }
+      if (hasSizey()) {
+        hash = (37 * hash) + SIZEY_FIELD_NUMBER;
+        hash = (53 * hash) + getSizey();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
     public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -4262,71 +5369,111 @@ public final class Redata {
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.MapRasterization parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.bolson.redistricter.Redata.MapRasterization prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(org.bolson.redistricter.Redata.MapRasterization prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     /**
-     * Protobuf type {@code MapRasterization}
-     *
      * <pre>
      * For each block, a list of pixels (x,y coords) to draw.
      * </pre>
+     *
+     * Protobuf type {@code MapRasterization}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          org.bolson.redistricter.Redata.MapRasterization, Builder>
-        implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:MapRasterization)
         org.bolson.redistricter.Redata.MapRasterizationOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_MapRasterization_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_MapRasterization_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.MapRasterization.class, org.bolson.redistricter.Redata.MapRasterization.Builder.class);
+      }
+
       // Construct using org.bolson.redistricter.Redata.MapRasterization.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
 
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
       private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getBlockFieldBuilder();
+        }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
+      @java.lang.Override
       public Builder clear() {
         super.clear();
-        block_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
+        if (blockBuilder_ == null) {
+          block_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          blockBuilder_.clear();
+        }
         sizex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
         sizey_ = 0;
@@ -4334,14 +5481,18 @@ public final class Redata {
         return this;
       }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bolson.redistricter.Redata.internal_static_MapRasterization_descriptor;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.MapRasterization getDefaultInstanceForType() {
         return org.bolson.redistricter.Redata.MapRasterization.getDefaultInstance();
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.MapRasterization build() {
         org.bolson.redistricter.Redata.MapRasterization result = buildPartial();
         if (!result.isInitialized()) {
@@ -4350,38 +5501,102 @@ public final class Redata {
         return result;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.MapRasterization buildPartial() {
         org.bolson.redistricter.Redata.MapRasterization result = new org.bolson.redistricter.Redata.MapRasterization(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          block_ = java.util.Collections.unmodifiableList(block_);
-          bitField0_ = (bitField0_ & ~0x00000001);
+        if (blockBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            block_ = java.util.Collections.unmodifiableList(block_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.block_ = block_;
+        } else {
+          result.block_ = blockBuilder_.build();
         }
-        result.block_ = block_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.sizex_ = sizex_;
           to_bitField0_ |= 0x00000001;
         }
-        result.sizex_ = sizex_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.sizey_ = sizey_;
           to_bitField0_ |= 0x00000002;
         }
-        result.sizey_ = sizey_;
         result.bitField0_ = to_bitField0_;
+        onBuilt();
         return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bolson.redistricter.Redata.MapRasterization) {
+          return mergeFrom((org.bolson.redistricter.Redata.MapRasterization)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
       }
 
       public Builder mergeFrom(org.bolson.redistricter.Redata.MapRasterization other) {
         if (other == org.bolson.redistricter.Redata.MapRasterization.getDefaultInstance()) return this;
-        if (!other.block_.isEmpty()) {
-          if (block_.isEmpty()) {
-            block_ = other.block_;
-            bitField0_ = (bitField0_ & ~0x00000001);
-          } else {
-            ensureBlockIsMutable();
-            block_.addAll(other.block_);
+        if (blockBuilder_ == null) {
+          if (!other.block_.isEmpty()) {
+            if (block_.isEmpty()) {
+              block_ = other.block_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureBlockIsMutable();
+              block_.addAll(other.block_);
+            }
+            onChanged();
           }
-          
+        } else {
+          if (!other.block_.isEmpty()) {
+            if (blockBuilder_.isEmpty()) {
+              blockBuilder_.dispose();
+              blockBuilder_ = null;
+              block_ = other.block_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              blockBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getBlockFieldBuilder() : null;
+            } else {
+              blockBuilder_.addAllMessages(other.block_);
+            }
+          }
         }
         if (other.hasSizex()) {
           setSizex(other.getSizex());
@@ -4389,15 +5604,17 @@ public final class Redata {
         if (other.hasSizey()) {
           setSizey(other.getSizey());
         }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4407,7 +5624,7 @@ public final class Redata {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.bolson.redistricter.Redata.MapRasterization) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -4420,41 +5637,60 @@ public final class Redata {
       private java.util.List<org.bolson.redistricter.Redata.MapRasterization.Block> block_ =
         java.util.Collections.emptyList();
       private void ensureBlockIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           block_ = new java.util.ArrayList<org.bolson.redistricter.Redata.MapRasterization.Block>(block_);
           bitField0_ |= 0x00000001;
          }
       }
 
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.MapRasterization.Block, org.bolson.redistricter.Redata.MapRasterization.Block.Builder, org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder> blockBuilder_;
+
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public java.util.List<org.bolson.redistricter.Redata.MapRasterization.Block> getBlockList() {
-        return java.util.Collections.unmodifiableList(block_);
+        if (blockBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(block_);
+        } else {
+          return blockBuilder_.getMessageList();
+        }
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public int getBlockCount() {
-        return block_.size();
+        if (blockBuilder_ == null) {
+          return block_.size();
+        } else {
+          return blockBuilder_.getCount();
+        }
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public org.bolson.redistricter.Redata.MapRasterization.Block getBlock(int index) {
-        return block_.get(index);
+        if (blockBuilder_ == null) {
+          return block_.get(index);
+        } else {
+          return blockBuilder_.getMessage(index);
+        }
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public Builder setBlock(
           int index, org.bolson.redistricter.Redata.MapRasterization.Block value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (blockBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlockIsMutable();
+          block_.set(index, value);
+          onChanged();
+        } else {
+          blockBuilder_.setMessage(index, value);
         }
-        ensureBlockIsMutable();
-        block_.set(index, value);
-
         return this;
       }
       /**
@@ -4462,21 +5698,29 @@ public final class Redata {
        */
       public Builder setBlock(
           int index, org.bolson.redistricter.Redata.MapRasterization.Block.Builder builderForValue) {
-        ensureBlockIsMutable();
-        block_.set(index, builderForValue.build());
-
+        if (blockBuilder_ == null) {
+          ensureBlockIsMutable();
+          block_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          blockBuilder_.setMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public Builder addBlock(org.bolson.redistricter.Redata.MapRasterization.Block value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (blockBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlockIsMutable();
+          block_.add(value);
+          onChanged();
+        } else {
+          blockBuilder_.addMessage(value);
         }
-        ensureBlockIsMutable();
-        block_.add(value);
-
         return this;
       }
       /**
@@ -4484,12 +5728,16 @@ public final class Redata {
        */
       public Builder addBlock(
           int index, org.bolson.redistricter.Redata.MapRasterization.Block value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (blockBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlockIsMutable();
+          block_.add(index, value);
+          onChanged();
+        } else {
+          blockBuilder_.addMessage(index, value);
         }
-        ensureBlockIsMutable();
-        block_.add(index, value);
-
         return this;
       }
       /**
@@ -4497,9 +5745,13 @@ public final class Redata {
        */
       public Builder addBlock(
           org.bolson.redistricter.Redata.MapRasterization.Block.Builder builderForValue) {
-        ensureBlockIsMutable();
-        block_.add(builderForValue.build());
-
+        if (blockBuilder_ == null) {
+          ensureBlockIsMutable();
+          block_.add(builderForValue.build());
+          onChanged();
+        } else {
+          blockBuilder_.addMessage(builderForValue.build());
+        }
         return this;
       }
       /**
@@ -4507,9 +5759,13 @@ public final class Redata {
        */
       public Builder addBlock(
           int index, org.bolson.redistricter.Redata.MapRasterization.Block.Builder builderForValue) {
-        ensureBlockIsMutable();
-        block_.add(index, builderForValue.build());
-
+        if (blockBuilder_ == null) {
+          ensureBlockIsMutable();
+          block_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          blockBuilder_.addMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
@@ -4517,132 +5773,266 @@ public final class Redata {
        */
       public Builder addAllBlock(
           java.lang.Iterable<? extends org.bolson.redistricter.Redata.MapRasterization.Block> values) {
-        ensureBlockIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, block_);
-
+        if (blockBuilder_ == null) {
+          ensureBlockIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, block_);
+          onChanged();
+        } else {
+          blockBuilder_.addAllMessages(values);
+        }
         return this;
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public Builder clearBlock() {
-        block_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-
+        if (blockBuilder_ == null) {
+          block_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          blockBuilder_.clear();
+        }
         return this;
       }
       /**
        * <code>repeated group Block = 1 { ... }</code>
        */
       public Builder removeBlock(int index) {
-        ensureBlockIsMutable();
-        block_.remove(index);
-
+        if (blockBuilder_ == null) {
+          ensureBlockIsMutable();
+          block_.remove(index);
+          onChanged();
+        } else {
+          blockBuilder_.remove(index);
+        }
         return this;
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.MapRasterization.Block.Builder getBlockBuilder(
+          int index) {
+        return getBlockFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder getBlockOrBuilder(
+          int index) {
+        if (blockBuilder_ == null) {
+          return block_.get(index);  } else {
+          return blockBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public java.util.List<? extends org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder> 
+           getBlockOrBuilderList() {
+        if (blockBuilder_ != null) {
+          return blockBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(block_);
+        }
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.MapRasterization.Block.Builder addBlockBuilder() {
+        return getBlockFieldBuilder().addBuilder(
+            org.bolson.redistricter.Redata.MapRasterization.Block.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.MapRasterization.Block.Builder addBlockBuilder(
+          int index) {
+        return getBlockFieldBuilder().addBuilder(
+            index, org.bolson.redistricter.Redata.MapRasterization.Block.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Block = 1 { ... }</code>
+       */
+      public java.util.List<org.bolson.redistricter.Redata.MapRasterization.Block.Builder> 
+           getBlockBuilderList() {
+        return getBlockFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.MapRasterization.Block, org.bolson.redistricter.Redata.MapRasterization.Block.Builder, org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder> 
+          getBlockFieldBuilder() {
+        if (blockBuilder_ == null) {
+          blockBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.bolson.redistricter.Redata.MapRasterization.Block, org.bolson.redistricter.Redata.MapRasterization.Block.Builder, org.bolson.redistricter.Redata.MapRasterization.BlockOrBuilder>(
+                  block_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          block_ = null;
+        }
+        return blockBuilder_;
       }
 
       private int sizex_ ;
       /**
        * <code>optional int32 sizex = 4;</code>
+       * @return Whether the sizex field is set.
        */
+      @java.lang.Override
       public boolean hasSizex() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 sizex = 4;</code>
+       * @return The sizex.
        */
+      @java.lang.Override
       public int getSizex() {
         return sizex_;
       }
       /**
        * <code>optional int32 sizex = 4;</code>
+       * @param value The sizex to set.
+       * @return This builder for chaining.
        */
       public Builder setSizex(int value) {
         bitField0_ |= 0x00000002;
         sizex_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional int32 sizex = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSizex() {
         bitField0_ = (bitField0_ & ~0x00000002);
         sizex_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private int sizey_ ;
       /**
        * <code>optional int32 sizey = 5;</code>
+       * @return Whether the sizey field is set.
        */
+      @java.lang.Override
       public boolean hasSizey() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 sizey = 5;</code>
+       * @return The sizey.
        */
+      @java.lang.Override
       public int getSizey() {
         return sizey_;
       }
       /**
        * <code>optional int32 sizey = 5;</code>
+       * @param value The sizey to set.
+       * @return This builder for chaining.
        */
       public Builder setSizey(int value) {
         bitField0_ |= 0x00000004;
         sizey_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional int32 sizey = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSizey() {
         bitField0_ = (bitField0_ & ~0x00000004);
         sizey_ = 0;
-        
+        onChanged();
         return this;
       }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:MapRasterization)
     }
 
+    // @@protoc_insertion_point(class_scope:MapRasterization)
+    private static final org.bolson.redistricter.Redata.MapRasterization DEFAULT_INSTANCE;
     static {
-      defaultInstance = new MapRasterization(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.MapRasterization();
     }
 
-    // @@protoc_insertion_point(class_scope:MapRasterization)
+    public static org.bolson.redistricter.Redata.MapRasterization getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<MapRasterization>
+        PARSER = new com.google.protobuf.AbstractParser<MapRasterization>() {
+      @java.lang.Override
+      public MapRasterization parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new MapRasterization(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<MapRasterization> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<MapRasterization> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.bolson.redistricter.Redata.MapRasterization getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface TableFileDescriptionOrBuilder extends
       // @@protoc_insertion_point(interface_extends:TableFileDescription)
-      com.google.protobuf.MessageLiteOrBuilder {
+      com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -4660,42 +6050,57 @@ public final class Redata {
      * <code>repeated group Table = 2 { ... }</code>
      */
     int getTableCount();
+    /**
+     * <code>repeated group Table = 2 { ... }</code>
+     */
+    java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder> 
+        getTableOrBuilderList();
+    /**
+     * <code>repeated group Table = 2 { ... }</code>
+     */
+    org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder getTableOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code TableFileDescription}
    */
   public static final class TableFileDescription extends
-      com.google.protobuf.GeneratedMessageLite implements
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:TableFileDescription)
       TableFileDescriptionOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use TableFileDescription.newBuilder() to construct.
-    private TableFileDescription(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+    private TableFileDescription(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private TableFileDescription(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final TableFileDescription defaultInstance;
-    public static TableFileDescription getDefaultInstance() {
-      return defaultInstance;
+    private TableFileDescription() {
+      name_ = "";
+      table_ = java.util.Collections.emptyList();
     }
 
-    public TableFileDescription getDefaultInstanceForType() {
-      return defaultInstance;
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new TableFileDescription();
     }
 
-    private final com.google.protobuf.ByteString unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
     private TableFileDescription(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput);
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -4704,13 +6109,6 @@ public final class Redata {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -4718,12 +6116,19 @@ public final class Redata {
               break;
             }
             case 19: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 table_ = new java.util.ArrayList<org.bolson.redistricter.Redata.TableFileDescription.Table>();
                 mutable_bitField0_ |= 0x00000002;
               }
               table_.add(input.readGroup(2, org.bolson.redistricter.Redata.TableFileDescription.Table.PARSER,
                   extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4732,76 +6137,74 @@ public final class Redata {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           table_ = java.util.Collections.unmodifiableList(table_);
         }
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
+        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static com.google.protobuf.Parser<TableFileDescription> PARSER =
-        new com.google.protobuf.AbstractParser<TableFileDescription>() {
-      public TableFileDescription parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TableFileDescription(input, extensionRegistry);
-      }
-    };
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bolson.redistricter.Redata.internal_static_TableFileDescription_descriptor;
+    }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<TableFileDescription> getParserForType() {
-      return PARSER;
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bolson.redistricter.Redata.internal_static_TableFileDescription_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bolson.redistricter.Redata.TableFileDescription.class, org.bolson.redistricter.Redata.TableFileDescription.Builder.class);
     }
 
     public interface TableOrBuilder extends
         // @@protoc_insertion_point(interface_extends:TableFileDescription.Table)
-        com.google.protobuf.MessageLiteOrBuilder {
+        com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return Whether the table field is set.
        */
       boolean hasTable();
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return The table.
        */
       java.lang.String getTable();
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return The bytes for table.
        */
       com.google.protobuf.ByteString
           getTableBytes();
 
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return Whether the tableDescription field is set.
        */
       boolean hasTableDescription();
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return The tableDescription.
        */
       java.lang.String getTableDescription();
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return The bytes for tableDescription.
        */
       com.google.protobuf.ByteString
           getTableDescriptionBytes();
@@ -4819,42 +6222,58 @@ public final class Redata {
        * <code>repeated group Column = 5 { ... }</code>
        */
       int getColumnCount();
+      /**
+       * <code>repeated group Column = 5 { ... }</code>
+       */
+      java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder> 
+          getColumnOrBuilderList();
+      /**
+       * <code>repeated group Column = 5 { ... }</code>
+       */
+      org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder getColumnOrBuilder(
+          int index);
     }
     /**
      * Protobuf type {@code TableFileDescription.Table}
      */
     public static final class Table extends
-        com.google.protobuf.GeneratedMessageLite implements
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:TableFileDescription.Table)
         TableOrBuilder {
+    private static final long serialVersionUID = 0L;
       // Use Table.newBuilder() to construct.
-      private Table(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+      private Table(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
-        this.unknownFields = builder.getUnknownFields();
       }
-      private Table(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-      private static final Table defaultInstance;
-      public static Table getDefaultInstance() {
-        return defaultInstance;
+      private Table() {
+        table_ = "";
+        tableDescription_ = "";
+        column_ = java.util.Collections.emptyList();
       }
 
-      public Table getDefaultInstanceForType() {
-        return defaultInstance;
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new Table();
       }
 
-      private final com.google.protobuf.ByteString unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
       private Table(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        initFields();
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         int mutable_bitField0_ = 0;
-        com.google.protobuf.ByteString.Output unknownFieldsOutput =
-            com.google.protobuf.ByteString.newOutput();
-        com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-            com.google.protobuf.CodedOutputStream.newInstance(
-                unknownFieldsOutput);
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
         try {
           boolean done = false;
           while (!done) {
@@ -4863,13 +6282,6 @@ public final class Redata {
               case 0:
                 done = true;
                 break;
-              default: {
-                if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                       extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
               case 26: {
                 com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
@@ -4883,12 +6295,19 @@ public final class Redata {
                 break;
               }
               case 43: {
-                if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                   column_ = new java.util.ArrayList<org.bolson.redistricter.Redata.TableFileDescription.Table.Column>();
                   mutable_bitField0_ |= 0x00000004;
                 }
                 column_.add(input.readGroup(5, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.PARSER,
                     extensionRegistry));
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
                 break;
               }
             }
@@ -4897,88 +6316,88 @@ public final class Redata {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
           throw new com.google.protobuf.InvalidProtocolBufferException(
-              e.getMessage()).setUnfinishedMessage(this);
+              e).setUnfinishedMessage(this);
         } finally {
-          if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((mutable_bitField0_ & 0x00000004) != 0)) {
             column_ = java.util.Collections.unmodifiableList(column_);
           }
-          try {
-            unknownFieldsCodedOutput.flush();
-          } catch (java.io.IOException e) {
-          // Should not happen
-          } finally {
-            unknownFields = unknownFieldsOutput.toByteString();
-          }
+          this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static com.google.protobuf.Parser<Table> PARSER =
-          new com.google.protobuf.AbstractParser<Table>() {
-        public Table parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Table(input, extensionRegistry);
-        }
-      };
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_descriptor;
+      }
 
       @java.lang.Override
-      public com.google.protobuf.Parser<Table> getParserForType() {
-        return PARSER;
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.TableFileDescription.Table.class, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder.class);
       }
 
       public interface ColumnOrBuilder extends
           // @@protoc_insertion_point(interface_extends:TableFileDescription.Table.Column)
-          com.google.protobuf.MessageLiteOrBuilder {
+          com.google.protobuf.MessageOrBuilder {
 
         /**
-         * <code>required int32 column = 6;</code>
-         *
          * <pre>
          * number of column within table file
          * </pre>
+         *
+         * <code>required int32 column = 6;</code>
+         * @return Whether the column field is set.
          */
         boolean hasColumn();
         /**
-         * <code>required int32 column = 6;</code>
-         *
          * <pre>
          * number of column within table file
          * </pre>
+         *
+         * <code>required int32 column = 6;</code>
+         * @return The column.
          */
         int getColumn();
 
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @return A list containing the path.
          */
-        com.google.protobuf.ProtocolStringList
+        java.util.List<java.lang.String>
             getPathList();
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @return The count of path.
          */
         int getPathCount();
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @param index The index of the element to return.
+         * @return The path at the given index.
          */
         java.lang.String getPath(int index);
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the path at the given index.
          */
         com.google.protobuf.ByteString
             getPathBytes(int index);
@@ -4987,37 +6406,41 @@ public final class Redata {
        * Protobuf type {@code TableFileDescription.Table.Column}
        */
       public static final class Column extends
-          com.google.protobuf.GeneratedMessageLite implements
+          com.google.protobuf.GeneratedMessageV3 implements
           // @@protoc_insertion_point(message_implements:TableFileDescription.Table.Column)
           ColumnOrBuilder {
+      private static final long serialVersionUID = 0L;
         // Use Column.newBuilder() to construct.
-        private Column(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private Column(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
           super(builder);
-          this.unknownFields = builder.getUnknownFields();
         }
-        private Column(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-        private static final Column defaultInstance;
-        public static Column getDefaultInstance() {
-          return defaultInstance;
+        private Column() {
+          path_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
-        public Column getDefaultInstanceForType() {
-          return defaultInstance;
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new Column();
         }
 
-        private final com.google.protobuf.ByteString unknownFields;
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
         private Column(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
-          initFields();
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
           int mutable_bitField0_ = 0;
-          com.google.protobuf.ByteString.Output unknownFieldsOutput =
-              com.google.protobuf.ByteString.newOutput();
-          com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-              com.google.protobuf.CodedOutputStream.newInstance(
-                  unknownFieldsOutput);
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
           try {
             boolean done = false;
             while (!done) {
@@ -5026,13 +6449,6 @@ public final class Redata {
                 case 0:
                   done = true;
                   break;
-                default: {
-                  if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                         extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
                 case 48: {
                   bitField0_ |= 0x00000001;
                   column_ = input.readInt32();
@@ -5040,11 +6456,18 @@ public final class Redata {
                 }
                 case 58: {
                   com.google.protobuf.ByteString bs = input.readBytes();
-                  if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                     path_ = new com.google.protobuf.LazyStringArrayList();
                     mutable_bitField0_ |= 0x00000002;
                   }
                   path_.add(bs);
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
                   break;
                 }
               }
@@ -5053,56 +6476,52 @@ public final class Redata {
             throw e.setUnfinishedMessage(this);
           } catch (java.io.IOException e) {
             throw new com.google.protobuf.InvalidProtocolBufferException(
-                e.getMessage()).setUnfinishedMessage(this);
+                e).setUnfinishedMessage(this);
           } finally {
-            if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+            if (((mutable_bitField0_ & 0x00000002) != 0)) {
               path_ = path_.getUnmodifiableView();
             }
-            try {
-              unknownFieldsCodedOutput.flush();
-            } catch (java.io.IOException e) {
-            // Should not happen
-            } finally {
-              unknownFields = unknownFieldsOutput.toByteString();
-            }
+            this.unknownFields = unknownFields.build();
             makeExtensionsImmutable();
           }
         }
-        public static com.google.protobuf.Parser<Column> PARSER =
-            new com.google.protobuf.AbstractParser<Column>() {
-          public Column parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new Column(input, extensionRegistry);
-          }
-        };
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_Column_descriptor;
+        }
 
         @java.lang.Override
-        public com.google.protobuf.Parser<Column> getParserForType() {
-          return PARSER;
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_Column_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.bolson.redistricter.Redata.TableFileDescription.Table.Column.class, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder.class);
         }
 
         private int bitField0_;
         public static final int COLUMN_FIELD_NUMBER = 6;
         private int column_;
         /**
-         * <code>required int32 column = 6;</code>
-         *
          * <pre>
          * number of column within table file
          * </pre>
+         *
+         * <code>required int32 column = 6;</code>
+         * @return Whether the column field is set.
          */
+        @java.lang.Override
         public boolean hasColumn() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
+          return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>required int32 column = 6;</code>
-         *
          * <pre>
          * number of column within table file
          * </pre>
+         *
+         * <code>required int32 column = 6;</code>
+         * @return The column.
          */
+        @java.lang.Override
         public int getColumn() {
           return column_;
         }
@@ -5110,53 +6529,56 @@ public final class Redata {
         public static final int PATH_FIELD_NUMBER = 7;
         private com.google.protobuf.LazyStringList path_;
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @return A list containing the path.
          */
         public com.google.protobuf.ProtocolStringList
             getPathList() {
           return path_;
         }
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @return The count of path.
          */
         public int getPathCount() {
           return path_.size();
         }
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @param index The index of the element to return.
+         * @return The path at the given index.
          */
         public java.lang.String getPath(int index) {
           return path_.get(index);
         }
         /**
-         * <code>repeated string path = 7;</code>
-         *
          * <pre>
          * ['total','male','30-35'] or similar
          * </pre>
+         *
+         * <code>repeated string path = 7;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the path at the given index.
          */
         public com.google.protobuf.ByteString
             getPathBytes(int index) {
           return path_.getByteString(index);
         }
 
-        private void initFields() {
-          column_ = 0;
-          path_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        }
         private byte memoizedIsInitialized = -1;
+        @java.lang.Override
         public final boolean isInitialized() {
           byte isInitialized = memoizedIsInitialized;
           if (isInitialized == 1) return true;
@@ -5170,49 +6592,93 @@ public final class Redata {
           return true;
         }
 
+        @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                             throws java.io.IOException {
-          getSerializedSize();
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             output.writeInt32(6, column_);
           }
           for (int i = 0; i < path_.size(); i++) {
-            output.writeBytes(7, path_.getByteString(i));
+            com.google.protobuf.GeneratedMessageV3.writeString(output, 7, path_.getRaw(i));
           }
-          output.writeRawBytes(unknownFields);
+          unknownFields.writeTo(output);
         }
 
-        private int memoizedSerializedSize = -1;
+        @java.lang.Override
         public int getSerializedSize() {
-          int size = memoizedSerializedSize;
+          int size = memoizedSize;
           if (size != -1) return size;
 
           size = 0;
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(6, column_);
           }
           {
             int dataSize = 0;
             for (int i = 0; i < path_.size(); i++) {
-              dataSize += com.google.protobuf.CodedOutputStream
-                .computeBytesSizeNoTag(path_.getByteString(i));
+              dataSize += computeStringSizeNoTag(path_.getRaw(i));
             }
             size += dataSize;
             size += 1 * getPathList().size();
           }
-          size += unknownFields.size();
-          memoizedSerializedSize = size;
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
           return size;
         }
 
-        private static final long serialVersionUID = 0L;
         @java.lang.Override
-        protected java.lang.Object writeReplace()
-            throws java.io.ObjectStreamException {
-          return super.writeReplace();
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof org.bolson.redistricter.Redata.TableFileDescription.Table.Column)) {
+            return super.equals(obj);
+          }
+          org.bolson.redistricter.Redata.TableFileDescription.Table.Column other = (org.bolson.redistricter.Redata.TableFileDescription.Table.Column) obj;
+
+          if (hasColumn() != other.hasColumn()) return false;
+          if (hasColumn()) {
+            if (getColumn()
+                != other.getColumn()) return false;
+          }
+          if (!getPathList()
+              .equals(other.getPathList())) return false;
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
         }
 
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          if (hasColumn()) {
+            hash = (37 * hash) + COLUMN_FIELD_NUMBER;
+            hash = (53 * hash) + getColumn();
+          }
+          if (getPathCount() > 0) {
+            hash = (37 * hash) + PATH_FIELD_NUMBER;
+            hash = (53 * hash) + getPathList().hashCode();
+          }
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
             com.google.protobuf.ByteString data)
             throws com.google.protobuf.InvalidProtocolBufferException {
@@ -5236,63 +6702,98 @@ public final class Redata {
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(java.io.InputStream input)
             throws java.io.IOException {
-          return PARSER.parseFrom(input);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
             java.io.InputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          return PARSER.parseFrom(input, extensionRegistry);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseDelimitedFrom(java.io.InputStream input)
             throws java.io.IOException {
-          return PARSER.parseDelimitedFrom(input);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseDelimitedFrom(
             java.io.InputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          return PARSER.parseDelimitedFrom(input, extensionRegistry);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
             com.google.protobuf.CodedInputStream input)
             throws java.io.IOException {
-          return PARSER.parseFrom(input);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
         }
         public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column parseFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          return PARSER.parseFrom(input, extensionRegistry);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
         }
 
-        public static Builder newBuilder() { return Builder.create(); }
+        @java.lang.Override
         public Builder newBuilderForType() { return newBuilder(); }
-        public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription.Table.Column prototype) {
-          return newBuilder().mergeFrom(prototype);
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
         }
-        public Builder toBuilder() { return newBuilder(this); }
+        public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription.Table.Column prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
 
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
         /**
          * Protobuf type {@code TableFileDescription.Table.Column}
          */
         public static final class Builder extends
-            com.google.protobuf.GeneratedMessageLite.Builder<
-              org.bolson.redistricter.Redata.TableFileDescription.Table.Column, Builder>
-            implements
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
             // @@protoc_insertion_point(builder_implements:TableFileDescription.Table.Column)
             org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_Column_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_Column_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    org.bolson.redistricter.Redata.TableFileDescription.Table.Column.class, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder.class);
+          }
+
           // Construct using org.bolson.redistricter.Redata.TableFileDescription.Table.Column.newBuilder()
           private Builder() {
             maybeForceBuilderInitialization();
           }
 
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
           private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
           }
-          private static Builder create() {
-            return new Builder();
-          }
-
+          @java.lang.Override
           public Builder clear() {
             super.clear();
             column_ = 0;
@@ -5302,14 +6803,18 @@ public final class Redata {
             return this;
           }
 
-          public Builder clone() {
-            return create().mergeFrom(buildPartial());
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_Column_descriptor;
           }
 
+          @java.lang.Override
           public org.bolson.redistricter.Redata.TableFileDescription.Table.Column getDefaultInstanceForType() {
             return org.bolson.redistricter.Redata.TableFileDescription.Table.Column.getDefaultInstance();
           }
 
+          @java.lang.Override
           public org.bolson.redistricter.Redata.TableFileDescription.Table.Column build() {
             org.bolson.redistricter.Redata.TableFileDescription.Table.Column result = buildPartial();
             if (!result.isInitialized()) {
@@ -5318,21 +6823,65 @@ public final class Redata {
             return result;
           }
 
+          @java.lang.Override
           public org.bolson.redistricter.Redata.TableFileDescription.Table.Column buildPartial() {
             org.bolson.redistricter.Redata.TableFileDescription.Table.Column result = new org.bolson.redistricter.Redata.TableFileDescription.Table.Column(this);
             int from_bitField0_ = bitField0_;
             int to_bitField0_ = 0;
-            if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            if (((from_bitField0_ & 0x00000001) != 0)) {
+              result.column_ = column_;
               to_bitField0_ |= 0x00000001;
             }
-            result.column_ = column_;
-            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            if (((bitField0_ & 0x00000002) != 0)) {
               path_ = path_.getUnmodifiableView();
               bitField0_ = (bitField0_ & ~0x00000002);
             }
             result.path_ = path_;
             result.bitField0_ = to_bitField0_;
+            onBuilt();
             return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof org.bolson.redistricter.Redata.TableFileDescription.Table.Column) {
+              return mergeFrom((org.bolson.redistricter.Redata.TableFileDescription.Table.Column)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
           }
 
           public Builder mergeFrom(org.bolson.redistricter.Redata.TableFileDescription.Table.Column other) {
@@ -5348,21 +6897,22 @@ public final class Redata {
                 ensurePathIsMutable();
                 path_.addAll(other.path_);
               }
-              
+              onChanged();
             }
-            setUnknownFields(
-                getUnknownFields().concat(other.unknownFields));
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
             return this;
           }
 
+          @java.lang.Override
           public final boolean isInitialized() {
             if (!hasColumn()) {
-              
               return false;
             }
             return true;
           }
 
+          @java.lang.Override
           public Builder mergeFrom(
               com.google.protobuf.CodedInputStream input,
               com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5372,7 +6922,7 @@ public final class Redata {
               parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
               parsedMessage = (org.bolson.redistricter.Redata.TableFileDescription.Table.Column) e.getUnfinishedMessage();
-              throw e;
+              throw e.unwrapIOException();
             } finally {
               if (parsedMessage != null) {
                 mergeFrom(parsedMessage);
@@ -5384,107 +6934,123 @@ public final class Redata {
 
           private int column_ ;
           /**
-           * <code>required int32 column = 6;</code>
-           *
            * <pre>
            * number of column within table file
            * </pre>
+           *
+           * <code>required int32 column = 6;</code>
+           * @return Whether the column field is set.
            */
+          @java.lang.Override
           public boolean hasColumn() {
-            return ((bitField0_ & 0x00000001) == 0x00000001);
+            return ((bitField0_ & 0x00000001) != 0);
           }
           /**
-           * <code>required int32 column = 6;</code>
-           *
            * <pre>
            * number of column within table file
            * </pre>
+           *
+           * <code>required int32 column = 6;</code>
+           * @return The column.
            */
+          @java.lang.Override
           public int getColumn() {
             return column_;
           }
           /**
-           * <code>required int32 column = 6;</code>
-           *
            * <pre>
            * number of column within table file
            * </pre>
+           *
+           * <code>required int32 column = 6;</code>
+           * @param value The column to set.
+           * @return This builder for chaining.
            */
           public Builder setColumn(int value) {
             bitField0_ |= 0x00000001;
             column_ = value;
-            
+            onChanged();
             return this;
           }
           /**
-           * <code>required int32 column = 6;</code>
-           *
            * <pre>
            * number of column within table file
            * </pre>
+           *
+           * <code>required int32 column = 6;</code>
+           * @return This builder for chaining.
            */
           public Builder clearColumn() {
             bitField0_ = (bitField0_ & ~0x00000001);
             column_ = 0;
-            
+            onChanged();
             return this;
           }
 
           private com.google.protobuf.LazyStringList path_ = com.google.protobuf.LazyStringArrayList.EMPTY;
           private void ensurePathIsMutable() {
-            if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+            if (!((bitField0_ & 0x00000002) != 0)) {
               path_ = new com.google.protobuf.LazyStringArrayList(path_);
               bitField0_ |= 0x00000002;
              }
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @return A list containing the path.
            */
           public com.google.protobuf.ProtocolStringList
               getPathList() {
             return path_.getUnmodifiableView();
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @return The count of path.
            */
           public int getPathCount() {
             return path_.size();
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param index The index of the element to return.
+           * @return The path at the given index.
            */
           public java.lang.String getPath(int index) {
             return path_.get(index);
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param index The index of the value to return.
+           * @return The bytes of the path at the given index.
            */
           public com.google.protobuf.ByteString
               getPathBytes(int index) {
             return path_.getByteString(index);
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param index The index to set the value at.
+           * @param value The path to set.
+           * @return This builder for chaining.
            */
           public Builder setPath(
               int index, java.lang.String value) {
@@ -5493,15 +7059,17 @@ public final class Redata {
   }
   ensurePathIsMutable();
             path_.set(index, value);
-            
+            onChanged();
             return this;
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param value The path to add.
+           * @return This builder for chaining.
            */
           public Builder addPath(
               java.lang.String value) {
@@ -5510,43 +7078,48 @@ public final class Redata {
   }
   ensurePathIsMutable();
             path_.add(value);
-            
+            onChanged();
             return this;
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param values The path to add.
+           * @return This builder for chaining.
            */
           public Builder addAllPath(
               java.lang.Iterable<java.lang.String> values) {
             ensurePathIsMutable();
             com.google.protobuf.AbstractMessageLite.Builder.addAll(
                 values, path_);
-            
+            onChanged();
             return this;
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @return This builder for chaining.
            */
           public Builder clearPath() {
             path_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             bitField0_ = (bitField0_ & ~0x00000002);
-            
+            onChanged();
             return this;
           }
           /**
-           * <code>repeated string path = 7;</code>
-           *
            * <pre>
            * ['total','male','30-35'] or similar
            * </pre>
+           *
+           * <code>repeated string path = 7;</code>
+           * @param value The bytes of the path to add.
+           * @return This builder for chaining.
            */
           public Builder addPathBytes(
               com.google.protobuf.ByteString value) {
@@ -5555,41 +7128,86 @@ public final class Redata {
   }
   ensurePathIsMutable();
             path_.add(value);
-            
+            onChanged();
             return this;
           }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
 
           // @@protoc_insertion_point(builder_scope:TableFileDescription.Table.Column)
         }
 
+        // @@protoc_insertion_point(class_scope:TableFileDescription.Table.Column)
+        private static final org.bolson.redistricter.Redata.TableFileDescription.Table.Column DEFAULT_INSTANCE;
         static {
-          defaultInstance = new Column(true);
-          defaultInstance.initFields();
+          DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.TableFileDescription.Table.Column();
         }
 
-        // @@protoc_insertion_point(class_scope:TableFileDescription.Table.Column)
+        public static org.bolson.redistricter.Redata.TableFileDescription.Table.Column getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        @java.lang.Deprecated public static final com.google.protobuf.Parser<Column>
+            PARSER = new com.google.protobuf.AbstractParser<Column>() {
+          @java.lang.Override
+          public Column parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Column(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<Column> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Column> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public org.bolson.redistricter.Redata.TableFileDescription.Table.Column getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
       }
 
       private int bitField0_;
       public static final int TABLE_FIELD_NUMBER = 3;
-      private java.lang.Object table_;
+      private volatile java.lang.Object table_;
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return Whether the table field is set.
        */
+      @java.lang.Override
       public boolean hasTable() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return The table.
        */
+      @java.lang.Override
       public java.lang.String getTable() {
         java.lang.Object ref = table_;
         if (ref instanceof java.lang.String) {
@@ -5605,12 +7223,14 @@ public final class Redata {
         }
       }
       /**
-       * <code>required string table = 3;</code>
-       *
        * <pre>
        * the name of the table (group of columns)
        * </pre>
+       *
+       * <code>required string table = 3;</code>
+       * @return The bytes for table.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getTableBytes() {
         java.lang.Object ref = table_;
@@ -5626,16 +7246,20 @@ public final class Redata {
       }
 
       public static final int TABLEDESCRIPTION_FIELD_NUMBER = 4;
-      private java.lang.Object tableDescription_;
+      private volatile java.lang.Object tableDescription_;
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return Whether the tableDescription field is set.
        */
+      @java.lang.Override
       public boolean hasTableDescription() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return The tableDescription.
        */
+      @java.lang.Override
       public java.lang.String getTableDescription() {
         java.lang.Object ref = tableDescription_;
         if (ref instanceof java.lang.String) {
@@ -5652,7 +7276,9 @@ public final class Redata {
       }
       /**
        * <code>optional string tableDescription = 4;</code>
+       * @return The bytes for tableDescription.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getTableDescriptionBytes() {
         java.lang.Object ref = tableDescription_;
@@ -5672,12 +7298,14 @@ public final class Redata {
       /**
        * <code>repeated group Column = 5 { ... }</code>
        */
+      @java.lang.Override
       public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table.Column> getColumnList() {
         return column_;
       }
       /**
        * <code>repeated group Column = 5 { ... }</code>
        */
+      @java.lang.Override
       public java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder> 
           getColumnOrBuilderList() {
         return column_;
@@ -5685,29 +7313,28 @@ public final class Redata {
       /**
        * <code>repeated group Column = 5 { ... }</code>
        */
+      @java.lang.Override
       public int getColumnCount() {
         return column_.size();
       }
       /**
        * <code>repeated group Column = 5 { ... }</code>
        */
+      @java.lang.Override
       public org.bolson.redistricter.Redata.TableFileDescription.Table.Column getColumn(int index) {
         return column_.get(index);
       }
       /**
        * <code>repeated group Column = 5 { ... }</code>
        */
+      @java.lang.Override
       public org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder getColumnOrBuilder(
           int index) {
         return column_.get(index);
       }
 
-      private void initFields() {
-        table_ = "";
-        tableDescription_ = "";
-        column_ = java.util.Collections.emptyList();
-      }
       private byte memoizedIsInitialized = -1;
+      @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
         if (isInitialized == 1) return true;
@@ -5727,51 +7354,103 @@ public final class Redata {
         return true;
       }
 
+      @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
-        getSerializedSize();
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeBytes(3, getTableBytes());
+        if (((bitField0_ & 0x00000001) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, table_);
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeBytes(4, getTableDescriptionBytes());
+        if (((bitField0_ & 0x00000002) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, tableDescription_);
         }
         for (int i = 0; i < column_.size(); i++) {
           output.writeGroup(5, column_.get(i));
         }
-        output.writeRawBytes(unknownFields);
+        unknownFields.writeTo(output);
       }
 
-      private int memoizedSerializedSize = -1;
+      @java.lang.Override
       public int getSerializedSize() {
-        int size = memoizedSerializedSize;
+        int size = memoizedSize;
         if (size != -1) return size;
 
         size = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeBytesSize(3, getTableBytes());
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, table_);
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeBytesSize(4, getTableDescriptionBytes());
+        if (((bitField0_ & 0x00000002) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, tableDescription_);
         }
         for (int i = 0; i < column_.size(); i++) {
           size += com.google.protobuf.CodedOutputStream
             .computeGroupSize(5, column_.get(i));
         }
-        size += unknownFields.size();
-        memoizedSerializedSize = size;
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
         return size;
       }
 
-      private static final long serialVersionUID = 0L;
       @java.lang.Override
-      protected java.lang.Object writeReplace()
-          throws java.io.ObjectStreamException {
-        return super.writeReplace();
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof org.bolson.redistricter.Redata.TableFileDescription.Table)) {
+          return super.equals(obj);
+        }
+        org.bolson.redistricter.Redata.TableFileDescription.Table other = (org.bolson.redistricter.Redata.TableFileDescription.Table) obj;
+
+        if (hasTable() != other.hasTable()) return false;
+        if (hasTable()) {
+          if (!getTable()
+              .equals(other.getTable())) return false;
+        }
+        if (hasTableDescription() != other.hasTableDescription()) return false;
+        if (hasTableDescription()) {
+          if (!getTableDescription()
+              .equals(other.getTableDescription())) return false;
+        }
+        if (!getColumnList()
+            .equals(other.getColumnList())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
       }
 
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasTable()) {
+          hash = (37 * hash) + TABLE_FIELD_NUMBER;
+          hash = (53 * hash) + getTable().hashCode();
+        }
+        if (hasTableDescription()) {
+          hash = (37 * hash) + TABLEDESCRIPTION_FIELD_NUMBER;
+          hash = (53 * hash) + getTableDescription().hashCode();
+        }
+        if (getColumnCount() > 0) {
+          hash = (37 * hash) + COLUMN_FIELD_NUMBER;
+          hash = (53 * hash) + getColumnList().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -5795,82 +7474,126 @@ public final class Redata {
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
-        return PARSER.parseFrom(input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
       public static org.bolson.redistricter.Redata.TableFileDescription.Table parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
-      public static Builder newBuilder() { return Builder.create(); }
+      @java.lang.Override
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription.Table prototype) {
-        return newBuilder().mergeFrom(prototype);
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
       }
-      public Builder toBuilder() { return newBuilder(this); }
+      public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription.Table prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
 
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
       /**
        * Protobuf type {@code TableFileDescription.Table}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessageLite.Builder<
-            org.bolson.redistricter.Redata.TableFileDescription.Table, Builder>
-          implements
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:TableFileDescription.Table)
           org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.bolson.redistricter.Redata.TableFileDescription.Table.class, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder.class);
+        }
+
         // Construct using org.bolson.redistricter.Redata.TableFileDescription.Table.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+            getColumnFieldBuilder();
+          }
         }
-        private static Builder create() {
-          return new Builder();
-        }
-
+        @java.lang.Override
         public Builder clear() {
           super.clear();
           table_ = "";
           bitField0_ = (bitField0_ & ~0x00000001);
           tableDescription_ = "";
           bitField0_ = (bitField0_ & ~0x00000002);
-          column_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          if (columnBuilder_ == null) {
+            column_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            columnBuilder_.clear();
+          }
           return this;
         }
 
-        public Builder clone() {
-          return create().mergeFrom(buildPartial());
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.bolson.redistricter.Redata.internal_static_TableFileDescription_Table_descriptor;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.TableFileDescription.Table getDefaultInstanceForType() {
           return org.bolson.redistricter.Redata.TableFileDescription.Table.getDefaultInstance();
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.TableFileDescription.Table build() {
           org.bolson.redistricter.Redata.TableFileDescription.Table result = buildPartial();
           if (!result.isInitialized()) {
@@ -5879,25 +7602,73 @@ public final class Redata {
           return result;
         }
 
+        @java.lang.Override
         public org.bolson.redistricter.Redata.TableFileDescription.Table buildPartial() {
           org.bolson.redistricter.Redata.TableFileDescription.Table result = new org.bolson.redistricter.Redata.TableFileDescription.Table(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((from_bitField0_ & 0x00000001) != 0)) {
             to_bitField0_ |= 0x00000001;
           }
           result.table_ = table_;
-          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((from_bitField0_ & 0x00000002) != 0)) {
             to_bitField0_ |= 0x00000002;
           }
           result.tableDescription_ = tableDescription_;
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            column_ = java.util.Collections.unmodifiableList(column_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+          if (columnBuilder_ == null) {
+            if (((bitField0_ & 0x00000004) != 0)) {
+              column_ = java.util.Collections.unmodifiableList(column_);
+              bitField0_ = (bitField0_ & ~0x00000004);
+            }
+            result.column_ = column_;
+          } else {
+            result.column_ = columnBuilder_.build();
           }
-          result.column_ = column_;
           result.bitField0_ = to_bitField0_;
+          onBuilt();
           return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.bolson.redistricter.Redata.TableFileDescription.Table) {
+            return mergeFrom((org.bolson.redistricter.Redata.TableFileDescription.Table)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
         }
 
         public Builder mergeFrom(org.bolson.redistricter.Redata.TableFileDescription.Table other) {
@@ -5905,42 +7676,58 @@ public final class Redata {
           if (other.hasTable()) {
             bitField0_ |= 0x00000001;
             table_ = other.table_;
-            
+            onChanged();
           }
           if (other.hasTableDescription()) {
             bitField0_ |= 0x00000002;
             tableDescription_ = other.tableDescription_;
-            
+            onChanged();
           }
-          if (!other.column_.isEmpty()) {
-            if (column_.isEmpty()) {
-              column_ = other.column_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-            } else {
-              ensureColumnIsMutable();
-              column_.addAll(other.column_);
+          if (columnBuilder_ == null) {
+            if (!other.column_.isEmpty()) {
+              if (column_.isEmpty()) {
+                column_ = other.column_;
+                bitField0_ = (bitField0_ & ~0x00000004);
+              } else {
+                ensureColumnIsMutable();
+                column_.addAll(other.column_);
+              }
+              onChanged();
             }
-            
+          } else {
+            if (!other.column_.isEmpty()) {
+              if (columnBuilder_.isEmpty()) {
+                columnBuilder_.dispose();
+                columnBuilder_ = null;
+                column_ = other.column_;
+                bitField0_ = (bitField0_ & ~0x00000004);
+                columnBuilder_ = 
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                     getColumnFieldBuilder() : null;
+              } else {
+                columnBuilder_.addAllMessages(other.column_);
+              }
+            }
           }
-          setUnknownFields(
-              getUnknownFields().concat(other.unknownFields));
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
           return this;
         }
 
+        @java.lang.Override
         public final boolean isInitialized() {
           if (!hasTable()) {
-            
             return false;
           }
           for (int i = 0; i < getColumnCount(); i++) {
             if (!getColumn(i).isInitialized()) {
-              
               return false;
             }
           }
           return true;
         }
 
+        @java.lang.Override
         public Builder mergeFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5950,7 +7737,7 @@ public final class Redata {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             parsedMessage = (org.bolson.redistricter.Redata.TableFileDescription.Table) e.getUnfinishedMessage();
-            throw e;
+            throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
               mergeFrom(parsedMessage);
@@ -5962,21 +7749,23 @@ public final class Redata {
 
         private java.lang.Object table_ = "";
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @return Whether the table field is set.
          */
         public boolean hasTable() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
+          return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @return The table.
          */
         public java.lang.String getTable() {
           java.lang.Object ref = table_;
@@ -5993,11 +7782,12 @@ public final class Redata {
           }
         }
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @return The bytes for table.
          */
         public com.google.protobuf.ByteString
             getTableBytes() {
@@ -6013,11 +7803,13 @@ public final class Redata {
           }
         }
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @param value The table to set.
+         * @return This builder for chaining.
          */
         public Builder setTable(
             java.lang.String value) {
@@ -6026,28 +7818,31 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
           table_ = value;
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @return This builder for chaining.
          */
         public Builder clearTable() {
           bitField0_ = (bitField0_ & ~0x00000001);
           table_ = getDefaultInstance().getTable();
-          
+          onChanged();
           return this;
         }
         /**
-         * <code>required string table = 3;</code>
-         *
          * <pre>
          * the name of the table (group of columns)
          * </pre>
+         *
+         * <code>required string table = 3;</code>
+         * @param value The bytes for table to set.
+         * @return This builder for chaining.
          */
         public Builder setTableBytes(
             com.google.protobuf.ByteString value) {
@@ -6056,19 +7851,21 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
           table_ = value;
-          
+          onChanged();
           return this;
         }
 
         private java.lang.Object tableDescription_ = "";
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @return Whether the tableDescription field is set.
          */
         public boolean hasTableDescription() {
-          return ((bitField0_ & 0x00000002) == 0x00000002);
+          return ((bitField0_ & 0x00000002) != 0);
         }
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @return The tableDescription.
          */
         public java.lang.String getTableDescription() {
           java.lang.Object ref = tableDescription_;
@@ -6086,6 +7883,7 @@ public final class Redata {
         }
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @return The bytes for tableDescription.
          */
         public com.google.protobuf.ByteString
             getTableDescriptionBytes() {
@@ -6102,6 +7900,8 @@ public final class Redata {
         }
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @param value The tableDescription to set.
+         * @return This builder for chaining.
          */
         public Builder setTableDescription(
             java.lang.String value) {
@@ -6110,20 +7910,23 @@ public final class Redata {
   }
   bitField0_ |= 0x00000002;
           tableDescription_ = value;
-          
+          onChanged();
           return this;
         }
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @return This builder for chaining.
          */
         public Builder clearTableDescription() {
           bitField0_ = (bitField0_ & ~0x00000002);
           tableDescription_ = getDefaultInstance().getTableDescription();
-          
+          onChanged();
           return this;
         }
         /**
          * <code>optional string tableDescription = 4;</code>
+         * @param value The bytes for tableDescription to set.
+         * @return This builder for chaining.
          */
         public Builder setTableDescriptionBytes(
             com.google.protobuf.ByteString value) {
@@ -6132,48 +7935,67 @@ public final class Redata {
   }
   bitField0_ |= 0x00000002;
           tableDescription_ = value;
-          
+          onChanged();
           return this;
         }
 
         private java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table.Column> column_ =
           java.util.Collections.emptyList();
         private void ensureColumnIsMutable() {
-          if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (!((bitField0_ & 0x00000004) != 0)) {
             column_ = new java.util.ArrayList<org.bolson.redistricter.Redata.TableFileDescription.Table.Column>(column_);
             bitField0_ |= 0x00000004;
            }
         }
 
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+            org.bolson.redistricter.Redata.TableFileDescription.Table.Column, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder, org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder> columnBuilder_;
+
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table.Column> getColumnList() {
-          return java.util.Collections.unmodifiableList(column_);
+          if (columnBuilder_ == null) {
+            return java.util.Collections.unmodifiableList(column_);
+          } else {
+            return columnBuilder_.getMessageList();
+          }
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public int getColumnCount() {
-          return column_.size();
+          if (columnBuilder_ == null) {
+            return column_.size();
+          } else {
+            return columnBuilder_.getCount();
+          }
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public org.bolson.redistricter.Redata.TableFileDescription.Table.Column getColumn(int index) {
-          return column_.get(index);
+          if (columnBuilder_ == null) {
+            return column_.get(index);
+          } else {
+            return columnBuilder_.getMessage(index);
+          }
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public Builder setColumn(
             int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Column value) {
-          if (value == null) {
-            throw new NullPointerException();
+          if (columnBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureColumnIsMutable();
+            column_.set(index, value);
+            onChanged();
+          } else {
+            columnBuilder_.setMessage(index, value);
           }
-          ensureColumnIsMutable();
-          column_.set(index, value);
-
           return this;
         }
         /**
@@ -6181,21 +8003,29 @@ public final class Redata {
          */
         public Builder setColumn(
             int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder builderForValue) {
-          ensureColumnIsMutable();
-          column_.set(index, builderForValue.build());
-
+          if (columnBuilder_ == null) {
+            ensureColumnIsMutable();
+            column_.set(index, builderForValue.build());
+            onChanged();
+          } else {
+            columnBuilder_.setMessage(index, builderForValue.build());
+          }
           return this;
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public Builder addColumn(org.bolson.redistricter.Redata.TableFileDescription.Table.Column value) {
-          if (value == null) {
-            throw new NullPointerException();
+          if (columnBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureColumnIsMutable();
+            column_.add(value);
+            onChanged();
+          } else {
+            columnBuilder_.addMessage(value);
           }
-          ensureColumnIsMutable();
-          column_.add(value);
-
           return this;
         }
         /**
@@ -6203,12 +8033,16 @@ public final class Redata {
          */
         public Builder addColumn(
             int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Column value) {
-          if (value == null) {
-            throw new NullPointerException();
+          if (columnBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureColumnIsMutable();
+            column_.add(index, value);
+            onChanged();
+          } else {
+            columnBuilder_.addMessage(index, value);
           }
-          ensureColumnIsMutable();
-          column_.add(index, value);
-
           return this;
         }
         /**
@@ -6216,9 +8050,13 @@ public final class Redata {
          */
         public Builder addColumn(
             org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder builderForValue) {
-          ensureColumnIsMutable();
-          column_.add(builderForValue.build());
-
+          if (columnBuilder_ == null) {
+            ensureColumnIsMutable();
+            column_.add(builderForValue.build());
+            onChanged();
+          } else {
+            columnBuilder_.addMessage(builderForValue.build());
+          }
           return this;
         }
         /**
@@ -6226,9 +8064,13 @@ public final class Redata {
          */
         public Builder addColumn(
             int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder builderForValue) {
-          ensureColumnIsMutable();
-          column_.add(index, builderForValue.build());
-
+          if (columnBuilder_ == null) {
+            ensureColumnIsMutable();
+            column_.add(index, builderForValue.build());
+            onChanged();
+          } else {
+            columnBuilder_.addMessage(index, builderForValue.build());
+          }
           return this;
         }
         /**
@@ -6236,62 +8078,183 @@ public final class Redata {
          */
         public Builder addAllColumn(
             java.lang.Iterable<? extends org.bolson.redistricter.Redata.TableFileDescription.Table.Column> values) {
-          ensureColumnIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, column_);
-
+          if (columnBuilder_ == null) {
+            ensureColumnIsMutable();
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, column_);
+            onChanged();
+          } else {
+            columnBuilder_.addAllMessages(values);
+          }
           return this;
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public Builder clearColumn() {
-          column_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-
+          if (columnBuilder_ == null) {
+            column_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000004);
+            onChanged();
+          } else {
+            columnBuilder_.clear();
+          }
           return this;
         }
         /**
          * <code>repeated group Column = 5 { ... }</code>
          */
         public Builder removeColumn(int index) {
-          ensureColumnIsMutable();
-          column_.remove(index);
-
+          if (columnBuilder_ == null) {
+            ensureColumnIsMutable();
+            column_.remove(index);
+            onChanged();
+          } else {
+            columnBuilder_.remove(index);
+          }
           return this;
         }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder getColumnBuilder(
+            int index) {
+          return getColumnFieldBuilder().getBuilder(index);
+        }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder getColumnOrBuilder(
+            int index) {
+          if (columnBuilder_ == null) {
+            return column_.get(index);  } else {
+            return columnBuilder_.getMessageOrBuilder(index);
+          }
+        }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder> 
+             getColumnOrBuilderList() {
+          if (columnBuilder_ != null) {
+            return columnBuilder_.getMessageOrBuilderList();
+          } else {
+            return java.util.Collections.unmodifiableList(column_);
+          }
+        }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder addColumnBuilder() {
+          return getColumnFieldBuilder().addBuilder(
+              org.bolson.redistricter.Redata.TableFileDescription.Table.Column.getDefaultInstance());
+        }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder addColumnBuilder(
+            int index) {
+          return getColumnFieldBuilder().addBuilder(
+              index, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.getDefaultInstance());
+        }
+        /**
+         * <code>repeated group Column = 5 { ... }</code>
+         */
+        public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder> 
+             getColumnBuilderList() {
+          return getColumnFieldBuilder().getBuilderList();
+        }
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+            org.bolson.redistricter.Redata.TableFileDescription.Table.Column, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder, org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder> 
+            getColumnFieldBuilder() {
+          if (columnBuilder_ == null) {
+            columnBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                org.bolson.redistricter.Redata.TableFileDescription.Table.Column, org.bolson.redistricter.Redata.TableFileDescription.Table.Column.Builder, org.bolson.redistricter.Redata.TableFileDescription.Table.ColumnOrBuilder>(
+                    column_,
+                    ((bitField0_ & 0x00000004) != 0),
+                    getParentForChildren(),
+                    isClean());
+            column_ = null;
+          }
+          return columnBuilder_;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
 
         // @@protoc_insertion_point(builder_scope:TableFileDescription.Table)
       }
 
+      // @@protoc_insertion_point(class_scope:TableFileDescription.Table)
+      private static final org.bolson.redistricter.Redata.TableFileDescription.Table DEFAULT_INSTANCE;
       static {
-        defaultInstance = new Table(true);
-        defaultInstance.initFields();
+        DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.TableFileDescription.Table();
       }
 
-      // @@protoc_insertion_point(class_scope:TableFileDescription.Table)
+      public static org.bolson.redistricter.Redata.TableFileDescription.Table getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Table>
+          PARSER = new com.google.protobuf.AbstractParser<Table>() {
+        @java.lang.Override
+        public Table parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Table(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Table> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Table> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.bolson.redistricter.Redata.TableFileDescription.Table getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
     }
 
     private int bitField0_;
     public static final int NAME_FIELD_NUMBER = 1;
-    private java.lang.Object name_;
+    private volatile java.lang.Object name_;
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -6307,12 +8270,14 @@ public final class Redata {
       }
     }
     /**
-     * <code>required string name = 1;</code>
-     *
      * <pre>
      * the name of the containing table file
      * </pre>
+     *
+     * <code>required string name = 1;</code>
+     * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -6332,12 +8297,14 @@ public final class Redata {
     /**
      * <code>repeated group Table = 2 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table> getTableList() {
       return table_;
     }
     /**
      * <code>repeated group Table = 2 { ... }</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder> 
         getTableOrBuilderList() {
       return table_;
@@ -6345,28 +8312,28 @@ public final class Redata {
     /**
      * <code>repeated group Table = 2 { ... }</code>
      */
+    @java.lang.Override
     public int getTableCount() {
       return table_.size();
     }
     /**
      * <code>repeated group Table = 2 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.TableFileDescription.Table getTable(int index) {
       return table_.get(index);
     }
     /**
      * <code>repeated group Table = 2 { ... }</code>
      */
+    @java.lang.Override
     public org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder getTableOrBuilder(
         int index) {
       return table_.get(index);
     }
 
-    private void initFields() {
-      name_ = "";
-      table_ = java.util.Collections.emptyList();
-    }
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6386,44 +8353,88 @@ public final class Redata {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getNameBytes());
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
       for (int i = 0; i < table_.size(); i++) {
         output.writeGroup(2, table_.get(i));
       }
-      output.writeRawBytes(unknownFields);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
+    @java.lang.Override
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getNameBytes());
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
       for (int i = 0; i < table_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeGroupSize(2, table_.get(i));
       }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.bolson.redistricter.Redata.TableFileDescription)) {
+        return super.equals(obj);
+      }
+      org.bolson.redistricter.Redata.TableFileDescription other = (org.bolson.redistricter.Redata.TableFileDescription) obj;
+
+      if (hasName() != other.hasName()) return false;
+      if (hasName()) {
+        if (!getName()
+            .equals(other.getName())) return false;
+      }
+      if (!getTableList()
+          .equals(other.getTableList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasName()) {
+        hash = (37 * hash) + NAME_FIELD_NUMBER;
+        hash = (53 * hash) + getName().hashCode();
+      }
+      if (getTableCount() > 0) {
+        hash = (37 * hash) + TABLE_FIELD_NUMBER;
+        hash = (53 * hash) + getTableList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
     public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -6447,80 +8458,124 @@ public final class Redata {
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.TableFileDescription parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(org.bolson.redistricter.Redata.TableFileDescription prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     /**
      * Protobuf type {@code TableFileDescription}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          org.bolson.redistricter.Redata.TableFileDescription, Builder>
-        implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:TableFileDescription)
         org.bolson.redistricter.Redata.TableFileDescriptionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_TableFileDescription_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_TableFileDescription_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.TableFileDescription.class, org.bolson.redistricter.Redata.TableFileDescription.Builder.class);
+      }
+
       // Construct using org.bolson.redistricter.Redata.TableFileDescription.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
 
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
       private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getTableFieldBuilder();
+        }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         name_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
-        table_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000002);
+        if (tableBuilder_ == null) {
+          table_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          tableBuilder_.clear();
+        }
         return this;
       }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bolson.redistricter.Redata.internal_static_TableFileDescription_descriptor;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.TableFileDescription getDefaultInstanceForType() {
         return org.bolson.redistricter.Redata.TableFileDescription.getDefaultInstance();
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.TableFileDescription build() {
         org.bolson.redistricter.Redata.TableFileDescription result = buildPartial();
         if (!result.isInitialized()) {
@@ -6529,21 +8584,69 @@ public final class Redata {
         return result;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.TableFileDescription buildPartial() {
         org.bolson.redistricter.Redata.TableFileDescription result = new org.bolson.redistricter.Redata.TableFileDescription(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          table_ = java.util.Collections.unmodifiableList(table_);
-          bitField0_ = (bitField0_ & ~0x00000002);
+        if (tableBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0)) {
+            table_ = java.util.Collections.unmodifiableList(table_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.table_ = table_;
+        } else {
+          result.table_ = tableBuilder_.build();
         }
-        result.table_ = table_;
         result.bitField0_ = to_bitField0_;
+        onBuilt();
         return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bolson.redistricter.Redata.TableFileDescription) {
+          return mergeFrom((org.bolson.redistricter.Redata.TableFileDescription)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
       }
 
       public Builder mergeFrom(org.bolson.redistricter.Redata.TableFileDescription other) {
@@ -6551,37 +8654,53 @@ public final class Redata {
         if (other.hasName()) {
           bitField0_ |= 0x00000001;
           name_ = other.name_;
-          
+          onChanged();
         }
-        if (!other.table_.isEmpty()) {
-          if (table_.isEmpty()) {
-            table_ = other.table_;
-            bitField0_ = (bitField0_ & ~0x00000002);
-          } else {
-            ensureTableIsMutable();
-            table_.addAll(other.table_);
+        if (tableBuilder_ == null) {
+          if (!other.table_.isEmpty()) {
+            if (table_.isEmpty()) {
+              table_ = other.table_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureTableIsMutable();
+              table_.addAll(other.table_);
+            }
+            onChanged();
           }
-          
+        } else {
+          if (!other.table_.isEmpty()) {
+            if (tableBuilder_.isEmpty()) {
+              tableBuilder_.dispose();
+              tableBuilder_ = null;
+              table_ = other.table_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              tableBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getTableFieldBuilder() : null;
+            } else {
+              tableBuilder_.addAllMessages(other.table_);
+            }
+          }
         }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
-          
           return false;
         }
         for (int i = 0; i < getTableCount(); i++) {
           if (!getTable(i).isInitialized()) {
-            
             return false;
           }
         }
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6591,7 +8710,7 @@ public final class Redata {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.bolson.redistricter.Redata.TableFileDescription) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -6603,21 +8722,23 @@ public final class Redata {
 
       private java.lang.Object name_ = "";
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -6634,11 +8755,12 @@ public final class Redata {
         }
       }
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -6654,11 +8776,13 @@ public final class Redata {
         }
       }
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -6667,28 +8791,31 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
         name_ = value;
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
         name_ = getDefaultInstance().getName();
-        
+        onChanged();
         return this;
       }
       /**
-       * <code>required string name = 1;</code>
-       *
        * <pre>
        * the name of the containing table file
        * </pre>
+       *
+       * <code>required string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -6697,48 +8824,67 @@ public final class Redata {
   }
   bitField0_ |= 0x00000001;
         name_ = value;
-        
+        onChanged();
         return this;
       }
 
       private java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table> table_ =
         java.util.Collections.emptyList();
       private void ensureTableIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           table_ = new java.util.ArrayList<org.bolson.redistricter.Redata.TableFileDescription.Table>(table_);
           bitField0_ |= 0x00000002;
          }
       }
 
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.TableFileDescription.Table, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder, org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder> tableBuilder_;
+
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table> getTableList() {
-        return java.util.Collections.unmodifiableList(table_);
+        if (tableBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(table_);
+        } else {
+          return tableBuilder_.getMessageList();
+        }
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public int getTableCount() {
-        return table_.size();
+        if (tableBuilder_ == null) {
+          return table_.size();
+        } else {
+          return tableBuilder_.getCount();
+        }
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public org.bolson.redistricter.Redata.TableFileDescription.Table getTable(int index) {
-        return table_.get(index);
+        if (tableBuilder_ == null) {
+          return table_.get(index);
+        } else {
+          return tableBuilder_.getMessage(index);
+        }
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public Builder setTable(
           int index, org.bolson.redistricter.Redata.TableFileDescription.Table value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (tableBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTableIsMutable();
+          table_.set(index, value);
+          onChanged();
+        } else {
+          tableBuilder_.setMessage(index, value);
         }
-        ensureTableIsMutable();
-        table_.set(index, value);
-
         return this;
       }
       /**
@@ -6746,21 +8892,29 @@ public final class Redata {
        */
       public Builder setTable(
           int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder builderForValue) {
-        ensureTableIsMutable();
-        table_.set(index, builderForValue.build());
-
+        if (tableBuilder_ == null) {
+          ensureTableIsMutable();
+          table_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          tableBuilder_.setMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public Builder addTable(org.bolson.redistricter.Redata.TableFileDescription.Table value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (tableBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTableIsMutable();
+          table_.add(value);
+          onChanged();
+        } else {
+          tableBuilder_.addMessage(value);
         }
-        ensureTableIsMutable();
-        table_.add(value);
-
         return this;
       }
       /**
@@ -6768,12 +8922,16 @@ public final class Redata {
        */
       public Builder addTable(
           int index, org.bolson.redistricter.Redata.TableFileDescription.Table value) {
-        if (value == null) {
-          throw new NullPointerException();
+        if (tableBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTableIsMutable();
+          table_.add(index, value);
+          onChanged();
+        } else {
+          tableBuilder_.addMessage(index, value);
         }
-        ensureTableIsMutable();
-        table_.add(index, value);
-
         return this;
       }
       /**
@@ -6781,9 +8939,13 @@ public final class Redata {
        */
       public Builder addTable(
           org.bolson.redistricter.Redata.TableFileDescription.Table.Builder builderForValue) {
-        ensureTableIsMutable();
-        table_.add(builderForValue.build());
-
+        if (tableBuilder_ == null) {
+          ensureTableIsMutable();
+          table_.add(builderForValue.build());
+          onChanged();
+        } else {
+          tableBuilder_.addMessage(builderForValue.build());
+        }
         return this;
       }
       /**
@@ -6791,9 +8953,13 @@ public final class Redata {
        */
       public Builder addTable(
           int index, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder builderForValue) {
-        ensureTableIsMutable();
-        table_.add(index, builderForValue.build());
-
+        if (tableBuilder_ == null) {
+          ensureTableIsMutable();
+          table_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          tableBuilder_.addMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
@@ -6801,142 +8967,281 @@ public final class Redata {
        */
       public Builder addAllTable(
           java.lang.Iterable<? extends org.bolson.redistricter.Redata.TableFileDescription.Table> values) {
-        ensureTableIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, table_);
-
+        if (tableBuilder_ == null) {
+          ensureTableIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, table_);
+          onChanged();
+        } else {
+          tableBuilder_.addAllMessages(values);
+        }
         return this;
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public Builder clearTable() {
-        table_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000002);
-
+        if (tableBuilder_ == null) {
+          table_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          tableBuilder_.clear();
+        }
         return this;
       }
       /**
        * <code>repeated group Table = 2 { ... }</code>
        */
       public Builder removeTable(int index) {
-        ensureTableIsMutable();
-        table_.remove(index);
-
+        if (tableBuilder_ == null) {
+          ensureTableIsMutable();
+          table_.remove(index);
+          onChanged();
+        } else {
+          tableBuilder_.remove(index);
+        }
         return this;
       }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.TableFileDescription.Table.Builder getTableBuilder(
+          int index) {
+        return getTableFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder getTableOrBuilder(
+          int index) {
+        if (tableBuilder_ == null) {
+          return table_.get(index);  } else {
+          return tableBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public java.util.List<? extends org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder> 
+           getTableOrBuilderList() {
+        if (tableBuilder_ != null) {
+          return tableBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(table_);
+        }
+      }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.TableFileDescription.Table.Builder addTableBuilder() {
+        return getTableFieldBuilder().addBuilder(
+            org.bolson.redistricter.Redata.TableFileDescription.Table.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public org.bolson.redistricter.Redata.TableFileDescription.Table.Builder addTableBuilder(
+          int index) {
+        return getTableFieldBuilder().addBuilder(
+            index, org.bolson.redistricter.Redata.TableFileDescription.Table.getDefaultInstance());
+      }
+      /**
+       * <code>repeated group Table = 2 { ... }</code>
+       */
+      public java.util.List<org.bolson.redistricter.Redata.TableFileDescription.Table.Builder> 
+           getTableBuilderList() {
+        return getTableFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.bolson.redistricter.Redata.TableFileDescription.Table, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder, org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder> 
+          getTableFieldBuilder() {
+        if (tableBuilder_ == null) {
+          tableBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.bolson.redistricter.Redata.TableFileDescription.Table, org.bolson.redistricter.Redata.TableFileDescription.Table.Builder, org.bolson.redistricter.Redata.TableFileDescription.TableOrBuilder>(
+                  table_,
+                  ((bitField0_ & 0x00000002) != 0),
+                  getParentForChildren(),
+                  isClean());
+          table_ = null;
+        }
+        return tableBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:TableFileDescription)
     }
 
+    // @@protoc_insertion_point(class_scope:TableFileDescription)
+    private static final org.bolson.redistricter.Redata.TableFileDescription DEFAULT_INSTANCE;
     static {
-      defaultInstance = new TableFileDescription(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.TableFileDescription();
     }
 
-    // @@protoc_insertion_point(class_scope:TableFileDescription)
+    public static org.bolson.redistricter.Redata.TableFileDescription getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<TableFileDescription>
+        PARSER = new com.google.protobuf.AbstractParser<TableFileDescription>() {
+      @java.lang.Override
+      public TableFileDescription parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new TableFileDescription(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<TableFileDescription> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TableFileDescription> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.bolson.redistricter.Redata.TableFileDescription getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface StatLogEntryOrBuilder extends
       // @@protoc_insertion_point(interface_extends:StatLogEntry)
-      com.google.protobuf.MessageLiteOrBuilder {
+      com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>required int32 generation = 1;</code>
+     * @return Whether the generation field is set.
      */
     boolean hasGeneration();
     /**
      * <code>required int32 generation = 1;</code>
+     * @return The generation.
      */
     int getGeneration();
 
     /**
      * <code>required double kmpp = 2;</code>
+     * @return Whether the kmpp field is set.
      */
     boolean hasKmpp();
     /**
      * <code>required double kmpp = 2;</code>
+     * @return The kmpp.
      */
     double getKmpp();
 
     /**
      * <code>required double averagePopulation = 3;</code>
+     * @return Whether the averagePopulation field is set.
      */
     boolean hasAveragePopulation();
     /**
      * <code>required double averagePopulation = 3;</code>
+     * @return The averagePopulation.
      */
     double getAveragePopulation();
 
     /**
      * <code>required double popStdDev = 4;</code>
+     * @return Whether the popStdDev field is set.
      */
     boolean hasPopStdDev();
     /**
      * <code>required double popStdDev = 4;</code>
+     * @return The popStdDev.
      */
     double getPopStdDev();
 
     /**
      * <code>required int32 maxPop = 5;</code>
+     * @return Whether the maxPop field is set.
      */
     boolean hasMaxPop();
     /**
      * <code>required int32 maxPop = 5;</code>
+     * @return The maxPop.
      */
     int getMaxPop();
 
     /**
      * <code>required int32 minPop = 6;</code>
+     * @return Whether the minPop field is set.
      */
     boolean hasMinPop();
     /**
      * <code>required int32 minPop = 6;</code>
+     * @return The minPop.
      */
     int getMinPop();
 
     /**
      * <code>required int32 medianPop = 7;</code>
+     * @return Whether the medianPop field is set.
      */
     boolean hasMedianPop();
     /**
      * <code>required int32 medianPop = 7;</code>
+     * @return The medianPop.
      */
     int getMedianPop();
 
     /**
      * <code>optional int32 noDistrictBlocks = 8;</code>
+     * @return Whether the noDistrictBlocks field is set.
      */
     boolean hasNoDistrictBlocks();
     /**
      * <code>optional int32 noDistrictBlocks = 8;</code>
+     * @return The noDistrictBlocks.
      */
     int getNoDistrictBlocks();
 
     /**
      * <code>optional int32 noDistrictPop = 9;</code>
+     * @return Whether the noDistrictPop field is set.
      */
     boolean hasNoDistrictPop();
     /**
      * <code>optional int32 noDistrictPop = 9;</code>
+     * @return The noDistrictPop.
      */
     int getNoDistrictPop();
 
     /**
      * <code>optional double kmppVariability = 10;</code>
+     * @return Whether the kmppVariability field is set.
      */
     boolean hasKmppVariability();
     /**
      * <code>optional double kmppVariability = 10;</code>
+     * @return The kmppVariability.
      */
     double getKmppVariability();
 
     /**
      * <code>optional double spreadVariability = 11;</code>
+     * @return Whether the spreadVariability field is set.
      */
     boolean hasSpreadVariability();
     /**
      * <code>optional double spreadVariability = 11;</code>
+     * @return The spreadVariability.
      */
     double getSpreadVariability();
   }
@@ -6944,37 +9249,40 @@ public final class Redata {
    * Protobuf type {@code StatLogEntry}
    */
   public static final class StatLogEntry extends
-      com.google.protobuf.GeneratedMessageLite implements
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:StatLogEntry)
       StatLogEntryOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use StatLogEntry.newBuilder() to construct.
-    private StatLogEntry(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+    private StatLogEntry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private StatLogEntry(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final StatLogEntry defaultInstance;
-    public static StatLogEntry getDefaultInstance() {
-      return defaultInstance;
+    private StatLogEntry() {
     }
 
-    public StatLogEntry getDefaultInstanceForType() {
-      return defaultInstance;
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StatLogEntry();
     }
 
-    private final com.google.protobuf.ByteString unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
     private StatLogEntry(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput);
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
         while (!done) {
@@ -6983,13 +9291,6 @@ public final class Redata {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               generation_ = input.readInt32();
@@ -7045,37 +9346,36 @@ public final class Redata {
               spreadVariability_ = input.readDouble();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
+        this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static com.google.protobuf.Parser<StatLogEntry> PARSER =
-        new com.google.protobuf.AbstractParser<StatLogEntry>() {
-      public StatLogEntry parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StatLogEntry(input, extensionRegistry);
-      }
-    };
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bolson.redistricter.Redata.internal_static_StatLogEntry_descriptor;
+    }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<StatLogEntry> getParserForType() {
-      return PARSER;
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bolson.redistricter.Redata.internal_static_StatLogEntry_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bolson.redistricter.Redata.StatLogEntry.class, org.bolson.redistricter.Redata.StatLogEntry.Builder.class);
     }
 
     private int bitField0_;
@@ -7083,13 +9383,17 @@ public final class Redata {
     private int generation_;
     /**
      * <code>required int32 generation = 1;</code>
+     * @return Whether the generation field is set.
      */
+    @java.lang.Override
     public boolean hasGeneration() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required int32 generation = 1;</code>
+     * @return The generation.
      */
+    @java.lang.Override
     public int getGeneration() {
       return generation_;
     }
@@ -7098,13 +9402,17 @@ public final class Redata {
     private double kmpp_;
     /**
      * <code>required double kmpp = 2;</code>
+     * @return Whether the kmpp field is set.
      */
+    @java.lang.Override
     public boolean hasKmpp() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required double kmpp = 2;</code>
+     * @return The kmpp.
      */
+    @java.lang.Override
     public double getKmpp() {
       return kmpp_;
     }
@@ -7113,13 +9421,17 @@ public final class Redata {
     private double averagePopulation_;
     /**
      * <code>required double averagePopulation = 3;</code>
+     * @return Whether the averagePopulation field is set.
      */
+    @java.lang.Override
     public boolean hasAveragePopulation() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required double averagePopulation = 3;</code>
+     * @return The averagePopulation.
      */
+    @java.lang.Override
     public double getAveragePopulation() {
       return averagePopulation_;
     }
@@ -7128,13 +9440,17 @@ public final class Redata {
     private double popStdDev_;
     /**
      * <code>required double popStdDev = 4;</code>
+     * @return Whether the popStdDev field is set.
      */
+    @java.lang.Override
     public boolean hasPopStdDev() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>required double popStdDev = 4;</code>
+     * @return The popStdDev.
      */
+    @java.lang.Override
     public double getPopStdDev() {
       return popStdDev_;
     }
@@ -7143,13 +9459,17 @@ public final class Redata {
     private int maxPop_;
     /**
      * <code>required int32 maxPop = 5;</code>
+     * @return Whether the maxPop field is set.
      */
+    @java.lang.Override
     public boolean hasMaxPop() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>required int32 maxPop = 5;</code>
+     * @return The maxPop.
      */
+    @java.lang.Override
     public int getMaxPop() {
       return maxPop_;
     }
@@ -7158,13 +9478,17 @@ public final class Redata {
     private int minPop_;
     /**
      * <code>required int32 minPop = 6;</code>
+     * @return Whether the minPop field is set.
      */
+    @java.lang.Override
     public boolean hasMinPop() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>required int32 minPop = 6;</code>
+     * @return The minPop.
      */
+    @java.lang.Override
     public int getMinPop() {
       return minPop_;
     }
@@ -7173,13 +9497,17 @@ public final class Redata {
     private int medianPop_;
     /**
      * <code>required int32 medianPop = 7;</code>
+     * @return Whether the medianPop field is set.
      */
+    @java.lang.Override
     public boolean hasMedianPop() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>required int32 medianPop = 7;</code>
+     * @return The medianPop.
      */
+    @java.lang.Override
     public int getMedianPop() {
       return medianPop_;
     }
@@ -7188,13 +9516,17 @@ public final class Redata {
     private int noDistrictBlocks_;
     /**
      * <code>optional int32 noDistrictBlocks = 8;</code>
+     * @return Whether the noDistrictBlocks field is set.
      */
+    @java.lang.Override
     public boolean hasNoDistrictBlocks() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional int32 noDistrictBlocks = 8;</code>
+     * @return The noDistrictBlocks.
      */
+    @java.lang.Override
     public int getNoDistrictBlocks() {
       return noDistrictBlocks_;
     }
@@ -7203,13 +9535,17 @@ public final class Redata {
     private int noDistrictPop_;
     /**
      * <code>optional int32 noDistrictPop = 9;</code>
+     * @return Whether the noDistrictPop field is set.
      */
+    @java.lang.Override
     public boolean hasNoDistrictPop() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional int32 noDistrictPop = 9;</code>
+     * @return The noDistrictPop.
      */
+    @java.lang.Override
     public int getNoDistrictPop() {
       return noDistrictPop_;
     }
@@ -7218,13 +9554,17 @@ public final class Redata {
     private double kmppVariability_;
     /**
      * <code>optional double kmppVariability = 10;</code>
+     * @return Whether the kmppVariability field is set.
      */
+    @java.lang.Override
     public boolean hasKmppVariability() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <code>optional double kmppVariability = 10;</code>
+     * @return The kmppVariability.
      */
+    @java.lang.Override
     public double getKmppVariability() {
       return kmppVariability_;
     }
@@ -7233,31 +9573,23 @@ public final class Redata {
     private double spreadVariability_;
     /**
      * <code>optional double spreadVariability = 11;</code>
+     * @return Whether the spreadVariability field is set.
      */
+    @java.lang.Override
     public boolean hasSpreadVariability() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
     /**
      * <code>optional double spreadVariability = 11;</code>
+     * @return The spreadVariability.
      */
+    @java.lang.Override
     public double getSpreadVariability() {
       return spreadVariability_;
     }
 
-    private void initFields() {
-      generation_ = 0;
-      kmpp_ = 0D;
-      averagePopulation_ = 0D;
-      popStdDev_ = 0D;
-      maxPop_ = 0;
-      minPop_ = 0;
-      medianPop_ = 0;
-      noDistrictBlocks_ = 0;
-      noDistrictPop_ = 0;
-      kmppVariability_ = 0D;
-      spreadVariability_ = 0D;
-    }
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7295,107 +9627,246 @@ public final class Redata {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(1, generation_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeDouble(2, kmpp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeDouble(3, averagePopulation_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeDouble(4, popStdDev_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt32(5, maxPop_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeInt32(6, minPop_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeInt32(7, medianPop_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeInt32(8, noDistrictBlocks_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeInt32(9, noDistrictPop_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         output.writeDouble(10, kmppVariability_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         output.writeDouble(11, spreadVariability_);
       }
-      output.writeRawBytes(unknownFields);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
+    @java.lang.Override
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, generation_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(2, kmpp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(3, averagePopulation_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(4, popStdDev_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, maxPop_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(6, minPop_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(7, medianPop_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(8, noDistrictBlocks_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, noDistrictPop_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(10, kmppVariability_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(11, spreadVariability_);
       }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.bolson.redistricter.Redata.StatLogEntry)) {
+        return super.equals(obj);
+      }
+      org.bolson.redistricter.Redata.StatLogEntry other = (org.bolson.redistricter.Redata.StatLogEntry) obj;
+
+      if (hasGeneration() != other.hasGeneration()) return false;
+      if (hasGeneration()) {
+        if (getGeneration()
+            != other.getGeneration()) return false;
+      }
+      if (hasKmpp() != other.hasKmpp()) return false;
+      if (hasKmpp()) {
+        if (java.lang.Double.doubleToLongBits(getKmpp())
+            != java.lang.Double.doubleToLongBits(
+                other.getKmpp())) return false;
+      }
+      if (hasAveragePopulation() != other.hasAveragePopulation()) return false;
+      if (hasAveragePopulation()) {
+        if (java.lang.Double.doubleToLongBits(getAveragePopulation())
+            != java.lang.Double.doubleToLongBits(
+                other.getAveragePopulation())) return false;
+      }
+      if (hasPopStdDev() != other.hasPopStdDev()) return false;
+      if (hasPopStdDev()) {
+        if (java.lang.Double.doubleToLongBits(getPopStdDev())
+            != java.lang.Double.doubleToLongBits(
+                other.getPopStdDev())) return false;
+      }
+      if (hasMaxPop() != other.hasMaxPop()) return false;
+      if (hasMaxPop()) {
+        if (getMaxPop()
+            != other.getMaxPop()) return false;
+      }
+      if (hasMinPop() != other.hasMinPop()) return false;
+      if (hasMinPop()) {
+        if (getMinPop()
+            != other.getMinPop()) return false;
+      }
+      if (hasMedianPop() != other.hasMedianPop()) return false;
+      if (hasMedianPop()) {
+        if (getMedianPop()
+            != other.getMedianPop()) return false;
+      }
+      if (hasNoDistrictBlocks() != other.hasNoDistrictBlocks()) return false;
+      if (hasNoDistrictBlocks()) {
+        if (getNoDistrictBlocks()
+            != other.getNoDistrictBlocks()) return false;
+      }
+      if (hasNoDistrictPop() != other.hasNoDistrictPop()) return false;
+      if (hasNoDistrictPop()) {
+        if (getNoDistrictPop()
+            != other.getNoDistrictPop()) return false;
+      }
+      if (hasKmppVariability() != other.hasKmppVariability()) return false;
+      if (hasKmppVariability()) {
+        if (java.lang.Double.doubleToLongBits(getKmppVariability())
+            != java.lang.Double.doubleToLongBits(
+                other.getKmppVariability())) return false;
+      }
+      if (hasSpreadVariability() != other.hasSpreadVariability()) return false;
+      if (hasSpreadVariability()) {
+        if (java.lang.Double.doubleToLongBits(getSpreadVariability())
+            != java.lang.Double.doubleToLongBits(
+                other.getSpreadVariability())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasGeneration()) {
+        hash = (37 * hash) + GENERATION_FIELD_NUMBER;
+        hash = (53 * hash) + getGeneration();
+      }
+      if (hasKmpp()) {
+        hash = (37 * hash) + KMPP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getKmpp()));
+      }
+      if (hasAveragePopulation()) {
+        hash = (37 * hash) + AVERAGEPOPULATION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getAveragePopulation()));
+      }
+      if (hasPopStdDev()) {
+        hash = (37 * hash) + POPSTDDEV_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getPopStdDev()));
+      }
+      if (hasMaxPop()) {
+        hash = (37 * hash) + MAXPOP_FIELD_NUMBER;
+        hash = (53 * hash) + getMaxPop();
+      }
+      if (hasMinPop()) {
+        hash = (37 * hash) + MINPOP_FIELD_NUMBER;
+        hash = (53 * hash) + getMinPop();
+      }
+      if (hasMedianPop()) {
+        hash = (37 * hash) + MEDIANPOP_FIELD_NUMBER;
+        hash = (53 * hash) + getMedianPop();
+      }
+      if (hasNoDistrictBlocks()) {
+        hash = (37 * hash) + NODISTRICTBLOCKS_FIELD_NUMBER;
+        hash = (53 * hash) + getNoDistrictBlocks();
+      }
+      if (hasNoDistrictPop()) {
+        hash = (37 * hash) + NODISTRICTPOP_FIELD_NUMBER;
+        hash = (53 * hash) + getNoDistrictPop();
+      }
+      if (hasKmppVariability()) {
+        hash = (37 * hash) + KMPPVARIABILITY_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getKmppVariability()));
+      }
+      if (hasSpreadVariability()) {
+        hash = (37 * hash) + SPREADVARIABILITY_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getSpreadVariability()));
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
     public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -7419,63 +9890,98 @@ public final class Redata {
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
     public static org.bolson.redistricter.Redata.StatLogEntry parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.bolson.redistricter.Redata.StatLogEntry prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(org.bolson.redistricter.Redata.StatLogEntry prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     /**
      * Protobuf type {@code StatLogEntry}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          org.bolson.redistricter.Redata.StatLogEntry, Builder>
-        implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:StatLogEntry)
         org.bolson.redistricter.Redata.StatLogEntryOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bolson.redistricter.Redata.internal_static_StatLogEntry_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bolson.redistricter.Redata.internal_static_StatLogEntry_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bolson.redistricter.Redata.StatLogEntry.class, org.bolson.redistricter.Redata.StatLogEntry.Builder.class);
+      }
+
       // Construct using org.bolson.redistricter.Redata.StatLogEntry.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
 
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
       private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         generation_ = 0;
@@ -7503,14 +10009,18 @@ public final class Redata {
         return this;
       }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bolson.redistricter.Redata.internal_static_StatLogEntry_descriptor;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.StatLogEntry getDefaultInstanceForType() {
         return org.bolson.redistricter.Redata.StatLogEntry.getDefaultInstance();
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.StatLogEntry build() {
         org.bolson.redistricter.Redata.StatLogEntry result = buildPartial();
         if (!result.isInitialized()) {
@@ -7519,56 +10029,100 @@ public final class Redata {
         return result;
       }
 
+      @java.lang.Override
       public org.bolson.redistricter.Redata.StatLogEntry buildPartial() {
         org.bolson.redistricter.Redata.StatLogEntry result = new org.bolson.redistricter.Redata.StatLogEntry(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.generation_ = generation_;
           to_bitField0_ |= 0x00000001;
         }
-        result.generation_ = generation_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.kmpp_ = kmpp_;
           to_bitField0_ |= 0x00000002;
         }
-        result.kmpp_ = kmpp_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.averagePopulation_ = averagePopulation_;
           to_bitField0_ |= 0x00000004;
         }
-        result.averagePopulation_ = averagePopulation_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.popStdDev_ = popStdDev_;
           to_bitField0_ |= 0x00000008;
         }
-        result.popStdDev_ = popStdDev_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.maxPop_ = maxPop_;
           to_bitField0_ |= 0x00000010;
         }
-        result.maxPop_ = maxPop_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.minPop_ = minPop_;
           to_bitField0_ |= 0x00000020;
         }
-        result.minPop_ = minPop_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.medianPop_ = medianPop_;
           to_bitField0_ |= 0x00000040;
         }
-        result.medianPop_ = medianPop_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.noDistrictBlocks_ = noDistrictBlocks_;
           to_bitField0_ |= 0x00000080;
         }
-        result.noDistrictBlocks_ = noDistrictBlocks_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.noDistrictPop_ = noDistrictPop_;
           to_bitField0_ |= 0x00000100;
         }
-        result.noDistrictPop_ = noDistrictPop_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.kmppVariability_ = kmppVariability_;
           to_bitField0_ |= 0x00000200;
         }
-        result.kmppVariability_ = kmppVariability_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          result.spreadVariability_ = spreadVariability_;
           to_bitField0_ |= 0x00000400;
         }
-        result.spreadVariability_ = spreadVariability_;
         result.bitField0_ = to_bitField0_;
+        onBuilt();
         return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bolson.redistricter.Redata.StatLogEntry) {
+          return mergeFrom((org.bolson.redistricter.Redata.StatLogEntry)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
       }
 
       public Builder mergeFrom(org.bolson.redistricter.Redata.StatLogEntry other) {
@@ -7606,43 +10160,38 @@ public final class Redata {
         if (other.hasSpreadVariability()) {
           setSpreadVariability(other.getSpreadVariability());
         }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasGeneration()) {
-          
           return false;
         }
         if (!hasKmpp()) {
-          
           return false;
         }
         if (!hasAveragePopulation()) {
-          
           return false;
         }
         if (!hasPopStdDev()) {
-          
           return false;
         }
         if (!hasMaxPop()) {
-          
           return false;
         }
         if (!hasMinPop()) {
-          
           return false;
         }
         if (!hasMedianPop()) {
-          
           return false;
         }
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7652,7 +10201,7 @@ public final class Redata {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.bolson.redistricter.Redata.StatLogEntry) e.getUnfinishedMessage();
-          throw e;
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -7665,368 +10214,610 @@ public final class Redata {
       private int generation_ ;
       /**
        * <code>required int32 generation = 1;</code>
+       * @return Whether the generation field is set.
        */
+      @java.lang.Override
       public boolean hasGeneration() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required int32 generation = 1;</code>
+       * @return The generation.
        */
+      @java.lang.Override
       public int getGeneration() {
         return generation_;
       }
       /**
        * <code>required int32 generation = 1;</code>
+       * @param value The generation to set.
+       * @return This builder for chaining.
        */
       public Builder setGeneration(int value) {
         bitField0_ |= 0x00000001;
         generation_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required int32 generation = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearGeneration() {
         bitField0_ = (bitField0_ & ~0x00000001);
         generation_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private double kmpp_ ;
       /**
        * <code>required double kmpp = 2;</code>
+       * @return Whether the kmpp field is set.
        */
+      @java.lang.Override
       public boolean hasKmpp() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required double kmpp = 2;</code>
+       * @return The kmpp.
        */
+      @java.lang.Override
       public double getKmpp() {
         return kmpp_;
       }
       /**
        * <code>required double kmpp = 2;</code>
+       * @param value The kmpp to set.
+       * @return This builder for chaining.
        */
       public Builder setKmpp(double value) {
         bitField0_ |= 0x00000002;
         kmpp_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required double kmpp = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKmpp() {
         bitField0_ = (bitField0_ & ~0x00000002);
         kmpp_ = 0D;
-        
+        onChanged();
         return this;
       }
 
       private double averagePopulation_ ;
       /**
        * <code>required double averagePopulation = 3;</code>
+       * @return Whether the averagePopulation field is set.
        */
+      @java.lang.Override
       public boolean hasAveragePopulation() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required double averagePopulation = 3;</code>
+       * @return The averagePopulation.
        */
+      @java.lang.Override
       public double getAveragePopulation() {
         return averagePopulation_;
       }
       /**
        * <code>required double averagePopulation = 3;</code>
+       * @param value The averagePopulation to set.
+       * @return This builder for chaining.
        */
       public Builder setAveragePopulation(double value) {
         bitField0_ |= 0x00000004;
         averagePopulation_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required double averagePopulation = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAveragePopulation() {
         bitField0_ = (bitField0_ & ~0x00000004);
         averagePopulation_ = 0D;
-        
+        onChanged();
         return this;
       }
 
       private double popStdDev_ ;
       /**
        * <code>required double popStdDev = 4;</code>
+       * @return Whether the popStdDev field is set.
        */
+      @java.lang.Override
       public boolean hasPopStdDev() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required double popStdDev = 4;</code>
+       * @return The popStdDev.
        */
+      @java.lang.Override
       public double getPopStdDev() {
         return popStdDev_;
       }
       /**
        * <code>required double popStdDev = 4;</code>
+       * @param value The popStdDev to set.
+       * @return This builder for chaining.
        */
       public Builder setPopStdDev(double value) {
         bitField0_ |= 0x00000008;
         popStdDev_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required double popStdDev = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPopStdDev() {
         bitField0_ = (bitField0_ & ~0x00000008);
         popStdDev_ = 0D;
-        
+        onChanged();
         return this;
       }
 
       private int maxPop_ ;
       /**
        * <code>required int32 maxPop = 5;</code>
+       * @return Whether the maxPop field is set.
        */
+      @java.lang.Override
       public boolean hasMaxPop() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>required int32 maxPop = 5;</code>
+       * @return The maxPop.
        */
+      @java.lang.Override
       public int getMaxPop() {
         return maxPop_;
       }
       /**
        * <code>required int32 maxPop = 5;</code>
+       * @param value The maxPop to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxPop(int value) {
         bitField0_ |= 0x00000010;
         maxPop_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required int32 maxPop = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxPop() {
         bitField0_ = (bitField0_ & ~0x00000010);
         maxPop_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private int minPop_ ;
       /**
        * <code>required int32 minPop = 6;</code>
+       * @return Whether the minPop field is set.
        */
+      @java.lang.Override
       public boolean hasMinPop() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>required int32 minPop = 6;</code>
+       * @return The minPop.
        */
+      @java.lang.Override
       public int getMinPop() {
         return minPop_;
       }
       /**
        * <code>required int32 minPop = 6;</code>
+       * @param value The minPop to set.
+       * @return This builder for chaining.
        */
       public Builder setMinPop(int value) {
         bitField0_ |= 0x00000020;
         minPop_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required int32 minPop = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMinPop() {
         bitField0_ = (bitField0_ & ~0x00000020);
         minPop_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private int medianPop_ ;
       /**
        * <code>required int32 medianPop = 7;</code>
+       * @return Whether the medianPop field is set.
        */
+      @java.lang.Override
       public boolean hasMedianPop() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>required int32 medianPop = 7;</code>
+       * @return The medianPop.
        */
+      @java.lang.Override
       public int getMedianPop() {
         return medianPop_;
       }
       /**
        * <code>required int32 medianPop = 7;</code>
+       * @param value The medianPop to set.
+       * @return This builder for chaining.
        */
       public Builder setMedianPop(int value) {
         bitField0_ |= 0x00000040;
         medianPop_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>required int32 medianPop = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMedianPop() {
         bitField0_ = (bitField0_ & ~0x00000040);
         medianPop_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private int noDistrictBlocks_ ;
       /**
        * <code>optional int32 noDistrictBlocks = 8;</code>
+       * @return Whether the noDistrictBlocks field is set.
        */
+      @java.lang.Override
       public boolean hasNoDistrictBlocks() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional int32 noDistrictBlocks = 8;</code>
+       * @return The noDistrictBlocks.
        */
+      @java.lang.Override
       public int getNoDistrictBlocks() {
         return noDistrictBlocks_;
       }
       /**
        * <code>optional int32 noDistrictBlocks = 8;</code>
+       * @param value The noDistrictBlocks to set.
+       * @return This builder for chaining.
        */
       public Builder setNoDistrictBlocks(int value) {
         bitField0_ |= 0x00000080;
         noDistrictBlocks_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional int32 noDistrictBlocks = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNoDistrictBlocks() {
         bitField0_ = (bitField0_ & ~0x00000080);
         noDistrictBlocks_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private int noDistrictPop_ ;
       /**
        * <code>optional int32 noDistrictPop = 9;</code>
+       * @return Whether the noDistrictPop field is set.
        */
+      @java.lang.Override
       public boolean hasNoDistrictPop() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional int32 noDistrictPop = 9;</code>
+       * @return The noDistrictPop.
        */
+      @java.lang.Override
       public int getNoDistrictPop() {
         return noDistrictPop_;
       }
       /**
        * <code>optional int32 noDistrictPop = 9;</code>
+       * @param value The noDistrictPop to set.
+       * @return This builder for chaining.
        */
       public Builder setNoDistrictPop(int value) {
         bitField0_ |= 0x00000100;
         noDistrictPop_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional int32 noDistrictPop = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNoDistrictPop() {
         bitField0_ = (bitField0_ & ~0x00000100);
         noDistrictPop_ = 0;
-        
+        onChanged();
         return this;
       }
 
       private double kmppVariability_ ;
       /**
        * <code>optional double kmppVariability = 10;</code>
+       * @return Whether the kmppVariability field is set.
        */
+      @java.lang.Override
       public boolean hasKmppVariability() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000200) != 0);
       }
       /**
        * <code>optional double kmppVariability = 10;</code>
+       * @return The kmppVariability.
        */
+      @java.lang.Override
       public double getKmppVariability() {
         return kmppVariability_;
       }
       /**
        * <code>optional double kmppVariability = 10;</code>
+       * @param value The kmppVariability to set.
+       * @return This builder for chaining.
        */
       public Builder setKmppVariability(double value) {
         bitField0_ |= 0x00000200;
         kmppVariability_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional double kmppVariability = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKmppVariability() {
         bitField0_ = (bitField0_ & ~0x00000200);
         kmppVariability_ = 0D;
-        
+        onChanged();
         return this;
       }
 
       private double spreadVariability_ ;
       /**
        * <code>optional double spreadVariability = 11;</code>
+       * @return Whether the spreadVariability field is set.
        */
+      @java.lang.Override
       public boolean hasSpreadVariability() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000400) != 0);
       }
       /**
        * <code>optional double spreadVariability = 11;</code>
+       * @return The spreadVariability.
        */
+      @java.lang.Override
       public double getSpreadVariability() {
         return spreadVariability_;
       }
       /**
        * <code>optional double spreadVariability = 11;</code>
+       * @param value The spreadVariability to set.
+       * @return This builder for chaining.
        */
       public Builder setSpreadVariability(double value) {
         bitField0_ |= 0x00000400;
         spreadVariability_ = value;
-        
+        onChanged();
         return this;
       }
       /**
        * <code>optional double spreadVariability = 11;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSpreadVariability() {
         bitField0_ = (bitField0_ & ~0x00000400);
         spreadVariability_ = 0D;
-        
+        onChanged();
         return this;
       }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:StatLogEntry)
     }
 
+    // @@protoc_insertion_point(class_scope:StatLogEntry)
+    private static final org.bolson.redistricter.Redata.StatLogEntry DEFAULT_INSTANCE;
     static {
-      defaultInstance = new StatLogEntry(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new org.bolson.redistricter.Redata.StatLogEntry();
     }
 
-    // @@protoc_insertion_point(class_scope:StatLogEntry)
+    public static org.bolson.redistricter.Redata.StatLogEntry getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StatLogEntry>
+        PARSER = new com.google.protobuf.AbstractParser<StatLogEntry>() {
+      @java.lang.Override
+      public StatLogEntry parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StatLogEntry(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StatLogEntry> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StatLogEntry> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.bolson.redistricter.Redata.StatLogEntry getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_RedistricterData_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_RedistricterData_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_RedistricterData_Other_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_RedistricterData_Other_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_MapRasterization_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_MapRasterization_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_MapRasterization_Block_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_MapRasterization_Block_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_TableFileDescription_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_TableFileDescription_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_TableFileDescription_Table_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_TableFileDescription_Table_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_TableFileDescription_Table_Column_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_TableFileDescription_Table_Column_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_StatLogEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_StatLogEntry_fieldAccessorTable;
 
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
+    return descriptor;
+  }
+  private static  com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
   static {
+    java.lang.String[] descriptorData = {
+      "\n\014redata.proto\"\371\001\n\020RedistricterData\022\021\n\ti" +
+      "ntpoints\030\001 \003(\005\022\017\n\007fpoints\030\002 \003(\001\022\022\n\npopul" +
+      "ation\030\003 \003(\005\022\014\n\004area\030\004 \003(\004\022\r\n\005ubids\030\005 \003(\004" +
+      "\022\016\n\006recnos\030\006 \003(\005\022\r\n\005edges\030\007 \003(\005\022\024\n\014numDi" +
+      "stricts\030\010 \001(\005\022&\n\005other\030\t \003(\n2\027.Redistric" +
+      "terData.Other\022\r\n\005place\030\014 \003(\r\032$\n\005Other\022\014\n" +
+      "\004name\030\n \002(\t\022\r\n\005odata\030\013 \003(\005\"\254\001\n\020MapRaster" +
+      "ization\022&\n\005block\030\001 \003(\n2\027.MapRasterizatio" +
+      "n.Block\022\r\n\005sizex\030\004 \001(\005\022\r\n\005sizey\030\005 \001(\005\032R\n" +
+      "\005Block\022\014\n\004ubid\030\002 \001(\004\022\r\n\005recno\030\006 \001(\005\022\017\n\007b" +
+      "lockid\030\007 \001(\014\022\n\n\002xy\030\003 \003(\005\022\017\n\007waterxy\030\010 \003(" +
+      "\005\"\337\001\n\024TableFileDescription\022\014\n\004name\030\001 \002(\t" +
+      "\022*\n\005table\030\002 \003(\n2\033.TableFileDescription.T" +
+      "able\032\214\001\n\005Table\022\r\n\005table\030\003 \002(\t\022\030\n\020tableDe" +
+      "scription\030\004 \001(\t\0222\n\006column\030\005 \003(\n2\".TableF" +
+      "ileDescription.Table.Column\032&\n\006Column\022\016\n" +
+      "\006column\030\006 \002(\005\022\014\n\004path\030\007 \003(\t\"\366\001\n\014StatLogE" +
+      "ntry\022\022\n\ngeneration\030\001 \002(\005\022\014\n\004kmpp\030\002 \002(\001\022\031" +
+      "\n\021averagePopulation\030\003 \002(\001\022\021\n\tpopStdDev\030\004" +
+      " \002(\001\022\016\n\006maxPop\030\005 \002(\005\022\016\n\006minPop\030\006 \002(\005\022\021\n\t" +
+      "medianPop\030\007 \002(\005\022\030\n\020noDistrictBlocks\030\010 \001(" +
+      "\005\022\025\n\rnoDistrictPop\030\t \001(\005\022\027\n\017kmppVariabil" +
+      "ity\030\n \001(\001\022\031\n\021spreadVariability\030\013 \001(\001B#\n\027" +
+      "org.bolson.redistricterH\003Z\006.;data"
+    };
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+        });
+    internal_static_RedistricterData_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_RedistricterData_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_RedistricterData_descriptor,
+        new java.lang.String[] { "Intpoints", "Fpoints", "Population", "Area", "Ubids", "Recnos", "Edges", "NumDistricts", "Other", "Place", });
+    internal_static_RedistricterData_Other_descriptor =
+      internal_static_RedistricterData_descriptor.getNestedTypes().get(0);
+    internal_static_RedistricterData_Other_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_RedistricterData_Other_descriptor,
+        new java.lang.String[] { "Name", "Odata", });
+    internal_static_MapRasterization_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_MapRasterization_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_MapRasterization_descriptor,
+        new java.lang.String[] { "Block", "Sizex", "Sizey", });
+    internal_static_MapRasterization_Block_descriptor =
+      internal_static_MapRasterization_descriptor.getNestedTypes().get(0);
+    internal_static_MapRasterization_Block_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_MapRasterization_Block_descriptor,
+        new java.lang.String[] { "Ubid", "Recno", "Blockid", "Xy", "Waterxy", });
+    internal_static_TableFileDescription_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_TableFileDescription_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_TableFileDescription_descriptor,
+        new java.lang.String[] { "Name", "Table", });
+    internal_static_TableFileDescription_Table_descriptor =
+      internal_static_TableFileDescription_descriptor.getNestedTypes().get(0);
+    internal_static_TableFileDescription_Table_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_TableFileDescription_Table_descriptor,
+        new java.lang.String[] { "Table", "TableDescription", "Column", });
+    internal_static_TableFileDescription_Table_Column_descriptor =
+      internal_static_TableFileDescription_Table_descriptor.getNestedTypes().get(0);
+    internal_static_TableFileDescription_Table_Column_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_TableFileDescription_Table_Column_descriptor,
+        new java.lang.String[] { "Column", "Path", });
+    internal_static_StatLogEntry_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_StatLogEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_StatLogEntry_descriptor,
+        new java.lang.String[] { "Generation", "Kmpp", "AveragePopulation", "PopStdDev", "MaxPop", "MinPop", "MedianPop", "NoDistrictBlocks", "NoDistrictPop", "KmppVariability", "SpreadVariability", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

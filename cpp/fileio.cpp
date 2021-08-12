@@ -29,7 +29,7 @@ extern FILE* blaf;
 
 int GeoData::open( const char* inputname ) {
 	int err;
-	
+
 	fd = ::open( inputname, O_RDONLY );
 	if ( fd <= 0 ) {
 		perror(inputname);
@@ -369,8 +369,21 @@ PlGeo::PlGeo() {
 }
 PlGeo::~PlGeo() {
 }
+
+int PlGeo::load() {
+  if (0 == memcmp(data, "PLST  ", 6)) {
+    return load2010();
+  } else if (0 == memcmp(data, "PLST|", 5)) {
+    return load2020();
+  } else {
+    assert(false);
+    return -1;
+  }
+}
+
 /*
 Census 2010 PL94-171 (redistricting) geography
+fixed width fields in a fixed width line
 http://www.census.gov/prod/cen2010/pl94-171.pdf
 
 0,6 "PLST  "
@@ -399,10 +412,9 @@ static inline void PL_UBID_CHAR(uint64_t& tubid, char c) {
 	assert(c <= '9');
 	tubid = (tubid * 10) + (c - '0');
 }
-
-int PlGeo::load() {
+int PlGeo::load2010() {
 	assert(0 == memcmp(data, "PLST  ", 6));
-	// For each point, read lat,lon,area,population,ubid
+	// For each point, read lat,lon,area,population,ubid,logrecno,place
 	int i;
 	char buf[128];
 	char* endp;
@@ -471,21 +483,21 @@ int PlGeo::load() {
 			uint64_t tubid = 0;
 			// state county tract blkgrp block
 			PL_UBID_CHAR(tubid, line[27]); // state
-			PL_UBID_CHAR(tubid, line[28]); // 
+			PL_UBID_CHAR(tubid, line[28]); //
 			PL_UBID_CHAR(tubid, line[29]); // county
-			PL_UBID_CHAR(tubid, line[30]); // 
-			PL_UBID_CHAR(tubid, line[31]); // 
+			PL_UBID_CHAR(tubid, line[30]); //
+			PL_UBID_CHAR(tubid, line[31]); //
 			PL_UBID_CHAR(tubid, line[54]); // tract
-			PL_UBID_CHAR(tubid, line[55]); // 
-			PL_UBID_CHAR(tubid, line[56]); // 
-			PL_UBID_CHAR(tubid, line[57]); // 
-			PL_UBID_CHAR(tubid, line[58]); // 
-			PL_UBID_CHAR(tubid, line[59]); // 
+			PL_UBID_CHAR(tubid, line[55]); //
+			PL_UBID_CHAR(tubid, line[56]); //
+			PL_UBID_CHAR(tubid, line[57]); //
+			PL_UBID_CHAR(tubid, line[58]); //
+			PL_UBID_CHAR(tubid, line[59]); //
 			//PL_UBID_CHAR(tubid, line[60]); // block group
 			PL_UBID_CHAR(tubid, line[61]); // block
-			PL_UBID_CHAR(tubid, line[62]); // 
-			PL_UBID_CHAR(tubid, line[63]); // 
-			PL_UBID_CHAR(tubid, line[64]); // 
+			PL_UBID_CHAR(tubid, line[62]); //
+			PL_UBID_CHAR(tubid, line[63]); //
+			PL_UBID_CHAR(tubid, line[64]); //
 			//printf("tubid=%lu i=%d\n", tubid, i);
 			ubids[i].ubid = tubid;
 			ubids[i].index = i;
@@ -523,6 +535,255 @@ int PlGeo::load() {
 	}
 	return 0;
 }
+
+static int countLines(char* pos, char* eof) {
+  int count = 1; // we presumably start in a line
+  bool inEol = false;
+  while (pos < eof) {
+    switch (*pos) {
+    case '\r':
+    case '\n':
+      if (!inEol) {
+	inEol = true;
+      }
+      break;
+    default:
+      if (inEol) {
+	// new line content begins
+	inEol = false;
+	count++;
+      }
+    }
+    pos++;
+  }
+  return count;
+}
+
+static char* nextLine(char* pos, char* eof) {
+  bool inEol = false;
+  while (pos < eof) {
+    switch (*pos) {
+    case '\r':
+    case '\n':
+      if (!inEol) {
+	inEol = true;
+      }
+      break;
+    default:
+      if (inEol) {
+	// new line content begins
+	inEol = false;
+	return pos;
+      }
+    }
+    pos++;
+  }
+  return NULL;
+}
+
+// sets (startp, endp). endp is just after last char (like strtod() etc)
+// line should point to start of line
+// eof should point to the byte after last byte in the file
+static inline int pipeField(char* line, int col, char** startp, char** endp, char* eof) {
+  int cp = 0;
+  while (cp < col) {
+    switch (*line) {
+    case '|':
+      cp++;
+      break;
+    case '\r':
+    case '\n':
+      return -1;
+    default:
+      break;
+    }
+    line++;
+    if (line > eof) {
+      return -1;
+    }
+  }
+  *startp = line;
+  line++;
+  while (true) {
+    if (line == eof) {
+      *endp = line;
+      return 0;
+    }
+    switch (*line) {
+    case '|':
+    case '\r':
+    case '\n':
+      *endp = line;
+      return 0;
+    default:
+      break;
+    }
+    line++;
+  }
+  return -2;
+}
+
+// 2020 data is | delimited values
+int PlGeo::load2020() {
+  assert(0 == memcmp(data, "PLST|", 5));
+  char* line = reinterpret_cast<char*>(data);
+  char* eof = line + sb.st_size;
+  // For each point, read lat,lon,area,population,ubid,logrecno,place
+  // | delimited lines
+  // colname, col index (0 based)
+  // POP100 90
+  // INTPTLAT 92
+  // INTPTLON 93
+  // AREALAND 84
+  // AREAWATR 85
+  // STATE 12 (FIPS code)
+  // COUNTY 14 (FIPS code)
+  // TRACT 32
+  // BLOCK 34
+  // LOGRECNO 7
+  // PLACE 29 (FIPS code)
+  // PLACECC 30
+
+  numPoints = countLines(line, eof);
+  pos = new int[numPoints*2];
+  maxx = maxy = INT_MIN;
+  minx = miny = INT_MAX;
+  area = new uint64_t[numPoints];
+  pop = new int[numPoints];
+  totalpop = 0;
+  maxpop = 0;
+  ubids = new UST[numPoints];
+  recno_map = new RecnoNode[numPoints];
+  recnos = new uint32_t[numPoints];
+  place = new uint32_t[numPoints];
+
+  int i = 0;
+  while (line < eof) {
+    char* fstart;
+    char* fend;
+    char* cend;
+    int err;
+
+    // longitude, "x"
+    err = pipeField(line, 93, &fstart, &fend, eof);
+    assert(err == 0);
+    pos[i*2  ] = strtod(fstart, &cend) * 1000000;
+    assert(cend != fstart);
+    assert(cend == fend);
+    if ( pos[i*2  ] > maxx ) {
+      maxx = pos[i*2  ];
+    }
+    if ( pos[i*2  ] < minx ) {
+      minx = pos[i*2  ];
+    }
+
+    // latitude, "y"
+    err = pipeField(line, 92, &fstart, &fend, eof);
+    assert(err == 0);
+    pos[i*2+1] = strtod(fstart, &cend) * 1000000;
+    assert(cend != fstart);
+    assert(cend == fend);
+    if ( pos[i*2+1] > maxy ) {
+      maxy = pos[i*2+1];
+    }
+    if ( pos[i*2+1] < miny ) {
+      miny = pos[i*2+1];
+    }
+
+    // area land
+    err = pipeField(line, 84, &fstart, &fend, eof);
+    assert(err == 0);
+    area[i] = strtoull(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+
+    // population
+    err = pipeField(line, 90, &fstart, &fend, eof);
+    assert(err == 0);
+    pop[i] = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+    totalpop += pop[i];
+    if (pop[i] > maxpop) {
+      maxpop = pop[i];
+    }
+
+    // ubid
+    unsigned long state_fips;
+    unsigned long county_fips;
+    unsigned long tract;
+    unsigned long block;
+    err = pipeField(line, 12, &fstart, &fend, eof);
+    assert(err == 0);
+    state_fips = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+    err = pipeField(line, 14, &fstart, &fend, eof);
+    assert(err == 0);
+    county_fips = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+    err = pipeField(line, 32, &fstart, &fend, eof);
+    assert(err == 0);
+    tract = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+    err = pipeField(line, 34, &fstart, &fend, eof);
+    assert(err == 0);
+    block = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+
+    // block is 4 digets 0..9999
+    // tract is 6 digets 0..999999
+    // county is 3 digits 0..999
+    ubids[i].ubid = (state_fips * 1000 * 1000000 * 10000) + (county_fips * 1000000 * 10000) + (tract * 10000) + block;
+    ubids[i].index = i;
+
+    // logrecno
+    err = pipeField(line, 7, &fstart, &fend, eof);
+    assert(err == 0);
+    recno_map[i].recno = strtoul(fstart, &cend, 10);
+    assert(cend != fstart);
+    assert(cend == fend);
+    recno_map[i].index = i;
+    recnos[i] = recno_map[i].recno;
+
+    // place (if place code filters in)
+    err = pipeField(line, 30, &fstart, &fend, eof);
+    assert(err == 0);
+    if (fstart[0] == 'C' && (fstart[1] == '1' || fstart[1] == '2' || fstart[1] == '5' || fstart[1] == '6' || fstart[1] == '7' || fstart[1] == '8')) {
+      err = pipeField(line, 29, &fstart, &fend, eof);
+      assert(err == 0);
+      place[i] = strtoul(fstart, &cend, 10);
+      if (cend == fstart) {
+	place[i] = 0;
+      } else {
+	assert(place[i] != 0);
+      }
+      assert(cend == fend);
+    } else {
+      place[i] = 0;
+    }
+
+    i++;
+    line = nextLine(line, eof);
+    if (line == NULL) {
+      break;
+    }
+  }
+  assert(i == numPoints);
+
+  qsort( ubids, numPoints, sizeof( UST ), ubidSortF );
+  for ( i = 0; i < 10; i++ ) {
+    fprintf( stderr, "%lu\t%d\n", ubids[i].ubid, ubids[i].index );
+  }
+  printf("PlGeo::load() minx %d, miny %d, maxx %d, maxy %d\n", minx, miny, maxx, maxy );
+  if (recnos != NULL) {
+    qsort( recno_map, numPoints, sizeof(RecnoNode), recnoSortF );
+  }
+  return 0;
+}
 int PlGeo::numDistricts() {
 	return 0;
 }
@@ -558,14 +819,14 @@ int Uf1::load() {
 	int i;
 	char buf[128];
 	char* endp;
-		
+
 	numPoints = sb.st_size / sizeof_GeoUf1;
 #if 0
 	if ( blaf != NULL ) {
 		fprintf( blaf, "there are %d blocks\n", numPoints );
 	}
 #endif
-	
+
 	pos = new int[numPoints*2];
 	maxx = maxy = INT_MIN;
 	minx = miny = INT_MAX;
