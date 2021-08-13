@@ -13,7 +13,7 @@ states = [
     ('Colorado',	'CO',	8),
     ('Connecticut',	'CT',	9),
     ('Delaware',	'DE',	10),
-    ('Washington D.C.',	'DC',	11),
+    ('District of Columbia',	'DC',	11),
     ('Florida',	'FL',	12),
     ('Georgia',	'GA',	13),
     ('Hawaii',	'HI',	15),
