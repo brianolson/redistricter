@@ -257,14 +257,17 @@ func maybeFetch(url, path string, maxage time.Duration) error {
 }
 
 type RunContext struct {
-	dataDir string
-	workDir string
-	binDir  string
-	threads int
+	clientDir string
+	dataDir   string
+	workDir   string
+	binDir    string
+	threads   int
 
 	local bool
 
 	config AllConfig
+
+	enabledConfigs map[string]Config
 
 	weightSum float64
 
@@ -604,7 +607,32 @@ func (rc *RunContext) randomConfig() Config {
 	return Config{}
 }
 
+// check a stop file path to exist, return true if found
+func (rc *RunContext) maybeStopFile(stopPath string) bool {
+	_, err := os.Stat(stopPath)
+	if err != nil {
+		rc.quit()
+		os.Remove(stopPath)
+		return true
+	}
+	return false
+}
+
+// return true if we found a stop file
+func (rc *RunContext) maybeStop() bool {
+	if rc.maybeStopFile(filepath.Join(rc.workDir)) {
+		return true
+	}
+	if rc.clientDir != "" && rc.maybeStopFile(filepath.Join(rc.workDir)) {
+		return true
+	}
+	return false
+}
+
 func (rc *RunContext) maybeStartSolver() bool {
+	if rc.maybeStop() {
+		return false
+	}
 	// must be run from inside rc.subpLock
 	if len(rc.children) >= rc.threads {
 		return false
@@ -764,7 +792,6 @@ type nestedError interface {
 
 func main() {
 	var (
-		clientDir            string
 		printAllCommandLines bool
 	)
 	var rc RunContext
@@ -774,7 +801,7 @@ func main() {
 	pwd, err = filepath.Abs(pwd)
 	maybeFail(err, "pwd.abs: %v", err)
 	flag.StringVar(&rc.config.ConfigURL, "url", defaultURL, "url to fetch bot config json from")
-	flag.StringVar(&clientDir, "dir", pwd, "dir to hold local data")
+	flag.StringVar(&rc.clientDir, "dir", pwd, "dir to hold local data")
 	flag.StringVar(&rc.dataDir, "data", "", "dir path with datasets")
 	flag.StringVar(&rc.workDir, "work", "", "work dir path")
 	flag.StringVar(&rc.binDir, "bin", "", "bin dir path")
@@ -783,7 +810,7 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "show debug log")
 	flag.BoolVar(&rc.notnice, "full-prio", false, "run without `nice`")
 	flag.BoolVar(&printAllCommandLines, "print-all-commands", false, "debug")
-	// TODO: --diskQuota limit of combined clientDir contents
+	// TODO: --diskQuota limit of combined rc.clientDir contents
 	// TODO: --failuresPerSuccessesAllowed=5/2
 	// TODO: include/exclude list of what things to run
 	flag.Parse()
@@ -791,13 +818,13 @@ func main() {
 	debug("GOARCH=%s GOOS=%s version=%s", runtime.GOARCH, runtime.GOOS, version.Version)
 
 	if rc.dataDir == "" {
-		rc.dataDir = filepath.Join(clientDir, "data")
+		rc.dataDir = filepath.Join(rc.clientDir, "data")
 	}
 	if rc.workDir == "" {
-		rc.workDir = filepath.Join(clientDir, "work")
+		rc.workDir = filepath.Join(rc.clientDir, "work")
 	}
 	if rc.binDir == "" {
-		rc.binDir = filepath.Join(clientDir, "bin")
+		rc.binDir = filepath.Join(rc.clientDir, "bin")
 	}
 
 	err = os.MkdirAll(rc.workDir, 0755)
@@ -805,6 +832,28 @@ func main() {
 
 	rc.config.Configs = rc.readDataDir()
 	rc.loadConfig()
+
+	args := flag.Args()
+	if len(args) > 0 {
+		rc.enabledConfigs = make(map[string]Config, len(rc.config.Configs))
+		for name, conf := range rc.config.Configs {
+			hit := false
+			for _, arg := range args {
+				hit, err = filepath.Match(arg, name)
+				if err == nil && hit {
+					break
+				}
+			}
+			if hit {
+				rc.enabledConfigs[name] = conf
+				if verbose {
+					fmt.Fprintf(os.Stdout, "%s enabled\n", name)
+				}
+			}
+		}
+	} else {
+		rc.enabledConfigs = rc.config.Configs
+	}
 
 	if !rc.local {
 		logerror("TODO: get config URL")
