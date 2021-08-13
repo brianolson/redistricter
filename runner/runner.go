@@ -585,7 +585,7 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 func (rc *RunContext) randomConfig() Config {
 	// weirdly doubly-random, by hash order and by deliberate randomness
 	pick := rand.Float64() * rc.weightSum
-	for _, config := range rc.config.Configs {
+	for _, config := range rc.enabledConfigs {
 		cw := config.GetWeight()
 		if pick < cw {
 			return config
@@ -593,15 +593,15 @@ func (rc *RunContext) randomConfig() Config {
 		pick -= cw
 	}
 	// paranoid nonsense code in case something was wrong with weight?
-	ipick := rand.Intn(len(rc.config.Configs))
+	ipick := rand.Intn(len(rc.enabledConfigs))
 	i := 0
-	for _, config := range rc.config.Configs {
+	for _, config := range rc.enabledConfigs {
 		if i < ipick {
 			return config
 		}
 		i++
 	}
-	for _, config := range rc.config.Configs {
+	for _, config := range rc.enabledConfigs {
 		return config
 	}
 	return Config{}
@@ -610,8 +610,9 @@ func (rc *RunContext) randomConfig() Config {
 // check a stop file path to exist, return true if found
 func (rc *RunContext) maybeStopFile(stopPath string) bool {
 	_, err := os.Stat(stopPath)
-	if err != nil {
-		rc.quit()
+	if err == nil {
+		debug("saw stop file %s, quitting...", stopPath)
+		atomic.StoreUint32(&rc.gracefulExit, 1)
 		os.Remove(stopPath)
 		return true
 	}
@@ -620,10 +621,10 @@ func (rc *RunContext) maybeStopFile(stopPath string) bool {
 
 // return true if we found a stop file
 func (rc *RunContext) maybeStop() bool {
-	if rc.maybeStopFile(filepath.Join(rc.workDir)) {
+	if rc.maybeStopFile(filepath.Join(rc.workDir, "stop")) {
 		return true
 	}
-	if rc.clientDir != "" && rc.maybeStopFile(filepath.Join(rc.workDir)) {
+	if rc.clientDir != "" && rc.maybeStopFile(filepath.Join(rc.workDir, "stop")) {
 		return true
 	}
 	return false
@@ -656,7 +657,9 @@ func (rc *RunContext) runLoop() {
 	for atomic.LoadUint32(&rc.gracefulExit) == 0 {
 		didStart := rc.maybeStartSolver()
 		if !didStart {
-			rc.subpCond.Wait()
+			if atomic.LoadUint32(&rc.gracefulExit) == 0 {
+				rc.subpCond.Wait()
+			}
 		}
 	}
 }
