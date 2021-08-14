@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/brianolson/redistricter/runner/version"
@@ -190,7 +192,7 @@ type AllConfig struct {
 	Timestamp int64 `json:"ts"`
 
 	// e.g. {"NM":"https://bot.bdistricting.com/2020/NM_1234.tar.gz", ...}
-	StateDataURLs map[string]string
+	StateDataURLs map[string]string `json:"durls"`
 
 	// Solver crash/fail should not exceed mfn/mfd
 	MaxFailuresNumerator   int `json:"mfn"`
@@ -276,6 +278,8 @@ type RunContext struct {
 	// use sync/atomic on this
 	gracefulExit uint32
 
+	restart bool // should exec self instead of exit
+
 	ctx context.Context
 
 	// subprocess state
@@ -284,8 +288,9 @@ type RunContext struct {
 	children  []*SolverThread
 	finishes  []int // 0 = success, 1 = failure
 	finishPos int
+	wg        sync.WaitGroup
 
-	best *BestDB
+	best BestDB
 }
 
 func (rc *RunContext) init() {
@@ -293,9 +298,13 @@ func (rc *RunContext) init() {
 	rc.subpCond = sync.NewCond(&rc.subpLock)
 	bestpath := filepath.Join(rc.workDir, "bestdb")
 	var err error
+	log.Printf("open best db: %v", bestpath)
 	rc.best, err = OpenBestDB(bestpath)
 	if err != nil {
 		logerror("%s: %v", bestpath, err)
+	}
+	if rc.best == nil {
+		panic("no best db")
 	}
 }
 
@@ -422,12 +431,16 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 			return
 		}
 		rc.children = append(rc.children, st)
+		rc.wg.Add(1)
 		go rc.solverWaiter(st)
 	}
 }
 
 func (rc *RunContext) solverWaiter(st *SolverThread) {
+	go st.watchdog(6 * time.Hour)
 	err := st.cmd.Wait()
+	close(st.done)
+	finish := time.Now()
 	bestKmpp, statsum, sterr := rc.processStatlog(st)
 	if err == nil && sterr != nil {
 		logerror("%s/statlog: %s", st.cwd, sterr)
@@ -436,7 +449,7 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 	if err == nil {
 		rc.maybeSendSolution(st, bestKmpp, statsum)
 	}
-	rc.best.Log(st.cwd, st.config.Name, err == nil, bestKmpp)
+	rc.best.Log(st, finish, err == nil, bestKmpp)
 	rc.logFinish(st, bestKmpp, err)
 }
 
@@ -577,6 +590,7 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 			}
 			rc.children[len(rc.children)-1] = nil // Go GC
 			rc.children = rc.children[:len(rc.children)-1]
+			rc.wg.Done()
 			break
 		}
 	}
@@ -621,6 +635,14 @@ func (rc *RunContext) maybeStopFile(stopPath string) bool {
 
 // return true if we found a stop file
 func (rc *RunContext) maybeStop() bool {
+	if rc.maybeStopFile(filepath.Join(rc.workDir, "restart")) {
+		rc.restart = true
+		return true
+	}
+	if rc.clientDir != "" && rc.maybeStopFile(filepath.Join(rc.workDir, "restart")) {
+		rc.restart = true
+		return true
+	}
 	if rc.maybeStopFile(filepath.Join(rc.workDir, "stop")) {
 		return true
 	}
@@ -656,7 +678,9 @@ func (rc *RunContext) runLoop() {
 	defer rc.subpLock.Unlock()
 	for atomic.LoadUint32(&rc.gracefulExit) == 0 {
 		didStart := rc.maybeStartSolver()
-		if !didStart {
+		if didStart {
+			time.Sleep(time.Second)
+		} else {
 			if atomic.LoadUint32(&rc.gracefulExit) == 0 {
 				rc.subpCond.Wait()
 			}
@@ -715,6 +739,10 @@ type SolverThread struct {
 	out io.Writer
 
 	config Config
+
+	start time.Time
+
+	done chan int
 }
 
 func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args []string, config Config) (st *SolverThread, err error) {
@@ -744,6 +772,8 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 	st.lstderr = bufio.NewScanner(st.pstderr)
 	st.out = out
 	st.config = config
+	st.start = time.Now()
+	st.done = make(chan int)
 
 	go st.prefixThread(st.lstdout, "O")
 	go st.prefixThread(st.lstderr, "E")
@@ -754,6 +784,19 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 func (st *SolverThread) prefixThread(lines *bufio.Scanner, prefix string) {
 	for lines.Scan() {
 		fmt.Fprintf(st.out, "%s %d %s\n", prefix, st.cmd.Process.Pid, lines.Text())
+	}
+}
+
+func (st *SolverThread) watchdog(timeout time.Duration) {
+	tc := time.NewTimer(timeout)
+	select {
+	case <-st.done:
+		if !tc.Stop() {
+			<-tc.C
+		}
+		return
+	case <-tc.C:
+		st.cmd.Process.Kill()
 	}
 }
 
@@ -796,9 +839,11 @@ type nestedError interface {
 func main() {
 	var (
 		printAllCommandLines bool
+		showBest             bool
+		noRun                bool
+		httpAddr             string
 	)
 	var rc RunContext
-	rc.init()
 	pwd, err := os.Getwd()
 	maybeFail(err, "pwd: %v", err)
 	pwd, err = filepath.Abs(pwd)
@@ -808,11 +853,14 @@ func main() {
 	flag.StringVar(&rc.dataDir, "data", "", "dir path with datasets")
 	flag.StringVar(&rc.workDir, "work", "", "work dir path")
 	flag.StringVar(&rc.binDir, "bin", "", "bin dir path")
+	flag.StringVar(&httpAddr, "http", "", "[host]:port to serve on")
 	flag.IntVar(&rc.threads, "threads", runtime.NumCPU(), "number of districter2 processes to run")
 	flag.BoolVar(&rc.local, "local", false, "run from local data")
 	flag.BoolVar(&verbose, "verbose", false, "show debug log")
 	flag.BoolVar(&rc.notnice, "full-prio", false, "run without `nice`")
 	flag.BoolVar(&printAllCommandLines, "print-all-commands", false, "debug")
+	flag.BoolVar(&showBest, "show-best", false, "show best runs")
+	flag.BoolVar(&noRun, "no-run", false, "don't actually run solver")
 	// TODO: --diskQuota limit of combined rc.clientDir contents
 	// TODO: --failuresPerSuccessesAllowed=5/2
 	// TODO: include/exclude list of what things to run
@@ -833,13 +881,29 @@ func main() {
 	err = os.MkdirAll(rc.workDir, 0755)
 	maybeFail(err, "%s: could not create work dir, %v", rc.workDir, err)
 
+	rc.init()
 	rc.config.Configs = rc.readDataDir()
 	rc.loadConfig()
 
+	if showBest {
+		bests, err := rc.best.List()
+		maybeFail(err, "could not load results from db, %v", err)
+		for cname, sll := range bests {
+			fmt.Printf("%s\t%f\n", cname, sll.Kmpp)
+		}
+		return
+	}
+
 	args := flag.Args()
-	if len(args) > 0 {
-		rc.enabledConfigs = make(map[string]Config, len(rc.config.Configs))
-		for name, conf := range rc.config.Configs {
+	rc.enabledConfigs = make(map[string]Config, len(rc.config.Configs))
+	for name, conf := range rc.config.Configs {
+		if conf.Disabled {
+			if verbose {
+				fmt.Fprintf(os.Stdout, "%s disabled\n", name)
+			}
+			continue
+		}
+		if len(args) > 0 {
 			hit := false
 			for _, arg := range args {
 				hit, err = filepath.Match(arg, name)
@@ -847,15 +911,17 @@ func main() {
 					break
 				}
 			}
-			if hit {
-				rc.enabledConfigs[name] = conf
+			if !hit {
 				if verbose {
-					fmt.Fprintf(os.Stdout, "%s enabled\n", name)
+					fmt.Fprintf(os.Stdout, "%s not in current run set\n", name)
 				}
+				continue
 			}
 		}
-	} else {
-		rc.enabledConfigs = rc.config.Configs
+		rc.enabledConfigs[name] = conf
+		if verbose {
+			fmt.Fprintf(os.Stdout, "%s enabled\n", name)
+		}
 	}
 
 	if !rc.local {
@@ -879,5 +945,50 @@ func main() {
 		return
 	}
 	rc.saveConfig()
+	var server http.Server
+	if httpAddr != "" {
+		sh := runServer{&rc}
+		server = http.Server{
+			Addr:    httpAddr,
+			Handler: &sh,
+		}
+		go func() {
+			log.Printf("serving on %s", httpAddr)
+			httpErr := server.ListenAndServe()
+			if httpErr != nil {
+				fmt.Fprintf(os.Stderr, "runner httpd exited: %v", httpErr)
+			}
+		}()
+
+	}
+	if noRun {
+		if httpAddr == "" {
+			return
+		}
+		for {
+			time.Sleep(time.Hour)
+		}
+	}
 	rc.runLoop()
+	rc.wg.Wait()
+	if httpAddr != "" {
+		server.Close()
+	}
+	if rc.restart {
+		execSelf()
+	}
+}
+
+func execSelf() {
+	args := os.Args
+	selfpath, err := exec.LookPath(args[0])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: could not find on PATH, %v", args[0], err)
+		return
+	}
+	env := os.Environ()
+	err = syscall.Exec(selfpath, args, env)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: could not exec, %v", selfpath, err)
+	}
 }

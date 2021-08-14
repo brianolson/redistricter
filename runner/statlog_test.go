@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -32,8 +33,11 @@ func TestStatlogBestKmpp(t *testing.T) {
 	const raw = `#Best Km/p: Km/p=41.261278 spread=1535.000000 std=424.780999 gen=50983
 `
 	fin := strings.NewReader(raw)
-	_, _, err := statlogSummary(fin)
+	bestKmpp, _, err := statlogSummary(fin)
 	maybeFatalf(t, err, "%s: bad statlog, %v", testStatlogPath, err)
+	if math.Abs(bestKmpp.Kmpp-41.261278) > 0.000001 {
+		t.Errorf("bad kmpp, wanted 41.261278 got %f", bestKmpp.Kmpp)
+	}
 }
 
 func maybeFatalf(t *testing.T, err error, format string, args ...interface{}) {
