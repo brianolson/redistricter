@@ -50,6 +50,8 @@ def run(datadir='data', stulist=None, dryrun=False, newerthan=None, csvpath=None
                     'name':stu + '_' + name_part,
                     'common':{'kwargs':{'-d':row[2]}}
                 }
+                if (row[2] == '1') or (row[2] == 1):
+                    ob['disabled'] = True
                 json.dump(ob, out)
     return congress_total
 

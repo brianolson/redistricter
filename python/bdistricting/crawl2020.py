@@ -602,10 +602,14 @@ class StateData(setupstatedata.StateData):
         fout.write('\n')
       return list(map(int, places))
 
+    out = []
     with open(placelistPath, 'r') as fin:
       line = next(fin)
       line = line.strip()
-      return list(map(int, line.split(' ')))
+      for x in line.split(' '):
+        if x:
+          out.append(int(x))
+    return out
 
   def buildHighlightBlocklist(self):
     """highlightPlaces.txt + geoblocks.places -> highlight.ubidz binary ubid list"""
