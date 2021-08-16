@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/tar"
 	"bufio"
 	"bytes"
 	"compress/gzip"
@@ -226,6 +227,7 @@ func (fe *fetchError) Error() string {
 }
 
 func doFetch(url, path string) error {
+	debug("%s -> %s", url, path)
 	response, err := http.DefaultClient.Get(url)
 	if err != nil {
 		return &fetchError{url, err}
@@ -393,10 +395,65 @@ func shescape(x string) string {
 	return x
 }
 
+func fexists(path string) bool {
+	_, err := os.Stat(path)
+	// TODO: os.IsNotExist(err) ?
+	return err == nil
+}
+
 func (rc *RunContext) debugCommandLines() {
 	for _, config := range rc.config.Configs {
 		rc.runConfig(config, true)
 	}
+}
+
+func (rc *RunContext) downloadData(config Config) error {
+	url := config.DataURL
+	if url == "" {
+		url = rc.config.StateDataURLs[config.State]
+	}
+	tarpath := filepath.Join(rc.dataDir, config.State+".tar.gz")
+	err = maybeFetch(url, tarpath, time.Year)
+	if err != nil {
+		logerror("could not download %s from %s: %v", config.State, url, err)
+		return err
+	}
+	fin, err := os.Open(tarpath)
+	if err != nil {
+		logerror("%s: %v", tarpath, err)
+		return err
+	}
+	gzin := gzip.NewReader(fin)
+	tf := tar.NewReader(gzin)
+	for {
+		th, err := tf.Next()
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			logerror("%s: error in tar file, %v", tarpath, err)
+			return err
+		}
+		if th.Typeflag != tar.TypeReg {
+			debug("ignore tar element %s", th.Name)
+			continue
+		}
+		outpath := filepath.Join(rc.dataDir, th.Name)
+		outdir := filepath.Dir(outpath)
+		err = os.MkdirAll(outdir, 0755)
+		if err != nil {
+			logerror("%s: could not mkdir, %v", outdir, err)
+			return err
+		}
+		debug("%s/%s -> %s", tarpath, th.Name, outpath)
+		outf, err := os.OpenFile(outpath, os.O_CREATE|os.O_WRONLY, th.Mode)
+		_, err = io.Copy(outf, tf)
+		if err != nil {
+			logerror("%s/%s -> %s: %v", tarpath, th.Name, outpath, err)
+			return err
+		}
+	}
+	return err
 }
 
 func (rc *RunContext) runConfig(config Config, dryrun bool) {
@@ -407,7 +464,14 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 	workdir := filepath.Join(rc.workDir, config.Name, tmpdirName)
 	stl := strings.ToLower(config.State)
 	args := NewArgs().Update(config.Common).Update(config.Solver)
-	args.Arg("-P", filepath.Join(rc.dataDir, config.State, stl+".pb"))
+	pbpath := filepath.Join(rc.dataDir, config.State, stl+".pb")
+	if !fexists(pbpath) {
+		err = rc.downloadData(config)
+		if err != nil {
+			return
+		}
+	}
+	args.Arg("-P", pbpath)
 	if !rc.notnice {
 		args.Arg("-nice", "19")
 	}
