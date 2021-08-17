@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -184,20 +185,20 @@ type AllConfig struct {
 	Configs map[string]Config `json:"c"`
 
 	// where to get the next version of this config
-	ConfigURL string `json:"url"`
+	ConfigURL string `json:"url,omitempty"`
 
 	// where to send results
-	PostURL string `json:"post"`
+	PostURL string `json:"post,omitempty"`
 
 	// time.Now().Unix()
-	Timestamp int64 `json:"ts"`
+	Timestamp int64 `json:"ts,omitempty"`
 
 	// e.g. {"NM":"https://bot.bdistricting.com/2020/NM_1234.tar.gz", ...}
-	StateDataURLs map[string]string `json:"durls"`
+	StateDataURLs map[string]string `json:"durls,omitempty"`
 
 	// Solver crash/fail should not exceed mfn/mfd
-	MaxFailuresNumerator   int `json:"mfn"`
-	MaxFailuresDenominator int `json:"mfd"`
+	MaxFailuresNumerator   int `json:"mfn,omitempty"`
+	MaxFailuresDenominator int `json:"mfd,omitempty"`
 }
 
 func (ac *AllConfig) Normalize() {
@@ -413,7 +414,7 @@ func (rc *RunContext) downloadData(config Config) error {
 		url = rc.config.StateDataURLs[config.State]
 	}
 	tarpath := filepath.Join(rc.dataDir, config.State+".tar.gz")
-	err = maybeFetch(url, tarpath, time.Year)
+	err := maybeFetch(url, tarpath, 300*24*time.Hour)
 	if err != nil {
 		logerror("could not download %s from %s: %v", config.State, url, err)
 		return err
@@ -423,7 +424,11 @@ func (rc *RunContext) downloadData(config Config) error {
 		logerror("%s: %v", tarpath, err)
 		return err
 	}
-	gzin := gzip.NewReader(fin)
+	gzin, err := gzip.NewReader(fin)
+	if err != nil {
+		logerror("%s: %v", tarpath, err)
+		return err
+	}
 	tf := tar.NewReader(gzin)
 	for {
 		th, err := tf.Next()
@@ -446,14 +451,13 @@ func (rc *RunContext) downloadData(config Config) error {
 			return err
 		}
 		debug("%s/%s -> %s", tarpath, th.Name, outpath)
-		outf, err := os.OpenFile(outpath, os.O_CREATE|os.O_WRONLY, th.Mode)
+		outf, err := os.OpenFile(outpath, os.O_CREATE|os.O_WRONLY, fs.FileMode(th.Mode))
 		_, err = io.Copy(outf, tf)
 		if err != nil {
 			logerror("%s/%s -> %s: %v", tarpath, th.Name, outpath, err)
 			return err
 		}
 	}
-	return err
 }
 
 func (rc *RunContext) runConfig(config Config, dryrun bool) {
@@ -466,7 +470,7 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 	args := NewArgs().Update(config.Common).Update(config.Solver)
 	pbpath := filepath.Join(rc.dataDir, config.State, stl+".pb")
 	if !fexists(pbpath) {
-		err = rc.downloadData(config)
+		err := rc.downloadData(config)
 		if err != nil {
 			return
 		}
@@ -510,55 +514,37 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 		logerror("%s/statlog: %s", st.cwd, sterr)
 		err = sterr
 	}
-	if err == nil {
-		rc.maybeSendSolution(st, bestKmpp, statsum)
-	}
+	rc.maybeSendSolution(st, finish, err, bestKmpp, statsum)
 	rc.best.Log(st, finish, err == nil, bestKmpp)
 	rc.logFinish(st, bestKmpp, err)
 }
 
-func (rc *RunContext) maybeSendSolution(st *SolverThread, bestKmpp StatlogLine, statsum string) {
-	var result ResultJSON
-	result.Vars = make(map[string]string, 1)
-	result.Vars["config"] = st.config.Name
+func (rc *RunContext) maybeSendSolution(st *SolverThread, stopTime time.Time, solErr error, bestKmpp StatlogLine, statsum string) {
+	if rc.config.PostURL == "" {
+		debug("no \"post\" url set")
+		return
+	}
+	result := ResultJSON{
+		ConfigName: st.config.Name,
+		Started:    toJTime(st.start),
+		Timestamp:  toJTime(stopTime),
+		Seconds:    stopTime.Sub(st.start).Seconds(),
+		BestKmpp:   bestKmpp,
+		Ok:         solErr == nil,
+		Statsum:    statsum,
+	}
 
 	// check bestKmpp against local best
 	prevBest, err := rc.best.Get(st.config.Name)
-	if err == nil {
-		if bestKmpp.Kmpp >= prevBest.Kmpp {
-			// not as good as our own best, nevermind
-			return
-		}
-	}
-
-	dszpath := filepath.Join(st.cwd, "bestKmpp.dsz")
-	dsz, err := ioutil.ReadFile(dszpath)
-	if err != nil {
-		logerror("%s: %v", dszpath, err)
-		if st.config.SendAnything {
-			// keep going
+	if solErr == nil && err == nil && bestKmpp.Kmpp < prevBest.Kmpp {
+		dszpath := filepath.Join(st.cwd, "bestKmpp.dsz")
+		dsz, err := ioutil.ReadFile(dszpath)
+		if err == nil {
+			result.SetSolution(dsz)
 		} else {
-			// don't send
-			return
+			logerror("%s: %v", dszpath, err)
 		}
-	} else {
-		result.SetSolution(dsz)
 	}
-
-	if st.config.SendAnything {
-		binlogpath := filepath.Join(st.cwd, "binlog")
-		binlog, blerr := ioutil.ReadFile(binlogpath)
-		if blerr != nil {
-			logerror("%s: %v", binlogpath, blerr)
-			if err != nil {
-				// also no dsz, nothing to send
-				return
-			}
-		}
-		result.SetBinlog(binlog)
-	}
-
-	result.Statsum = statsum
 
 	blob, err := json.Marshal(result)
 	if err != nil {
@@ -608,7 +594,13 @@ func (rc *RunContext) processStatlog(st *SolverThread) (bestKmpp StatlogLine, st
 	gzout := gzip.NewWriter(fout)
 	gp := GzipPipe{fin, fout, gzout}
 	bestKmpp, statsum, err = statlogSummary(&gp)
-	if err != nil {
+	if err == ErrKmppNotFound {
+		fe := gp.Finish()
+		if fe == nil {
+			os.Remove(statlogPath)
+		}
+		return
+	} else if err != nil {
 		err = fmt.Errorf("statlog line reading, %v", err)
 		return
 	}
@@ -869,10 +861,17 @@ func b64(blob []byte) string {
 }
 
 type ResultJSON struct {
-	Vars        map[string]string `json:"vars"`
-	SolutionB64 string            `json:"bestKmpp.dsz"`
-	BinlogB64   string            `json:"binlog"`
-	Statsum     string            `json:"statsum"`
+	ConfigName string      `json:"n"`
+	Started    int64       `json:"s"`
+	Timestamp  int64       `json:"t"` // finish time
+	Seconds    float64     `json:"r"` // run time
+	BestKmpp   StatlogLine `json:"b"`
+	Ok         bool        `json:"ok"`
+
+	SolutionB64 string `json:"bestKmpp.dsz"`
+	Statsum     string `json:"statsum"`
+
+	BinlogB64 string `json:"binlog"` // deprecated
 }
 
 func (r *ResultJSON) SetSolution(dsz []byte) {

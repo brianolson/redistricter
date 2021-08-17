@@ -9,6 +9,7 @@ import cgi
 import cgitb
 from io import StringIO
 import json
+import glob
 import logging
 import os
 import random
@@ -31,6 +32,13 @@ kSoldirEnvName = 'REDISTRICTER_SOLUTIONS'
 SUFFIX_LETTERS_ = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0213456789'
 
 rand = random.Random()
+
+server_json_path = os.path.join(os.environ[kSoldirEnvName], 'server.json')
+
+def serverConfig():
+    # TODO: caching? just let the filesystem do it and assume everything is fast-enough?
+    with open(server_json_path) as fin:
+        return json.load(fin)
 
 
 def makeEventId(remote_addr):
@@ -84,44 +92,6 @@ def stringTruth(x):
     return True
 
 
-class outFileSet(object):
-    def __init__(self, outdir):
-        self.outdir = outdir
-        os.makedirs(self.outdir)
-
-    def outParam(self, name, value):
-        if not value:
-            return
-        paramToFile(name, value, self.outdir)
-
-    def close(self):
-        pass
-
-
-class outTarfileSet(object):
-    def __init__(self, outpath):
-        outdir = os.path.dirname(outpath)
-        if not os.path.isdir(outdir):
-            os.makedirs(outdir)
-        self.out = tarfile.open(outpath, 'w|gz')
-
-    def outParam(self, name, value):
-        if not value:
-            return
-        ti = tarfile.TarInfo()
-        ti.name = name
-        ti.size = len(value)
-        ti.mode = 0o444
-        # TODO: set mtime from Last-Modified if present
-        ti.mtime = time.time()
-        ti.type = tarfile.REGTYPE
-        sf = StringIO(value)
-        self.out.addfile(ti, sf)
-
-    def close(self):
-        self.out.close()
-
-
 def error_text(environ, start_response, code, message):
     start_response(str(code), [('Content-Type', 'text/plain')])
     if isinstance(message, str):
@@ -129,12 +99,17 @@ def error_text(environ, start_response, code, message):
     return [message]
 
 
+def maybeset(d, k, v):
+    if v is None:
+        return
+    d[k] = v
+
 MAX_BODY = 1000000
 
 
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET':
-        return old_http_get(environ, start_response)
+        return http_get(environ, start_response)
     if environ['REQUEST_METHOD'] != 'POST':
         return error_text(environ, start_response, 400, 'bad method')
     # new json:
@@ -147,8 +122,22 @@ def application(environ, start_response):
     raw = environ['wsgi.input'].read(MAX_BODY)
     if len(raw) == MAX_BODY:
         return error_text(environ, start_response, 400, 'bad submission')
+    # we should get:
+    # {
+    #   "n": config name, // e.g. MI_Congress
+    #   "s": start time java ms,
+    #   "t": stop time java ms,
+    #   "r": run time float seconds,
+    #   "b": {"Kmpp": float, "Spread": float, "Std": float},
+    #   "ok": bool,
+    #   "bestKmpp.dsz": base64...,
+    #   "statsum": text,
+    #
+    #   "vars":{"config": cname}, // prior schema
+    #   "binlog": base64..., // deprecated/forgotten
+    # }
     ob = json.loads(raw)
-    if ('bestKmpp.dsz' not in ob) and ('binlog' not in ob):
+    if ('bestKmpp.dsz' not in ob) and ('statsum' not in ob):
         return error_text(environ, start_response, 400, 'empty submission')
     # TODO: more validation of good upload
     # TODO: rate limit per submitting host
@@ -168,89 +157,41 @@ def application(environ, start_response):
     return [json.dumps(ret).encode()]
 
 
-def old_http_get(environ, start_response):
-    form = cgi.FieldStorage(fp=environ.get('wsgi.input'), environ=environ)
-    debug = stringTruth(form.getfirst('debug')) or stringTruth(environ.get('DEBUG'))
-    if debug:
-        # only allow debug for real debug situations
-        addr = environ.get('REMOTE_ADDR')
-        if addr and (addr != '127.0.0.1'):
-            debug = False
-    html = 'html' in form
+def dpathset(d, path, value):
+    if len(path) == 1:
+        d[path[0]] = value
+    else:
+        if d.get(path[0]) is None:
+            d[path[0]] = dict()
+        dpathset(d[path[0]], path[1:], value)
 
+
+# return config json
+# read config.json
+# overlay url,post,durls from server.json
+def http_get(environ, start_response):
+    debug = False
     if debug:
         cgitb.enable()
-    else:
-        pass
-
-    dest_dir = environ[kSoldirEnvName]
-
-    solution = form.getfirst('solution')
-    vars = form.getfirst('vars')
-    statlog_gz = form.getfirst('statlog')
-    binlog = form.getfirst('binlog')
-    statsum = form.getfirst('statsum')
-
-    remote_addr = environ.get('REMOTE_ADDR')
-    eventid = makeEventId(remote_addr)
-
+    server_dir = os.environ[kSoldirEnvName]
+    # districter configs, e.g. IL_Congress
+    with open(os.path.join(server_dir, 'config.json')) as fin:
+        allconf = json.load(fin)
+    allconf['ts'] = int(time.time())
+    server = serverConfig()
+    maybeset(allconf, 'url', server.get('url'))
+    maybeset(allconf, 'post', server.get('post'))
+    maybeset(allconf, 'durls', server.get('durls'))
+    overlays = server.get('overlays', [])
+    for cmd in overlays:
+        path, value = cmd
+        path = path.split('.')
+        dpathset(allconf, path, value)
     headers = []
-    if html:
-        headers.append( ('Content-Type', 'text/html') )
-    else:
-        headers.append( ('Content-Type', 'text/plain') )
+    headers.append( ('Content-Type', 'application/json') )
 
-    if solution or binlog or statlog_gz:
-        solsave = outTarfileSet(os.path.join(dest_dir, eventid + '.tar.gz'))
-        # solsave = outFileSet(os.path.join(dest_dir, eventid))
-        start_response('200 OK', headers)
-        # Just a solution is enough. Store it.
-        solsave.outParam('solution', solution)
-        solsave.outParam('vars', vars)
-        solsave.outParam('binlog', binlog)
-        solsave.outParam('statlog.gz', statlog_gz)
-        solsave.outParam('statsum', statsum)
-        status = 'ok'
-    else:
-        start_response('400 bad request', headers)
-        status = 'no solution|binlog|statlog.gz'
-    outl = []
-    if html:
-        outl.append("""<!DOCTYPE html>
-<html><head><title>solution submission</title></head><body bgcolor="#ffffff" text="#000000">
-<p>%s</p>
-""" % status)
-    else:
-        outl.append(status)
-        outl.append('\n')
-    if debug:
-        if html:
-            outl.append('<pre>\n')
-        outl.append('eventid: ' + eventid + '\n')
-        outl.append('solution: ' + falseOrLen(solution) + '\n')
-        outl.append('vars: ' + falseOrLen(vars) + '\n')
-        outl.append('statlog_gz: ' + falseOrLen(statlog_gz) + '\n')
-        outl.append('binlog: ' + falseOrLen(binlog) + '\n')
-        outl.append('statsum: ' + falseOrLen(statsum) + '\n')
-        outl.append('keys: ' + repr(list(form.keys())) + '\n')
-        keys = sorted(form.keys())
-        for k in keys:
-            v = form[k].value
-            if len(v) > 50:
-                vs = 'len(%d)' % len(v)
-            else:
-                vs = repr(v)
-            outl.append('form[\'%s\'] = %s\n' % (k, vs))
-        keys = sorted(environ.keys())
-        for k in keys:
-            outl.append('environ[\'%s\'] = %r\n' % (k, environ[k]))
-        #outl.append('os.environ: ' + repr(environ))
-        if html:
-            outl.append('</pre>\n')
-
-    if html:
-        outl.append('</body></html>\n')
-    return [''.join(outl)]
+    start_response('200 OK', headers)
+    return [json.dumps(allconf).encode()]
 
 
 if __name__ == '__main__':

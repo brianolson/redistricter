@@ -29,10 +29,13 @@ var ErrKmppNotFound error = errors.New("best Km/p not found")
 // parse log line:
 // #Best Km/p: Km/p={fake_kmpp} spread=1535.000000 std=424.780999 gen=50983
 func statlogSummary(fin io.Reader) (bestKmpp StatlogLine, statsum string, err error) {
+	tail := newTail(50)
 	sumlines := make([]string, 0, 10)
 	scanner := bufio.NewScanner(fin)
+	hit := false
 	for scanner.Scan() {
 		line := scanner.Text()
+		tail.Push(line)
 		if len(line) > 0 && line[0] == '#' {
 			sumlines = append(sumlines, line)
 		}
@@ -47,14 +50,23 @@ func statlogSummary(fin io.Reader) (bestKmpp StatlogLine, statsum string, err er
 				return
 			}
 			bestKmpp.Std, err = strconv.ParseFloat(parts[3], 64)
+			if err != nil {
+				return
+			}
+			hit = true
 			return
 		}
 	}
-	err = scanner.Err()
-	if err == nil {
-		err = ErrKmppNotFound
-	}
 	statsum = strings.Join(sumlines, "\n")
+	err = scanner.Err()
+	if err != nil {
+		return
+	}
+	if !hit {
+		err = ErrKmppNotFound
+		statsum = strings.Join(tail.Tail(), "\n")
+		return
+	}
 	return
 }
 
@@ -101,4 +113,39 @@ func OpenAny(path string) (io.ReadCloser, error) {
 		return &subReadCloser{gzin, fin}, nil
 	}
 	return os.Open(path)
+}
+
+// circular buffer to keep last N lines
+type linebuf struct {
+	lines  []string
+	lineno int
+}
+
+func newTail(lines int) linebuf {
+	return linebuf{lines: make([]string, lines)}
+}
+
+func (tail *linebuf) Push(line string) {
+	tail.lines[tail.lineno%len(tail.lines)] = line
+	tail.lineno++
+}
+
+func (tail *linebuf) Tail() []string {
+	if tail.lineno < len(tail.lines) {
+		// never wrapped
+		return tail.lines[:tail.lineno]
+	}
+	out := make([]string, len(tail.lines))
+	outpos := 0
+	pos := (tail.lineno + 1) % len(tail.lines)
+	end := (tail.lineno) % len(tail.lines)
+	for {
+		out[outpos] = tail.lines[pos]
+		if pos == end {
+			break
+		}
+		outpos++
+		pos = (pos + 1) % len(tail.lines)
+	}
+	return out
 }

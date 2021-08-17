@@ -8,14 +8,18 @@ import (
 	"strings"
 )
 
+func textResponse(code int, response http.ResponseWriter, format string, args ...interface{}) {
+	response.Header().Set("Content-Type", "text/plain")
+	response.WriteHeader(code)
+	fmt.Fprintf(response, format, args...)
+}
+
 // return true if Handler should exit
 func httpErr(err error, code int, response http.ResponseWriter, format string, args ...interface{}) bool {
 	if err == nil {
 		return false
 	}
-	response.Header().Set("Content-Type", "text/plain")
-	response.WriteHeader(code)
-	fmt.Fprintf(response, format, args...)
+	textResponse(code, response, format, args...)
 	return true
 }
 
@@ -29,6 +33,11 @@ func (rs *runServer) ServeHTTP(response http.ResponseWriter, request *http.Reque
 		rs.showBest(response, request)
 		return
 	}
+	if request.URL.Path == "/running" {
+		rs.showRunning(response, request)
+		return
+	}
+	textResponse(404, response, "nope")
 }
 func (rs *runServer) showBest(response http.ResponseWriter, request *http.Request) {
 	sb := strings.Builder{}
@@ -54,4 +63,8 @@ func (rs *runServer) showBest(response http.ResponseWriter, request *http.Reques
 		response.WriteHeader(http.StatusOK)
 		response.Write([]byte(sb.String()))
 	}
+}
+
+func (rs *runServer) showRunning(response http.ResponseWriter, request *http.Request) {
+	// TODO: 'currently running' report
 }
