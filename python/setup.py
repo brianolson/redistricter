@@ -18,6 +18,7 @@ setup(
             'dataserver = bdistricting.dataserver:main',
             'analyze_submissions = bdistricting.analyze_submissions:main',
             'receiver_tool = bdistricting.receiver_tool:main',
+            'send_all_work = bdistricting.send_all_work:main',
         ]
     },
     license='BSD',

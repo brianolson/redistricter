@@ -36,6 +36,7 @@ def main():
             fname = os.path.basename(path)
             stu = fname[:2]
             stateDataUrls[stu] = prefix + fname
+        config['durls'] = stateDataUrls
 
     if args.overlays:
         with open(args.overlays) as fin:
@@ -51,7 +52,6 @@ def main():
                 path = path.split('.')
                 dpathset(config, path, value)
 
-    config['durls'] = stateDataUrls
     with open(args.outpath, 'wt') as fout:
         json.dump(config, fout)
 

@@ -10,6 +10,7 @@ import cgitb
 from io import StringIO
 import json
 import glob
+import hashlib
 import logging
 import os
 import random
@@ -106,6 +107,11 @@ def maybeset(d, k, v):
 
 MAX_BODY = 1000000
 
+def sha256(blob):
+    m = hashlib.sha256()
+    m.update(blob)
+    return m.digest()
+
 
 def application(environ, start_response):
     if environ['REQUEST_METHOD'] == 'GET':
@@ -137,8 +143,12 @@ def application(environ, start_response):
     #   "binlog": base64..., // deprecated/forgotten
     # }
     ob = json.loads(raw)
-    if ('bestKmpp.dsz' not in ob) and ('statsum' not in ob):
+    value = ob.get('bestKmpp.dsz')
+    if not value:
+        value = ob.get('statsum')
+    if not value:
         return error_text(environ, start_response, 400, 'empty submission')
+    vhash = sha256(value)
     # TODO: more validation of good upload
     # TODO: rate limit per submitting host
     dest_dir = os.environ[kSoldirEnvName]

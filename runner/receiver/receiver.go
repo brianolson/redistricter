@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bufio"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -20,6 +25,7 @@ var (
 	serveAddr string
 	dataDir   string
 	rp        resultPather
+	hs        *hashSet
 )
 
 type ErrJSON struct {
@@ -101,16 +107,76 @@ func configHandler(out http.ResponseWriter, request *http.Request) {
 	}
 	out.WriteHeader(http.StatusOK)
 	out.Write(outConfBlob)
-
 }
 
 func putHandler(out http.ResponseWriter, request *http.Request) {
+	if request.Method != "POST" {
+		jsonResponse(out, 400, "not POST")
+		return
+	}
+	if request.Header.Get("Content-Type") != "application/json" {
+		jsonResponse(out, 400, "wrong Content-Type")
+		return
+	}
+	var req data.ResultJSON
+	fin := http.MaxBytesReader(out, request.Body, 10000000)
+	raw, err := io.ReadAll(fin)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(raw, &req)
+	if maybeErrJson(err, out, 400, "bad result json: %v", err) {
+		return
+	}
+	request.Body.Close()
+	value := req.SolutionB64
+	if value == "" {
+		value = req.Statsum
+	}
+	if value == "" {
+		jsonResponse(out, 400, "empty result")
+		return
+	}
+	vhash := sha256.Sum256([]byte(value))
+	collision := hs.insertOrRejectPending(vhash[:])
+	if collision {
+		jsonResponse(out, 200, "already received")
+		return
+	}
+	defer hs.rollback(vhash[:]) // nop if committed
+	rhost := request.RemoteAddr
+	pos := strings.LastIndexByte(rhost, ':')
+	if pos != -1 {
+		rhost = rhost[:pos]
+	}
+	outpath := rp.makeEventId(rhost)
+	outpath = filepath.Join(dataDir, outpath)
+	outdir := filepath.Dir(outpath)
+	err = os.MkdirAll(outdir, 0755)
+	if maybeErrJson(err, out, 500, "%s: could not make upload dir: %v", outdir, err) {
+		return
+	}
+	err = ioutil.WriteFile(outpath, raw, 0444)
+	if maybeErrJson(err, out, 500, "%s: could not write upload: %v", outpath, err) {
+		return
+	}
+	hs.commit(vhash[:])
+	jsonResponse(out, 200, "ok")
 }
 
 func main() {
 	flag.StringVar(&serveAddr, "addr", ":7319", "Server Addr")
 	flag.StringVar(&dataDir, "dir", "", "data dir")
 	flag.Parse()
+
+	hspath := filepath.Join(dataDir, "seen")
+	var err error
+	hs, err = openHashSet(hspath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: could not open hash set, %v", hspath, err)
+		os.Exit(1)
+		return
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/config.json", configHandler)
@@ -156,4 +222,79 @@ func (rp *resultPather) makeEventId(ipAddr string) string {
 	}
 	fname := fmt.Sprintf("%s_%s_%s", hms, ipAddr, string(rc3[:]))
 	return filepath.Join(rp.day, rp.group, fname)
+}
+
+type hashSet struct {
+	path string
+	out  io.WriteCloser
+
+	pending map[string]bool
+	they    map[string]bool
+
+	l sync.Mutex
+}
+
+func openHashSet(path string) (*hashSet, error) {
+	hs := new(hashSet)
+	hs.path = path
+	fin, err := os.Open(path)
+	doread := true
+	if err != nil {
+		doread = !os.IsNotExist(err)
+		if doread {
+			return nil, err
+		}
+	}
+	hs.they = make(map[string]bool, 1000)
+	hs.pending = make(map[string]bool, 10)
+	if doread {
+		scanner := bufio.NewScanner(fin)
+		for scanner.Scan() {
+			line := scanner.Text()
+			h, err := base64.StdEncoding.DecodeString(line)
+			if err != nil {
+				return nil, err
+			}
+			hh := string(h)
+			hs.they[hh] = true
+		}
+	}
+	hs.out, err = os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return hs, nil
+}
+
+func (hs *hashSet) insertOrRejectPending(h []byte) bool {
+	hh := string(h)
+	hs.l.Lock()
+	defer hs.l.Unlock()
+	if hs.they[hh] {
+		return true
+	}
+	if hs.pending[hh] {
+		return true
+	}
+	hs.pending[hh] = true
+	return false
+}
+
+// return true on collision
+// otherwise return false and insert into the set
+func (hs *hashSet) commit(h []byte) {
+	hh := string(h)
+	hs.l.Lock()
+	defer hs.l.Unlock()
+	delete(hs.pending, hh)
+	hos := base64.StdEncoding.EncodeToString(h)
+	fmt.Fprintf(hs.out, "%s\n", hos)
+	hs.they[hh] = true
+}
+
+func (hs *hashSet) rollback(h []byte) {
+	hh := string(h)
+	hs.l.Lock()
+	defer hs.l.Unlock()
+	delete(hs.pending, hh)
 }
