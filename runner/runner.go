@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -27,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/brianolson/redistricter/runner/data"
 	"github.com/brianolson/redistricter/runner/version"
 )
 
@@ -857,31 +857,7 @@ func (st *SolverThread) watchdog(timeout time.Duration) {
 	}
 }
 
-func b64(blob []byte) string {
-	return base64.StdEncoding.EncodeToString(blob)
-}
-
-type ResultJSON struct {
-	ConfigName string      `json:"n"`
-	Started    int64       `json:"s"`
-	Timestamp  int64       `json:"t"` // finish time
-	Seconds    float64     `json:"r"` // run time
-	BestKmpp   StatlogLine `json:"b"`
-	Ok         bool        `json:"ok"`
-
-	SolutionB64 string `json:"bestKmpp.dsz"`
-	Statsum     string `json:"statsum"`
-
-	BinlogB64 string `json:"binlog"` // deprecated
-}
-
-func (r *ResultJSON) SetSolution(dsz []byte) {
-	r.SolutionB64 = b64(dsz)
-}
-
-func (r *ResultJSON) SetBinlog(binlog []byte) {
-	r.BinlogB64 = b64(binlog)
-}
+type ResultJSON = data.ResultJSON
 
 var verbose = false
 

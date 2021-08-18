@@ -9,13 +9,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/brianolson/redistricter/runner/data"
 )
 
-type StatlogLine struct {
-	Kmpp   float64
-	Spread float64
-	Std    float64
-}
+type StatlogLine = data.StatlogLine
 
 var bestKmppRe *regexp.Regexp
 
