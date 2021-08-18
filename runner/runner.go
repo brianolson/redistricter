@@ -517,6 +517,7 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 	rc.maybeSendSolution(st, finish, err, bestKmpp, statsum)
 	rc.best.Log(st, finish, err == nil, bestKmpp)
 	rc.logFinish(st, bestKmpp, err)
+	// TODO: remove .png files from old non-best attempts
 }
 
 func (rc *RunContext) maybeSendSolution(st *SolverThread, stopTime time.Time, solErr error, bestKmpp StatlogLine, statsum string) {
@@ -988,7 +989,6 @@ func main() {
 	}
 
 	if !rc.local {
-		logerror("TODO: get config URL")
 		serverConfigPath := filepath.Join(rc.workDir, "server_config.json")
 		err := maybeFetch(rc.config.ConfigURL, serverConfigPath, 23*time.Hour)
 		if err != nil {
