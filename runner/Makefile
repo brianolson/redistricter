@@ -1,8 +1,3 @@
-DATESTAMP=$(shell date +%Y%m%d_%H%M%S)
+GTSRC=.
 
-runner:	*.go
-	CGO_ENABLED=0 go build -ldflags="-X github.com/brianolson/redistricter/runner/version.Version=${DATESTAMP}"
-
-#runner:  data/redata.pb.go
-#data/redata.pb.go:	../redata.proto
-#	protoc ../redata.proto --go_out=data --proto_path=../
+include gotools.make

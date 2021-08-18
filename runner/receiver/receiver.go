@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/brianolson/forwarded"
 	"github.com/brianolson/redistricter/runner/data"
 )
 
@@ -144,7 +145,10 @@ func putHandler(out http.ResponseWriter, request *http.Request) {
 		return
 	}
 	defer hs.rollback(vhash[:]) // nop if committed
-	rhost := request.RemoteAddr
+	rhost := forwarded.FirstForwardedFor(forwarded.ParseHeaders(request.Header))
+	if rhost == "" {
+		rhost = request.RemoteAddr
+	}
 	pos := strings.LastIndexByte(rhost, ':')
 	if pos != -1 {
 		rhost = rhost[:pos]
