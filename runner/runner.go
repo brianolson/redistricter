@@ -134,8 +134,6 @@ type ConfigArgs = data.ConfigArgs
 type Config = data.Config
 type AllConfig = data.AllConfig
 
-const defaultURL = "https://bdistricting.com/bot/2020.json"
-
 func maybeFail(err error, errfmt string, params ...interface{}) {
 	if err == nil {
 		return
@@ -174,10 +172,10 @@ func doFetch(url, path string) error {
 func maybeFetch(url, path string, maxage time.Duration) error {
 	fi, err := os.Stat(path)
 	if err != nil {
-		if err != os.ErrNotExist {
-			return err
-		} else {
+		if os.IsNotExist(err) {
 			return doFetch(url, path)
+		} else {
+			return err
 		}
 	}
 	age := time.Now().Sub(fi.ModTime())
@@ -194,7 +192,7 @@ type RunContext struct {
 	binDir    string
 	threads   int
 
-	local bool
+	//local bool
 
 	config AllConfig
 
@@ -219,7 +217,7 @@ type RunContext struct {
 	finishPos int
 	wg        sync.WaitGroup
 
-	best BestDB
+	best *BestDBJsFile
 }
 
 func (rc *RunContext) init() {
@@ -447,30 +445,42 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 }
 
 func (rc *RunContext) maybeSendSolution(st *SolverThread, stopTime time.Time, solErr error, bestKmpp StatlogLine, statsum string) {
+	// check bestKmpp against local best
+	prevBest, err := rc.best.Get(st.config.Name)
+	if err == nil && bestKmpp.Kmpp > prevBest.Kmpp {
+		// nevermind
+		return
+	}
+	rc.sendSolution(st.start, stopTime, st.config.Name, st.cwd, solErr, bestKmpp, statsum)
+}
+func (rc *RunContext) sendSolution(startTime, stopTime time.Time, cname, workdir string, solErr error, bestKmpp StatlogLine, statsum string) {
 	if rc.config.PostURL == "" {
 		debug("no \"post\" url set")
 		return
 	}
 	result := ResultJSON{
-		ConfigName: st.config.Name,
-		Started:    toJTime(st.start),
+		ConfigName: cname,
+		Started:    toJTime(startTime),
 		Timestamp:  toJTime(stopTime),
-		Seconds:    stopTime.Sub(st.start).Seconds(),
+		Seconds:    stopTime.Sub(startTime).Seconds(),
 		BestKmpp:   bestKmpp,
 		Ok:         solErr == nil,
 		Statsum:    statsum,
 	}
 
-	// check bestKmpp against local best
-	prevBest, err := rc.best.Get(st.config.Name)
-	if solErr == nil && err == nil && bestKmpp.Kmpp < prevBest.Kmpp {
-		dszpath := filepath.Join(st.cwd, "bestKmpp.dsz")
+	if solErr == nil {
+		dszpath := filepath.Join(workdir, "bestKmpp.dsz")
 		dsz, err := ioutil.ReadFile(dszpath)
 		if err == nil {
 			result.SetSolution(dsz)
 		} else {
 			logerror("%s: %v", dszpath, err)
+			return
 		}
+	} else if statsum == "" {
+		// nothing to send
+		debug("%s: error and no statsum, nothing to POST\n", workdir)
+		return
 	}
 
 	blob, err := json.Marshal(result)
@@ -487,7 +497,7 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, stopTime time.Time, so
 	if hr.StatusCode != 200 {
 		msg := make([]byte, 1000)
 		n, berr := hr.Body.Read(msg)
-		if berr == nil {
+		if berr == nil || berr == io.EOF {
 			logerror("post status %s, message: %s", hr.Status, string(msg[:n]))
 		} else {
 			logerror("post status %s", hr.Status)
@@ -495,7 +505,7 @@ func (rc *RunContext) maybeSendSolution(st *SolverThread, stopTime time.Time, so
 		return
 	}
 
-	err = rc.best.Put(st.config.Name, bestKmpp)
+	err = rc.best.Put(cname, bestKmpp)
 	if err != nil {
 		logerror("local best db err: %v", err)
 	}
@@ -701,7 +711,12 @@ func (rc *RunContext) saveConfig() {
 
 func (rc *RunContext) readServerConfig(fin io.Reader) error {
 	dec := json.NewDecoder(fin)
-	return dec.Decode(&rc.config)
+	err := dec.Decode(&rc.config)
+	if err != nil {
+		return err
+	}
+	rc.config.Normalize()
+	return nil
 }
 
 func (rc *RunContext) error(format string, params ...interface{}) {
@@ -807,25 +822,28 @@ func main() {
 		printAllCommandLines bool
 		showBest             bool
 		noRun                bool
+		resendBest           bool
 		httpAddr             string
+		configURL            string
 	)
 	var rc RunContext
 	pwd, err := os.Getwd()
 	maybeFail(err, "pwd: %v", err)
 	pwd, err = filepath.Abs(pwd)
 	maybeFail(err, "pwd.abs: %v", err)
-	flag.StringVar(&rc.config.ConfigURL, "url", defaultURL, "url to fetch bot config json from")
+	flag.StringVar(&configURL, "url", "", "url to fetch bot config json from")
 	flag.StringVar(&rc.clientDir, "dir", pwd, "dir to hold local data")
 	flag.StringVar(&rc.dataDir, "data", "", "dir path with datasets")
 	flag.StringVar(&rc.workDir, "work", "", "work dir path")
 	flag.StringVar(&rc.binDir, "bin", "", "bin dir path")
 	flag.StringVar(&httpAddr, "http", "", "[host]:port to serve on")
 	flag.IntVar(&rc.threads, "threads", runtime.NumCPU(), "number of districter2 processes to run")
-	flag.BoolVar(&rc.local, "local", false, "run from local data")
+	//flag.BoolVar(&rc.local, "local", false, "run from local data")
 	flag.BoolVar(&verbose, "verbose", false, "show debug log")
 	flag.BoolVar(&rc.notnice, "full-prio", false, "run without `nice`")
 	flag.BoolVar(&printAllCommandLines, "print-all-commands", false, "debug")
 	flag.BoolVar(&showBest, "show-best", false, "show best runs")
+	flag.BoolVar(&resendBest, "resend-best", false, "re-send best runs")
 	flag.BoolVar(&noRun, "no-run", false, "don't actually run solver")
 	// TODO: --diskQuota limit of combined rc.clientDir contents
 	// TODO: --failuresPerSuccessesAllowed=5/2
@@ -860,6 +878,21 @@ func main() {
 		return
 	}
 
+	if configURL != "" {
+		serverConfigPath := filepath.Join(rc.workDir, "server_config.json")
+		err := maybeFetch(configURL, serverConfigPath, 23*time.Hour)
+		if err != nil {
+			if _, ok := err.(*fetchError); !ok {
+				maybeFail(err, "could not fetch server config from %s, %v", rc.config.ConfigURL, err)
+			}
+		}
+		fin, err := os.Open(serverConfigPath)
+		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
+		err = rc.readServerConfig(fin)
+		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
+		fin.Close()
+	}
+
 	args := flag.Args()
 	rc.enabledConfigs = make(map[string]Config, len(rc.config.Configs))
 	for name, conf := range rc.config.Configs {
@@ -889,26 +922,23 @@ func main() {
 			fmt.Fprintf(os.Stdout, "%s enabled\n", name)
 		}
 	}
-
-	if !rc.local {
-		serverConfigPath := filepath.Join(rc.workDir, "server_config.json")
-		err := maybeFetch(rc.config.ConfigURL, serverConfigPath, 23*time.Hour)
-		if err != nil {
-			if _, ok := err.(*fetchError); !ok {
-				maybeFail(err, "could not fetch server config from %s, %v", rc.config.ConfigURL, err)
-			}
-		}
-		fin, err := os.Open(serverConfigPath)
-		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
-		err = rc.readServerConfig(fin)
-		maybeFail(err, "%s: bad server config, %v", serverConfigPath, err)
-		fin.Close()
-	}
+	debug("%d configs enabled of %d\n", len(rc.enabledConfigs), len(rc.config.Configs))
 	rc.sumWeights()
 	if printAllCommandLines {
 		rc.debugCommandLines()
 		return
 	}
+
+	if resendBest {
+		bests, err := rc.best.ListFull()
+		maybeFail(err, "could not load results from db, %v", err)
+		for cname, flr := range bests {
+			debug("post %s\n", flr.WorkDir)
+			rc.sendSolution(TimeFromJava(flr.Started), TimeFromJava(flr.Timestamp), cname, flr.WorkDir, nil, flr.BestKmpp, "")
+		}
+		return
+	}
+
 	rc.saveConfig()
 	var server http.Server
 	if httpAddr != "" {

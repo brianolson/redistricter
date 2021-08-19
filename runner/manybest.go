@@ -26,7 +26,7 @@ type BestDBJsFile struct {
 	bests map[string]FinishLogRecord
 }
 
-func OpenBestDB(path string) (bdb BestDB, err error) {
+func OpenBestDB(path string) (bdb *BestDBJsFile, err error) {
 	best := new(BestDBJsFile)
 	best.path = path
 	best.bests = make(map[string]FinishLogRecord, 100)
@@ -57,10 +57,13 @@ func (best *BestDBJsFile) read() error {
 		if err != nil {
 			return fmt.Errorf("%s:%d bad json, %v", best.path, lineno, err)
 		}
-		prev, any := best.bests[rec.ConfigName]
+		if !rec.Ok {
+			continue
+		}
 		if rec.BestKmpp.Kmpp < 0.000001 {
 			continue
 		}
+		prev, any := best.bests[rec.ConfigName]
 		if (!any) || (prev.BestKmpp.Kmpp > rec.BestKmpp.Kmpp) {
 			best.bests[rec.ConfigName] = rec
 		}
@@ -87,6 +90,14 @@ func (best *BestDBJsFile) List() (bests map[string]StatlogLine, err error) {
 	return bests, nil
 }
 
+func (best *BestDBJsFile) ListFull() (bests map[string]FinishLogRecord, err error) {
+	bests = make(map[string]FinishLogRecord, len(best.bests))
+	for k, v := range best.bests {
+		bests[k] = v
+	}
+	return bests, nil
+}
+
 type FinishLogRecord struct {
 	ConfigName string      `json:"n"`
 	Started    int64       `json:"s"`
@@ -107,9 +118,11 @@ func (best *BestDBJsFile) Log(st *SolverThread, stopTime time.Time, ok bool, sta
 		BestKmpp:   stat,
 		Ok:         ok,
 	}
-	prev, any := best.bests[rec.ConfigName]
-	if (!any) || ((rec.BestKmpp.Kmpp > 0.000001) && (prev.BestKmpp.Kmpp > rec.BestKmpp.Kmpp)) {
-		best.bests[rec.ConfigName] = rec
+	if ok {
+		prev, any := best.bests[rec.ConfigName]
+		if (!any) || ((rec.BestKmpp.Kmpp > 0.000001) && (prev.BestKmpp.Kmpp > rec.BestKmpp.Kmpp)) {
+			best.bests[rec.ConfigName] = rec
+		}
 	}
 	blob, err := json.Marshal(rec)
 	if err != nil {
@@ -244,4 +257,8 @@ func JavaTime() int64 {
 
 func toJTime(now time.Time) int64 {
 	return (now.Unix() * 1000) + int64(now.Nanosecond()/1000000)
+}
+
+func TimeFromJava(jtms int64) time.Time {
+	return time.Unix(jtms/1000, (jtms%1000)*1000000)
 }

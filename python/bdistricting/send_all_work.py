@@ -82,12 +82,15 @@ def main():
                         lines = [x for x in fin]
                         if len(lines) > 50:
                             lines = lines[-50:]
-                        rec['statsum'] = '\n'.join(lines)
-                        havestatlog = True
+                        statsum = '\n'.join(lines)
+                        if statsum:
+                            rec['statsum'] = statsum
+                            havestatlog = True
                 except Exception as e:
                     print('{}: could not read statlog, {}'.format(bestpath, e))
             if (not havestatlog) and (not havebest):
                 print('{}: not enough to report, skipping'.format(rundir))
+                continue
             req = urllib.request.Request(posturl, data=json.dumps(rec).encode(), headers={'Content-Type':'application/json'}, method='POST')
             try:
                 with urllib.request.urlopen(req) as result:
