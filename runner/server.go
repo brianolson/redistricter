@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func textResponse(code int, response http.ResponseWriter, format string, args ...interface{}) {
@@ -54,7 +55,6 @@ func (rs *runServer) showBest(response http.ResponseWriter, request *http.Reques
 		response.Header().Set("Content-Type", "application/json")
 		response.WriteHeader(http.StatusOK)
 		response.Write(blob)
-
 	} else {
 		for cname, sll := range bests {
 			fmt.Fprintf(&sb, "%s\t%f\n", cname, sll.Kmpp)
@@ -65,6 +65,26 @@ func (rs *runServer) showBest(response http.ResponseWriter, request *http.Reques
 	}
 }
 
+type RunningRecord struct {
+	Cwd      string `json:"cwd"`
+	Start    string `json:"s"`
+	StartInt int64  `json:"sn"`
+}
+
 func (rs *runServer) showRunning(response http.ResponseWriter, request *http.Request) {
-	// TODO: 'currently running' report
+	children := rs.rc.listChildrenCopy()
+
+	out := make([]RunningRecord, len(children))
+	for i, ch := range children {
+		out[i].Cwd = ch.cwd
+		out[i].StartInt = ch.start.Unix()
+		out[i].Start = ch.start.Format(time.RFC3339)
+	}
+	blob, err := json.Marshal(out)
+	if httpErr(err, 500, response, "could not json, %v", err) {
+		return
+	}
+	response.Header().Set("Content-Type", "application/json")
+	response.WriteHeader(http.StatusOK)
+	response.Write(blob)
 }

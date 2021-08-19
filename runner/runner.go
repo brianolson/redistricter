@@ -30,6 +30,8 @@ import (
 	"github.com/brianolson/redistricter/runner/version"
 )
 
+var logfile = os.Stdout
+
 // args for districter2
 var argsWithParam = []string{
 	"-P", "-B", "--pngout", "-d", "-i", "-U", "-g", "-o", "-r",
@@ -138,7 +140,7 @@ func maybeFail(err error, errfmt string, params ...interface{}) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, errfmt+"\n", params...)
+	fmt.Fprintf(logfile, errfmt+"\n", params...)
 	os.Exit(1)
 }
 
@@ -253,7 +255,7 @@ func (rc *RunContext) readDataDir() (configs map[string]Config) {
 	}
 	if verbose {
 		cj, _ := json.Marshal(configs)
-		fmt.Fprintf(os.Stderr, "found configs:\n%v\n", string(cj))
+		fmt.Fprintf(logfile, "found configs:\n%v\n", string(cj))
 	}
 	return
 }
@@ -417,12 +419,13 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 			rc.error("could not mkdir runner thread workdir %s, %v", workdir, err)
 			return
 		}
-		st, err := NewSolverThread(rc.ctx, os.Stdout, workdir, filepath.Join(rc.binDir, "districter2"), argStrings, config)
+		st, err := NewSolverThread(rc.ctx, logfile, workdir, filepath.Join(rc.binDir, "districter2"), argStrings, config)
 		if err != nil {
 			rc.error("error starting solver, %v", err)
 			return
 		}
 		rc.children = append(rc.children, st)
+		debug("%d children active", len(rc.children))
 		rc.wg.Add(1)
 		go rc.solverWaiter(st)
 	}
@@ -437,6 +440,8 @@ func (rc *RunContext) solverWaiter(st *SolverThread) {
 	if err == nil && sterr != nil {
 		logerror("%s/statlog: %s", st.cwd, sterr)
 		err = sterr
+	} else {
+		fmt.Fprintf(logfile, "exited %s\n", st.cwd)
 	}
 	rc.maybeSendSolution(st, finish, err, bestKmpp, statsum)
 	rc.best.Log(st, finish, err == nil, bestKmpp)
@@ -576,6 +581,7 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 			rc.error("too many failures, %d/%d", fc, len(rc.finishes))
 		}
 	}
+	la := len(rc.children)
 	for i, stv := range rc.children {
 		if stv == st {
 			if i != len(rc.children)-1 {
@@ -587,6 +593,19 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 			break
 		}
 	}
+	lb := len(rc.children)
+	debug("len(children) %d->d", la, lb)
+	if lb == la {
+		logerror("%s exited but len(children) %d->%d", st.cwd, la, lb)
+	}
+}
+
+func (rc *RunContext) listChildrenCopy() []*SolverThread {
+	rc.subpLock.Lock()
+	defer rc.subpLock.Unlock()
+	out := make([]*SolverThread, len(rc.children))
+	copy(out, rc.children)
+	return out
 }
 
 func (rc *RunContext) randomConfig() Config {
@@ -646,11 +665,15 @@ func (rc *RunContext) maybeStop() bool {
 }
 
 func (rc *RunContext) maybeStartSolver() bool {
+	rc.subpLock.Lock()
+	defer rc.subpLock.Unlock()
 	if rc.maybeStop() {
+		debug("maybeStart no because stopping")
 		return false
 	}
 	// must be run from inside rc.subpLock
 	if len(rc.children) >= rc.threads {
+		debug("maybeStart no have %d children of %d", len(rc.children), rc.threads)
 		return false
 	}
 	nextc := rc.randomConfig()
@@ -667,18 +690,20 @@ func (rc *RunContext) quit() {
 }
 
 func (rc *RunContext) runLoop() {
-	rc.subpLock.Lock()
-	defer rc.subpLock.Unlock()
 	for atomic.LoadUint32(&rc.gracefulExit) == 0 {
 		didStart := rc.maybeStartSolver()
 		if didStart {
 			time.Sleep(time.Second)
 		} else {
-			if atomic.LoadUint32(&rc.gracefulExit) == 0 {
-				rc.subpCond.Wait()
+			if atomic.LoadUint32(&rc.gracefulExit) != 0 {
+				break
 			}
+			rc.subpLock.Lock()
+			rc.subpCond.Wait()
+			rc.subpLock.Unlock()
 		}
 	}
+	fmt.Fprintf(logfile, "runLoop exiting, winding down\n")
 }
 
 func (rc *RunContext) configPath() string {
@@ -773,6 +798,8 @@ func NewSolverThread(ctx context.Context, out io.Writer, cwd, bin string, args [
 	st.start = time.Now()
 	st.done = make(chan int)
 
+	fmt.Fprintf(st.out, "starting %s\n", cwd)
+
 	go st.prefixThread(st.lstdout, "O")
 	go st.prefixThread(st.lstderr, "E")
 	err = st.cmd.Start()
@@ -804,12 +831,12 @@ var verbose = false
 
 func debug(format string, params ...interface{}) {
 	if verbose {
-		fmt.Fprintf(os.Stderr, "debug: "+format+"\n", params...)
+		fmt.Fprintf(logfile, "debug: "+format+"\n", params...)
 	}
 }
 
 func logerror(format string, params ...interface{}) {
-	fmt.Fprintf(os.Stderr, format+"\n", params...)
+	fmt.Fprintf(logfile, format+"\n", params...)
 }
 
 // e.g. io.fs.PathError
@@ -898,7 +925,7 @@ func main() {
 	for name, conf := range rc.config.Configs {
 		if conf.Disabled {
 			if verbose {
-				fmt.Fprintf(os.Stdout, "%s disabled\n", name)
+				fmt.Fprintf(logfile, "%s disabled\n", name)
 			}
 			continue
 		}
@@ -912,14 +939,14 @@ func main() {
 			}
 			if !hit {
 				if verbose {
-					fmt.Fprintf(os.Stdout, "%s not in current run set\n", name)
+					fmt.Fprintf(logfile, "%s not in current run set\n", name)
 				}
 				continue
 			}
 		}
 		rc.enabledConfigs[name] = conf
 		if verbose {
-			fmt.Fprintf(os.Stdout, "%s enabled\n", name)
+			fmt.Fprintf(logfile, "%s enabled\n", name)
 		}
 	}
 	debug("%d configs enabled of %d\n", len(rc.enabledConfigs), len(rc.config.Configs))
@@ -951,7 +978,7 @@ func main() {
 			log.Printf("serving on %s", httpAddr)
 			httpErr := server.ListenAndServe()
 			if httpErr != nil {
-				fmt.Fprintf(os.Stderr, "runner httpd exited: %v", httpErr)
+				fmt.Fprintf(logfile, "runner httpd exited: %v", httpErr)
 			}
 		}()
 
@@ -978,12 +1005,12 @@ func execSelf() {
 	args := os.Args
 	selfpath, err := exec.LookPath(args[0])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: could not find on PATH, %v", args[0], err)
+		fmt.Fprintf(logfile, "%s: could not find on PATH, %v", args[0], err)
 		return
 	}
 	env := os.Environ()
 	err = syscall.Exec(selfpath, args, env)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: could not exec, %v", selfpath, err)
+		fmt.Fprintf(logfile, "%s: could not exec, %v", selfpath, err)
 	}
 }
