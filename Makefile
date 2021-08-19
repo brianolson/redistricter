@@ -23,7 +23,7 @@ tools.jar:	java/org/bolson/redistricter/Redata.java
 python/bdistricting/redata_pb2.py:
 	protoc redata.proto --python_out=python/bdistricting
 
-GCSRC=runner
+GTSRC=runner
 include runner/gotools.make
 
 deploy.tar:	runner/runner districter2
