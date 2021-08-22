@@ -424,8 +424,10 @@ func (rc *RunContext) runConfig(config Config, dryrun bool) {
 			rc.error("error starting solver, %v", err)
 			return
 		}
+		rc.subpLock.Lock()
 		rc.children = append(rc.children, st)
 		debug("%d children active", len(rc.children))
+		rc.subpLock.Unlock()
 		rc.wg.Add(1)
 		go rc.solverWaiter(st)
 	}
@@ -578,7 +580,8 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 			fc += v
 		}
 		if fc >= rc.config.MaxFailuresNumerator {
-			rc.error("too many failures, %d/%d", fc, len(rc.finishes))
+			logerror("too many failures, %d/%d", fc, len(rc.finishes))
+			// TODO: _do_ something about too many failures?
 		}
 	}
 	la := len(rc.children)
@@ -594,7 +597,7 @@ func (rc *RunContext) logFinish(st *SolverThread, bestKmpp StatlogLine, err erro
 		}
 	}
 	lb := len(rc.children)
-	debug("len(children) %d->d", la, lb)
+	debug("len(children) %d->%d", la, lb)
 	if lb == la {
 		logerror("%s exited but len(children) %d->%d", st.cwd, la, lb)
 	}
@@ -665,15 +668,15 @@ func (rc *RunContext) maybeStop() bool {
 }
 
 func (rc *RunContext) maybeStartSolver() bool {
-	rc.subpLock.Lock()
-	defer rc.subpLock.Unlock()
 	if rc.maybeStop() {
 		debug("maybeStart no because stopping")
 		return false
 	}
-	// must be run from inside rc.subpLock
-	if len(rc.children) >= rc.threads {
-		debug("maybeStart no have %d children of %d", len(rc.children), rc.threads)
+	rc.subpLock.Lock()
+	numChildren := len(rc.children)
+	rc.subpLock.Unlock()
+	if numChildren >= rc.threads {
+		debug("maybeStart no have %d children of %d", numChildren, rc.threads)
 		return false
 	}
 	nextc := rc.randomConfig()
@@ -699,7 +702,10 @@ func (rc *RunContext) runLoop() {
 				break
 			}
 			rc.subpLock.Lock()
-			rc.subpCond.Wait()
+			for (len(rc.children) >= rc.threads) && (atomic.LoadUint32(&rc.gracefulExit) == 0) {
+				debug("runLoop len(children) = %d, waiting", len(rc.children))
+				rc.subpCond.Wait()
+			}
 			rc.subpLock.Unlock()
 		}
 	}
