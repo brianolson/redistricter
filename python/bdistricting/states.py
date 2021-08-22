@@ -139,7 +139,7 @@ def legislatureStatsForPostalCode(code, csvpath=None):
     if not _legstats:
         _legstats = {}
         if csvpath is None:
-            csvpath = os.path.join(os.path.dirname(__file__), 'legislatures2010.csv')
+            csvpath = os.path.join(os.path.dirname(__file__), 'legislatures2020.csv')
         elif not os.path.exists(csvpath):
             tp = os.path.join(os.path.dirname(__file__), csvpath)
             if not os.path.exists(tp):

@@ -428,7 +428,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    }
 	}
 
-        if (nostats) {
+        if (nostats || (statsOutName == NULL)) {
           statsout = NULL;
         } else if (0 == strcmp("-", statsOutName)) {
             statsout = stdout;
@@ -451,7 +451,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 			char* statstr = new char[10000];
 			sov.getDistrictStats(statstr, 10000);
 			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
-                        if (!stdoutInUse) {
+                        if (statsout != NULL) {
                           fputs(statstr, statsout);
                           fprintf(statsout, "pop FH-ssd: %g\n", ssd);
                         } else {

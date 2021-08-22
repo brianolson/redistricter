@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ##!/usr/bin/python
 
+import base64
 import cgi
 import csv
 import gzip
@@ -26,6 +27,8 @@ from .newerthan import newerthan, any_newerthan
 from . import resultspage
 from . import runallstates
 from . import states
+
+logger = logging.getLogger(__name__)
 
 srcdir_ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -58,6 +61,9 @@ def scandir(path):
                 innerpath = fpath[len(path):]
                 #logging.debug('found %s', innerpath)
                 yield (fpath, innerpath)
+
+
+_MAX_SOLUTION_JSON_SIZE = 1000000
 
 
 def elementAfter(haystack, needle):
@@ -164,11 +170,12 @@ def parseAnalyzeStats(rawblob):
 
 
 # Example analyze output:
-# generation 0: 21.679798418 Km/person
-# population avg=634910 std=1707.11778
-# max=638656 (dist# 10)  min=632557 (dist# 7)  median=634306 (dist# 6)
+# generation 0: 15.212226473 Km/person to pop center; 18.095824563 Km/person to land center
+# population avg=774083 std=381.131529
+# max=774798 (dist# 6)  min=773461 (dist# 3)  median=774097 (dist# 7)
+# pop FH-ssd: 8.81096e+21
 
-kmppRe = re.compile(r'([0-9.]+)\s+Km/person')
+kmppRe = re.compile(r'([0-9.]+)\s+Km/person to land center')
 maxMinRe = re.compile(r'max=([0-9]+).*min=([0-9]+)')
 
 
@@ -304,20 +311,27 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
         if not os.path.isdir(configdir):
             logging.debug('no %s/config', xx)
             continue
-        for variant in os.listdir(configdir):
+        vfiles = os.listdir(configdir)
+        for variant in vfiles:
+            if (variant + '.json') in vfiles:
+                continue
             if runallstates.ignoreFile(variant):
                 logging.debug('ignore file %s/config/"%s"', xx, variant)
                 continue
-            cpath = os.path.join(datadir, xx, 'config', variant)
+            cpath = os.path.join(configdir, variant)
             if configPathFilter and (not configPathFilter(cpath)):
                 logging.debug('filter out "%s"', cpath)
                 continue
-            cname = stu + '_' + variant
-            configs[cname] = runallstates.configuration(
-                name=cname,
-                datadir=os.path.join(datadir, xx),
-                config=cpath,
-                dataroot=datadir)
+            with open(cpath) as fin:
+                conf = json.load(fin)
+            cname = conf['name']
+            configs[cname] = conf
+            # TODO: do I need the configuration() object?
+            # configs[cname] = runallstates.configuration(
+            #     name=cname,
+            #     datadir=os.path.join(datadir, xx),
+            #     config=cpath,
+            #     dataroot=datadir)
             logging.debug('set config "%s"', cname)
 
 
@@ -394,25 +408,26 @@ class SubmissionAnalyzer(object):
         if not config:
             logging.warn('config %s not loaded. cannot analyze', configname)
             return (None,None)
-        datapb = config.args['-P']
-        districtNum = config.args['-d']
+        #datapb = config.args['-P']
+        stu = config['st'].upper()
+        stl = stu.lower()
+        datapb = os.path.join(self.options.datadir, stu, stl + '.pb')
+        #districtNum = config.args['-d']
+        districtNum = config['common']['kwargs']['-d']
         cmd = [os.path.join(self.options.bindir, 'analyze'),
             '-P', datapb,
             '-d', districtNum,
-               '-notext',
+            '-notext', '-stats=-',
             '-r', '-']
         logging.debug('run %r', cmd)
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-        p.stdin.write(solraw)
-        p.stdin.close()
-        retcode = p.wait()
-        if retcode != 0:
-            self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
+        result = subprocess.run(cmd, input=solraw, capture_output=True)
+        if result.returncode != 0:
+            self.stderr.write('error {} running {}\n'.format(result.returncode, ' '.join(cmd)))
             return (None,None)
-        raw = p.stdout.read()
+        raw = result.stdout.decode()
         m = kmppRe.search(raw)
         if not m:
-            self.stderr.write('failed to find kmpp %r in analyze output:\n%s\n%s\n' % (kmppRe.pattern, ' '.join(cmd), raw))
+            self.stderr.write('failed to find kmpp %r in analyze output:\n%s\n%r\n' % (kmppRe.pattern, ' '.join(cmd), raw))
             return (None,None)
         kmpp = float(m.group(1))
         m = maxMinRe.search(raw)
@@ -445,13 +460,16 @@ class SubmissionAnalyzer(object):
         if not config:
             logging.warn('no config for "%s"', fpath)
             return False
-        if 'solution' in tfparts:
-            kmppSpread = self.measureSolution(tfparts['solution'], config)
+        return self.handleSolutionB(tfparts.get('solution', None), config, innerpath, fpath, tf_mtime)
+
+    def handleSolutionB(self, dsz, config, varsStr, innerpath, fpath, tf_mtime):
+        if dsz:
+            kmppSpread = self.measureSolution(dsz, config)
             if (not kmppSpread) or (kmppSpread[0] is None):
                 logging.warn('failed to analyze solution for %s in "%s"', config, fpath)
                 c = self.db.cursor()
                 c.execute('INSERT INTO submissions (vars, unixtime, path, config) VALUES ( ?, ?, ?, ? )',
-            (tfparts['vars'], tf_mtime, innerpath, config))
+            (varsStr, tf_mtime, innerpath, config))
                 # TODO: set attempt count in 'vars' and retry up to N times
                 return True # db was written
         else:
@@ -461,7 +479,7 @@ class SubmissionAnalyzer(object):
             config, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath)
         c = self.db.cursor()
         c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
-            (tfparts['vars'], tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
+            (varsStr, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
         return True
 
     def updatedb(self, path):
@@ -469,6 +487,7 @@ class SubmissionAnalyzer(object):
         if not self.db:
             raise Exception('no db opened')
         setAny = False
+        # TODO: also find any json file with a {"bestKmpp.dsz":"..."} in it
         for (fpath, innerpath) in scandir(path):
             x = self.lookupByPath(innerpath)
             if x:
@@ -484,8 +503,65 @@ class SubmissionAnalyzer(object):
                 logging.warn('failed to process "%s": %r', fpath, e)
                 if not self.options.keepgoing:
                     break
+        didJson = self.importSolutionJsons(path)
+        setAny = setAny or didJson
         if setAny:
             self.db.commit()
+
+    def importSolutionJsons(self, path):
+        """like updatedb() but for json submissions."""
+        setAny = False
+        errcount = 0
+        for root, dirnames, filenames in os.walk(path):
+            if 'Attic' in dirnames:
+                dirnames.remove('Attic')
+            for fname in filenames:
+                fpath = os.path.join(root, fname)
+                innerpath = fpath[len(path):]
+                x = self.lookupByPath(innerpath)
+                if x:
+                    # already did this one
+                    continue
+                try:
+                    finfo = os.stat(fpath)
+                    if finfo.st_size > _MAX_SOLUTION_JSON_SIZE:
+                        continue
+                    with open(fpath, 'rb') as fin:
+                        blob = fin.read()
+                    if not blob:
+                        logger.debug('%s: empty', fpath)
+                        continue
+                    if blob[0] != ord('{'):
+                        logger.debug('%s: not json %r', fpath, blob[0])
+                        continue
+                    ob = json.loads(blob)
+                    if 'n' not in ob:
+                        logger.debug('%s: no name', fpath)
+                        continue
+                    if 'ok' not in ob:
+                        logger.debug('%s: no ok', fpath)
+                        continue
+                    if ('bestKmpp.dsz' not in ob) and ('statsum' not in ob):
+                        logger.debug('%s: no solution or statsum', fpath)
+                        continue
+                    dsz = None
+                    dszb64 = ob.get('bestKmpp.dsz')
+                    if dszb64:
+                        dsz = base64.b64decode(dszb64)
+                    cname = ob['n']
+                    # old style vars string
+                    varsStr = urllib.parse.urlencode({'config':cname})
+                    didSet = self.handleSolutionB(dsz, cname, varsStr, innerpath, fpath, os.path.getmtime(fpath))
+                    setAny = setAny or didSet
+                    logging.info('added %s', innerpath)
+                except Exception as e:
+                    logging.warn('failed to process "%s": %r', fpath, e, exc_info=True)
+                    errcount += 1
+                    if errcount > 10:
+                        raise
+                    # TODO: add junk paths to the db so we don't re-scan them all the time?
+                    pass # don't care, move on
+        return setAny
 
     def getConfigCounts(self):
         """For all configurations, return dict mapping config name to a dict {'count': number of solutions reported} for it.
@@ -587,7 +663,8 @@ class SubmissionAnalyzer(object):
 <html><head><title>solution report</title><link rel="stylesheet" href="report.css" /></head><body><h1>solution report</h1><p class="gentime">Generated %s</p>
 """ % (localtime(),))
         out.write("""<div style="float:left"><div></div>""" + self.statenav(None, configs) + """</div>\n""")
-        out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
+        if newestconfig:
+            out.write("""<p>Newest winning result: <a href="%s/">%s</a><br /><img src="%s/map500.png"></p>\n""" % (newestconfig['config'], newestconfig['config'], newestconfig['config']))
 
         firstNoSolution = True
         clist = sorted(configs.keys())
@@ -706,6 +783,8 @@ class SubmissionAnalyzer(object):
             variations.sort()
             variations.insert(0, 'Congress')
         legstats = states.legislatureStatsForPostalCode(stu)
+        if not legstats:
+            raise Exception('no legstats for {}'.format(stu))
         bodyrows = []
         firstvar = None
         for variation in variations:
@@ -843,11 +922,11 @@ class SubmissionAnalyzer(object):
         mappath = os.path.join(sdir, 'map.png')
         mapLgPath = os.path.join(sdir, 'map_lg.png')
         config = self.config[cname]
-        mppb_lg_path = os.path.join(config.datadir, stu + '_lg.mppb')
+        mppb_lg_path = os.path.join(self.options.datadir, stu, stu + '_lg.mppb')
         if not os.path.exists(mppb_lg_path):
             logging.debug('missing %s', mppb_lg_path)
             mppb_lg_path = None
-        highlight_path = os.path.join(config.datadir, 'highlight.ubidz')
+        highlight_path = os.path.join(self.options.datadir, stu, 'highlight.ubidz')
         if not os.path.exists(highlight_path):
             logging.debug('missing %s', highlight_path)
             highlight_path = None
@@ -916,7 +995,7 @@ class SubmissionAnalyzer(object):
                 # ensure setup
                 actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
                 drendargs = config.drendargs
-                zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
+                zipname = os.path.join(self.options.datadir, stu, 'zips', stl + '2010.pl.zip')
                 (current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), cname, stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
 
                 actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
@@ -1083,7 +1162,7 @@ class SubmissionAnalyzer(object):
             self.statedir(stu, configs)
 
         # build top level index.html
-        newestconfig = self.newestWinner(configs)['config']
+        newestconfig = (self.newestWinner(configs) or {'config':''})['config']
         newestname = configToName(newestconfig)
         pageabsurl = urljoin(self.options.siteurl, self.options.rooturl)
         cgipageabsurl = urllib.parse.quote_plus(pageabsurl)
