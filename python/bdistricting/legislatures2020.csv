@@ -22,6 +22,8 @@ Connecticut,Senate,36
 Delaware,Congress,1
 Delaware,House of Representatives,41
 Delaware,Senate,21
+District of Columbia,Congress,1
+District of Columbia,Ward Districts,8
 Florida,Congress,28
 Florida,House of Representatives,120
 Florida,Senate,40
@@ -111,6 +113,9 @@ Oregon,State Senate,30
 Pennsylvania,Congress,17
 Pennsylvania,House of Representatives,203
 Pennsylvania,Senate,50
+Puerto Rico,Congress,43
+Puerto Rico,Senado,16
+Puerto Rico,Cámara de Representantes,40
 Rhode Island,Congress,2
 Rhode Island,House of Representatives,75
 Rhode Island,Senate,38
