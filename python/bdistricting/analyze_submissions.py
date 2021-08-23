@@ -325,6 +325,7 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
             with open(cpath) as fin:
                 conf = json.load(fin)
             cname = conf['name']
+            conf['path'] = datadir
             configs[cname] = conf
             # TODO: do I need the configuration() object?
             # configs[cname] = runallstates.configuration(
@@ -690,12 +691,21 @@ class SubmissionAnalyzer(object):
         out.close()
         self.copyResources()
 
-    def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None, highlight=None):
-        args = dict(self.config[cname].drendargs)
+    def doDrend(self, cname, data, pngpath, dszpath=None, solutionDszRaw=None, altmppb=None, highlight=None, altpb=None):
+        conf = self.config[cname]
+        args = conf.get('common', {}).get('kwargs')
+        if not args:
+            logger.debug('doDrend data=%r', data)
+            args = dict()
+        drendargs = self.config[cname].get('drendargs')
+        if drendargs:
+            args.update(drendargs)
         args.pop('--loadSolution', None)
         args['--pngout'] = pngpath
         if altmppb:
             args['--mppb'] = altmppb
+        if altpb:
+            args['-P'] = altpb
         if dszpath:
             args['-r'] = dszpath
         elif solutionDszRaw:
@@ -715,8 +725,8 @@ class SubmissionAnalyzer(object):
             p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
         retcode = p.wait()
         if retcode != 0:
-            self.stderr.write('config args {!r}\n'.format(self.config[cname].drendargs))
-            self.stderr.write('error %d running "%s"\n' % (retcode, ' '.join(cmd)))
+            logger.error('drend fail, args %r', args)
+            logger.error('error %d running "%s"', retcode, ' '.join(cmd))
             return None
 
     def statenav(self, current, configs):
@@ -837,7 +847,8 @@ class SubmissionAnalyzer(object):
     def measureRace(self, cname, solution, htmlout, exportpath):
         config = self.config[cname]
         stl = cname[0:2].lower()
-        zipname = os.path.join(config.datadir, 'zips', stl + '2010.pl.zip')
+        # TODO: fix for 2020
+        zipname = os.path.join(config['path'], 'zips', stl + '2010.pl.zip')
         if not os.path.exists(zipname):
             logging.error('could not measure race without %s', zipname)
             return
@@ -922,7 +933,9 @@ class SubmissionAnalyzer(object):
         mappath = os.path.join(sdir, 'map.png')
         mapLgPath = os.path.join(sdir, 'map_lg.png')
         config = self.config[cname]
+        mppb_path = os.path.join(self.options.datadir, stu, stu + '.mppb')
         mppb_lg_path = os.path.join(self.options.datadir, stu, stu + '_lg.mppb')
+        pb_path = os.path.join(self.options.datadir, stu, stl + '.pb')
         if not os.path.exists(mppb_lg_path):
             logging.debug('missing %s', mppb_lg_path)
             mppb_lg_path = None
@@ -938,7 +951,15 @@ class SubmissionAnalyzer(object):
             return
 
         tpath = self.cleanupSolutionPath(data['path'])
-        tfparts = extractSome(tpath, ('solution', 'statsum'))
+        if tpath.endswith('.tar.gz'):
+            tfparts = extractSome(tpath, ('solution', 'statsum'))
+        else:
+            with open(tpath) as fin:
+                ob = json.load(fin)
+            tfparts = {
+                'solution':base64.b64decode(ob['bestKmpp.dsz']),
+                'statsum':ob.get('statsum'),
+            }
         actualMapPath = None
         actualMap500Path = None
         actualHtmlPath = None
@@ -982,13 +1003,13 @@ class SubmissionAnalyzer(object):
 
             # Make images map.png and map500.png
             if needsDrend:
-                self.doDrend(cname, data, mappath, dszpath=solpath, highlight=highlight_path)
+                self.doDrend(cname, data, mappath, dszpath=solpath, altmppb=mppb_path, highlight=highlight_path, altpb=pb_path)
             map500path = os.path.join(sdir, 'map500.png')
             if newerthan(mappath, map500path):
                 subprocess.call(['convert', mappath, '-resize', '500x500', map500path])
 
             if needsLargeMap:
-                self.doDrend(cname, data, mapLgPath, dszpath=solpath, altmppb=mppb_lg_path, highlight=highlight_path)
+                self.doDrend(cname, data, mapLgPath, dszpath=solpath, altmppb=mppb_lg_path, highlight=highlight_path, altpb=pb_path)
 
             # use actual maps if available
             if self.options.actualdir:
