@@ -56,7 +56,7 @@ void MapDrawer::initDataAndRows() {
 	rows = (unsigned char**)malloc(height*sizeof(unsigned char*) );
 	assert(data != NULL);
 	assert(rows != NULL);
-	
+
 	for ( int y = 0; y < height; y++ ) {
 		rows[y] = data + (y*width*bytesPerPixel);
 	}
@@ -80,11 +80,11 @@ public:
 	pxlistElement* next;
 	// index within internal arrays in sf1-geo order
 	int index;
-	
+
 	pxlistElement(pxlist* list, int index_, pxlistElement* next_) : it(list), next(next_), index(index_) {
 		// pass
 	}
-	
+
 private:
 	static int numAllocatedBlocks;
 	static pxlistElement** allocatedBlocks;
@@ -127,11 +127,11 @@ public:
 	int width;
 	int height;
 	pxlistElement** they;
-	
+
 	pxlistGrid() : rows(-1), cols(-1), width(-1), height(-1), they(NULL) {
 		// pass
 	}
-	
+
 	void build(int rows_, int cols_, pxlist* px, int numPoints, int width_, int height_) {
 		if (they != NULL) {
 			for (int i = 0; i < rows*cols; ++i) {
@@ -173,11 +173,11 @@ public:
 			}
 		}
 	}
-	
+
 	inline int pointToBucket(int x, int y) {
 		return ((y / height) * cols) + (x / width);
 	}
-	
+
 #if 0
 	// TODO DELETE
 	inline pxlistElement* rc(int x, int y) {
@@ -188,7 +188,7 @@ public:
 		return they[(y*rows) + x];
 	}
 #endif
-	
+
 	int pointToIndex(int x, int y) {
 		pxlistElement* cur = they[pointToBucket(x, y)];
 		while (cur != NULL) {
@@ -215,7 +215,7 @@ bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 	if (px == NULL) {
 		px = new pxlist[sov->gd->numPoints];
 	}
-	
+
 	filemem = (uintptr_t)mf.data;
 	// int32_t vers, x, y;
 	{
@@ -246,7 +246,7 @@ bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 		off_t ep;
 		uint32_t index;
 		int newpoints;
-		
+
 		memcpy( &tubid, (void*)(filemem + pos), 8 );
 		if ( endianness ) {
 			tubid = swap64( tubid );
@@ -289,7 +289,7 @@ bool MapDrawer::readUPix( const Solver* sov, const char* upfname ) {
 		}
 		pos = ep + 4;
 	}
-	
+
 	mf.close();
 	return true;
 }
@@ -299,7 +299,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 	if (fd < 0) {
 		perror(mppb_path);
 		return false;
-	}	
+	}
 	google::protobuf::io::FileInputStream pbfin(fd);
 	google::protobuf::io::GzipInputStream zin(&pbfin);
 	MapRasterization map;
@@ -309,12 +309,12 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 		return false;
 	}
 	pbfin.Close();
-	
+
 	width = map.sizex();
 	assert(width > 0);
 	height = map.sizey();
 	assert(height > 0);
-	
+
 	if (px != NULL) {
 		delete [] px;
 		px = NULL;
@@ -323,6 +323,7 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 		px = new pxlist[sov->gd->numPoints];
 	}
 	uint64_t mrrPxcount = 0;
+        int dupcount = 0;
 	for (int i = 0; i < map.block_size(); ++i) {
 		const MapRasterization::Block& b = map.block(i);
 		if (!b.has_ubid()) {
@@ -341,42 +342,55 @@ bool MapDrawer::readMapRasterization( const Solver* sov, const char* mppb_path )
 				fprintf(stderr, "index %d already has %d pix, adding %d from ubid %lu", index, cpx->numpx, blockpoints, tubid);
 			}
 			if ( cpx->px != NULL ) {
-				fprintf(stderr, "reallog cpx->px %d -> %d\n", cpx->numpx, cpx->numpx + blockpoints);
+				fprintf(stderr, "realloc cpx->px %d -> %d\n", cpx->numpx, cpx->numpx + blockpoints);
 				cpx->px = (uint16_t*)realloc( cpx->px, sizeof(uint16_t)*((cpx->numpx + blockpoints)*2) );
 				assert( cpx->px != NULL );
-				cpx->numpx += blockpoints;
+				//cpx->numpx += blockpoints;
 			} else {
 				cpx->px = (uint16_t*)malloc( sizeof(uint16_t)*blockpoints*2 );
-				cpx->numpx = blockpoints;
+				//cpx->numpx = blockpoints;
 			}
-			for (int pi = 0; pi < b.xy_size(); ++pi) {
+			for (int pi = 0; pi < b.xy_size(); pi += 2) {
 				assert(b.xy(pi) >= 0);
 				//assert(b.xy(pi) <= 65535);
-				if (pi & 1) {
-					assert(b.xy(pi) <= height);
-				} else {
-					assert(b.xy(pi) <= width);
-				}
-				cpx->px[nexti + pi] = b.xy(pi);
-				if (pi & 1) {
-					assert(cpx->px[pi] <= height);
-				} else {
-					assert(cpx->px[pi] <= width);
-				}
+                                bool dup = false;
+                                for (int pn = 0; pn < cpx->numpx; pn++) {
+                                  if ((cpx->px[pn*2] == b.xy(pi)) && (cpx->px[(pn*2)+1] == b.xy(pi+1))) {
+                                    dup = true;
+                                    break;
+                                  }
+                                }
+                                if (dup) {
+                                  dupcount++;
+                                  if (dupcount < 10) {
+                                    fprintf(stderr, "dropped dup pixel %d,%d\n", b.xy(pi), b.xy(pi+1));
+                                  }
+                                  break;
+                                }
+                                auto outpos = cpx->numpx * 2;
+                                assert(b.xy(pi) <= width);
+                                assert(b.xy(pi+1) <= height);
+				cpx->px[outpos] = b.xy(pi);
+				cpx->px[outpos+1] = b.xy(pi+1);
+                                assert(cpx->px[outpos] <= width);
+                                assert(cpx->px[outpos+1] <= height);
+                                cpx->numpx++;
 			}
-			for (int xxxi = 0; xxxi < cpx->numpx; xxxi += 2) {
-				assert(cpx->px[xxxi] <= width);
-				assert(cpx->px[xxxi+1] <= height);
-				if (xxxi > 1) {
-					assert(!((cpx->px[xxxi-2] == cpx->px[xxxi]) &&
-							 (cpx->px[xxxi-1] == cpx->px[xxxi+1])));
-				}
+			for (int xxxi = 0; xxxi < cpx->numpx; xxxi++) {
+                          assert(cpx->px[(xxxi*2)  ] <= width);
+                          assert(cpx->px[(xxxi*2)+1] <= height);
+                          if (xxxi > 0) {
+                            if ((cpx->px[(xxxi-1)*2] == cpx->px[xxxi*2]) && (cpx->px[(xxxi*2)-1] == cpx->px[(xxxi*2)+1])) {
+                              fprintf(stderr, "duplicate points %d and %d, (%d,%d)\n", xxxi, xxxi+1, cpx->px[xxxi], cpx->px[xxxi+1]);
+                            }
+                            assert(!((cpx->px[(xxxi-1)*2] == cpx->px[xxxi*2]) && (cpx->px[(xxxi*2)-1] == cpx->px[(xxxi*2)+1])));
+                          }
 			}
 		} else {
 			fprintf(stderr, "%013lu no index!\n", tubid );
 		}
 	}
-	fprintf(stderr, "loaded %lu px from %d blocks into %d solution blocks\n", mrrPxcount, map.block_size(), sov->gd->numPoints);
+	fprintf(stderr, "loaded %lu px from %d blocks into %d solution blocks, (%d dup drop)\n", mrrPxcount, map.block_size(), sov->gd->numPoints, dupcount);
 	return true;
 }
 
@@ -627,10 +641,10 @@ void MapDrawer::paintPoints( Solver* sov ) {
             "min lat,lon=(%d, %d), max (%d, %d)\n",
             lminx, lminy, lmaxx, lmaxy);
         debugprintf("scale x,y=(%f, %f)\n", xm, ym);
-	
+
 	GeoData* gd = sov->gd;
 	POPTYPE* winner = sov->winner;
-	
+
 	for ( int i = 0; i < gd->numPoints; i++ ) {
 		double ox, oy;
 		const unsigned char* color;
@@ -663,6 +677,7 @@ void MapDrawer::paintPoints( Solver* sov ) {
 
 // population density
 double _tpd(int pop, unsigned long long area) {
+  if (area == 0) { return 0.0; }
 	double tpd = (1.0 * pop) / area;
 	// could be logarithmic, but linear is working for now.
 	tpd = log(tpd + 1.0);
@@ -765,10 +780,12 @@ void MapDrawer::paintPopulation( Solver* sov ) {
 	int ghist[256];
 	memset(ghist, 0, sizeof(ghist));
 	int blocksSkipped = 0;
+        int popSkipped = 0;
 	for ( int i = 0; i < numPoints; i++ ) {
 		pxlist* cpx = px + i;
 		if ( cpx->numpx <= 0 ) {
 			blocksSkipped++;
+                        popSkipped += sov->gd->pop[i];
 			continue;
 		}
 		double tpd = _tpd(sov->gd->pop[i], sov->gd->area[i]);
@@ -803,7 +820,7 @@ void MapDrawer::paintPopulation( Solver* sov ) {
 		fprintf(stderr, "ghist[%d] %d\n", i, ghist[i]);
 	}
 #endif
-	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
+	fprintf(stderr, "%d blocks (%d pop) skipped due to being represented by no pixels\n", blocksSkipped, popSkipped);
 }
 void MapDrawer::paintPixels( Solver* sov ) {
 	if ( px == NULL ) {
@@ -818,10 +835,11 @@ void MapDrawer::paintPixels( Solver* sov ) {
 	DPRSET( miny, minlat );
 	DPRSET( maxy, maxlat );
 #endif
-	
+
 	POPTYPE* winner = sov->winner;
 	int numPoints = sov->gd->numPoints;
 	int blocksSkipped = 0;
+        int popSkipped = 0;
 	double minpd = 9999999;
 	double pdrange;
 	// TODO: make a command line flag to turn this off.
@@ -832,15 +850,16 @@ void MapDrawer::paintPixels( Solver* sov ) {
 		ubidLut = sov->gd->makeUbidLUT(&minIndex, &maxIndex);
 	}
 	int mrrPxCount = 0;
-	
+
 	for ( int i = 0; i < numPoints; i++ ) {
 		pxlist* cpx = px + i;
 		if ( cpx->numpx <= 0 ) {
 			blocksSkipped++;
+                        popSkipped += sov->gd->pop[i];
 			continue;
 		}
 		mrrPxCount += cpx->numpx;
-		
+
 		const unsigned char* color;
 		uint8_t r, g, b;
 		if (randomBlockDemo) {
@@ -901,7 +920,7 @@ void MapDrawer::paintPixels( Solver* sov ) {
 			setPoint(x, y, r, g, b);
 		}
 	}
-	fprintf(stderr, "%d blocks skipped due to being represented by no pixels\n", blocksSkipped);
+	fprintf(stderr, "%d blocks skipped (%d pop) due to being represented by no pixels\n", blocksSkipped, popSkipped);
 	fprintf(stderr, "processed %d pixels, %d collisions, %d pxCount\n", mrrPxCount, pxCollisionCount, pxCount);
 }
 
@@ -927,16 +946,16 @@ void MapDrawer::setIndexColor(Solver* sov, int index, uint8_t red, uint8_t green
 		}
 	} else {
 		int lminx, lminy, lmaxx, lmaxy;
-		
+
 		DPRSET( minx, minlon );
 		DPRSET( maxx, maxlon );
 		DPRSET( miny, minlat );
 		DPRSET( maxy, maxlat );
-		
+
 		/* setup transformation */
 		double ym = 0.999 * height / (lmaxy - lminy);
 		double xm = 0.999 * width / (lmaxx - lminx);
-		
+
 		GeoData* gd = sov->gd;
 		double ox, oy;
 		if ( gd->pos[index*2] < lminx ) {
