@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><title>2020 Redistricting Results</title>
+<html><head><title>2020 Redistricting Results</title><meta charset="UTF-8">
 <meta property="og:image" content="GA_Congress/map.png" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="{{rooturl}}report.css" rel="stylesheet" type="text/css" />
@@ -20,6 +20,7 @@ No gerrymandering.<p>
 Here are the most <a href="/about.html#compact">optimally compact</a> results so far.</p>
 <table class="sp"><tr><td>
 <div style="font-size: 80%; color:#777">As of {{localtime}}</div>
+<div id="statebutton">☰ States</div>
 {{statenav|safe}}
 
 </td><td align="center" id="dispresult"><div>Newest winning result: <a href="{{nwinner}}/">{{nwinnername}}</a></div><div><a href="{{nwinner}}/"><img src="{{nwinner}}/map500.png"></a></div></td></tr></table>
@@ -45,5 +46,6 @@ if (dr) {
 })();
 </script>
 
+<script type="text/javascript" src="{{rooturl}}/st_index.js"></script>
 {{google_analytics|safe}}
 </body></html>
