@@ -397,7 +397,7 @@ class SubmissionAnalyzer(object):
     def lookupByPath(self, path):
         """Return db value for path."""
         c = self.db.cursor()
-        c.execute('SELECT * FROM submissions WHERE path == ?', (path,))
+        c.execute('SELECT id, vars, unixtime, kmpp, spread, path, config FROM submissions WHERE path == ?', (path,))
         out = c.fetchone()
         c.close()
         return out
@@ -438,6 +438,7 @@ class SubmissionAnalyzer(object):
         max = int(m.group(1))
         min = int(m.group(2))
         spread = max - min
+        # TODO: also capture stddev of pop variations
         return (kmpp, spread)
 
     def setFromPath(self, fpath, innerpath):
@@ -481,6 +482,7 @@ class SubmissionAnalyzer(object):
         c = self.db.cursor()
         c.execute('INSERT INTO submissions (vars, unixtime, kmpp, spread, path, config) VALUES ( ?, ?, ?, ?, ?, ? )',
             (varsStr, tf_mtime, kmppSpread[0], kmppSpread[1], innerpath, config))
+        c.close()
         return True
 
     def updatedb(self, path):
@@ -513,6 +515,11 @@ class SubmissionAnalyzer(object):
         """like updatedb() but for json submissions."""
         setAny = False
         errcount = 0
+        starttime = time.time()
+        lastlog = starttime
+        alreadyCount = 0
+        didCount = 0
+        badCount = 0
         for root, dirnames, filenames in os.walk(path):
             if 'Attic' in dirnames:
                 dirnames.remove('Attic')
@@ -521,8 +528,13 @@ class SubmissionAnalyzer(object):
                 innerpath = fpath[len(path):]
                 x = self.lookupByPath(innerpath)
                 if x:
+                    alreadyCount += 1
                     # already did this one
                     continue
+                now = time.time()
+                if (now - lastlog) > 5:
+                    logger.info('%d scanned, %d already scanned, %d bad', didCount, alreadyCount, badCount)
+                    lastlog = now
                 try:
                     finfo = os.stat(fpath)
                     if finfo.st_size > _MAX_SOLUTION_JSON_SIZE:
@@ -544,6 +556,7 @@ class SubmissionAnalyzer(object):
                         continue
                     if ('bestKmpp.dsz' not in ob) and ('statsum' not in ob):
                         logger.debug('%s: no solution or statsum', fpath)
+                        badCount += 1
                         continue
                     dsz = None
                     dszb64 = ob.get('bestKmpp.dsz')
@@ -555,6 +568,7 @@ class SubmissionAnalyzer(object):
                     didSet = self.handleSolutionB(dsz, cname, varsStr, innerpath, fpath, os.path.getmtime(fpath))
                     setAny = setAny or didSet
                     logging.info('added %s', innerpath)
+                    didCount += 1
                 except Exception as e:
                     logging.warn('failed to process "%s": %r', fpath, e, exc_info=True)
                     errcount += 1
@@ -562,6 +576,8 @@ class SubmissionAnalyzer(object):
                         raise
                     # TODO: add junk paths to the db so we don't re-scan them all the time?
                     pass # don't care, move on
+        dt = time.time() - starttime
+        logger.info('%d scanned, %d already scanned, %d bad (in %0.2f seconds)', didCount, alreadyCount, badCount, dt)
         return setAny
 
     def getConfigCounts(self):
@@ -767,7 +783,7 @@ class SubmissionAnalyzer(object):
             else:
                 dclazz = 'slg'
             outl.append('<tr class="%s"><td><a href="%s/">%s</a></td>%s</tr>' % (dclazz, urljoin(self.options.rooturl, stu), name, ' '.join(vlist)))
-        text = '<table class="snl">' + ''.join(outl) + '</table>'
+        text = '<table class="snl mhid">' + ''.join(outl) + '</table>'
         if current is None:
             self._statenav_all = text
         return text
@@ -951,6 +967,9 @@ class SubmissionAnalyzer(object):
             return
 
         tpath = self.cleanupSolutionPath(data['path'])
+        if not tpath:
+            logger.warning('buildReportDirForConfig no path stu={} data={!r}'.format(stu, data))
+            return
         if tpath.endswith('.tar.gz'):
             tfparts = extractSome(tpath, ('solution', 'statsum'))
         else:
@@ -966,6 +985,11 @@ class SubmissionAnalyzer(object):
         current_kmpp = None
         current_spread = None
         current_std = None
+        solrow = self.lookupByPath(data['path'])
+        if not solrow:
+            solrow = self.lookupByPath(tpath)
+        if not solrow:
+            raise Exception('solution at path {!r} aka {!r} not previously measured?'.format(data['path'], tpath))
 
         if 'solution' in tfparts:
             # write solution.dsz
@@ -1028,13 +1052,19 @@ class SubmissionAnalyzer(object):
             self.processFailedSubmissions(configs, cname)
 
         # index.html
-        (kmpp, spread, std) = resultspage.parse_statsum(tfparts.get('statsum'))
-        if (kmpp is None) or (spread is None) or (std is None):
-            logging.error('bad statsum for %s', cname)
-            return
-        kmpp = float(kmpp)
-        spread = int(float(spread))
-        std = float(std)
+        if solrow:
+            logger.info('solrow %r', solrow)
+            kmpp = solrow[3]
+            spread = solrow[4]
+            std = 0.0 # TODO: use stddev from measureSolution
+        else:
+            (kmpp, spread, std) = resultspage.parse_statsum(tfparts.get('statsum'))
+            if (kmpp is None) or (spread is None) or (std is None):
+                logging.error('bad statsum for %s', cname)
+                return
+            kmpp = float(kmpp)
+            spread = int(float(spread))
+            std = float(std)
         # TODO: permalink
         permalink = os.path.join(self.options.rooturl, cname, str(data['id'])) + '/'
         racedata = ''

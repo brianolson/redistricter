@@ -3,7 +3,8 @@ body{color:#000000;background-color:#ffffff;}
 p.gentime{color:#555;}
 /* div.rb site nav item */
 /* state nav left */
-table.snl{z-index:1;position:relative;font-size:24px;background-color:#aaa;font-family:'Helvetica',sans-serif;margin-bottom:4px;}
+table.snl{z-index:1;position:relative;font-size:24px;background-color:#fff;font-family:'Helvetica',sans-serif;margin-bottom:4px;}
+.mhid{display:none;}
 #statebutton{font-size:30px;border:1px solid black;display:inline-block;}
 tr.slg{}
 tr.slgC{background-color:#ddd}
@@ -37,8 +38,10 @@ div.content{width:100%;}
 
 /* https://www.w3schools.com/css/css_rwd_mediaqueries.asp 600, 768, 992, 1200 */
 @media only screen and (min-width: 768px) {
-    table.snl{font-size:10pt;background-color:#fff;display:block;}
+    table.snl{font-size:10pt;background-color:#fff;}
+    .mhid{display:block;}
     #statebutton{display:none;}
     div.leftbar{width:200px;}
     div.content{width:auto;}
+    td.ln{max-width:25em;}
 }

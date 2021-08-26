@@ -223,17 +223,17 @@ class DBaseFieldDescriptor(object):
 			 self.length, self.count, # BB
 			 unused_2
 			 ) = struct.unpack('<11scIBB14s', rawbytes)
-		self.name = self.name.strip(' \t\r\n\0')
+		self.name = self.name.strip(b' \t\r\n\0')
 
 	def convert(self, raw):
-		if self.ftype == 'C':
+		if self.ftype == b'C':
 			return raw
-		if self.ftype == 'N':
-			if '.' in raw:
+		if self.ftype == b'N':
+			if b'.' in raw:
 				return float(raw)
 			else:
 				return int(raw)
-		assert False
+		assert False, self.ftype
 
 	def fromLine(self, line):
 		v = self.convert(line[self.start:self.end])
@@ -264,7 +264,7 @@ class CensusDBaseFile(object):
 	def readFile(self, f):
 		self.readHeader(f)
 		x = f.read(1)
-		while x != '\x1a':
+		while x != b'\x1a':
 			line = f.read(self.recordLength)
 			yield self.parseLine(line)
 			self.recordCount += 1
@@ -293,7 +293,7 @@ class CensusDBaseFile(object):
 		self.specDate = '%04d-%02d-%02d' % (year, month, day)
 		print(str(self))
 		x = f.read(1)
-		while x != '\x0d':
+		while x != b'\x0d':
 			xb = f.read(field_descriptor_b_size)
 			newfield = DBaseFieldDescriptor(rawbytes=x+xb)
 			print(newfield)
@@ -360,11 +360,11 @@ def readZipfile(fname):
 	for arg in zf.namelist():
 		if arg.endswith('.dbf'):
 			dbf = CensusDBaseFile()
-			for rec in dbf.readFile(io.StringIO(zf.read(arg))):
+			for rec in dbf.readFile(io.BytesIO(zf.read(arg))):
 				dbrecords.append(rec)
 		elif arg.endswith('.shp'):
 			shp = Shapefile()
-			for rec in shp.parseFile(io.StringIO(zf.read(arg))):
+			for rec in shp.parseFile(io.BytesIO(zf.read(arg))):
 				polys.append(rec)
 	assert len(dbrecords) == len(polys)
 	return (dbf,shp,dbrecords,polys)

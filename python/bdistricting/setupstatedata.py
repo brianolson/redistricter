@@ -276,11 +276,12 @@ class StateData(metaclass=abc.ABCMeta):
         if bestzip is None:
             logger.info('found no best zipfile to use')
             return None
+        logger.debug('bestzip %s', bestzip)
         zipspath = self.zipspath(dpath)
         assert zipspath is not None
         bestzip = os.path.join(zipspath, bestzip)
-        tabblockPath = os.path.join(zipspath, 'tl_2010_%02d_tabblock10.zip' % (self.fips,))
-        useFaces = True
+        tabblockPath = sorted(glob.glob(os.path.join(zipspath, 'tl_20?0_%02d_tabblock?0.zip' % (self.fips,))), reverse=True)[0]
+        useFaces = False
         if not useFaces:
             # Disable detailed rendering for now, the blocks don't line up right.
             facesPaths = None

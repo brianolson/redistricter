@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 {# this is the template for a single result, e.g. IN_Congress #}
 <html><head><title>{{statename}} Redistricting</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="{{rooturl}}s/report.css" rel="stylesheet" type="text/css" />
+<link href="{{rooturl}}/report.css" rel="stylesheet" type="text/css" />
 <meta property="og:image" content="{{ba_small}}" />
 <meta property="og:title" content="BDistricting: {{statename}}" />
 <meta property="og:url" content="https://www.bdistricting.com/2020/{{cname}}/" />
@@ -18,9 +19,9 @@
 
 </div>
 <h1>{{statename}} Redistricting</h1>
-<div class="small">From 2010 data</div>
-<table class="sp"><tr><td>
-      <div><a href="/2010/">2010 Redistricting Home</a></div>
+<div class="small">From 2020 data</div>
+<table class="sp"><tr><td class="ln">
+      <div><a href="/2020/">2020 Redistricting Home</a></div>
       <div id="statebutton">☰ States</div>
 {{statenav|safe}}
 <hr width="50%" align="center">
@@ -37,9 +38,9 @@
 
 <table border="1" style="margin-top:1em;margin-bottom:1em;" align="center">
 {% if current_small %}<tr><td></td><td class="myow">My Way</td><td class="myow">Current</td></tr>{% endif %}
-<tr><td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myon{% if my_kmpp < current_kmpp %} better{% endif %}">{{my_kmpp|pprint}}</td>{% if current_small %}<td class="myon{% if my_kmpp > current_kmpp %} better{% endif %}">{{current_kmpp|pprint}}</td>{% endif %}</tr>
-<tr><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about )--></td><td class="myon{% if my_spread < current_spread %} better{% endif %}">{{my_spread}}</td>{% if current_small %}<td class="myon{% if my_spread > current_spread %} better{% endif %}">{{current_spread}}</td>{% endif %}</tr>
-<tr><td class="myoh">standard deviation of<br />district populations</td><td class="myon{% if my_std < current_std %} better{% endif %}">{{my_std}}</td>{% if current_small %}<td class="myon{% if my_std > current_std %} better{% endif %}">{{current_std}}</td>{% endif %}</tr>
+<tr><td class="myoh">average distance between a voter and<br />the center of their district (in kilometers)</td><td class="myon{% if current_kmpp and my_kmpp < current_kmpp %} better{% endif %}">{{my_kmpp|pprint}}</td>{% if current_small %}<td class="myon{% if current_kmpp and my_kmpp > current_kmpp %} better{% endif %}">{{current_kmpp|pprint}}</td>{% endif %}</tr>
+<tr><td class="myoh">difference in population between<br />the least populous district and<br />the most populous district<!-- (out of about )--></td><td class="myon{% if current_spread and my_spread < current_spread %} better{% endif %}">{{my_spread}}</td>{% if current_small %}<td class="myon{% if current_spread and my_spread > current_spread %} better{% endif %}">{{current_spread}}</td>{% endif %}</tr>
+<tr><td class="myoh">standard deviation of<br />district populations</td><td class="myon{% if current_std and my_std < current_std %} better{% endif %}">{{my_std}}</td>{% if current_small %}<td class="myon{% if current_std and my_std > current_std %} better{% endif %}">{{current_std}}</td>{% endif %}</tr>
 </table>
 
 {{extra|safe}}
@@ -62,6 +63,6 @@
 <div><a href="/2000/{{stu}}/">{{statename}} from 2000 Census</a></div>
 </td></tr></table>
 <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work by <a xmlns:cc="http://creativecommons.org/ns#" href="http://bdistricting.com/" property="cc:attributionName" rel="cc:attributionURL">Brian Olson</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.</p>
-<script type="text/javascript" src="{{rooturl}}s/st_index.js"></script>
+<script type="text/javascript" src="{{rooturl}}/st_index.js"></script>
 {{google_analytics|safe}}
 </body></html>
