@@ -19,11 +19,30 @@ import org.bolson.redistricter.ShapefileBundle.MapSetLinkWrapper;
  * Read 'edges' files because they trivially connect tfid-tfid pairs as adjacent.
  */
 public class LinksFromEdges {
+  public static final class DataGeneration {
+    public String state;
+    public String county;
+    public String tract;
+    public String block;
+
+    public DataGeneration(String state, String count, String tract, String block) {
+      this.state = state;
+      this.county = county;
+      this.tract = tract;
+      this.block = block;
+    }
+  }
+
+  public static final DataGeneration data2000 = new DataGeneration("STATEFP00","COUNTYFP00", "TRACTCE00", "BLOCKCE00");
+  public static final DataGeneration data2010 = new DataGeneration("STATEFP10","COUNTYFP10", "TRACTCE10", "BLOCKCE10");
+  public static final DataGeneration data2020 = new DataGeneration("STATEFP20","COUNTYFP20", "TRACTCE20", "BLOCKCE20");
+
 	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
 
 	TreeMap<Long, byte[]> tfidUbid = new TreeMap<Long, byte[]>();
 	Map<byte[], Set<byte[]> > links;
 	ShapefileBundle.SetLink linkSetter;
+  DataGeneration gen;
 
 	LinksFromEdges() {
 		boolean tree = true;
@@ -33,6 +52,7 @@ public class LinksFromEdges {
 			links = new HashMap<byte[], Set<byte[]> >();
 		}
 		linkSetter = new MapSetLinkWrapper(links);
+                gen = data2020;  // TODO: make this settable to use previous data
 	}
 
 	/**
@@ -57,10 +77,10 @@ public class LinksFromEdges {
 	int readFaces(ShapefileBundle sb, boolean y2kmode) throws IOException {
 		DBaseFieldDescriptor blockIdField = null;
 		// synthesize blockId from parts of faces file
-		DBaseFieldDescriptor state = sb.dbf.getFieldBest("STATEFP20","STATEFP10","STATEFP00");
-		DBaseFieldDescriptor county = sb.dbf.getFieldBest("COUNTYFP20","COUNTYFP10","COUNTYFP00");
-		DBaseFieldDescriptor tract = sb.dbf.getFieldBest("TRACTCE20","TRACTCE10","TRACTCE00");
-		DBaseFieldDescriptor block = sb.dbf.getFieldBest("BLOCKCE20","BLOCKCE10","BLOCKCE00");
+		DBaseFieldDescriptor state = sb.dbf.getField(gen.state);
+		DBaseFieldDescriptor county = sb.dbf.getField(gen.county);
+		DBaseFieldDescriptor tract = sb.dbf.getField(gen.tract);
+		DBaseFieldDescriptor block = sb.dbf.getField(gen.block);
 		DBaseFieldDescriptor suffix = sb.dbf.getField("SUFFIX1CE");
 		if ((state != null) && (county != null) && (tract != null) && (block != null) && (y2kmode || (suffix != null))) {
 			CompositeDBaseField cfield = new CompositeDBaseField();

@@ -36,7 +36,7 @@ public class ShapefileBundle {
 	// TODO: requires Java 1.6
 	//static java.util.logging.Logger log = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
 	static java.util.logging.Logger log = java.util.logging.Logger.getLogger("org.bolson.redistricter");
-	
+
 	static int swap(int x) {
 		return
 		((x & 0x000000ff) << 24) |
@@ -62,7 +62,7 @@ public class ShapefileBundle {
 		(data[pos] << 24);
 	}
 	static int bytesToUShortLE(byte[] data, int pos) {
-		return 
+		return
 		((((int)data[pos+1]) & 0x000000FF) << 8) |
 		(((int)data[pos]) & 0x000000FF);
 	}
@@ -73,7 +73,7 @@ public class ShapefileBundle {
 		(data[pos+3] << 24);
 	}
 	static long bytesToLongLE(byte[] data, int pos) {
-		return 
+		return
 		((((long)data[pos+7]) & 0x00000000000000FFL) << 56) |
 		((((long)data[pos+6]) & 0x00000000000000FFL) << 48) |
 		((((long)data[pos+5]) & 0x00000000000000FFL) << 40) |
@@ -98,7 +98,7 @@ public class ShapefileBundle {
 		long l = bytesToLongLE(data, pos);
 		return Double.longBitsToDouble(l);
 	}
-	
+
 	static interface SetLink {
 		/**
 		 * Record a link between two blocks.
@@ -136,7 +136,7 @@ public class ShapefileBundle {
 			return rhset.add(upper);
 		}
 	}
-	
+
 	public static ArrayList<String> readLines(String path) throws IOException {
 		FileReader fr = new FileReader(path);
 		BufferedReader br = new BufferedReader(fr);
@@ -148,12 +148,12 @@ public class ShapefileBundle {
 		}
 		return out;
 	}
-	
+
 	ZipFile bundle = null;
 	Shapefile shp = null;
 	DBase dbf = null;
 	private Proj projection;
-	
+
 	public static final long blockidToUbid(byte[] blockid) {
 		if (blockid.length <= 19) {
 			try {
@@ -164,7 +164,7 @@ public class ShapefileBundle {
 		}
 		return -1;
 	}
-	
+
 	public static final String blockidToString(byte[] blockid) {
 		int start = 0;
 		int end = -1;
@@ -214,7 +214,7 @@ public class ShapefileBundle {
 		int lastSlash = filename.lastIndexOf('/');
 		assert(filename.endsWith(".zip"));
 		String nameroot = filename.substring(lastSlash+1, filename.length() - 4);
-		
+
 		bundle = new ZipFile(filename);
 		openFinish(nameroot);
 	}
@@ -246,16 +246,16 @@ public class ShapefileBundle {
 		dbf = new DBase();
 		dbf.setInputStream(new DataInputStream(dbfIs));
 	}
-	
+
 	public static class CompositeDBaseField extends DBaseFieldDescriptor {
-		protected ArrayList<DBaseFieldDescriptor> subFields = new ArrayList<DBaseFieldDescriptor>(); 
+		protected ArrayList<DBaseFieldDescriptor> subFields = new ArrayList<DBaseFieldDescriptor>();
 
 		public CompositeDBaseField() {
 			super();
 			length = 0;
 			type = CHARACTER;
 		}
-		
+
 		public void add(DBaseFieldDescriptor field) {
 			subFields.add(field);
 			length += field.length;
@@ -265,7 +265,7 @@ public class ShapefileBundle {
 				name = name + "+" + field.name;
 			}
 		}
-		
+
 		public int getBytes(byte[] data, int offset, int length, byte[] out, int outOffset) {
 			// TODO: assert(change in outOffset == this.length)
 			for (DBaseFieldDescriptor field : subFields) {
@@ -274,14 +274,14 @@ public class ShapefileBundle {
 			return outOffset;
 		}
 	}
-	
+
 	/**
 	 * Read a Shapefile and DBase pair.
-	 * Loads all the polygons from the Shapefile and identifiers from the 
+	 * Loads all the polygons from the Shapefile and identifiers from the
 	 * corresponding records in the DBase file.
 	 * @param shp
 	 * @param dbf
-	 * @return 
+	 * @return
 	 * @throws IOException
 	 */
 	public int read(Iterable<PolygonProcessor> pps) throws IOException {
@@ -299,6 +299,22 @@ public class ShapefileBundle {
 		if (blockIdField == null) {
 			// NAMELSAD part of places
 			blockIdField = dbf.getField("NAMELSAD");
+		}
+		if (blockIdField == null && !y2kmode) {
+			// maybe synthesize blockId from parts of faces file
+			DBaseFieldDescriptor state = dbf.getField("STATEFP20");
+			DBaseFieldDescriptor county = dbf.getField("COUNTYFP20");
+			DBaseFieldDescriptor tract = dbf.getField("TRACTCE20");
+			DBaseFieldDescriptor block = dbf.getField("BLOCKCE20");
+			if ((state != null) && (county != null) && (tract != null) && (block != null)) {
+				CompositeDBaseField cfield = new CompositeDBaseField();
+				cfield.add(state);
+				cfield.add(county);
+				cfield.add(tract);
+				cfield.add(block);
+				//cfield.add(suffix);
+				blockIdField = cfield;
+			}
 		}
 		if (blockIdField == null && !y2kmode) {
 			// maybe synthesize blockId from parts of faces file
@@ -344,7 +360,7 @@ public class ShapefileBundle {
 			waterArea = dbf.getField("AWATER00");
 			landArea = dbf.getField("ALAND00");
 		}
-		
+
 		if (log.isLoggable(Level.FINE)) {
 			log.fine(shp.toString());
 			log.fine(dbf.toString());
@@ -353,7 +369,7 @@ public class ShapefileBundle {
 			log.fine("waterArea=" + waterArea);
 			log.fine("landArea=" + landArea);
 		}
-		
+
 		int count = 0;
 		Polygon p = (Polygon)shp.next();
 
@@ -391,7 +407,7 @@ public class ShapefileBundle {
 		assert(shp.recordCount == dbf.readCount);
 		return shp.recordCount;
 	}
-	
+
 	public static class SynchronizingSetLink implements SetLink {
 		SetLink out;
 		public SynchronizingSetLink(SetLink sub) {
@@ -505,14 +521,14 @@ public static final String usage =
 			log.addHandler(ch);
 		}
 	}
-	
+
 	public void setProjection(Proj projection) {
 		this.projection = projection;
 		if (this.projection != null) {
 			log.info("bundle useing proj " + this.projection);
 		}
 	}
-	
+
 	/**
 	 * --xpx int
 --ypx int
@@ -526,7 +542,7 @@ public static final String usage =
 --simple-rast # don't optimize pb
 --flagfile path
 --links out path, usually 'geoblocks.links'
---rastgeom out path, 
+--rastgeom out path,
 --threads n
 --boundx n e.g. 1920
 --boundy n e.g. 1080
@@ -541,14 +557,14 @@ public static final String usage =
 		// TODO: take county and place (and more?) at the same time as tabblock and co-render all the layers
 		long totalStart = System.currentTimeMillis();
 		loggingInit();
-		
+
 		RunContext x = new RunContext();
 		x.main(argv);
 
 		long totalEnd = System.currentTimeMillis();
 		log.info("total time: " + ((totalEnd - totalStart) / 1000.0) + " seconds");
 	}
-	
+
 	public String toString() {
 		return bundle.getName();
 	}
