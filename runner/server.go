@@ -1,13 +1,32 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 )
+
+//go:embed templates
+var tfs embed.FS
+
+var templates *template.Template
+
+func init() {
+	nt, err := template.ParseFS(tfs, "templates/*.html")
+	if err != nil {
+		panic(fmt.Sprintf("could not load templates, %v", err))
+	}
+	t := nt.Lookup("index.html")
+	if t == nil {
+		panic("no index.html template")
+	}
+	templates = nt
+}
 
 func textResponse(code int, response http.ResponseWriter, format string, args ...interface{}) {
 	response.Header().Set("Content-Type", "text/plain")
@@ -65,10 +84,18 @@ func (rs *runServer) showBest(response http.ResponseWriter, request *http.Reques
 	}
 }
 
+func (rs *runServer) showIndex(response http.ResponseWriter, request *http.Request) {
+	t := templates.Lookup("index.html")
+	if t == nil {
+		panic("no index.html template")
+	}
+}
+
 type RunningRecord struct {
 	Cwd      string `json:"cwd"`
 	Start    string `json:"s"`
 	StartInt int64  `json:"sn"`
+	Config   Config `json:"cfg"`
 }
 
 func (rs *runServer) showRunning(response http.ResponseWriter, request *http.Request) {
@@ -79,6 +106,7 @@ func (rs *runServer) showRunning(response http.ResponseWriter, request *http.Req
 		out[i].Cwd = ch.cwd
 		out[i].StartInt = ch.start.Unix()
 		out[i].Start = ch.start.Format(time.RFC3339)
+		out[i].Config = ch.config
 	}
 	blob, err := json.Marshal(out)
 	if httpErr(err, 500, response, "could not json, %v", err) {

@@ -1,6 +1,6 @@
 module github.com/brianolson/redistricter/runner
 
-go 1.15
+go 1.16
 
 require (
 	github.com/brianolson/forwarded v0.1.1 // indirect

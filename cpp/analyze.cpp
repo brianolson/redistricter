@@ -106,6 +106,8 @@ class AnalyzeApp {
 
     int dsort;
 
+  int logrecno_column;
+
     FILE* textout;
     FILE* csvout;
     FILE* htmlout;
@@ -122,6 +124,7 @@ class AnalyzeApp {
 AnalyzeApp::AnalyzeApp()
     : distrow(true), distcol(false), verbosity(DEBUG),
       dsort(-1),
+      logrecno_column(0),
       textout(NULL),
       csvout(NULL),
       htmlout(NULL),
@@ -337,6 +340,8 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 
 	const char* placenamePath = NULL;
 
+        bool do2010mode = false;
+
 	nargc = 1;
 	sov.districtSetFactory = District2SetFactory;
 
@@ -355,6 +360,7 @@ int AnalyzeApp::main( int argc, const char** argv ) {
 	    BoolArg("nostats", &nostats);
 	    BoolArg("distrow", &distrow);
 	    BoolArg("distcol", &distcol);
+	    BoolArg("2010", &do2010mode);
 	    StringArg("export", &exportPath);
 
 	    StringArg("place-names", &placenamePath);
@@ -440,6 +446,10 @@ int AnalyzeApp::main( int argc, const char** argv ) {
           }
         }
 
+        if (do2010mode) {
+          logrecno_column = 4;
+        }
+
 	sov.initNodes();
 	sov.allocSolution();
 	if (sov.hasSolutionToLoad()) {
@@ -450,13 +460,14 @@ int AnalyzeApp::main( int argc, const char** argv ) {
                 if ((statsout != NULL) || verbosity >= DEBUG) {
 			char* statstr = new char[10000];
 			sov.getDistrictStats(statstr, 10000);
-			double ssd = popSSD(sov.winner, sov.gd, sov.districts);
+                        // sum of squared distances between pops, exhaustively N^2 calculated, is not worth doing at this time. Too slow. Not interesting enough.
+			//double ssd = popSSD(sov.winner, sov.gd, sov.districts);
                         if (statsout != NULL) {
                           fputs(statstr, statsout);
-                          fprintf(statsout, "pop FH-ssd: %g\n", ssd);
+                          //fprintf(statsout, "pop FH-ssd: %g\n", ssd);
                         } else {
                           debug("%s", statstr);
-                          debug("pop FH-ssd: %g\n", ssd);
+                          //debug("pop FH-ssd: %g\n", ssd);
                         }
 			delete [] statstr;
 		}
@@ -530,7 +541,7 @@ int AnalyzeApp::placeSplits() {
     }
 
     if (htmlout) {
-        fprintf(htmlout, "<p>%d places split (%0.3f%%), %d places not split (%0.3f%%)</p>\n", placesSplit, (placesSplit * 1.0) / placeCount, placesNotSplit, (placesNotSplit * 1.0) / placeCount);
+        fprintf(htmlout, "<p>%d places split (%0.1f%%), %d places not split (%0.1f%%)</p>\n", placesSplit, (placesSplit * 100.0) / placeCount, placesNotSplit, (placesNotSplit * 100.0) / placeCount);
         if (placenames != NULL) {
             fprintf(htmlout, "<p id=\"splitplaces\" class=\"hidden\">");
             for (vector<uint64_t>::const_iterator it = splitPlaces.begin(); it != splitPlaces.end(); ++it) {
@@ -561,7 +572,7 @@ int AnalyzeApp::doCompare(char* fname, char* label) {
     vector<uint32_t*> data_columns;
     int recnos_matched;
     bool ok = read_uf1_columns_for_recnos(
-                                          sov.gd, fname, columns, &data_columns, &recnos_matched);
+        sov.gd, fname, logrecno_column, columns, &data_columns, &recnos_matched);
     info("%d recnos matched of %d points\n", recnos_matched, sov.gd->numPoints);
     if (!ok) {
         fprintf(stderr, "read file \"%s\" failed\n", fname);

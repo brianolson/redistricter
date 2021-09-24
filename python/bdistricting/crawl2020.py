@@ -22,6 +22,7 @@ from . import setupstatedata
 from . import shapefile
 from . import states
 from .makePlaceBlockList import getTopNPlaceCodes, filterPlacesToUbidList
+from .check_pop_race import pl1zipToRaceCsvGz
 
 logger = logging.getLogger(__name__)
 
@@ -538,6 +539,12 @@ class StateData(setupstatedata.StateData):
       if not self.options.dryrun:
         urllib.request.urlretrieve(plzipurl, plzip)
     assert os.path.exists(plzip), "missing %s" % (plzip,)
+
+    raceCsvGzPath = os.path.join(self.dpath, '{stl}_race.csv.gz'.format(stl=self.stl))
+    if newerthan(plzip, raceCsvGzPath):
+      logger.info('%s -> %s', plzip, raceCsvGzPath)
+      pl1zipToRaceCsvGz(plzip, raceCsvGzPath)
+
     needsbuild = newerthan(plzip, geoblockspath)
     needsbuild = needsbuild or newerthan(plzip, placespath)
     needsbuild = needsbuild or newerthan(plzip, placePopPath)

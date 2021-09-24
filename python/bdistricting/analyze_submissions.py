@@ -4,6 +4,7 @@
 import base64
 import cgi
 import csv
+import fnmatch
 import gzip
 import json
 import logging
@@ -179,18 +180,72 @@ kmppRe = re.compile(r'([0-9.]+)\s+Km/person to land center')
 maxMinRe = re.compile(r'max=([0-9]+).*min=([0-9]+)')
 
 
-def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None, bindir=None, printcmd=None):
+def dbgCmd(cmd):
+    return ' '.join([repr(x) for x in cmd])
+
+
+def measure_race(stl, numd, pbfile, solution, htmlout, raceCsvGzPath, exportpath=None, bindir=None, printcmd=None):
+    # TODO: 2020, use {stl}_race.csv.gz
+    # header:
+    # 'LOGRECNO', 'total', 'white', 'black', 'native', 'asian', 'pacific', 'other'
+    if not os.path.exists(raceCsvGzPath):
+        logging.error("%s: missing race csv gz file", raceCsvGzPath)
+        return None
+    if bindir is None:
+        bindir = srcdir_
+
+    analyzebin = os.path.join(bindir, 'analyze')
+    cmd = [analyzebin, '--compare', '{}:1,2,3,4,5,6,7'.format(raceCsvGzPath),
+           '--labels', 'total,white,black,native,asian,pacific,other',
+           '--dsort', '1', '--notext',
+           '--html', htmlout,
+           '-P', pbfile, '-d', str(numd)]
+    if solution:
+        if solution.lower().endswith('.csv'):
+            cmd += ['--csv-solution', solution]
+        else:
+            cmd += ['--loadSolution', solution]
+    if exportpath:
+        cmd += ['--export', exportpath]
+
+    if printcmd:
+        printcmd(cmd)
+    try:
+        start = time.time()
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        result.check_returncode()
+        end = time.time()
+        if (end - start) > 10:
+            logging.warning('slow run %.1f: %s', end-start, dbgCmd(cmd))
+        return result.stdout.decode()
+    except subprocess.CalledProcessError as e:
+        logging.error('failed analyzing race in subprocess %s', dbgCmd(cmd), exc_info=True)
+        logging.error('stderr:\n%s\n\n', e.stderr.decode())
+    except:
+        logging.error('failed analyzing race in subprocess %s', dbgCmd(cmd), exc_info=True)
+        raise
+    return None
+
+
+def measure_race2010(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None, bindir=None, printcmd=None):
     """Writes html to htmlout. Returns blob of text with stats. Pass blob to parseAnalyzeStats if desired."""
     if not os.path.exists(zipname):
         logging.error('could not measure race without %s', zipname)
         return
-    part1name = stl + '000012010.pl'
-    try:
-        with zipfile.ZipFile(zipname, 'r') as zf:
-            part1data = zf.read(part1name)
-    except:
-        logging.error('could not measure race, failed reading %r/%r', zipname, part1name, exc_info=True)
-        return None
+    part1glob = stl + '0000120?0.pl'
+    bestname = None
+    bestpath = None
+    with zipfile.ZipFile(zipname, 'r') as zf:
+        for zpath in zf.namelist():
+            fname = os.path.basename(zpath)
+            if fnmatch.fnmatch(fname, part1glob):
+                if (bestname is None) or (fname > bestname):
+                    bestname = fname
+                    bestpath = zpath
+        if bestpath is None:
+            logging.error('could not measure race, %r nothing matched %r', zipname, part1glob)
+            return
+        part1data = zf.read(bestpath)
     if bindir is None:
         bindir = srcdir_
 
@@ -199,7 +254,7 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
            '--labels', 'total,white,black,native,asian,pacific,other,mixed',
            '--dsort', '1', '--notext',
            '--html', htmlout,
-           '-P', pbfile, '-d', numd]
+           '-P', pbfile, '-d', str(numd)]
     if solution:
         if solution.lower().endswith('.csv'):
             cmd += ['--csv-solution', solution]
@@ -214,11 +269,11 @@ def measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath=None,
         result = subprocess.run(cmd, input=part1data, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
         result.check_returncode()
         return result.stdout.decode()
-    except subprocess.SubprocessError as e:
-        logging.error('failed analyzing race in subprocess %r < %s / %s', cmd, zipname, part1name, exc_info=True)
+    except subprocess.CalledProcessError as e:
+        logging.error('failed analyzing race in subprocess %r < %s / %s', dbgCmd(cmd), zipname, bestpath, exc_info=True)
         logging.error('stderr:\n%s\n\n', e.stderr.decode())
     except:
-        logging.error('failed analyzing race in subprocess %r', cmd, exc_info=True)
+        logging.error('failed analyzing race in subprocess %r', dbgCmd(cmd), exc_info=True)
         raise
     return None
 
@@ -339,6 +394,7 @@ def loadDatadirConfigurations(configs, datadir, statearglist=None, configPathFil
 class SubmissionAnalyzer(object):
     def __init__(self, options, dbpath=None):
         self.options = options
+        self.year = 2020
 
         # map from STU/config-name to runallstates.configuration objects
         self.config = {}
@@ -420,7 +476,7 @@ class SubmissionAnalyzer(object):
             '-d', districtNum,
             '-notext', '-stats=-',
             '-r', '-']
-        logging.debug('run %r', cmd)
+        logging.debug('run %r', dbgCmd(cmd))
         result = subprocess.run(cmd, input=solraw, capture_output=True)
         if result.returncode != 0:
             self.stderr.write('error {} running {}\n'.format(result.returncode, ' '.join(cmd)))
@@ -428,12 +484,12 @@ class SubmissionAnalyzer(object):
         raw = result.stdout.decode()
         m = kmppRe.search(raw)
         if not m:
-            self.stderr.write('failed to find kmpp %r in analyze output:\n%s\n%r\n' % (kmppRe.pattern, ' '.join(cmd), raw))
+            self.stderr.write('failed to find kmpp %r in analyze output:\n%s\n%r\n' % (kmppRe.pattern, dbgCmd(cmd), raw))
             return (None,None)
         kmpp = float(m.group(1))
         m = maxMinRe.search(raw)
         if not m:
-            self.stderr.write('failed to find max/min %r in analyze output:\ns\n%s\n' % (makMinRe.pattern, ' '.join(cmd), raw))
+            self.stderr.write('failed to find max/min %r in analyze output:\ns\n%s\n' % (makMinRe.pattern, dbgCmd(cmd), raw))
             return (None,None)
         max = int(m.group(1))
         min = int(m.group(2))
@@ -732,7 +788,7 @@ class SubmissionAnalyzer(object):
         cmd = [os.path.join(self.options.bindir, 'drend')] + runallstates.dictToArgList(args)
         if highlight:
             cmd += ['--hubidz', highlight]
-        logging.debug('run %r', cmd)
+        logging.debug('run %r', dbgCmd(cmd))
         if solutionDszRaw:
             p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
             p.stdin.write(solutionDszRaw)
@@ -742,7 +798,7 @@ class SubmissionAnalyzer(object):
         retcode = p.wait()
         if retcode != 0:
             logger.error('drend fail, args %r', args)
-            logger.error('error %d running "%s"', retcode, ' '.join(cmd))
+            logger.error('error %d running "%s"', retcode, dbgCmd(cmd))
             return None
 
     def statenav(self, current, configs):
@@ -863,15 +919,20 @@ class SubmissionAnalyzer(object):
     def measureRace(self, cname, solution, htmlout, exportpath):
         config = self.config[cname]
         stl = cname[0:2].lower()
-        # TODO: fix for 2020
-        zipname = os.path.join(config['path'], 'zips', stl + '2010.pl.zip')
-        if not os.path.exists(zipname):
-            logging.error('could not measure race without %s', zipname)
-            return
-        numd = config.args['-d']
-        pbfile = config.args['-P']
+        stu = stl.upper()
+        # 2010
+        # zipname = os.path.join(config['path'], stu, 'zips', stl + '{}.pl.zip'.format(self.year))
+        # if not os.path.exists(zipname):
+        #     logging.error('could not measure race without %s', zipname)
+        #     return
+        raceCsvGzPath = os.path.join(config['path'], stu, stl + '_race.csv.gz')
+        logger.debug('%s: config=%r', cname, config)
+        #numd = config.args['-d']
+        numd = int(config['common']['kwargs']['-d'])
+        #pbfile = config.args['-P']
+        pbfile = os.path.join(config['path'], stu, stl + '.pb')
 
-        measure_race(stl, numd, pbfile, solution, htmlout, zipname, exportpath, self.options.bindir)
+        measure_race(stl, numd, pbfile, solution, htmlout, raceCsvGzPath, exportpath, self.options.bindir)
 
     def processFailedSubmissions(self, configs, cname):
         c = self.db.cursor()
@@ -1040,7 +1101,7 @@ class SubmissionAnalyzer(object):
                 # ensure setup
                 actualSet = states.stateConfigToActual(stu, cname.split('_',1)[1])
                 drendargs = config.drendargs
-                zipname = os.path.join(self.options.datadir, stu, 'zips', stl + '2010.pl.zip')
+                zipname = os.path.join(self.options.datadir, stu, 'zips', stl + '{}.pl.zip'.format(self.year))
                 (current_kmpp, current_spread, current_std) = self.processActualsSource(os.path.join(self.options.actualdir, actualSet), cname, stu, self.actualsSource(actualSet, stu), drendargs['-P'], drendargs['--mppb'], zipname, mppb_lg_path, highlight=highlight_path)
 
                 actualMapPath = os.path.join(self.options.actualdir, actualSet, stu + '.png')
@@ -1158,11 +1219,11 @@ class SubmissionAnalyzer(object):
                 cmd = [drendpath(), '-d', districts, '-P', pb, '--mppb', mppb, '--csv-solution', simplecsvpath, '--pngout', pngout]
                 if highlight:
                     cmd += ['--hubidz', highlight]
-                logging.info('%r', cmd)
+                logging.info('%r', dbgCmd(cmd))
                 p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
                 retcode = p.wait()
                 if retcode != 0:
-                    logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+                    logging.error('cmd `%s` retcode %s log %s', dbgCmd(cmd), retcode, p.stdout.read())
                     sys.exit(1)
 
             # large image
@@ -1170,11 +1231,11 @@ class SubmissionAnalyzer(object):
                 cmd = [drendpath(), '-d', districts, '-P', pb, '--mppb', mppb_lg_path, '--csv-solution', simplecsvpath, '--pngout', pngLgOut]
                 if highlight:
                     cmd += ['--hubidz', highlight]
-                logging.info('%r', cmd)
+                logging.info('%r', dbgCmd(cmd))
                 p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, shell=False)
                 retcode = p.wait()
                 if retcode != 0:
-                    logging.error('cmd `%s` retcode %s log %s', cmd, retcode, p.stdout.read())
+                    logging.error('cmd `%s` retcode %s log %s', dbgCmd(cmd), retcode, p.stdout.read())
                     sys.exit(1)
 
             if any_newerthan( (pb, mppb, simplecsvpath, zipname), (htmlout, analyzeout)):

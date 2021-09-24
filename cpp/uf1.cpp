@@ -213,8 +213,11 @@ done:
 
 
 // Returns malloc() buffer full of uint32_t[gd->numPoints] of uf1 data.
+// In a raw sf1 CSV, logrecno_column=4
+// In crawl2020 race csv, logrecno_column=0
 bool read_uf1_columns_for_recnos(
 		GeoData* gd, const char* filename,
+                int logrecno_column,
 		const vector<int>& columns,
 		vector<uint32_t*>* data_columns,
 		int* recnos_matched) {
@@ -243,8 +246,12 @@ bool read_uf1_columns_for_recnos(
 		uint32_t recno;
 		uint32_t index;
 		line_number++;
-		if (!uint32_field_from_csv(&recno, line, 4)) {
-			fprintf(stderr, "%s:%d csv parse fail getting field 5 LOGRECNO\n", filename, line_number);
+		if (!uint32_field_from_csv(&recno, line, logrecno_column)) {
+                  if (line_number == 1) {
+                    // try one more, maybe header garbage
+                    continue;
+                  }
+                  fprintf(stderr, "%s:%d csv parse fail getting field %d LOGRECNO\n", filename, line_number, logrecno_column + 1);
 			good = false;
 			goto done;
 		}
@@ -291,7 +298,7 @@ public:
 		assert(numbersPerLine > 0);
 		assert(numbersPerLine < 10000);
 	}
-	
+
 	// parse int in 0-indexed column of comma separated data.
 	uint32_t uint32_field(int column) {
 		assert(pos != NULL);

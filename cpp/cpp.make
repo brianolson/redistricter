@@ -66,6 +66,9 @@ ANALYZEOBJS=$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(ANALYZESRCS)))
 analyze:	${ANALYZEOBJS}
 	$(CXX)  ${CXXFLAGS} $(ANALYZEOBJS) $(LDFLAGS) -o analyze
 
+analyze_prof:	${ANALYZESRCS}
+	$(CXX)  ${CXXFLAGS} $(ANALYZESRCS) $(LDFLAGS) -pg -o analyze_prof
+
 DBLSRCS:=${SRCDIR}/dumpBinLog.cpp ${SRCDIR}/redata.pb.cc
 
 dumpBinLog:	${DBLSRCS}
