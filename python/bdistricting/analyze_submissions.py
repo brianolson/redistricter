@@ -1348,6 +1348,9 @@ def main():
     (options, args) = argp.parse_args()
     if options.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+    analyzebin = os.path.join(options.bindir, 'analyze')
+    if not os.path.exists(analyzebin):
+        raise Exception('no `analyze`, expected {}'.format(analyzebin))
     options.configlist = options.configlist + args
     x = SubmissionAnalyzer(options, dbpath='.status.sqlite3')
     if options.summarypath:
