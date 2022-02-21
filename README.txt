@@ -11,6 +11,7 @@ DEPENDENCIES:
 	C++ compiler (GCC or CLANG)
 	Java 1.8+
 	Python 3.6+
+	Go 1.16+
 	png library
 	zlib compression library
 	google protocol buffers http://code.google.com/p/protobuf/
@@ -44,15 +45,16 @@ pip install -r python/requirements.txt
 Make a directory, which I traditionally call "data", to hold the Census data, and fetch a state of data into it, run preprocessing:
 
 mkdir data
-./bin/setupstatedata ct
+./bin/setupstatedata --data=data CT
 
 Run from local data:
 
-./bin/run_devmode --port=8080
+(cd runner && make)
+runner/runner -data data -http :8080
 
-The --port argument is optional, but runs a handy HTTP server on that port (e.g. http://localhost:8080/ ) which nicely displays status and results.
+The -http argument is optional, but runs a handy HTTP server on that port (e.g. http://localhost:8080/ ) which nicely displays status and results.
 
-Lots of other options are available on both ./setupstatedata and ./run_devmode and there is --help available for them.
+Lots of other options are available on both ./setupstatedata and runner/runner and there is --help available for them.
 
 
 ---

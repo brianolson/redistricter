@@ -9,6 +9,7 @@ srcdir = os.path.join(rootdir, 'python')
 
 sys.path.append(srcdir)
 
-from bdistricting.crawl2010 import main
+#from bdistricting.crawl2010 import main
+from bdistricting.crawl2020 import main
 
 main()
